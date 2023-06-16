@@ -1,3 +1,5 @@
+import re
+import time
 import random
 import base64
 from io import BytesIO
@@ -57,3 +59,19 @@ def convert_cookies(cookies: Optional[List[Cookie]]) -> Tuple[str, Dict]:
     for cookie in cookies:
         cookie_dict[cookie.get('name')] = cookie.get('value')
     return cookies_str, cookie_dict
+
+
+def get_current_timestamp():
+    return int(time.time() * 1000)
+
+
+def match_interact_info_count(count_str: str) -> int:
+    if not count_str:
+        return 0
+
+    match = re.search(r'\d+', count_str)
+    if match:
+        number = match.group()
+        return int(number)
+    else:
+        return 0
