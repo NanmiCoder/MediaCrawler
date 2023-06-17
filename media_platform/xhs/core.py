@@ -21,6 +21,7 @@ import config
 from .client import XHSClient
 from base_crawler import Crawler
 from models import xhs as xhs_model
+from .exception import *
 
 
 class XiaoHongShuCrawler(Crawler):
@@ -28,6 +29,7 @@ class XiaoHongShuCrawler(Crawler):
         self.login_phone = None
         self.login_type = None
         self.keywords = None
+        self.web_session = None
         self.cookies: Optional[List[Cookie]] = None
         self.browser_context: Optional[BrowserContext] = None
         self.context_page: Optional[Page] = None
@@ -37,9 +39,8 @@ class XiaoHongShuCrawler(Crawler):
         self.index_url = "https://www.xiaohongshu.com"
 
     def init_config(self, **kwargs):
-        self.keywords = kwargs.get("keywords")
-        self.login_type = kwargs.get("login_type")
-        self.login_phone = kwargs.get("login_phone")
+        for key in kwargs.keys():
+            setattr(self, key, kwargs[key])
 
     async def update_cookies(self):
         self.cookies = await self.browser_context.cookies()
@@ -48,7 +49,7 @@ class XiaoHongShuCrawler(Crawler):
         async with async_playwright() as playwright:
             # launch browser and create single browser context
             chromium = playwright.chromium
-            browser = await chromium.launch(headless=False)
+            browser = await chromium.launch(headless=True)
             self.browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 user_agent=self.user_agent,
@@ -90,13 +91,22 @@ class XiaoHongShuCrawler(Crawler):
         # There are two ways to log in:
         # 1. Semi-automatic: Log in by scanning the QR code.
         # 2. Fully automatic: Log in using forwarded text message notifications
+        # 3. handby automatic: Log in using preset cookie
         #  which includes mobile phone number and verification code.
         if self.login_type == "qrcode":
             await self.login_by_qrcode()
         elif self.login_type == "phone":
             await self.login_by_mobile()
-        else:
+        elif self.login_type == "handby":
+            await self.browser_context.add_cookies([{
+                'name': 'web_session',
+                'value': self.web_session,
+                'domain': ".xiaohongshu.com",
+                'path': "/"
+            }])
+        else: 
             pass
+            
 
     async def login_by_mobile(self):
         print("Start executing mobile phone number + verification code login on Xiaohongshu. ...")
@@ -203,7 +213,10 @@ class XiaoHongShuCrawler(Crawler):
                 for post_item in posts_res.get("items"):
                     max_note_len -= 1
                     note_id = post_item.get("id")
-                    note_detail = await self.xhs_client.get_note_by_id(note_id)
+                    try:
+                        note_detail = await self.xhs_client.get_note_by_id(note_id)
+                    except DataFetchError as ex:
+                        continue
                     await xhs_model.update_xhs_note(note_detail)
                     await asyncio.sleep(0.05)
                     note_list.append(note_id)
