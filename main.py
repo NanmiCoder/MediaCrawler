@@ -23,9 +23,9 @@ async def main():
     parser = argparse.ArgumentParser(description='Media crawler program.')
     parser.add_argument('--platform', type=str, help='Media platform select (xhs|dy)...', default=config.platform)
     parser.add_argument('--keywords', type=str, help='Search note/page keywords...', default=config.keyword)
-    parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | handby)', default=config.login_type)
-    parser.add_argument('--web_session', type=str, help='cookies to keep log in', default=config.login_webSession)
+    parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)', default=config.login_type)
     parser.add_argument('--phone', type=str, help='Login phone', default=config.login_phone)
+    parser.add_argument('--cookies', type=str, help='cookies to keep log in', default=config.cookies)
 
     args = parser.parse_args()
     crawler = CrawlerFactory().create_crawler(platform=args.platform)
@@ -33,7 +33,7 @@ async def main():
         keywords=args.keywords,
         login_phone=args.phone,
         login_type=args.lt,
-        web_session=args.web_session
+        cookie_str=args.cookies
     )
     await crawler.start()
 

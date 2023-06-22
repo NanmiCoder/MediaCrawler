@@ -30,7 +30,8 @@ class XiaoHongShuCrawler(Crawler):
         self.login_type = None
         self.keywords = None
         self.web_session = None
-        self.cookies: Optional[List[Cookie]] = None
+        self.cookies: Optional[List[Cookie]] = None  # cookies from browser context
+        self.cookie_str: Optional[str] = None  # cookie string from config or command line
         self.browser_context: Optional[BrowserContext] = None
         self.context_page: Optional[Page] = None
         self.proxy: Optional[Dict] = None
@@ -88,28 +89,51 @@ class XiaoHongShuCrawler(Crawler):
 
     async def login(self):
         """login xiaohongshu website and keep webdriver login state"""
-        # There are two ways to log in:
+        # There are three ways to log in:
         # 1. Semi-automatic: Log in by scanning the QR code.
         # 2. Fully automatic: Log in using forwarded text message notifications
-        # 3. handby automatic: Log in using preset cookie
-        #  which includes mobile phone number and verification code.
+        # 3. Semi-automatic: Log in using preset cookie
         if self.login_type == "qrcode":
             await self.login_by_qrcode()
         elif self.login_type == "phone":
             await self.login_by_mobile()
-        elif self.login_type == "handby":
-            await self.browser_context.add_cookies([{
-                'name': 'web_session',
-                'value': self.web_session,
-                'domain': ".xiaohongshu.com",
-                'path': "/"
-            }])
-        else: 
+        elif self.login_type == "cookie":
+            # cookie str convert to cookie dict
+            for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
+                await self.browser_context.add_cookies([{
+                    'name': key,
+                    'value': value,
+                    'domain': ".xiaohongshu.com",
+                    'path': "/"
+                }])
+        else:
             pass
-            
 
     async def login_by_mobile(self):
         print("Start executing mobile phone number + verification code login on Xiaohongshu. ...")
+
+        await asyncio.sleep(1)
+        try:
+            # After entering the main page of Xiaohongshu,
+            # the login window may not pop up automatically and you need to manually click the login button.
+            login_button_ele = await self.context_page.wait_for_selector(
+                selector="xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button",
+                timeout=5000
+            )
+            await login_button_ele.click()
+
+            # There are also two types of login dialog boxes for pop-ups.
+            # One type directly shows the phone number and verification code.
+            # Another type requires clicking to switch to mobile login.
+            element = await self.context_page.wait_for_selector(
+                selector='xpath=//div[@class="login-container"]//div[@class="other-method"]/div[1]',
+                timeout=5000
+            )
+            await element.click()
+        except:
+            print("have not found mobile button icon and keep going ...")
+        await asyncio.sleep(1)
+
         login_container_ele = await self.context_page.wait_for_selector("div.login-container")
         # Fill login phone
         input_ele = await login_container_ele.query_selector("label.phone > input")
@@ -158,16 +182,25 @@ class XiaoHongShuCrawler(Crawler):
     async def login_by_qrcode(self):
         """login xiaohongshu website and keep webdriver login state"""
         print("Start scanning QR code to log in to Xiaohongshu. ...")
+        qrcode_img_selector = "xpath=//img[@class='qrcode-img']"
 
         # find login qrcode
         base64_qrcode_img = await utils.find_login_qrcode(
             self.context_page,
-            selector="div.login-container > div.left > div.qrcode > img"
+            selector=qrcode_img_selector
         )
         if not base64_qrcode_img:
-            # todo ...if this website does not automatically popup login dialog box, we will manual click login button
-            print("login failed , have not found qrcode please check ....")
-            sys.exit()
+            print("have not found qrcode and try again get it ....")
+            # if this website does not automatically popup login dialog box, we will manual click login button
+            login_button_ele = self.context_page.locator("xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button")
+            await login_button_ele.click()
+            base64_qrcode_img = await utils.find_login_qrcode(
+                self.context_page,
+                selector=qrcode_img_selector
+            )
+            if not base64_qrcode_img:
+                print("login failed , program exit ...")
+                sys.exit()
 
         # get not logged session
         current_cookie = await self.browser_context.cookies()

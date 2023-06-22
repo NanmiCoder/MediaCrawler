@@ -61,6 +61,22 @@ def convert_cookies(cookies: Optional[List[Cookie]]) -> Tuple[str, Dict]:
     return cookies_str, cookie_dict
 
 
+def convert_str_cookie_to_dict(cookie_str: str) -> Dict:
+    cookie_dict = dict()
+    if not cookie_str:
+        return cookie_dict
+    for cookie in cookie_str.split(";"):
+        cookie = cookie.strip()
+        if not cookie:
+            continue
+        cookie = cookie.split("=")
+        cookie_value = cookie[1]
+        if isinstance(cookie_value, list):
+            cookie_value = "".join(cookie_value)
+        cookie_dict[cookie[0]] = cookie_value
+    return cookie_dict
+
+
 def get_current_timestamp():
     return int(time.time() * 1000)
 

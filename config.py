@@ -2,9 +2,12 @@
 
 platform = "xhs"
 keyword = "健身"
-login_type = "handby"  # qrcode or phone
-login_phone = "13812345678"  # your login phone
-login_webSession="040069b5f35b1cfef9787551bd364b86f4d839"
+login_type = "cookie"  # qrcode or phone or cookie
+login_phone = ""  # your login phone
+
+# If it's on the Xiaohongshu platform, only the web_session cookie will be kept.
+# web_session=040069b2acxxxxxxxxxxxxxxxxxxxx;
+cookies = ""
 
 # redis config
 redis_db_host = "redis://127.0.0.1"
