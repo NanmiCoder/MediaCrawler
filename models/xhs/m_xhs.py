@@ -1,6 +1,6 @@
 from typing import Dict
 
-import utils
+from tools import utils
 
 
 async def update_xhs_note(note_item: Dict):
@@ -24,7 +24,7 @@ async def update_xhs_note(note_item: Dict):
         "last_modify_ts": utils.get_current_timestamp(),
     }
     # do something ...
-    print("update note:", local_db_item)
+    print("xhs note:", local_db_item)
 
 
 async def update_xhs_note_comment(note_id: str, comment_item: Dict):
@@ -43,4 +43,4 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
         "last_modify_ts": utils.get_current_timestamp(),
     }
     # do something ...
-    print("update comment:", local_db_item)
+    print("xhs note comment:", local_db_item)

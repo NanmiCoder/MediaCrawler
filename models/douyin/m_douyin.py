@@ -1,7 +1,7 @@
 import json
 from typing import Dict, List
 
-import utils
+from tools import utils
 
 
 async def update_douyin_aweme(aweme_item: Dict):
@@ -24,7 +24,7 @@ async def update_douyin_aweme(aweme_item: Dict):
         "last_modify_ts": utils.get_current_timestamp(),
     }
     # do something ...
-    print(f"update douyin aweme id:{aweme_id}, title:{local_db_item.get('title')}")
+    print(f"douyin aweme id:{aweme_id}, title:{local_db_item.get('title')}")
 
 
 async def batch_update_dy_aweme_comments(aweme_id: str, comments: List[Dict]):
@@ -61,4 +61,4 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "last_modify_ts": utils.get_current_timestamp(),
     }
     # do something ...
-    print(f"update aweme comment: {comment_id}, content: {local_db_item.get('content')}")
+    print(f"douyin aweme comment: {comment_id}, content: {local_db_item.get('content')}")

@@ -2,6 +2,7 @@ import re
 import time
 import random
 import base64
+import logging
 from io import BytesIO
 from typing import Optional, Dict, List, Tuple
 
@@ -91,3 +92,13 @@ def match_interact_info_count(count_str: str) -> int:
         return int(number)
     else:
         return 0
+
+
+def init_loging_config():
+    level = logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s %(name)s %(levelname)s %(message)s ",
+        datefmt='%Y-%m-%d  %H:%M:%S'
+    )
+    logging.Logger("Media Crawler")

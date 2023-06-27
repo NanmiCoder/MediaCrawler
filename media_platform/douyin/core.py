@@ -1,42 +1,64 @@
 import logging
 import asyncio
 from asyncio import Task
-from typing import Optional, List, Dict
+from argparse import Namespace
+from typing import Optional, List, Dict, Tuple
 
 from playwright.async_api import async_playwright
 from playwright.async_api import Page
 from playwright.async_api import Cookie
 from playwright.async_api import BrowserContext
 
-import utils
+import config
+from tools import utils
 from .client import DOUYINClient
 from .exception import DataFetchError
-from base_crawler import Crawler
+from .login import DouYinLogin
+from base.base_crawler import AbstractCrawler
+from base.proxy_account_pool import AccountPool
 from models import douyin
 
 
-class DouYinCrawler(Crawler):
+class DouYinCrawler(AbstractCrawler):
     def __init__(self):
-        self.keywords: Optional[str] = None
         self.cookies: Optional[List[Cookie]] = None
         self.browser_context: Optional[BrowserContext] = None
         self.context_page: Optional[Page] = None
         self.proxy: Optional[Dict] = None
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
         self.dy_client: Optional[DOUYINClient] = None
+        self.command_args: Optional[Namespace] = None
+        self.account_pool: Optional[AccountPool] = None
 
     def init_config(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    def create_proxy_info(self) -> Tuple[str, Dict, str]:
+        """Create proxy info for playwright and httpx"""
+        # phone: 13012345671
+        # ip_proxy: 111.122.xx.xx1:8888
+        # 手机号和IP代理都是从账号池中获取的，并且它们是固定绑定的
+        phone, ip_proxy = self.account_pool.get_account()
+        playwright_proxy = {
+            "server": f"{config.IP_PROXY_PROTOCOL}{ip_proxy}",
+            "username": config.IP_PROXY_USER,
+            "password": config.IP_PROXY_PASSWORD,
+        }
+        httpx_proxy = f"{config.IP_PROXY_PROTOCOL}{config.IP_PROXY_USER}:{config.IP_PROXY_PASSWORD}@{ip_proxy}"
+        return phone, playwright_proxy, httpx_proxy
+
     async def start(self):
+        account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
+        if not config.ENABLE_IP_PROXY:
+            playwright_proxy, httpx_proxy = None, None
+
         async with async_playwright() as playwright:
             chromium = playwright.chromium
-            browser = await chromium.launch(headless=True)
+            browser = await chromium.launch(headless=True, proxy=playwright_proxy)
             self.browser_context = await browser.new_context(
                 viewport={"width": 1800, "height": 900},
                 user_agent=self.user_agent,
-                proxy=self.proxy
             )
             # execute JS to bypass anti automation/crawler detection
             await self.browser_context.add_init_script(path="libs/stealth.min.js")
@@ -44,14 +66,23 @@ class DouYinCrawler(Crawler):
             await self.context_page.goto("https://www.douyin.com", wait_until="domcontentloaded")
             await asyncio.sleep(3)
 
-            # scan qrcode login
-            # await self.login()
+            # begin login
+            login_obj = DouYinLogin(
+                login_type=self.command_args.lt,
+                login_phone=account_phone,
+                browser_context=self.browser_context,
+                context_page=self.context_page,
+                cookie_str=config.COOKIES
+            )
+            # await login_obj.begin()
+
+            # update cookies
             await self.update_cookies()
 
             # init request client
             cookie_str, cookie_dict = utils.convert_cookies(self.cookies)
             self.dy_client = DOUYINClient(
-                proxies=self.proxy,
+                proxies=httpx_proxy,
                 headers={
                     "User-Agent": self.user_agent,
                     "Cookie": cookie_str,
@@ -73,23 +104,10 @@ class DouYinCrawler(Crawler):
     async def update_cookies(self):
         self.cookies = await self.browser_context.cookies()
 
-    async def login(self):
-        """login douyin website and keep webdriver login state"""
-        print("Begin login douyin ...")
-        # todo ...
-
-    async def check_login_state(self) -> bool:
-        """Check if the current login status is successful and return True otherwise return False"""
-        current_cookie = await self.browser_context.cookies()
-        _, cookie_dict = utils.convert_cookies(current_cookie)
-        if cookie_dict.get("LOGIN_STATUS") == "1":
-            return True
-        return False
-
     async def search_posts(self):
-        # It is possible to modify the source code to allow for the passing of a batch of keywords.
-        for keyword in [self.keywords]:
-            print("Begin search douyin keywords: ", keyword)
+        logging.info("Begin search douyin keywords")
+        for keyword in config.KEYWORDS.split(","):
+            logging.info(f"Current keyword: {keyword}")
             aweme_list: List[str] = []
             max_note_len = 20
             page = 0
