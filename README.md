@@ -44,40 +44,40 @@
 ```
 MediaCrawler
 ├── base 
-│   ├── base_crawler.py # 项目的抽象类
-│   └── proxy_account_pool.py # 账号与IP代理池
+│   ├── base_crawler.py         # 项目的抽象类
+│   └── proxy_account_pool.py   # 账号与IP代理池
 ├── config 
-│   ├── account_config.py # 基础配置
-│   └── base_config.py # 账号池配置
+│   ├── account_config.py       # 基础配置
+│   └── base_config.py          # 账号池配置
 ├── images 
 │   ├── douyin.gif
 │   └── xiaohongshu.git
 ├── libs 
-│   ├── douyin.js # 抖音Sign函数
-│   └── stealth.min.js # 去除浏览器自动化特征的JS
+│   ├── douyin.js               # 抖音Sign函数
+│   └── stealth.min.js          # 去除浏览器自动化特征的JS
 ├── media_platform
-│   ├── douyin # 抖音crawler实现
-│   │   ├── client.py # 抖音API httpx 请求封装
-│   │   ├── core.py # 抖音crawler的核心实现
-│   │   ├── exception.py # 抖音crawler的异常处理
-│   │   ├── field.py # 抖音crawler的字段定义
-│   │   └── login.py # 抖音crawler的登录实现  
-│   └── xiaohongshu # 小红书crawler实现
-│       ├── client.py # 小红书API httpx 请求封装
-│       ├── core.py # 小红书crawler的核心实现
-│       ├── exception.py # 小红书crawler的异常处理
-│       ├── field.py # 小红书crawler的字段定义
-│       ├── help.py # 小红书crawler的辅助函数
-│       └── login.py # 小红书crawler的登录实现
+│   ├── douyin                  # 抖音crawler实现
+│   │   ├── client.py           # httpx 请求封装
+│   │   ├── core.py             # 核心实现
+│   │   ├── exception.py        # 异常处理
+│   │   ├── field.py            # 字段定义
+│   │   └── login.py            # 登录实现  
+│   └── xiaohongshu             # 小红书crawler实现
+│       ├── client.py           # API httpx 请求封装
+│       ├── core.py             # 核心实现
+│       ├── exception.py        # 异常处理
+│       ├── field.py            # 字段定义
+│       ├── help.py             # 辅助函数
+│       └── login.py            # 登录实现
 ├── modles 
 │   ├── douyin
 │   │   └── m_douyin.py
 │   └── xhs
 │       └── m_xhs.py
 ├── tools
-│   └── utils.py # 工具函数
-├── main.py # 程序入口
-└── recv_sms_notification.py # 短信转发器的HTTP SERVER接口
+│   └── utils.py                # 工具函数
+├── main.py                     # 程序入口
+└── recv_sms_notification.py    # 短信转发器的HTTP SERVER接口
 ```
 
 ## 小红书运行截图
@@ -116,8 +116,7 @@ MediaCrawler
 备注：
 
 - 小红书这边一个手机号一天只能发10条短信（悠着点），目前在发验证码时还未触发滑块验证，估计多了之后也会有~
--
-短信转发软件会不会监控自己手机上其他短信内容？（理论上应该不会，因为[短信转发仓库](https://github.com/pppscn/SmsForwarder)
+- 短信转发软件会不会监控自己手机上其他短信内容？（理论上应该不会，因为[短信转发仓库](https://github.com/pppscn/SmsForwarder)
 star还是蛮多的）
 
 
