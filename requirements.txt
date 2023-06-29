@@ -5,3 +5,4 @@ aioredis==2.0.1
 tenacity==8.2.2
 tornado==6.3.2
 PyExecJS==1.5.1
+opencv-python==4.7.0.72

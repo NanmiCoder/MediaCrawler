@@ -49,13 +49,25 @@ class DouYinCrawler(AbstractCrawler):
         return phone, playwright_proxy, httpx_proxy
 
     async def start(self):
-        account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
+        # phone: 1340xxxx, ip_proxy: 47.xxx.xxx.xxx:8888
+        account_phone, ip_proxy = self.account_pool.get_account()
+
+        # 抖音平台如果开启代理登录的话，会被风控，所以这里不开启代理
+        playwright_proxy = None
+        # playwright_proxy = {
+        #    "server": f"{config.ip_proxy_protocol}{ip_proxy}",
+        #    "username": config.ip_proxy_user,
+        #    "password": config.ip_proxy_password,
+        # }
+
+        httpx_proxy = f"{config.IP_PROXY_PROTOCOL}{config.IP_PROXY_USER}:{config.IP_PROXY_PASSWORD}@{ip_proxy}"
         if not config.ENABLE_IP_PROXY:
-            playwright_proxy, httpx_proxy = None, None
+            playwright_proxy = None
+            httpx_proxy = None
 
         async with async_playwright() as playwright:
             chromium = playwright.chromium
-            browser = await chromium.launch(headless=True, proxy=playwright_proxy)
+            browser = await chromium.launch(headless=config.HEADLESS, proxy=playwright_proxy)
             self.browser_context = await browser.new_context(
                 viewport={"width": 1800, "height": 900},
                 user_agent=self.user_agent,
@@ -74,7 +86,7 @@ class DouYinCrawler(AbstractCrawler):
                 context_page=self.context_page,
                 cookie_str=config.COOKIES
             )
-            # await login_obj.begin()
+            await login_obj.begin()
 
             # update cookies
             await self.update_cookies()
