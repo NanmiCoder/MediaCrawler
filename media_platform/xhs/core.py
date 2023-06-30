@@ -52,6 +52,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         httpx_proxy = f"{config.IP_PROXY_PROTOCOL}{config.IP_PROXY_USER}:{config.IP_PROXY_PASSWORD}@{ip_proxy}"
         return phone, playwright_proxy, httpx_proxy
 
+
     async def start(self):
         account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
         if not config.ENABLE_IP_PROXY:
@@ -100,13 +101,76 @@ class XiaoHongShuCrawler(AbstractCrawler):
             )
 
             # Search for notes and retrieve their comment information.
-            await self.search_posts()
+            # await self.search_posts()
 
             # block main crawler coroutine
-            await asyncio.Event().wait()
+            # await asyncio.Event().wait()
+            print(await self.xhs_client.get_note_by_id("648912e70000000012033f1a"))
+            await self.close()
+
+
+    async def start2(self, note_id: str):
+        account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
+        if not config.ENABLE_IP_PROXY:
+            playwright_proxy, httpx_proxy = None, None
+
+        async with async_playwright() as playwright:
+            # launch browser and create single browser context
+            chromium = playwright.chromium
+            browser = await chromium.launch(headless=config.HEADLESS, proxy=playwright_proxy)
+            self.browser_context = await browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent=self.user_agent
+            )
+
+            # execute JS to bypass anti automation/crawler detection
+            await self.browser_context.add_init_script(path="libs/stealth.min.js")
+            self.context_page = await self.browser_context.new_page()
+            await self.context_page.goto(self.index_url)
+
+            # begin login
+            login_obj = XHSLogin(
+                login_type=self.command_args.lt,
+                login_phone=account_phone,
+                browser_context=self.browser_context,
+                context_page=self.context_page,
+                cookie_str=config.COOKIES
+            )
+            await login_obj.begin()
+
+            # update cookies
+            await self.update_cookies()
+
+            # init request client
+            cookie_str, cookie_dict = utils.convert_cookies(self.cookies)
+            self.xhs_client = XHSClient(
+                proxies=httpx_proxy,
+                headers={
+                    "User-Agent": self.user_agent,
+                    "Cookie": cookie_str,
+                    "Origin": "https://www.xiaohongshu.com",
+                    "Referer": "https://www.xiaohongshu.com",
+                    "Content-Type": "application/json;charset=UTF-8"
+                },
+                playwright_page=self.context_page,
+                cookie_dict=cookie_dict,
+            )
+
+            # Search for notes and retrieve their comment information.
+            # await self.search_posts()
+
+            # block main crawler coroutine
+            # await asyncio.Event().wait()
+            s=await self.xhs_client.get_note_by_id(note_id)
+            await self.close()
+            return s
+
+
+
+
 
     async def close(self):
-        await self.browser_context.close()
+        # await self.browser_context.close()
         await self.browser_context.close()
         logging.info("Browser context closed ...")
 

@@ -2,7 +2,7 @@ import sys
 import asyncio
 import logging
 
-import aioredis
+import redis
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -80,7 +80,7 @@ class XHSLogin(AbstractLogin):
         await send_btn_ele.click()  # 点击发送验证码
         sms_code_input_ele = await login_container_ele.query_selector("label.auth-code > input")
         submit_btn_ele = await login_container_ele.query_selector("div.input-container > button")
-        redis_obj = aioredis.from_url(url=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD, decode_responses=True)
+        redis_obj = redis.from_url(url=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD, decode_responses=True)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         no_logged_in_session = ""
         while max_get_sms_code_time > 0:
