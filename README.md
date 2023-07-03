@@ -96,8 +96,6 @@ MediaCrawler
 
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
 
-- 如果该项目对你有帮助，可以请作者喝杯咖啡😊😊😊
-<img src="https://s2.loli.net/2023/06/16/luz5tyeHgFxhbfc.png" style="margin-top:10px">
 
 ## 关于手机号+验证码登录的说明
 
