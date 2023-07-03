@@ -1,6 +1,7 @@
 import sys
 import asyncio
 import logging
+import functools
 
 import aioredis
 from tenacity import (
@@ -146,7 +147,10 @@ class XHSLogin(AbstractLogin):
         no_logged_in_session = cookie_dict.get("web_session")
 
         # show login qrcode
-        utils.show_qrcode(base64_qrcode_img)
+        # utils.show_qrcode(base64_qrcode_img)
+        partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
+        asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
+
         logging.info(f"waiting for scan code login, remaining time is 20s")
         login_flag: bool = await self.check_login_state(no_logged_in_session)
         if not login_flag:

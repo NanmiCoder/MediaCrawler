@@ -1,6 +1,7 @@
 import sys
 import logging
 import asyncio
+import functools
 
 import aioredis
 from tenacity import (
@@ -104,6 +105,9 @@ class DouYinLogin(AbstractLogin):
             sys.exit()
 
         # show login qrcode
+            # utils.show_qrcode(base64_qrcode_img)
+        partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
+        asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
         utils.show_qrcode(base64_qrcode_img)
         await asyncio.sleep(2)
 
