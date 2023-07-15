@@ -21,7 +21,6 @@ class CrawlerFactory:
 
 
 async def main():
-    utils.init_loging_config()
     # define command line params ...
     parser = argparse.ArgumentParser(description='Media crawler program.')
     parser.add_argument('--platform', type=str, help='Media platform select (xhs|dy)...', default=config.PLATFORM)
@@ -37,20 +36,6 @@ async def main():
         account_pool=account_pool
     )
     await crawler.start()
-
-    """
-    # retry when exception ...
-    while True:
-        try:
-            await crawler.start()
-        except Exception as e:
-            logging.info(f"crawler start error: {e} ...")
-            await crawler.close()
-            # If you encounter an exception
-            # sleep for a period of time before retrying
-            # to avoid frequent requests that may result in the account being blocked.
-            await asyncio.sleep(config.RETRY_INTERVAL)
-    """
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+import os
 import random
 import asyncio
 import logging
@@ -8,6 +9,7 @@ from argparse import Namespace
 from playwright.async_api import Page
 from playwright.async_api import BrowserContext
 from playwright.async_api import async_playwright
+from playwright.async_api import BrowserType
 
 import config
 from tools import utils
@@ -31,8 +33,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
         self.account_pool: Optional[AccountPool] = None
 
     def init_config(self, **kwargs):
-        for key in kwargs.keys():
-            setattr(self, key, kwargs[key])
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     async def start(self):
         account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
@@ -66,13 +68,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
             # Search for notes and retrieve their comment information.
             await self.search_posts()
 
-            logging.info("Xhs Crawler finished ...")
+            utils.logger.info("Xhs Crawler finished ...")
 
     async def search_posts(self):
         """Search for notes and retrieve their comment information."""
-        logging.info("Begin search xiaohongshu keywords")
+        utils.logger.info("Begin search xiaohongshu keywords")
         for keyword in config.KEYWORDS.split(","):
-            logging.info(f"Current keyword: {keyword}")
+            utils.logger.info(f"Current keyword: {keyword}")
             note_list: List[str] = []
             max_note_len = config.MAX_PAGE_NUM
             page = 1
@@ -88,13 +90,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     try:
                         note_detail = await self.xhs_client.get_note_by_id(note_id)
                     except DataFetchError as ex:
-                        logging.error(f"Get note detail error: {ex}")
+                        utils.logger.error(f"Get note detail error: {ex}")
                         continue
                     await xhs_model.update_xhs_note(note_detail)
                     await asyncio.sleep(0.05)
                     note_list.append(note_id)
-            logging.info(f"keyword:{keyword}, note_list:{note_list}")
-            # await self.batch_get_note_comments(note_list)
+            utils.logger.info(f"keyword:{keyword}, note_list:{note_list}")
+            await self.batch_get_note_comments(note_list)
 
     async def batch_get_note_comments(self, note_list: List[str]):
         """Batch get note comments"""
@@ -106,7 +108,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def get_comments(self, note_id: str):
         """Get note comments"""
-        logging.info(f"Begin get note id comments {note_id}")
+        utils.logger.info(f"Begin get note id comments {note_id}")
         all_comments = await self.xhs_client.get_note_all_comments(note_id=note_id, crawl_interval=random.random())
         for comment in all_comments:
             await xhs_model.update_xhs_note_comment(note_id=note_id, comment_item=comment)
@@ -143,12 +145,21 @@ class XiaoHongShuCrawler(AbstractCrawler):
         )
         return xhs_client_obj
 
-    async def launch_browser(self, chromium, playwright_proxy, user_agent, headless=True) -> BrowserContext:
+    async def launch_browser(
+            self,
+            chromium: BrowserType,
+            playwright_proxy: Optional[Dict],
+            user_agent: Optional[str],
+            headless: bool = True
+    ) -> BrowserContext:
+        utils.logger.info("Begin create browser context ...")
         """Launch browser and create browser context"""
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
+            # we will save login state to avoid login every time
+            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % self.command_args.platform)
             browser_context = await chromium.launch_persistent_context(
-                user_data_dir=config.USER_DATA_DIR % self.command_args.platform,
+                user_data_dir=user_data_dir,
                 accept_downloads=True,
                 headless=headless,
                 proxy=playwright_proxy,
@@ -167,4 +178,4 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def close(self):
         """Close browser context"""
         await self.browser_context.close()
-        logging.info("Browser context closed ...")
+        utils.logger.info("Browser context closed ...")

@@ -50,7 +50,7 @@ class XHSLogin(AbstractLogin):
 
     async def begin(self):
         """Start login xiaohongshu"""
-        logging.info("Begin login xiaohongshu ...")
+        utils.logger.info("Begin login xiaohongshu ...")
         if self.login_type == "qrcode":
             await self.login_by_qrcode()
         elif self.login_type == "phone":
@@ -62,7 +62,7 @@ class XHSLogin(AbstractLogin):
 
     async def login_by_mobile(self):
         """Login xiaohongshu by mobile"""
-        logging.info("Begin login xiaohongshu by mobile ...")
+        utils.logger.info("Begin login xiaohongshu by mobile ...")
         await asyncio.sleep(1)
         try:
             # 小红书进入首页后，有可能不会自动弹出登录框，需要手动点击登录按钮
@@ -79,21 +79,24 @@ class XHSLogin(AbstractLogin):
             )
             await element.click()
         except Exception as e:
-            logging.info("have not found mobile button icon and keep going ...")
+            utils.logger.info("have not found mobile button icon and keep going ...")
+
         await asyncio.sleep(1)
         login_container_ele = await self.context_page.wait_for_selector("div.login-container")
         input_ele = await login_container_ele.query_selector("label.phone > input")
         await input_ele.fill(self.login_phone)
         await asyncio.sleep(0.5)
+
         send_btn_ele = await login_container_ele.query_selector("label.auth-code > span")
         await send_btn_ele.click()  # 点击发送验证码
         sms_code_input_ele = await login_container_ele.query_selector("label.auth-code > input")
         submit_btn_ele = await login_container_ele.query_selector("div.input-container > button")
+
         redis_obj = aioredis.from_url(url=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD, decode_responses=True)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         no_logged_in_session = ""
         while max_get_sms_code_time > 0:
-            logging.info(f"get sms code from redis remaining time {max_get_sms_code_time}s ...")
+            utils.logger.info(f"get sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"xhs_{self.login_phone}"
             sms_code_value = await redis_obj.get(sms_code_key)
@@ -119,17 +122,16 @@ class XHSLogin(AbstractLogin):
         try:
             await self.check_login_state(no_logged_in_session)
         except RetryError:
-            logging.info("Login xiaohongshu failed by mobile login method ...")
+            utils.logger.info("Login xiaohongshu failed by mobile login method ...")
             sys.exit()
 
         wait_redirect_seconds = 5
-        logging.info(f"Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+        utils.logger.info(f"Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
     async def login_by_qrcode(self):
         """login xiaohongshu website and keep webdriver login state"""
-        logging.info("Begin login xiaohongshu by qrcode ...")
-        await asyncio.sleep(10)
+        utils.logger.info("Begin login xiaohongshu by qrcode ...")
         # login_selector = "div.login-container > div.left > div.qrcode > img"
         qrcode_img_selector = "xpath=//img[@class='qrcode-img']"
         # find login qrcode
@@ -138,7 +140,7 @@ class XHSLogin(AbstractLogin):
             selector=qrcode_img_selector
         )
         if not base64_qrcode_img:
-            logging.info("login failed , have not found qrcode please check ....")
+            utils.logger.info("login failed , have not found qrcode please check ....")
             # if this website does not automatically popup login dialog box, we will manual click login button
             await asyncio.sleep(0.5)
             login_button_ele = self.context_page.locator("xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button")
@@ -162,20 +164,20 @@ class XHSLogin(AbstractLogin):
         partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
         asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
 
-        logging.info(f"waiting for scan code login, remaining time is 20s")
+        utils.logger.info(f"waiting for scan code login, remaining time is 20s")
         try:
             await self.check_login_state(no_logged_in_session)
         except RetryError:
-            logging.info("Login xiaohongshu failed by qrcode login method ...")
+            utils.logger.info("Login xiaohongshu failed by qrcode login method ...")
             sys.exit()
 
         wait_redirect_seconds = 5
-        logging.info(f"Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+        utils.logger.info(f"Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
     async def login_by_cookies(self):
         """login xiaohongshu website by cookies"""
-        logging.info("Begin login xiaohongshu by cookie ...")
+        utils.logger.info("Begin login xiaohongshu by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
             await self.browser_context.add_cookies([{
                 'name': key,

@@ -82,7 +82,7 @@ class XHSClient:
 
     async def ping(self) -> bool:
         """get a note to check if login state is ok"""
-        logging.info("begin to ping xhs...")
+        utils.logger.info("begin to ping xhs...")
         note_id = "5e5cb38a000000000100185e"
         try:
             note_card: Dict = await self.get_note_by_id(note_id)

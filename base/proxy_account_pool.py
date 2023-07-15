@@ -1,3 +1,5 @@
+from typing import Tuple, Optional
+
 import config
 
 
@@ -8,14 +10,14 @@ class PhonePool:
         self.phones = []
         self.used_phones = set()
 
-    def add_phone(self, phone):
+    def add_phone(self, phone: str) -> bool:
         """add phone to the pool"""
         if phone not in self.phones:
             self.phones.append(phone)
             return True
         return False
 
-    def remove_phone(self, phone):
+    def remove_phone(self, phone: str) -> bool:
         """remove phone from the pool"""
         if phone in self.used_phones:
             self.phones.remove(phone)
@@ -23,7 +25,7 @@ class PhonePool:
             return True
         return False
 
-    def get_phone(self):
+    def get_phone(self) -> Optional[str]:
         """get phone and mark as used"""
         if self.phones:
             left_phone = self.phones.pop(0)
@@ -49,7 +51,7 @@ class IPPool:
             return True
         return False
 
-    def remove_ip(self, ip):
+    def remove_ip(self, ip: str) -> bool:
         """remove ip"""
         if ip in self.used_ips:
             self.ips.remove(ip)
@@ -57,7 +59,7 @@ class IPPool:
             return True
         return False
 
-    def get_ip(self):
+    def get_ip(self) -> Optional[str]:
         """get ip and mark as used"""
         if self.ips:
             left_ips = self.ips.pop(0)
@@ -78,19 +80,19 @@ class AccountPool:
         self.phone_pool = PhonePool()
         self.ip_pool = IPPool()
 
-    def add_account(self, phone, ip):
+    def add_account(self, phone: str, ip: str) -> bool:
         """add account to pool with phone and ip"""
         if self.phone_pool.add_phone(phone) and self.ip_pool.add_ip(ip):
             return True
         return False
 
-    def remove_account(self, phone, ip):
+    def remove_account(self, phone: str, ip: str) -> bool:
         """remove account from pool """
         if self.phone_pool.remove_phone(phone) and self.ip_pool.remove_ip(ip):
             return True
         return False
 
-    def get_account(self):
+    def get_account(self) -> Tuple[str, str]:
         """get account if no account, reload account pool"""
         phone = self.phone_pool.get_phone()
         ip = self.ip_pool.get_ip()

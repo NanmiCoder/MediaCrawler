@@ -108,7 +108,12 @@ def init_loging_config():
         format="%(asctime)s %(name)s %(levelname)s %(message)s ",
         datefmt='%Y-%m-%d  %H:%M:%S'
     )
-    logging.Logger("Media Crawler")
+    _logger = logging.getLogger("MediaCrawler")
+    _logger.setLevel(level)
+    return _logger
+
+
+logger = init_loging_config()
 
 
 class Slide:
