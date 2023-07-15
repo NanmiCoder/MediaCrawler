@@ -163,3 +163,5 @@ cython_debug/
 *.iml
 .idea
 /temp_image/
+/xhs_user_data_dir/
+/dy_user_data_dir/

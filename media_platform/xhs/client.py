@@ -1,13 +1,16 @@
 import json
+import logging
 import asyncio
 from typing import Optional, Dict
 
 import httpx
 from playwright.async_api import Page
+from playwright.async_api import BrowserContext
 
 from .help import sign, get_search_id
 from .field import SearchSortType, SearchNoteType
 from .exception import DataFetchError, IPBlockError
+from tools import utils
 
 
 class XHSClient:
@@ -76,6 +79,21 @@ class XHSClient:
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=headers)
+
+    async def ping(self) -> bool:
+        """get a note to check if login state is ok"""
+        logging.info("begin to ping xhs...")
+        note_id = "5e5cb38a000000000100185e"
+        try:
+            note_card: Dict = await self.get_note_by_id(note_id)
+            return note_card.get("note_id") == note_id
+        except DataFetchError:
+            return False
+
+    async def update_cookies(self, browser_context: BrowserContext):
+        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+        self.headers["Cookie"] = cookie_str
+        self.cookie_dict = cookie_dict
 
     async def get_note_by_keyword(
             self, keyword: str,

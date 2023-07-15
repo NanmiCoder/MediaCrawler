@@ -8,7 +8,8 @@ from tenacity import (
     retry,
     stop_after_attempt,
     wait_fixed,
-    retry_if_result
+    retry_if_result,
+    RetryError
 )
 from playwright.async_api import Page
 from playwright.async_api import BrowserContext
@@ -35,7 +36,11 @@ class XHSLogin(AbstractLogin):
 
     @retry(stop=stop_after_attempt(20), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
-        """Check if the current login status is successful and return True otherwise return False"""
+        """
+            Check if the current login status is successful and return True otherwise return False
+            retry decorator will retry 20 times if the return value is False, and the retry interval is 1 second
+            if max retry times reached, raise RetryError
+        """
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
         current_web_session = cookie_dict.get("web_session")
@@ -44,6 +49,8 @@ class XHSLogin(AbstractLogin):
         return False
 
     async def begin(self):
+        """Start login xiaohongshu"""
+        logging.info("Begin login xiaohongshu ...")
         if self.login_type == "qrcode":
             await self.login_by_qrcode()
         elif self.login_type == "phone":
@@ -54,6 +61,7 @@ class XHSLogin(AbstractLogin):
             raise ValueError("Invalid Login Type Currently only supported qrcode or phone or cookies ...")
 
     async def login_by_mobile(self):
+        """Login xiaohongshu by mobile"""
         logging.info("Begin login xiaohongshu by mobile ...")
         await asyncio.sleep(1)
         try:
@@ -108,9 +116,10 @@ class XHSLogin(AbstractLogin):
             # todo ... 应该还需要检查验证码的正确性有可能输入的验证码不正确
             break
 
-        login_flag: bool = await self.check_login_state(no_logged_in_session)
-        if not login_flag:
-            logging.info("login failed please confirm ...")
+        try:
+            await self.check_login_state(no_logged_in_session)
+        except RetryError:
+            logging.info("Login xiaohongshu failed by mobile login method ...")
             sys.exit()
 
         wait_redirect_seconds = 5
@@ -147,14 +156,17 @@ class XHSLogin(AbstractLogin):
         no_logged_in_session = cookie_dict.get("web_session")
 
         # show login qrcode
-        # utils.show_qrcode(base64_qrcode_img)
+        # fix issue #12
+        # we need to use partial function to call show_qrcode function and run in executor
+        # then current asyncio event loop will not be blocked
         partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
         asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
 
         logging.info(f"waiting for scan code login, remaining time is 20s")
-        login_flag: bool = await self.check_login_state(no_logged_in_session)
-        if not login_flag:
-            logging.info("login failed please confirm ...")
+        try:
+            await self.check_login_state(no_logged_in_session)
+        except RetryError:
+            logging.info("Login xiaohongshu failed by qrcode login method ...")
             sys.exit()
 
         wait_redirect_seconds = 5
@@ -162,6 +174,7 @@ class XHSLogin(AbstractLogin):
         await asyncio.sleep(wait_redirect_seconds)
 
     async def login_by_cookies(self):
+        """login xiaohongshu website by cookies"""
         logging.info("Begin login xiaohongshu by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
             await self.browser_context.add_cookies([{
