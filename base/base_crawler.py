@@ -14,10 +14,6 @@ class AbstractCrawler(ABC):
     async def search_posts(self):
         pass
 
-    @abstractmethod
-    async def get_comments(self, item_id: int):
-        pass
-
 
 class AbstractLogin(ABC):
     @abstractmethod

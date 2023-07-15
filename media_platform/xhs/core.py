@@ -1,7 +1,6 @@
 import os
 import random
 import asyncio
-import logging
 from asyncio import Task
 from typing import Optional, List, Dict, Tuple
 from argparse import Namespace
@@ -73,51 +72,64 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def search_posts(self):
         """Search for notes and retrieve their comment information."""
         utils.logger.info("Begin search xiaohongshu keywords")
+
         for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"Current keyword: {keyword}")
-            note_list: List[str] = []
             max_note_len = config.MAX_PAGE_NUM
             page = 1
             while max_note_len > 0:
+                note_id_list: List[str] = []
                 posts_res = await self.xhs_client.get_note_by_keyword(
                     keyword=keyword,
                     page=page,
                 )
+                _semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+                task_list = [
+                    self.get_note_detail(post_item.get("id"), _semaphore)
+                    for post_item in posts_res.get("items")
+                ]
+                note_details = await asyncio.gather(*task_list)
+                for note_detail in note_details:
+                    if note_detail is not None:
+                        await xhs_model.update_xhs_note(note_detail)
+                        note_id_list.append(note_detail.get("note_id"))
                 page += 1
-                for post_item in posts_res.get("items"):
-                    max_note_len -= 1
-                    note_id = post_item.get("id")
-                    try:
-                        note_detail = await self.xhs_client.get_note_by_id(note_id)
-                    except DataFetchError as ex:
-                        utils.logger.error(f"Get note detail error: {ex}")
-                        continue
-                    await xhs_model.update_xhs_note(note_detail)
-                    await asyncio.sleep(0.05)
-                    note_list.append(note_id)
-            utils.logger.info(f"keyword:{keyword}, note_list:{note_list}")
-            await self.batch_get_note_comments(note_list)
+                max_note_len -= 20
+                utils.logger.info(f"Note details: {note_details}")
+                await self.batch_get_note_comments(note_id_list)
+
+    async def get_note_detail(self, note_id: str, semaphore: "asyncio.Semaphore") -> Optional[Dict]:
+        """Get note detail"""
+        async with semaphore:
+            try:
+                return await self.xhs_client.get_note_by_id(note_id)
+            except DataFetchError as ex:
+                utils.logger.error(f"Get note detail error: {ex}")
+                return None
 
     async def batch_get_note_comments(self, note_list: List[str]):
         """Batch get note comments"""
+        utils.logger.info(f"Begin batch get note comments, note list: {note_list}")
+        _semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for note_id in note_list:
-            task = asyncio.create_task(self.get_comments(note_id), name=note_id)
+            task = asyncio.create_task(self.get_comments(note_id, _semaphore), name=note_id)
             task_list.append(task)
-        await asyncio.wait(task_list)
+        await asyncio.gather(*task_list)
 
-    async def get_comments(self, note_id: str):
+    async def get_comments(self, note_id: str, semaphore: "asyncio.Semaphore"):
         """Get note comments"""
-        utils.logger.info(f"Begin get note id comments {note_id}")
-        all_comments = await self.xhs_client.get_note_all_comments(note_id=note_id, crawl_interval=random.random())
-        for comment in all_comments:
-            await xhs_model.update_xhs_note_comment(note_id=note_id, comment_item=comment)
+        async with semaphore:
+            utils.logger.info(f"Begin get note id comments {note_id}")
+            all_comments = await self.xhs_client.get_note_all_comments(note_id=note_id, crawl_interval=random.random())
+            for comment in all_comments:
+                await xhs_model.update_xhs_note_comment(note_id=note_id, comment_item=comment)
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
         """Create proxy info for playwright and httpx"""
         if not config.ENABLE_IP_PROXY:
             return None, None, None
-
+        utils.logger.info("Begin proxy info for playwright and httpx ...")
         # phone: 13012345671  ip_proxy: 111.122.xx.xx1:8888
         phone, ip_proxy = self.account_pool.get_account()
         playwright_proxy = {
@@ -130,6 +142,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def create_xhs_client(self, httpx_proxy: str) -> XHSClient:
         """Create xhs client"""
+        utils.logger.info("Begin create xiaohongshu API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         xhs_client_obj = XHSClient(
             proxies=httpx_proxy,
@@ -152,8 +165,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
             user_agent: Optional[str],
             headless: bool = True
     ) -> BrowserContext:
-        utils.logger.info("Begin create browser context ...")
         """Launch browser and create browser context"""
+        utils.logger.info("Begin create browser context ...")
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time

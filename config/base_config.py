@@ -25,3 +25,6 @@ USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
 # max page num
 MAX_PAGE_NUM = 20
+
+# max concurrency num
+MAX_CONCURRENCY_NUM = 10

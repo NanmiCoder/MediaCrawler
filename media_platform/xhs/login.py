@@ -1,6 +1,5 @@
 import sys
 import asyncio
-import logging
 import functools
 
 import aioredis

@@ -1,5 +1,4 @@
 import sys
-import logging
 import asyncio
 import functools
 
@@ -89,7 +88,7 @@ class DouYinLogin(AbstractLogin):
             # check dialog box is auto popup and wait for 10 seconds
             await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 10)
         except Exception as e:
-            logging.error(f"login dialog box does not pop up automatically, error: {e}")
+            utils.logger.error(f"login dialog box does not pop up automatically, error: {e}")
             utils.logger.info("login dialog box does not pop up automatically, we will manually click the login button")
             login_button_ele = self.context_page.locator("xpath=//p[text() = '登录']")
             await login_button_ele.click()
@@ -163,7 +162,7 @@ class DouYinLogin(AbstractLogin):
         slider_verify_success = False
         while not slider_verify_success:
             if max_slider_try_times <= 0:
-                logging.error("slider verify failed ...")
+                utils.logger.error("slider verify failed ...")
                 sys.exit()
             try:
                 await self.move_slider(back_selector, gap_selector, move_step, slider_level)
@@ -182,7 +181,7 @@ class DouYinLogin(AbstractLogin):
                 utils.logger.info("slider verify success ...")
                 slider_verify_success = True
             except Exception as e:
-                logging.error(f"slider verify failed, error: {e}")
+                utils.logger.error(f"slider verify failed, error: {e}")
                 await asyncio.sleep(1)
                 max_slider_try_times -= 1
                 utils.logger.info(f"remaining slider try times: {max_slider_try_times}")

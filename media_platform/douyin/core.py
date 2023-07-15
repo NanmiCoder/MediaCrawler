@@ -1,6 +1,5 @@
 import os
 import asyncio
-import logging
 from asyncio import Task
 from argparse import Namespace
 from typing import Optional, List, Dict, Tuple
@@ -78,7 +77,7 @@ class DouYinCrawler(AbstractCrawler):
                 try:
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword, offset=page * 10)
                 except DataFetchError:
-                    logging.error(f"search douyin keyword: {keyword} failed")
+                    utils.logger.error(f"search douyin keyword: {keyword} failed")
                     break
                 page += 1
                 max_note_len -= 10
@@ -108,7 +107,7 @@ class DouYinCrawler(AbstractCrawler):
             )
             utils.logger.info(f"aweme_id: {aweme_id} comments have all been obtained completed ...")
         except DataFetchError as e:
-            logging.error(f"aweme_id: {aweme_id} get comments failed, error: {e}")
+            utils.logger.error(f"aweme_id: {aweme_id} get comments failed, error: {e}")
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
         """Create proxy info for playwright and httpx"""

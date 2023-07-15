@@ -1,5 +1,4 @@
 import json
-import logging
 import asyncio
 from typing import Optional, Dict
 
@@ -100,21 +99,15 @@ class XHSClient:
             page: int = 1, page_size: int = 20,
             sort: SearchSortType = SearchSortType.GENERAL,
             note_type: SearchNoteType = SearchNoteType.ALL
-    ):
+    ) -> Dict:
         """search note by keyword
 
         :param keyword: what notes you want to search
-        :type keyword: str
         :param page: page number, defaults to 1
-        :type page: int, optional
         :param page_size: page size, defaults to 20
-        :type page_size: int, optional
         :param sort: sort ordering, defaults to SearchSortType.GENERAL
-        :type sort: SearchSortType, optional
         :param note_type: note type, defaults to SearchNoteType.ALL
-        :type note_type: SearchNoteType, optional
         :return: {has_more: true, items: []}
-        :rtype: dict
         """
         uri = "/api/sns/web/v1/search/notes"
         data = {
@@ -127,27 +120,21 @@ class XHSClient:
         }
         return await self.post(uri, data)
 
-    async def get_note_by_id(self, note_id: str):
+    async def get_note_by_id(self, note_id: str) -> Dict:
         """
         :param note_id: note_id you want to fetch
-        :type note_id: str
         :return: {"time":1679019883000,"user":{"nickname":"nickname","avatar":"avatar","user_id":"user_id"},"image_list":[{"url":"https://sns-img-qc.xhscdn.com/c8e505ca-4e5f-44be-fe1c-ca0205a38bad","trace_id":"1000g00826s57r6cfu0005ossb1e9gk8c65d0c80","file_id":"c8e505ca-4e5f-44be-fe1c-ca0205a38bad","height":1920,"width":1440}],"tag_list":[{"id":"5be78cdfdb601f000100d0bc","name":"jk","type":"topic"}],"desc":"裙裙","interact_info":{"followed":false,"liked":false,"liked_count":"1732","collected":false,"collected_count":"453","comment_count":"30","share_count":"41"},"at_user_list":[],"last_update_time":1679019884000,"note_id":"6413cf6b00000000270115b5","type":"normal","title":"title"}
-        :rtype: dict
         """
         data = {"source_note_id": note_id}
         uri = "/api/sns/web/v1/feed"
         res = await self.post(uri, data)
         return res["items"][0]["note_card"]
 
-    async def get_note_comments(self, note_id: str, cursor: str = ""):
+    async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:
         """get note comments
-
         :param note_id: note id you want to fetch
-        :type note_id: str
         :param cursor: last you get cursor, defaults to ""
-        :type cursor: str, optional
         :return: {"has_more": true,"cursor": "6422442d000000000700dcdb",comments: [],"user_id": "63273a77000000002303cc9b","time": 1681566542930}
-        :rtype: dict
         """
         uri = "/api/sns/web/v2/comment/page"
         params = {
@@ -156,21 +143,18 @@ class XHSClient:
         }
         return await self.get(uri, params)
 
-    async def get_note_sub_comments(self, note_id: str,
-                                    root_comment_id: str,
-                                    num: int = 30, cursor: str = ""):
-        """get note sub comments
-
+    async def get_note_sub_comments(
+            self, note_id: str,
+            root_comment_id: str,
+            num: int = 30, cursor: str = ""
+    ):
+        """
+        get note sub comments
         :param note_id: note id you want to fetch
-        :type note_id: str
         :param root_comment_id: parent comment id
-        :type root_comment_id: str
         :param num: recommend 30, if num greater 30, it only return 30 comments
-        :type num: int
         :param cursor: last you get cursor, defaults to ""
-        :type cursor: str optional
         :return: {"has_more": true,"cursor": "6422442d000000000700dcdb",comments: [],"user_id": "63273a77000000002303cc9b","time": 1681566542930}
-        :rtype: dict
         """
         uri = "/api/sns/web/v2/comment/sub/page"
         params = {
