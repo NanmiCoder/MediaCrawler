@@ -17,9 +17,10 @@ class XHSClient:
             self,
             timeout=10,
             proxies=None,
-            headers: Optional[Dict] = None,
-            playwright_page: Page = None,
-            cookie_dict: Dict = None
+            *,
+            headers: Dict[str, str],
+            playwright_page: Page,
+            cookie_dict: Dict[str, str],
     ):
         self.proxies = proxies
         self.timeout = timeout
@@ -51,21 +52,21 @@ class XHSClient:
         self.headers.update(headers)
         return self.headers
 
-    async def request(self, method, url, **kwargs):
+    async def request(self, method, url, **kwargs) -> Dict:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
             response = await client.request(
                 method, url, timeout=self.timeout,
                 **kwargs
             )
-        data = response.json()
+        data: Dict = response.json()
         if data["success"]:
-            return data.get("data", data.get("success"))
+            return data.get("data", data.get("success", {}))
         elif data["code"] == self.IP_ERROR_CODE:
             raise IPBlockError(self.IP_ERROR_STR)
         else:
             raise DataFetchError(data.get("msg", None))
 
-    async def get(self, uri: str, params=None):
+    async def get(self, uri: str, params=None) -> Dict:
         final_uri = uri
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
@@ -73,7 +74,7 @@ class XHSClient:
         headers = await self._pre_headers(final_uri)
         return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
 
-    async def post(self, uri: str, data: dict):
+    async def post(self, uri: str, data: dict) -> Dict:
         headers = await self._pre_headers(uri, data)
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return await self.request(method="POST", url=f"{self._host}{uri}",
@@ -86,7 +87,7 @@ class XHSClient:
         try:
             note_card: Dict = await self.get_note_by_id(note_id)
             return note_card.get("note_id") == note_id
-        except DataFetchError:
+        except Exception:
             return False
 
     async def update_cookies(self, browser_context: BrowserContext):
@@ -128,7 +129,8 @@ class XHSClient:
         data = {"source_note_id": note_id}
         uri = "/api/sns/web/v1/feed"
         res = await self.post(uri, data)
-        return res["items"][0]["note_card"]
+        res_dict: Dict = res["items"][0]["note_card"]
+        return res_dict
 
     async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:
         """get note comments

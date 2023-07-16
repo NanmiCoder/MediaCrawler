@@ -22,7 +22,7 @@ async def find_login_qrcode(page: Page, selector: str) -> str:
         elements = await page.wait_for_selector(
             selector=selector,
         )
-        login_qrcode_img = await elements.get_property("src")
+        login_qrcode_img = await elements.get_property("src") # type: ignore
         return str(login_qrcode_img)
 
     except Exception as e:
@@ -30,7 +30,7 @@ async def find_login_qrcode(page: Page, selector: str) -> str:
         return ""
 
 
-def show_qrcode(qr_code: str):
+def show_qrcode(qr_code) -> None: # type: ignore
     """parse base64 encode qrcode image and show it"""
     qr_code = qr_code.split(",")[1]
     qr_code = base64.b64decode(qr_code)
@@ -68,20 +68,20 @@ def convert_cookies(cookies: Optional[List[Cookie]]) -> Tuple[str, Dict]:
 
 
 def convert_str_cookie_to_dict(cookie_str: str) -> Dict:
-    cookie_dict = dict()
+    cookie_dict: Dict[str, str]= dict()
     if not cookie_str:
         return cookie_dict
     for cookie in cookie_str.split(";"):
         cookie = cookie.strip()
         if not cookie:
             continue
-        cookie = cookie.split("=")
-        if len(cookie) != 2:
+        cookie_list = cookie.split("=")
+        if len(cookie_list) != 2:
             continue
-        cookie_value = cookie[1]
+        cookie_value = cookie_list[1]
         if isinstance(cookie_value, list):
             cookie_value = "".join(cookie_value)
-        cookie_dict[cookie[0]] = cookie_value
+        cookie_dict[cookie_list[0]] = cookie_value
     return cookie_dict
 
 
@@ -228,11 +228,11 @@ class Slide:
         return x
 
 
-def get_track_simple(distance):
+def get_track_simple(distance) -> List[int]:
     # 有的检测移动速度的 如果匀速移动会被识别出来，来个简单点的 渐进
     # distance为传入的总距离
     # 移动轨迹
-    track = []
+    track: List[int]= []
     # 当前位移
     current = 0
     # 减速阈值
@@ -251,11 +251,11 @@ def get_track_simple(distance):
             a = -3
         v0 = v
         # 当前速度
-        v = v0 + a * t
+        v = v0 + a * t # type: ignore
         # 移动距离
         move = v0 * t + 1 / 2 * a * t * t
         # 当前位移
-        current += move
+        current += move # type: ignore
         # 加入轨迹
         track.append(round(move))
     return track

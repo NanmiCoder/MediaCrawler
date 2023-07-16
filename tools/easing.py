@@ -4,6 +4,7 @@
 # thanks to aneasystone for his great work
 import numpy as np
 import math
+from typing import List, Tuple
 
 
 # https://github.com/gdsmith/jquery.easing/blob/master/jquery.easing.js
@@ -52,7 +53,7 @@ def ease_out_elastic(x):
         return pow(2, -10 * x) * math.sin((x * 10 - 0.75) * c4) + 1
 
 
-def get_tracks(distance, seconds, ease_func):
+def get_tracks(distance, seconds, ease_func) -> Tuple[List[int], List[int]]:
     tracks = [0]
     offsets = [0]
     for t in np.arange(0.0, seconds, 0.1):

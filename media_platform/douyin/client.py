@@ -18,9 +18,10 @@ class DOUYINClient:
             self,
             timeout=30,
             proxies=None,
-            headers: Optional[Dict] = None,
-            playwright_page: Page = None,
-            cookie_dict: Dict = None
+            *,
+            headers: Dict,
+            playwright_page: Optional[Page],
+            cookie_dict: Dict
     ):
         self.proxies = proxies
         self.timeout = timeout
@@ -33,7 +34,7 @@ class DOUYINClient:
         if not params:
             return
         headers = headers or self.headers
-        local_storage: Dict = await self.playwright_page.evaluate("() => window.localStorage")
+        local_storage: Dict = await self.playwright_page.evaluate("() => window.localStorage") # type: ignore
         douyin_js_obj = execjs.compile(open('libs/douyin.js').read())
         common_params = {
             "device_platform": "webapp",
@@ -141,7 +142,7 @@ class DOUYINClient:
         del headers["Origin"]
         return await self.get("/aweme/v1/web/aweme/detail/", params, headers)
 
-    async def get_aweme_comments(self, aweme_id: str, cursor: str = ""):
+    async def get_aweme_comments(self, aweme_id: str, cursor: int = 0):
         """get note comments
 
         """

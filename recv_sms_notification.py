@@ -2,6 +2,7 @@
 import re
 import json
 import asyncio
+from typing import List
 
 import aioredis
 import tornado.web
@@ -14,7 +15,7 @@ def extract_verification_code(message) -> str:
     Extract verification code of 6 digits from the SMS.
     """
     pattern = re.compile(r'\b[0-9]{6}\b')
-    codes = pattern.findall(message)
+    codes: List[str]= pattern.findall(message)
     return codes[0] if codes and len(codes) > 0 else ""
 
 

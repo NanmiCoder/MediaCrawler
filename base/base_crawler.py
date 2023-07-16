@@ -21,10 +21,6 @@ class AbstractLogin(ABC):
         pass
 
     @abstractmethod
-    async def check_login_state(self):
-        pass
-
-    @abstractmethod
     async def login_by_qrcode(self):
         pass
 

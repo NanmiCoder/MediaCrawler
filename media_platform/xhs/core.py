@@ -21,15 +21,15 @@ from base.proxy_account_pool import AccountPool
 
 
 class XiaoHongShuCrawler(AbstractCrawler):
+    context_page: Page
+    browser_context: BrowserContext
+    xhs_client: XHSClient
+    account_pool: AccountPool
 
     def __init__(self):
-        self.browser_context: Optional[BrowserContext] = None
-        self.context_page: Optional[Page] = None
-        self.user_agent = utils.get_user_agent()
-        self.xhs_client: Optional[XHSClient] = None
         self.index_url = "https://www.xiaohongshu.com"
-        self.command_args: Optional[Namespace] = None
-        self.account_pool: Optional[AccountPool] = None
+        self.command_args: Optional[Namespace] = None # type: ignore
+        self.user_agent = utils.get_user_agent()
 
     def init_config(self, **kwargs):
         for key, value in kwargs.items():
@@ -69,7 +69,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             utils.logger.info("Xhs Crawler finished ...")
 
-    async def search_posts(self):
+    async def search_posts(self) -> None:
         """Search for notes and retrieve their comment information."""
         utils.logger.info("Begin search xiaohongshu keywords")
 
@@ -86,7 +86,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 _semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                 task_list = [
                     self.get_note_detail(post_item.get("id"), _semaphore)
-                    for post_item in posts_res.get("items")
+                    for post_item in posts_res.get("items", {})
                 ]
                 note_details = await asyncio.gather(*task_list)
                 for note_detail in note_details:
@@ -170,18 +170,18 @@ class XiaoHongShuCrawler(AbstractCrawler):
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
-            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % self.command_args.platform)
+            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % self.command_args.platform) # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
                 headless=headless,
-                proxy=playwright_proxy,
+                proxy=playwright_proxy, # type: ignore
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent
             )
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)
+            browser = await chromium.launch(headless=headless, proxy=playwright_proxy) # type: ignore
             browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent

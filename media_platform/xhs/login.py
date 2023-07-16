@@ -24,8 +24,8 @@ class XHSLogin(AbstractLogin):
                  login_type: str,
                  browser_context: BrowserContext,
                  context_page: Page,
-                 login_phone: str = None,
-                 cookie_str: str = None
+                 login_phone: str = "",
+                 cookie_str: str = ""
                  ):
         self.login_type = login_type
         self.browser_context = browser_context

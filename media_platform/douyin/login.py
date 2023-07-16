@@ -1,6 +1,7 @@
 import sys
 import asyncio
 import functools
+from typing import Optional
 
 import aioredis
 from tenacity import (
@@ -22,10 +23,10 @@ class DouYinLogin(AbstractLogin):
 
     def __init__(self,
                  login_type: str,
-                 browser_context: BrowserContext,
-                 context_page: Page,
-                 login_phone: str = None,
-                 cookie_str: str = None
+                 browser_context: BrowserContext, # type: ignore
+                 context_page: Page, # type: ignore
+                 login_phone: Optional[str] = "",
+                 cookie_str: Optional[str] = ""
                  ):
         self.login_type = login_type
         self.browser_context = browser_context
@@ -202,14 +203,14 @@ class DouYinLogin(AbstractLogin):
             selector=back_selector,
             timeout=1000 * 10,  # wait 10 seconds
         )
-        slide_back = str(await slider_back_elements.get_property("src"))
+        slide_back = str(await slider_back_elements.get_property("src")) # type: ignore
 
         # get slider gap image
         gap_elements = await self.context_page.wait_for_selector(
             selector=gap_selector,
             timeout=1000 * 10,  # wait 10 seconds
         )
-        gap_src = str(await gap_elements.get_property("src"))
+        gap_src = str(await gap_elements.get_property("src")) # type: ignore
 
         # 识别滑块位置
         slide_app = utils.Slide(gap=gap_src, bg=slide_back)
@@ -223,14 +224,14 @@ class DouYinLogin(AbstractLogin):
 
         # 根据轨迹拖拽滑块到指定位置
         element = await self.context_page.query_selector(gap_selector)
-        bounding_box = await element.bounding_box()
+        bounding_box = await element.bounding_box() # type: ignore
 
-        await self.context_page.mouse.move(bounding_box["x"] + bounding_box["width"] / 2,
-                                           bounding_box["y"] + bounding_box["height"] / 2)
+        await self.context_page.mouse.move(bounding_box["x"] + bounding_box["width"] / 2, # type: ignore
+                                           bounding_box["y"] + bounding_box["height"] / 2) # type: ignore
         # 这里获取到x坐标中心点位置
-        x = bounding_box["x"] + bounding_box["width"] / 2
+        x = bounding_box["x"] + bounding_box["width"] / 2 # type: ignore
         # 模拟滑动操作
-        await element.hover()
+        await element.hover() # type: ignore
         await self.context_page.mouse.down()
 
         for track in tracks:

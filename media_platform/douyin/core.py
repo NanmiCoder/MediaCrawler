@@ -20,20 +20,21 @@ from models import douyin
 
 
 class DouYinCrawler(AbstractCrawler):
-    def __init__(self):
-        self.browser_context: Optional[BrowserContext] = None
-        self.context_page: Optional[Page] = None
+    dy_client: DOUYINClient
+
+    def __init__(self) -> None:
+        self.browser_context: Optional[BrowserContext] = None # type: ignore
+        self.context_page: Optional[Page] = None # type: ignore
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
-        self.dy_client: Optional[DOUYINClient] = None
         self.index_url = "https://www.douyin.com"
-        self.command_args: Optional[Namespace] = None
-        self.account_pool: Optional[AccountPool] = None
+        self.command_args: Optional[Namespace] = None # type: ignore
+        self.account_pool: Optional[AccountPool] = None # type: ignore
 
     def init_config(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    async def start(self):
+    async def start(self) -> None:
         account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
         async with async_playwright() as playwright:
             # Launch a browser context.
@@ -52,7 +53,7 @@ class DouYinCrawler(AbstractCrawler):
             self.dy_client = await self.create_douyin_client(httpx_proxy)
             if not await self.dy_client.ping(browser_context=self.browser_context):
                 login_obj = DouYinLogin(
-                    login_type=self.command_args.lt,
+                    login_type=self.command_args.lt, # type: ignore
                     login_phone=account_phone,
                     browser_context=self.browser_context,
                     context_page=self.context_page,
@@ -66,7 +67,7 @@ class DouYinCrawler(AbstractCrawler):
 
             utils.logger.info("Douyin Crawler finished ...")
 
-    async def search_posts(self):
+    async def search_posts(self) -> None:
         utils.logger.info("Begin search douyin keywords")
         for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"Current keyword: {keyword}")
@@ -87,7 +88,7 @@ class DouYinCrawler(AbstractCrawler):
                                            post_item.get("aweme_mix_info", {}).get("mix_items")[0]
                     except TypeError:
                         continue
-                    aweme_list.append(aweme_info.get("aweme_id"))
+                    aweme_list.append(aweme_info.get("aweme_id",""))
                     await douyin.update_douyin_aweme(aweme_item=aweme_info)
             utils.logger.info(f"keyword:{keyword}, aweme_list:{aweme_list}")
             # await self.batch_get_note_comments(aweme_list)
@@ -115,7 +116,7 @@ class DouYinCrawler(AbstractCrawler):
             return None, None, None
 
         # phone: 13012345671  ip_proxy: 111.122.xx.xx1:8888
-        phone, ip_proxy = self.account_pool.get_account()
+        phone, ip_proxy = self.account_pool.get_account() # type: ignore
         playwright_proxy = {
             "server": f"{config.IP_PROXY_PROTOCOL}{ip_proxy}",
             "username": config.IP_PROXY_USER,
@@ -124,9 +125,9 @@ class DouYinCrawler(AbstractCrawler):
         httpx_proxy = f"{config.IP_PROXY_PROTOCOL}{config.IP_PROXY_USER}:{config.IP_PROXY_PASSWORD}@{ip_proxy}"
         return phone, playwright_proxy, httpx_proxy
 
-    async def create_douyin_client(self, httpx_proxy: str) -> DOUYINClient:
+    async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DOUYINClient:
         """Create douyin client"""
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
+        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies()) # type: ignore
         douyin_client = DOUYINClient(
             proxies=httpx_proxy,
             headers={
@@ -151,18 +152,18 @@ class DouYinCrawler(AbstractCrawler):
     ) -> BrowserContext:
         """Launch browser and create browser context"""
         if config.SAVE_LOGIN_STATE:
-            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % self.command_args.platform)
+            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % self.command_args.platform) # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
                 headless=headless,
-                proxy=playwright_proxy,
+                proxy=playwright_proxy, # type: ignore
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent
-            )
+            ) # type: ignore
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)
+            browser = await chromium.launch(headless=headless, proxy=playwright_proxy) # type: ignore
             browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent

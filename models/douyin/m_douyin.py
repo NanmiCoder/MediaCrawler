@@ -39,10 +39,10 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
     if aweme_id != comment_aweme_id:
         print(f"comment_aweme_id: {comment_aweme_id} != aweme_id: {aweme_id}")
         return
-    user_info = comment_item.get("user")
+    user_info = comment_item.get("user", {})
     comment_id = comment_item.get("cid")
-    avatar_info = user_info.get("avatar_medium") or user_info.get("avatar_300x300") or user_info.get(
-        "avatar_168x168") or user_info.get("avatar_thumb") or {}
+    avatar_info = user_info.get("avatar_medium", {}) or user_info.get("avatar_300x300", {}) or user_info.get(
+        "avatar_168x168", {}) or user_info.get("avatar_thumb", {}) or {}
     local_db_item = {
         "comment_id": comment_id,
         "create_time": comment_item.get("create_time"),

@@ -92,7 +92,7 @@ def mrc(e):
     ]
     o = -1
 
-    def right_without_sign(num, bit=0) -> int:
+    def right_without_sign(num: int, bit: int=0) -> int:
         val = ctypes.c_uint32(num).value >> bit
         MAX32INT = 4294967295
         return (val + (MAX32INT + 1)) % (2 * (MAX32INT + 1)) - MAX32INT - 1

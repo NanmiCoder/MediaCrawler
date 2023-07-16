@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List, Set
 
 import config
 
@@ -6,9 +6,9 @@ import config
 class PhonePool:
     """phone pool class"""
 
-    def __init__(self):
-        self.phones = []
-        self.used_phones = set()
+    def __init__(self) -> None:
+        self.phones: List[str] = []
+        self.used_phones: Set[str] = set()
 
     def add_phone(self, phone: str) -> bool:
         """add phone to the pool"""
@@ -40,9 +40,9 @@ class PhonePool:
 
 
 class IPPool:
-    def __init__(self):
-        self.ips = []
-        self.used_ips = set()
+    def __init__(self) -> None:
+        self.ips: List[str]= []
+        self.used_ips: Set[str]= set()
 
     def add_ip(self, ip):
         """添加ip"""
