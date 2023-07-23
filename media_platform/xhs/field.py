@@ -28,7 +28,7 @@ class FeedType(Enum):
 
 
 class NoteType(Enum):
-    NOMAL = "nomal"
+    NORMAL = "normal"
     VIDEO = "video"
 
 
