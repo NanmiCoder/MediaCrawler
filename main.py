@@ -2,8 +2,8 @@ import sys
 import asyncio
 import argparse
 
+import db
 import config
-from tools import utils
 from base import proxy_account_pool
 from media_platform.douyin import DouYinCrawler
 from media_platform.xhs import XiaoHongShuCrawler
@@ -28,6 +28,10 @@ async def main():
 
     # init account pool
     account_pool = proxy_account_pool.create_account_pool()
+
+    # init db
+    if config.IS_SAVED_DATABASED:
+        await db.init_db()
 
     args = parser.parse_args()
     crawler = CrawlerFactory().create_crawler(platform=args.platform)

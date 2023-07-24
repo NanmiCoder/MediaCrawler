@@ -83,12 +83,15 @@ class XHSClient:
     async def ping(self) -> bool:
         """get a note to check if login state is ok"""
         utils.logger.info("begin to ping xhs...")
-        note_id = "5e5cb38a000000000100185e"
+        ping_flag = False
         try:
-            note_card: Dict = await self.get_note_by_id(note_id)
-            return note_card.get("note_id") == note_id
-        except Exception:
-            return False
+            note_card: Dict = await self.get_note_by_keyword(keyword="小红书")
+            if note_card.get("items"):
+                ping_flag = True
+        except Exception as e:
+            utils.logger.error(f"ping xhs failed: {e}")
+            ping_flag = False
+        return ping_flag
 
     async def update_cookies(self, browser_context: BrowserContext):
         cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())

@@ -21,10 +21,8 @@
 - [x] 抖音登录（二维码、手机号、cookies）
 - [x] 抖音滑块（模拟滑动实现，准确率不太OK）
 - [x] 支持登录成功后的上下文浏览器环境保留
+- [x] 数据持久化到硬盘（关系型数据库）
 
-## 待实现
-
-- [ ] 数据持久化到硬盘
 
 ## 使用方法
 
@@ -32,9 +30,13 @@
    `pip install -r requirements.txt`
 2. 安装playwright浏览器驱动
    `playwright install`
-3. 运行爬虫程序
+3. 是否选择开启保存数据到DB中   
+   如果选择开启，则需要配置数据库连接信息，`config/db_config.py` 中的 `IS_SAVED_DATABASED`和`RELATION_DB_URL` 变量
+   <br>再执行 `python db.py` 初始化数据库信息，生成相关的数据库表结构
+4.  运行爬虫程序
    `python main.py --platform xhs --lt qrcode`
-4. 打开小红书扫二维码登录
+5. 打开对应APP扫二维码登录
+
 
 ## 项目代码结构
 
@@ -67,24 +69,16 @@ MediaCrawler
 │       ├── help.py             # 辅助函数
 │       └── login.py            # 登录实现
 ├── modles 
-│   ├── douyin
-│   │   └── m_douyin.py
-│   └── xhs
-│       └── m_xhs.py
+│   ├── douyin.py               # 抖音数据模型
+│   └── xiaohongshu.py          # 小红书数据模型 
 ├── tools
 │   └── utils.py                # 工具函数
 ├── main.py                     # 程序入口
 └── recv_sms_notification.py    # 短信转发器的HTTP SERVER接口
 ```
+## 数据持久化
 
-## 小红书运行截图
-
-![小红书运行截图](https://s2.loli.net/2023/06/09/PVBe3X5vf4yncrd.gif)
-
-## 抖音运行截图
-
-- ![抖音运行截图](https://s2.loli.net/2023/06/25/GXfkeLhpTyNiAqH.gif)
-
+![数据持久化](https://s2.loli.net/2023/07/24/ZTcGWz8jPAy7b5M.png)
 
 ## 支持一下
 

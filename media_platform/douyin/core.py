@@ -23,12 +23,12 @@ class DouYinCrawler(AbstractCrawler):
     dy_client: DOUYINClient
 
     def __init__(self) -> None:
-        self.browser_context: Optional[BrowserContext] = None # type: ignore
-        self.context_page: Optional[Page] = None # type: ignore
+        self.browser_context: Optional[BrowserContext] = None  # type: ignore
+        self.context_page: Optional[Page] = None  # type: ignore
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
         self.index_url = "https://www.douyin.com"
-        self.command_args: Optional[Namespace] = None # type: ignore
-        self.account_pool: Optional[AccountPool] = None # type: ignore
+        self.command_args: Optional[Namespace] = None  # type: ignore
+        self.account_pool: Optional[AccountPool] = None  # type: ignore
 
     def init_config(self, **kwargs):
         for key, value in kwargs.items():
@@ -53,7 +53,7 @@ class DouYinCrawler(AbstractCrawler):
             self.dy_client = await self.create_douyin_client(httpx_proxy)
             if not await self.dy_client.ping(browser_context=self.browser_context):
                 login_obj = DouYinLogin(
-                    login_type=self.command_args.lt, # type: ignore
+                    login_type=self.command_args.lt,  # type: ignore
                     login_phone=account_phone,
                     browser_context=self.browser_context,
                     context_page=self.context_page,
@@ -88,27 +88,29 @@ class DouYinCrawler(AbstractCrawler):
                                            post_item.get("aweme_mix_info", {}).get("mix_items")[0]
                     except TypeError:
                         continue
-                    aweme_list.append(aweme_info.get("aweme_id",""))
+                    aweme_list.append(aweme_info.get("aweme_id", ""))
                     await douyin.update_douyin_aweme(aweme_item=aweme_info)
             utils.logger.info(f"keyword:{keyword}, aweme_list:{aweme_list}")
-            # await self.batch_get_note_comments(aweme_list)
+            await self.batch_get_note_comments(aweme_list)
 
     async def batch_get_note_comments(self, aweme_list: List[str]):
         task_list: List[Task] = []
+        _semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         for aweme_id in aweme_list:
-            task = asyncio.create_task(self.get_comments(aweme_id), name=aweme_id)
+            task = asyncio.create_task(self.get_comments(aweme_id, _semaphore), name=aweme_id)
             task_list.append(task)
         await asyncio.wait(task_list)
 
-    async def get_comments(self, aweme_id: str):
-        try:
-            await self.dy_client.get_aweme_all_comments(
-                aweme_id=aweme_id,
-                callback=douyin.batch_update_dy_aweme_comments
-            )
-            utils.logger.info(f"aweme_id: {aweme_id} comments have all been obtained completed ...")
-        except DataFetchError as e:
-            utils.logger.error(f"aweme_id: {aweme_id} get comments failed, error: {e}")
+    async def get_comments(self, aweme_id: str, semaphore: "asyncio.Semaphore"):
+        async with semaphore:
+            try:
+                await self.dy_client.get_aweme_all_comments(
+                    aweme_id=aweme_id,
+                    callback=douyin.batch_update_dy_aweme_comments
+                )
+                utils.logger.info(f"aweme_id: {aweme_id} comments have all been obtained completed ...")
+            except DataFetchError as e:
+                utils.logger.error(f"aweme_id: {aweme_id} get comments failed, error: {e}")
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
         """Create proxy info for playwright and httpx"""
@@ -116,7 +118,7 @@ class DouYinCrawler(AbstractCrawler):
             return None, None, None
 
         # phone: 13012345671  ip_proxy: 111.122.xx.xx1:8888
-        phone, ip_proxy = self.account_pool.get_account() # type: ignore
+        phone, ip_proxy = self.account_pool.get_account()  # type: ignore
         playwright_proxy = {
             "server": f"{config.IP_PROXY_PROTOCOL}{ip_proxy}",
             "username": config.IP_PROXY_USER,
@@ -127,7 +129,7 @@ class DouYinCrawler(AbstractCrawler):
 
     async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DOUYINClient:
         """Create douyin client"""
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies()) # type: ignore
+        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())  # type: ignore
         douyin_client = DOUYINClient(
             proxies=httpx_proxy,
             headers={
@@ -152,18 +154,19 @@ class DouYinCrawler(AbstractCrawler):
     ) -> BrowserContext:
         """Launch browser and create browser context"""
         if config.SAVE_LOGIN_STATE:
-            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % self.command_args.platform) # type: ignore
+            user_data_dir = os.path.join(os.getcwd(), "browser_data",
+                                         config.USER_DATA_DIR % self.command_args.platform)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
                 headless=headless,
-                proxy=playwright_proxy, # type: ignore
+                proxy=playwright_proxy,  # type: ignore
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent
-            ) # type: ignore
+            )  # type: ignore
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy) # type: ignore
+            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)  # type: ignore
             browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent

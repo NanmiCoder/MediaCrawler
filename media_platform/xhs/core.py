@@ -15,7 +15,7 @@ from tools import utils
 from .exception import *
 from .login import XHSLogin
 from .client import XHSClient
-from models import xhs as xhs_model
+from models import xiaohongshu as xhs_model
 from base.base_crawler import AbstractCrawler
 from base.proxy_account_pool import AccountPool
 
