@@ -34,6 +34,7 @@ class DouyinAweme(DouyinBaseModel):
     liked_count = fields.CharField(null=True, max_length=16, description="视频点赞数")
     comment_count = fields.CharField(null=True, max_length=16, description="视频评论数")
     share_count = fields.CharField(null=True, max_length=16, description="视频分享数")
+    collected_count = fields.CharField(null=True, max_length=16, description="视频收藏数")
 
     class Meta:
         table = "douyin_aweme"
