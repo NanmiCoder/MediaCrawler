@@ -1,8 +1,6 @@
-from tortoise import Tortoise
-from tortoise import run_async
+from tortoise import Tortoise, run_async
 
 from config.db_config import *
-
 from tools import utils
 
 

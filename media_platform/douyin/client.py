@@ -1,16 +1,16 @@
-import copy
 import asyncio
-from typing import Optional, Dict, Callable
-
-import httpx
-import execjs
+import copy
 import urllib.parse
-from playwright.async_api import Page
-from playwright.async_api import BrowserContext
+from typing import Callable, Dict, Optional
 
-from .field import *
-from .exception import *
+import execjs
+import httpx
+from playwright.async_api import BrowserContext, Page
+
 from tools import utils
+
+from .exception import *
+from .field import *
 
 
 class DOUYINClient:

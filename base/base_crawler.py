@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 
+from base.proxy_account_pool import AccountPool
+
 
 class AbstractCrawler(ABC):
     @abstractmethod
-    def init_config(self, **kwargs):
+    def init_config(self, platform: str, login_type: str, account_pool: AccountPool):
         pass
 
     @abstractmethod
@@ -11,7 +13,7 @@ class AbstractCrawler(ABC):
         pass
 
     @abstractmethod
-    async def search_posts(self):
+    async def search(self):
         pass
 
 

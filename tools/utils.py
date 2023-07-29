@@ -1,19 +1,18 @@
-import re
-import os
-import time
-import random
 import base64
 import logging
+import os
+import random
+import re
+import time
 from io import BytesIO
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
-from typing import Optional, Dict, List, Tuple
 
 import cv2
 import httpx
 import numpy as np
 from PIL import Image, ImageDraw
-from playwright.async_api import Cookie
-from playwright.async_api import Page
+from playwright.async_api import Cookie, Page
 
 
 async def find_login_qrcode(page: Page, selector: str) -> str:

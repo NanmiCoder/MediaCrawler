@@ -1,7 +1,7 @@
 # Start an HTTP server to receive SMS forwarding notifications and store them in Redis.
-import re
-import json
 import asyncio
+import json
+import re
 from typing import List
 
 import aioredis

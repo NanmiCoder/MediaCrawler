@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 # copy from https://github.com/aneasystone/selenium-test/blob/master/12-slider-captcha.py
 # thanks to aneasystone for his great work
-import numpy as np
 import math
 from typing import List, Tuple
+
+import numpy as np
 
 
 # https://github.com/gdsmith/jquery.easing/blob/master/jquery.easing.js

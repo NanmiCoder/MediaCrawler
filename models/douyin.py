@@ -1,8 +1,8 @@
 import json
 from typing import Dict, List
 
-from tortoise.models import Model
 from tortoise import fields
+from tortoise.models import Model
 
 import config
 from tools import utils

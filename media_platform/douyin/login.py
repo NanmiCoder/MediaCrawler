@@ -1,22 +1,17 @@
-import sys
 import asyncio
 import functools
+import sys
 from typing import Optional
 
 import aioredis
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_fixed,
-    retry_if_result,
-    RetryError
-)
-from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
-from playwright.async_api import BrowserContext
+from playwright.async_api import BrowserContext, Page
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
+                      wait_fixed)
 
 import config
-from tools import utils
 from base.base_crawler import AbstractLogin
+from tools import utils
 
 
 class DouYinLogin(AbstractLogin):

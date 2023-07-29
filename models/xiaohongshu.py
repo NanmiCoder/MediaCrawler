@@ -1,7 +1,7 @@
-from typing import List, Dict
+from typing import Dict, List
 
-from tortoise.models import Model
 from tortoise import fields
+from tortoise.models import Model
 
 import config
 from tools import utils
@@ -65,7 +65,7 @@ async def update_xhs_note(note_item: Dict):
     local_db_item = {
         "note_id": note_item.get("note_id"),
         "type": note_item.get("type"),
-        "title": note_item.get("title"),
+        "title": note_item.get("title") or note_item.get("desc", ""),
         "desc": note_item.get("desc", ""),
         "time": note_item.get("time"),
         "last_update_time": note_item.get("last_update_time", 0),
