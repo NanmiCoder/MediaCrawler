@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # account_config.py
+import os
 
 PHONE_LIST = [
     "13012345671",
@@ -22,6 +23,5 @@ IP_PROXY_LIST = [
 ]
 
 IP_PROXY_PROTOCOL = "http://"
-IP_PROXY_USER = "xxxx"
-IP_PROXY_PASSWORD = "xxxx"
-
+IP_PROXY_USER = os.getenv("IP_PROXY_USER", "test")
+IP_PROXY_PASSWORD = os.getenv("IP_PROXY_PASSWORD", "123456")

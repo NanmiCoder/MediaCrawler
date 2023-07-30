@@ -3,7 +3,7 @@ import functools
 import sys
 from typing import Optional
 
-import aioredis
+import redis
 from playwright.async_api import BrowserContext, Page
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
@@ -85,15 +85,14 @@ class XHSLogin(AbstractLogin):
         await send_btn_ele.click()  # 点击发送验证码
         sms_code_input_ele = await login_container_ele.query_selector("label.auth-code > input")
         submit_btn_ele = await login_container_ele.query_selector("div.input-container > button")
-
-        redis_obj = aioredis.from_url(url=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD, decode_responses=True)
+        redis_obj = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         no_logged_in_session = ""
         while max_get_sms_code_time > 0:
             utils.logger.info(f"get sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"xhs_{self.login_phone}"
-            sms_code_value = await redis_obj.get(sms_code_key)
+            sms_code_value = redis_obj.get(sms_code_key)
             if not sms_code_value:
                 max_get_sms_code_time -= 1
                 continue
@@ -102,7 +101,7 @@ class XHSLogin(AbstractLogin):
             _, cookie_dict = utils.convert_cookies(current_cookie)
             no_logged_in_session = cookie_dict.get("web_session")
 
-            await sms_code_input_ele.fill(value=sms_code_value)  # 输入短信验证码
+            await sms_code_input_ele.fill(value=sms_code_value.decode())  # 输入短信验证码
             await asyncio.sleep(0.5)
             agree_privacy_ele = self.context_page.locator("xpath=//div[@class='agreements']//*[local-name()='svg']")
             await agree_privacy_ele.click()  # 点击同意隐私协议

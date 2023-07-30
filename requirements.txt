@@ -1,10 +1,11 @@
 httpx==0.24.0
 Pillow==9.5.0
 playwright==1.33.0
-aioredis==2.0.1
 tenacity==8.2.2
 tornado==6.3.2
 PyExecJS==1.5.1
 opencv-python==4.7.0.72
 tortoise-orm[asyncmy]==0.19.3
 aerich==0.7.2
+numpy~=1.24.4
+redis~=4.6.0

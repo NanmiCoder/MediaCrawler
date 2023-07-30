@@ -27,16 +27,32 @@
 ## 使用方法
 
 1. 安装依赖库
-   `pip install -r requirements.txt`
-2. 安装playwright浏览器驱动
-   `playwright install`
-3. 是否选择开启保存数据到DB中   
-   如果选择开启，则需要配置数据库连接信息，`config/db_config.py` 中的 `IS_SAVED_DATABASED`和`RELATION_DB_URL` 变量
-   <br>再执行 `python db.py` 初始化数据库信息，生成相关的数据库表结构
-4.  运行爬虫程序
-   `python main.py --platform xhs --lt qrcode`
-5. 打开对应APP扫二维码登录
 
+   ```shell
+   pip install -r requirements.txt
+   ```
+
+2. 安装playwright浏览器驱动
+
+   ```shell
+   playwright install
+   ```
+
+3. 是否保存数据到DB中
+
+   如果选择开启，则需要配置数据库连接信息，`config/db_config.py` 中的 `IS_SAVED_DATABASED`和`RELATION_DB_URL` 变量。然后执行以下命令初始化数据库信息，生成相关的数据库表结构：
+
+   ```shell
+   python db.py
+   ```
+
+4. 运行爬虫程序
+
+   ```shell
+   python main.py --platform xhs --lt qrcode
+   ```
+
+5. 打开对应APP扫二维码登录
 
 ## 项目代码结构
 
@@ -46,11 +62,9 @@ MediaCrawler
 │   ├── base_crawler.py         # 项目的抽象类
 │   └── proxy_account_pool.py   # 账号与IP代理池
 ├── config 
-│   ├── account_config.py       # 基础配置
-│   └── base_config.py          # 账号池配置
-├── images 
-│   ├── douyin.gif
-│   └── xiaohongshu.git
+│   ├── account_config.py       # 账号代理池配置
+│   ├── base_config.py          # 基础配置
+│   └── db_config.py            # 数据库配置
 ├── libs 
 │   ├── douyin.js               # 抖音Sign函数
 │   └── stealth.min.js          # 去除浏览器自动化特征的JS

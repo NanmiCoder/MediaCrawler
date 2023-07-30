@@ -3,7 +3,7 @@ import functools
 import sys
 from typing import Optional
 
-import aioredis
+import redis
 from playwright.async_api import BrowserContext, Page
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
@@ -121,20 +121,19 @@ class DouYinLogin(AbstractLogin):
 
         # 检查是否有滑动验证码
         await self.check_page_display_slider(move_step=10, slider_level="easy")
-
-        redis_obj = aioredis.from_url(url=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD, decode_responses=True)
+        redis_obj = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         while max_get_sms_code_time > 0:
             utils.logger.info(f"get douyin sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"dy_{self.login_phone}"
-            sms_code_value = await redis_obj.get(sms_code_key)
+            sms_code_value = redis_obj.get(sms_code_key)
             if not sms_code_value:
                 max_get_sms_code_time -= 1
                 continue
 
             sms_code_input_ele = self.context_page.locator("xpath=//input[@placeholder='请输入验证码']")
-            await sms_code_input_ele.fill(value=sms_code_value)
+            await sms_code_input_ele.fill(value=sms_code_value.decode())
             await asyncio.sleep(0.5)
             submit_btn_ele = self.context_page.locator("xpath=//button[@class='web-login-button']")
             await submit_btn_ele.click()  # 点击登录
