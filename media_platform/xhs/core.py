@@ -81,7 +81,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         utils.logger.info("Begin search xiaohongshu keywords")
         xhs_limit_count = 20  # xhs limit page fixed value
         for keyword in config.KEYWORDS.split(","):
-            utils.logger.info(f"Current keyword: {keyword}")
+            utils.logger.info(f"Current search keyword: {keyword}")
             page = 1
             while page * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 note_id_list: List[str] = []

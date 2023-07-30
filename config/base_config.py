@@ -1,8 +1,8 @@
 # Desc: base config
 PLATFORM = "xhs"
 KEYWORDS = "健身,旅游"
-LOGIN_TYPE = "qrcode"  # qrcode or phone or cookies
-COOKIES = "web_session=xxxxcfed1566xxxxxxxxxxxxxxxxxxx;"  # if platform is xhs, pleas set only web_session cookie attr
+LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
+COOKIES = ""  # login by cookie, if login_type is cookie, you must set this value
 
 # enable ip proxy
 ENABLE_IP_PROXY = False

@@ -49,7 +49,7 @@ class XHSLogin(AbstractLogin):
             await self.login_by_qrcode()
         elif self.login_type == "phone":
             await self.login_by_mobile()
-        elif self.login_type == "cookies":
+        elif self.login_type == "cookie":
             await self.login_by_cookies()
         else:
             raise ValueError("Invalid Login Type Currently only supported qrcode or phone or cookies ...")
@@ -172,6 +172,8 @@ class XHSLogin(AbstractLogin):
         """login xiaohongshu website by cookies"""
         utils.logger.info("Begin login xiaohongshu by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
+            if key != "web_session":  # only set web_session cookie attr
+                continue
             await self.browser_context.add_cookies([{
                 'name': key,
                 'value': value,

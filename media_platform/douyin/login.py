@@ -44,10 +44,10 @@ class DouYinLogin(AbstractLogin):
             await self.login_by_qrcode()
         elif self.login_type == "phone":
             await self.login_by_mobile()
-        elif self.login_type == "cookies":
+        elif self.login_type == "cookie":
             await self.login_by_cookies()
         else:
-            raise ValueError("Invalid Login Type Currently only supported qrcode or phone ...")
+            raise ValueError("Invalid Login Type Currently only supported qrcode or phone or cookie ...")
 
         # 如果页面重定向到滑动验证码页面，需要再次滑动滑块
         await asyncio.sleep(6)
