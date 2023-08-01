@@ -93,6 +93,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 task_list = [
                     self.get_note_detail(post_item.get("id"), semaphore)
                     for post_item in notes_res.get("items", {})
+                    if post_item.get('model_type') not in ('rec_query', 'hot_query')
                 ]
                 note_details = await asyncio.gather(*task_list)
                 for note_detail in note_details:
