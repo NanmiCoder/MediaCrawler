@@ -65,7 +65,7 @@ async def update_xhs_note(note_item: Dict):
     local_db_item = {
         "note_id": note_item.get("note_id"),
         "type": note_item.get("type"),
-        "title": note_item.get("title") or note_item.get("desc", ""),
+        "title": note_item.get("title") or note_item.get("desc", "")[:255],
         "desc": note_item.get("desc", ""),
         "time": note_item.get("time"),
         "last_update_time": note_item.get("last_update_time", 0),
