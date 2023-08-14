@@ -9,3 +9,4 @@ tortoise-orm[asyncmy]==0.19.3
 aerich==0.7.2
 numpy~=1.24.4
 redis~=4.6.0
+Pydantic==1.7
