@@ -1,4 +1,5 @@
-import json
+import csv
+import pathlib
 from typing import Dict, List
 
 from tortoise import fields
@@ -7,6 +8,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 
 import config
 from tools import utils
+from var import request_keyword_var
 
 
 class DouyinBaseModel(Model):
@@ -98,6 +100,15 @@ async def update_douyin_aweme(aweme_item: Dict):
             douyin_data = douyin_aweme_pydantic(**local_db_item)
             douyin_aweme_pydantic.validate(douyin_data)
             await DouyinAweme.filter(aweme_id=aweme_id).update(**douyin_data.dict())
+    else:
+        # Below is a simple way to save it in CSV format.
+        source_keywords = request_keyword_var.get()
+        pathlib.Path(f"data/dy").mkdir(parents=True, exist_ok=True)
+        with open(f"data/dy/aweme_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            if f.tell() == 0:
+                writer.writerow(local_db_item.keys())
+            writer.writerow(local_db_item.values())
 
 
 async def batch_update_dy_aweme_comments(aweme_id: str, comments: List[Dict]):
@@ -147,3 +158,11 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
             comment_data = comment_pydantic(**local_db_item)
             comment_pydantic.validate(comment_data)
             await DouyinAwemeComment.filter(comment_id=comment_id).update(**comment_data.dict())
+    else:
+        source_keywords = request_keyword_var.get()
+        pathlib.Path(f"data/dy").mkdir(parents=True, exist_ok=True)
+        with open(f"data/dy/comment_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            if f.tell() == 0:
+                writer.writerow(local_db_item.keys())
+            writer.writerow(local_db_item.values())

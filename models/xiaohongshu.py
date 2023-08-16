@@ -1,3 +1,5 @@
+import csv
+import pathlib
 from typing import Dict, List
 
 from tortoise import fields
@@ -6,6 +8,7 @@ from tortoise.models import Model
 
 import config
 from tools import utils
+from var import request_keyword_var
 
 
 class XhsBaseModel(Model):
@@ -94,6 +97,15 @@ async def update_xhs_note(note_item: Dict):
             note_data = note_pydantic(**local_db_item)
             note_pydantic.validate(note_data)
             await XHSNote.filter(note_id=note_id).update(**note_data.dict())
+    else:
+        # Below is a simple way to save it in CSV format.
+        source_keywords = request_keyword_var.get()
+        pathlib.Path(f"data/xhs").mkdir(parents=True, exist_ok=True)
+        with open(f"data/xhs/notes_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            if f.tell() == 0:
+                writer.writerow(local_db_item.keys())
+            writer.writerow(local_db_item.values())
 
 
 async def update_xhs_note_comment(note_id: str, comment_item: Dict):
@@ -125,3 +137,12 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
             comment_data = comment_pydantic(**local_db_item)
             comment_pydantic.validate(comment_data)
             await XHSNoteComment.filter(comment_id=comment_id).update(**comment_data.dict())
+    else:
+        # Below is a simple way to save it in CSV format.
+        source_keywords = request_keyword_var.get()
+        pathlib.Path(f"data/xhs").mkdir(parents=True, exist_ok=True)
+        with open(f"data/xhs/comment_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            if f.tell() == 0:
+                writer.writerow(local_db_item.keys())
+            writer.writerow(local_db_item.values())

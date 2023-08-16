@@ -12,6 +12,7 @@ from base.base_crawler import AbstractCrawler
 from base.proxy_account_pool import AccountPool
 from models import xiaohongshu as xhs_model
 from tools import utils
+from var import request_keyword_var
 
 from .client import XHSClient
 from .exception import DataFetchError
@@ -81,6 +82,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
         utils.logger.info("Begin search xiaohongshu keywords")
         xhs_limit_count = 20  # xhs limit page fixed value
         for keyword in config.KEYWORDS.split(","):
+            # set keyword to context var
+            request_keyword_var.set(keyword)
             utils.logger.info(f"Current search keyword: {keyword}")
             page = 1
             while page * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:

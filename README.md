@@ -21,7 +21,8 @@
 - [x] 抖音登录（二维码、手机号、cookies）
 - [x] 抖音滑块（模拟滑动实现，准确率不太OK）
 - [x] 支持登录成功后的上下文浏览器环境保留
-- [x] 数据持久化到硬盘（关系型数据库）
+- [x] 数据保存到CSV中（默认）
+- [x] 数据保持到数据库中（可选）
 
 
 ## 使用方法
@@ -54,6 +55,9 @@
 
 5. 打开对应APP扫二维码登录
 
+6. 等待爬虫程序执行完毕，数据会保存到 `data/xhs` 目录下
+
+
 ## 项目代码结构
 
 ```
@@ -61,10 +65,12 @@ MediaCrawler
 ├── base 
 │   ├── base_crawler.py         # 项目的抽象类
 │   └── proxy_account_pool.py   # 账号与IP代理池
+├── browser_data                # 浏览器数据目录 
 ├── config 
 │   ├── account_config.py       # 账号代理池配置
 │   ├── base_config.py          # 基础配置
 │   └── db_config.py            # 数据库配置
+├── data                        # 数据保存目录  
 ├── libs 
 │   ├── douyin.js               # 抖音Sign函数
 │   └── stealth.min.js          # 去除浏览器自动化特征的JS

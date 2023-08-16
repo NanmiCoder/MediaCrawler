@@ -8,6 +8,7 @@ import httpx
 from playwright.async_api import BrowserContext, Page
 
 from tools import utils
+from var import request_keyword_var
 
 from .exception import *
 from .field import *
@@ -142,7 +143,7 @@ class DOUYINClient:
         del headers["Origin"]
         return await self.get("/aweme/v1/web/aweme/detail/", params, headers)
 
-    async def get_aweme_comments(self, aweme_id: str, cursor: int = 0, keywords: str = ""):
+    async def get_aweme_comments(self, aweme_id: str, cursor: int = 0):
         """get note comments
 
         """
@@ -153,6 +154,7 @@ class DOUYINClient:
             "count": 20,
             "item_type": 0
         }
+        keywords = request_keyword_var.get()
         referer_url = "https://www.douyin.com/search/" + keywords + '?aid=3a3cec5a-9e27-4040-b6aa-ef548c2c1138&publish_time=0&sort_type=0&source=search_history&type=general'
         headers = copy.copy(self.headers)
         headers["Referer"] = urllib.parse.quote(referer_url, safe=':/')
@@ -164,7 +166,6 @@ class DOUYINClient:
             crawl_interval: float = 1.0,
             is_fetch_sub_comments=False,
             callback: Optional[Callable] = None,
-            keywords: str = ""
     ):
         """
         get note all comments include sub comments
@@ -172,14 +173,13 @@ class DOUYINClient:
         :param crawl_interval:
         :param is_fetch_sub_comments:
         :param callback:
-        :param keywords:
         :return:
         """
         result = []
         comments_has_more = 1
         comments_cursor = 0
         while comments_has_more:
-            comments_res = await self.get_aweme_comments(aweme_id, comments_cursor, keywords)
+            comments_res = await self.get_aweme_comments(aweme_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", 0)
             comments_cursor = comments_res.get("cursor", comments_cursor + 20)
             comments = comments_res.get("comments")

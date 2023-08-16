@@ -11,6 +11,7 @@ from base.base_crawler import AbstractCrawler
 from base.proxy_account_pool import AccountPool
 from models import douyin
 from tools import utils
+from var import request_keyword_var
 
 from .client import DOUYINClient
 from .exception import DataFetchError
@@ -70,14 +71,15 @@ class DouYinCrawler(AbstractCrawler):
     async def search(self) -> None:
         utils.logger.info("Begin search douyin keywords")
         for keyword in config.KEYWORDS.split(","):
+            request_keyword_var.set(keyword)
             utils.logger.info(f"Current keyword: {keyword}")
             aweme_list: List[str] = []
-            dy_limite_count = 10  # douyin fixed limit page 10
+            dy_limit_count = 10  # douyin fixed limit page 10
             page = 0
-            while (page + 1) * dy_limite_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            while (page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 try:
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
-                                                                            offset=page * dy_limite_count)
+                                                                            offset=page * dy_limit_count)
                 except DataFetchError:
                     utils.logger.error(f"search douyin keyword: {keyword} failed")
                     break
@@ -91,23 +93,22 @@ class DouYinCrawler(AbstractCrawler):
                     aweme_list.append(aweme_info.get("aweme_id", ""))
                     await douyin.update_douyin_aweme(aweme_item=aweme_info)
             utils.logger.info(f"keyword:{keyword}, aweme_list:{aweme_list}")
-            await self.batch_get_note_comments(aweme_list, keyword)
+            await self.batch_get_note_comments(aweme_list)
 
-    async def batch_get_note_comments(self, aweme_list: List[str], keywords: str) -> None:
+    async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
         task_list: List[Task] = []
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         for aweme_id in aweme_list:
-            task = asyncio.create_task(self.get_comments(aweme_id, semaphore, keywords), name=aweme_id)
+            task = asyncio.create_task(self.get_comments(aweme_id, semaphore), name=aweme_id)
             task_list.append(task)
         await asyncio.wait(task_list)
 
-    async def get_comments(self, aweme_id: str, semaphore: asyncio.Semaphore, keywords: str) -> None:
+    async def get_comments(self, aweme_id: str, semaphore: asyncio.Semaphore) -> None:
         async with semaphore:
             try:
                 await self.dy_client.get_aweme_all_comments(
                     aweme_id=aweme_id,
                     callback=douyin.batch_update_dy_aweme_comments,
-                    keywords=keywords
                 )
                 utils.logger.info(f"aweme_id: {aweme_id} comments have all been obtained completed ...")
             except DataFetchError as e:

@@ -1,6 +1,6 @@
 # Desc: base config
 PLATFORM = "xhs"
-KEYWORDS = "健身,旅游"
+KEYWORDS = "python,golang"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""  # login by cookie, if login_type is cookie, you must set this value
 
