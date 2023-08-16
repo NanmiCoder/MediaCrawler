@@ -34,7 +34,7 @@ class DOUYINClient:
         if not params:
             return
         headers = headers or self.headers
-        local_storage: Dict = await self.playwright_page.evaluate("() => window.localStorage") # type: ignore
+        local_storage: Dict = await self.playwright_page.evaluate("() => window.localStorage")  # type: ignore
         douyin_js_obj = execjs.compile(open('libs/douyin.js').read())
         common_params = {
             "device_platform": "webapp",
@@ -53,8 +53,8 @@ class DOUYINClient:
             "platform": "PC",
             "screen_width": "1920",
             "screen_height": "1200",
-            "webid": douyin_js_obj.call("get_web_id"),
-            "msToken": local_storage.get("xmst"),
+            #" webid": douyin_js_obj.call("get_web_id"),
+            # "msToken": local_storage.get("xmst"),
             # "msToken": "abL8SeUTPa9-EToD8qfC7toScSADxpg6yLh2dbNcpWHzE0bT04txM_4UwquIcRvkRb9IU8sifwgM1Kwf1Lsld81o9Irt2_yNyUbbQPSUO8EfVlZJ_78FckDFnwVBVUVK",
         }
         params.update(common_params)
@@ -142,7 +142,7 @@ class DOUYINClient:
         del headers["Origin"]
         return await self.get("/aweme/v1/web/aweme/detail/", params, headers)
 
-    async def get_aweme_comments(self, aweme_id: str, cursor: int = 0):
+    async def get_aweme_comments(self, aweme_id: str, cursor: int = 0, keywords: str = ""):
         """get note comments
 
         """
@@ -153,6 +153,9 @@ class DOUYINClient:
             "count": 20,
             "item_type": 0
         }
+        referer_url = "https://www.douyin.com/search/" + keywords + '?aid=3a3cec5a-9e27-4040-b6aa-ef548c2c1138&publish_time=0&sort_type=0&source=search_history&type=general'
+        headers = copy.copy(self.headers)
+        headers["Referer"] = urllib.parse.quote(referer_url, safe=':/')
         return await self.get(uri, params)
 
     async def get_aweme_all_comments(
@@ -160,7 +163,8 @@ class DOUYINClient:
             aweme_id: str,
             crawl_interval: float = 1.0,
             is_fetch_sub_comments=False,
-            callback: Optional[Callable] = None
+            callback: Optional[Callable] = None,
+            keywords: str = ""
     ):
         """
         get note all comments include sub comments
@@ -168,13 +172,14 @@ class DOUYINClient:
         :param crawl_interval:
         :param is_fetch_sub_comments:
         :param callback:
+        :param keywords:
         :return:
         """
         result = []
         comments_has_more = 1
         comments_cursor = 0
         while comments_has_more:
-            comments_res = await self.get_aweme_comments(aweme_id, comments_cursor)
+            comments_res = await self.get_aweme_comments(aweme_id, comments_cursor, keywords)
             comments_has_more = comments_res.get("has_more", 0)
             comments_cursor = comments_res.get("cursor", comments_cursor + 20)
             comments = comments_res.get("comments")

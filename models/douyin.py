@@ -88,12 +88,13 @@ async def update_douyin_aweme(aweme_item: Dict):
     if config.IS_SAVED_DATABASED:
         if not await DouyinAweme.filter(aweme_id=aweme_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()
-            douyin_aweme_pydantic = pydantic_model_creator(DouyinAweme,name='DouyinAwemeCreate',exclude=('id',))
+            douyin_aweme_pydantic = pydantic_model_creator(DouyinAweme, name='DouyinAwemeCreate', exclude=('id',))
             douyin_data = douyin_aweme_pydantic(**local_db_item)
             douyin_aweme_pydantic.validate(douyin_data)
             await DouyinAweme.create(**douyin_data.dict())
         else:
-            douyin_aweme_pydantic = pydantic_model_creator(DouyinAweme, name='DouyinAwemeUpdate', exclude=('id','add_ts'))
+            douyin_aweme_pydantic = pydantic_model_creator(DouyinAweme, name='DouyinAwemeUpdate',
+                                                           exclude=('id', 'add_ts'))
             douyin_data = douyin_aweme_pydantic(**local_db_item)
             douyin_aweme_pydantic.validate(douyin_data)
             await DouyinAweme.filter(aweme_id=aweme_id).update(**douyin_data.dict())
@@ -121,7 +122,6 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "ip_location": comment_item.get("ip_label", ""),
         "aweme_id": aweme_id,
         "content": comment_item.get("text"),
-        "content_extra": json.dumps(comment_item.get("text_extra", [])),
         "user_id": user_info.get("uid"),
         "sec_uid": user_info.get("sec_uid"),
         "short_user_id": user_info.get("short_id"),
@@ -136,12 +136,14 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
     if config.IS_SAVED_DATABASED:
         if not await DouyinAwemeComment.filter(comment_id=comment_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()
-            comment_pydantic = pydantic_model_creator(DouyinAwemeComment, name='DouyinAwemeCommentCreate', exclude=('id',))
+            comment_pydantic = pydantic_model_creator(DouyinAwemeComment, name='DouyinAwemeCommentCreate',
+                                                      exclude=('id',))
             comment_data = comment_pydantic(**local_db_item)
             comment_pydantic.validate(comment_data)
             await DouyinAwemeComment.create(**comment_data.dict())
         else:
-            comment_pydantic = pydantic_model_creator(DouyinAwemeComment, name='DouyinAwemeCommentUpdate', exclude=('id','add_ts'))
+            comment_pydantic = pydantic_model_creator(DouyinAwemeComment, name='DouyinAwemeCommentUpdate',
+                                                      exclude=('id', 'add_ts'))
             comment_data = comment_pydantic(**local_db_item)
             comment_pydantic.validate(comment_data)
             await DouyinAwemeComment.filter(comment_id=comment_id).update(**comment_data.dict())

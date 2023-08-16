@@ -85,12 +85,12 @@ async def update_xhs_note(note_item: Dict):
     if config.IS_SAVED_DATABASED:
         if not await XHSNote.filter(note_id=note_id).first():
             local_db_item["add_ts"] = utils.get_current_timestamp()
-            note_pydantic = pydantic_model_creator(XHSNote, name="XHSPydanticCreate", exclude=('id', ))
+            note_pydantic = pydantic_model_creator(XHSNote, name="XHSPydanticCreate", exclude=('id',))
             note_data = note_pydantic(**local_db_item)
             note_pydantic.validate(note_data)
             await XHSNote.create(**note_data.dict())
         else:
-            note_pydantic = pydantic_model_creator(XHSNote, name="XHSPydanticUpdate", exclude=('id','add_ts'))
+            note_pydantic = pydantic_model_creator(XHSNote, name="XHSPydanticUpdate", exclude=('id', 'add_ts'))
             note_data = note_pydantic(**local_db_item)
             note_pydantic.validate(note_data)
             await XHSNote.filter(note_id=note_id).update(**note_data.dict())
@@ -115,16 +115,13 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
     if config.IS_SAVED_DATABASED:
         if not await XHSNoteComment.filter(comment_id=comment_id).first():
             local_db_item["add_ts"] = utils.get_current_timestamp()
-            comment_pydantic = pydantic_model_creator(XHSNoteComment, name="CommentPydanticCreate", exclude=('id', ))
+            comment_pydantic = pydantic_model_creator(XHSNoteComment, name="CommentPydanticCreate", exclude=('id',))
             comment_data = comment_pydantic(**local_db_item)
             comment_pydantic.validate(comment_data)
             await XHSNoteComment.create(**comment_data.dict())
         else:
-            comment_pydantic = pydantic_model_creator(XHSNoteComment, name="CommentPydanticUpdate", exclude=('id','add_ts',))
+            comment_pydantic = pydantic_model_creator(XHSNoteComment, name="CommentPydanticUpdate",
+                                                      exclude=('id', 'add_ts',))
             comment_data = comment_pydantic(**local_db_item)
             comment_pydantic.validate(comment_data)
             await XHSNoteComment.filter(comment_id=comment_id).update(**comment_data.dict())
-
-
-
-
