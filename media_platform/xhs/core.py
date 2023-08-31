@@ -136,11 +136,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
         """Create proxy info for playwright and httpx"""
-        if not config.ENABLE_IP_PROXY:
-            return None, None, None
-        utils.logger.info("Begin proxy info for playwright and httpx ...")
         # phone: 13012345671  ip_proxy: 111.122.xx.xx1:8888
         phone, ip_proxy = self.account_pool.get_account()
+        if not config.ENABLE_IP_PROXY:
+            return phone, None, None
+        utils.logger.info("Begin proxy info for playwright and httpx ...")
         playwright_proxy = {
             "server": f"{config.IP_PROXY_PROTOCOL}{ip_proxy}",
             "username": config.IP_PROXY_USER,
