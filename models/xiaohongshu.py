@@ -36,6 +36,7 @@ class XHSNote(XhsBaseModel):
     comment_count = fields.CharField(null=True, max_length=16, description="笔记评论数")
     share_count = fields.CharField(null=True, max_length=16, description="笔记分享数")
     image_list = fields.TextField(null=True, description="笔记封面图片列表")
+    note_url = fields.CharField(null=True, max_length=255, description="笔记详情页的URL")
 
     class Meta:
         table = "xhs_note"
@@ -83,6 +84,7 @@ async def update_xhs_note(note_item: Dict):
         "ip_location": note_item.get("ip_location", ""),
         "image_list": ','.join([img.get('url', '') for img in image_list]),
         "last_modify_ts": utils.get_current_timestamp(),
+        "note_url": f"https://www.xiaohongshu.com/explore/{note_id}"
     }
     print("xhs note:", local_db_item)
     if config.IS_SAVED_DATABASED:

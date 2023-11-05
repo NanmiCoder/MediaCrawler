@@ -38,6 +38,7 @@ class DouyinAweme(DouyinBaseModel):
     comment_count = fields.CharField(null=True, max_length=16, description="视频评论数")
     share_count = fields.CharField(null=True, max_length=16, description="视频分享数")
     collected_count = fields.CharField(null=True, max_length=16, description="视频收藏数")
+    aweme_url = fields.CharField(null=True, max_length=255, description="视频详情页URL")
 
     class Meta:
         table = "douyin_aweme"
@@ -85,6 +86,7 @@ async def update_douyin_aweme(aweme_item: Dict):
         "share_count": interact_info.get("share_count"),
         "ip_location": aweme_item.get("ip_label", ""),
         "last_modify_ts": utils.get_current_timestamp(),
+        "aweme_url": f"https://www.douyin.com/video/{aweme_id}"
     }
     print(f"douyin aweme id:{aweme_id}, title:{local_db_item.get('title')}")
     if config.IS_SAVED_DATABASED:
