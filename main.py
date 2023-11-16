@@ -56,4 +56,4 @@ if __name__ == '__main__':
 # 1. 先把main函数服务化，用api调用main
 # 2. 实现传参，并且存下search的参数
 # 3. 实现搜索结果回调
-# 4. 实现qrcode发送手机
+# 4. 实现qrcode发送手机(wx，邮件，telegram等)
