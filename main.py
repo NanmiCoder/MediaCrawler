@@ -51,3 +51,9 @@ if __name__ == '__main__':
         asyncio.get_event_loop().run_until_complete(main())
     except KeyboardInterrupt:
         sys.exit()
+
+# TODO:
+# 1. 先把main函数服务化，用api调用main
+# 2. 实现传参，并且存下search的参数
+# 3. 实现搜索结果回调
+# 4. 实现qrcode发送手机
