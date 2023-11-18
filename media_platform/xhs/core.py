@@ -119,13 +119,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
         """Get the information and comments of the specified post"""
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
-            self.get_note_detail(note_id=note_id, semaphore=semaphore) for note_id in config.SPECIFIED_ID_LIST
+            self.get_note_detail(note_id=note_id, semaphore=semaphore) for note_id in config.XHS_SPECIFIED_ID_LIST
         ]
         note_details = await asyncio.gather(*task_list)
         for note_detail in note_details:
             if note_detail is not None:
                 await xhs_model.update_xhs_note(note_detail)
-        await self.batch_get_note_comments(config.SPECIFIED_ID_LIST)
+        await self.batch_get_note_comments(config.XHS_SPECIFIED_ID_LIST)
 
 
     async def get_note_detail(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:

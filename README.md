@@ -77,7 +77,7 @@
 # A: 在config/base_config.py 中 KEYWORDS 参数用于控制需要爬去的关键词
 
 # Q: 可以指定帖子爬去吗？
-# A：在config/base_config.py 中 SPECIFIED_ID_LIST 参数用于控制需要指定爬去的帖子ID列表
+# A：在config/base_config.py 中 XHS_SPECIFIED_ID_LIST 参数用于控制需要指定爬去的帖子ID列表
 
 # Q: 刚开始能爬取数据，过一段时间就是失效了？
 # A：出现这种情况多半是由于你的账号触发了平台风控机制了，❗️❗️请勿大规模对平台进行爬虫，影响平台。
