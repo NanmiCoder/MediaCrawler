@@ -21,6 +21,7 @@ from .login import DouYinLogin
 class DouYinCrawler(AbstractCrawler):
     platform: str
     login_type: str
+    crawler_type: str
     context_page: Page
     dy_client: DOUYINClient
     account_pool: AccountPool
@@ -30,10 +31,11 @@ class DouYinCrawler(AbstractCrawler):
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
         self.index_url = "https://www.douyin.com"
 
-    def init_config(self, platform: str, login_type: str, account_pool: AccountPool) -> None:
+    def init_config(self, platform: str, login_type: str, account_pool: AccountPool, crawler_type: str) -> None:
         self.platform = platform
         self.login_type = login_type
         self.account_pool = account_pool
+        self.crawler_type = crawler_type
 
     async def start(self) -> None:
         account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
@@ -63,8 +65,12 @@ class DouYinCrawler(AbstractCrawler):
                 await login_obj.begin()
                 await self.dy_client.update_cookies(browser_context=self.browser_context)
 
-            # search_posts
-            await self.search()
+            if self.crawler_type == "search":
+                # Search for notes and retrieve their comment information.
+                await self.search()
+            elif self.crawler_type == "detail":
+                # Get the information and comments of the specified post
+                await self.get_specified_notes()
 
             utils.logger.info("Douyin Crawler finished ...")
 
@@ -74,7 +80,7 @@ class DouYinCrawler(AbstractCrawler):
             request_keyword_var.set(keyword)
             utils.logger.info(f"Current keyword: {keyword}")
             aweme_list: List[str] = []
-            dy_limit_count = 10  # douyin fixed limit page 10
+            dy_limit_count = 10
             page = 0
             while (page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 try:
@@ -94,6 +100,11 @@ class DouYinCrawler(AbstractCrawler):
                     await douyin.update_douyin_aweme(aweme_item=aweme_info)
             utils.logger.info(f"keyword:{keyword}, aweme_list:{aweme_list}")
             await self.batch_get_note_comments(aweme_list)
+
+    async def get_specified_notes(self):
+        """Get the information and comments of the specified post"""
+        # todo douyin support
+        pass
 
     async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
         task_list: List[Task] = []
