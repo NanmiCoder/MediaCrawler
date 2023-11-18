@@ -8,7 +8,7 @@ from tortoise.models import Model
 
 import config
 from tools import utils
-from var import request_keyword_var
+from var import crawler_type_var
 
 
 class DouyinBaseModel(Model):
@@ -104,9 +104,9 @@ async def update_douyin_aweme(aweme_item: Dict):
             await DouyinAweme.filter(aweme_id=aweme_id).update(**douyin_data.dict())
     else:
         # Below is a simple way to save it in CSV format.
-        source_keywords = request_keyword_var.get()
         pathlib.Path(f"data/dy").mkdir(parents=True, exist_ok=True)
-        with open(f"data/dy/aweme_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+        save_file_name = f"data/dy/{crawler_type_var.get()}_awemes_{utils.get_current_date()}.csv"
+        with open(save_file_name, mode='a+', encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f)
             if f.tell() == 0:
                 writer.writerow(local_db_item.keys())
@@ -161,9 +161,10 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
             comment_pydantic.validate(comment_data)
             await DouyinAwemeComment.filter(comment_id=comment_id).update(**comment_data.dict())
     else:
-        source_keywords = request_keyword_var.get()
+
         pathlib.Path(f"data/dy").mkdir(parents=True, exist_ok=True)
-        with open(f"data/dy/comment_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+        save_file_name = f"data/dy/{crawler_type_var.get()}_comments_{utils.get_current_date()}.csv"
+        with open(save_file_name, mode='a+', encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f)
             if f.tell() == 0:
                 writer.writerow(local_db_item.keys())

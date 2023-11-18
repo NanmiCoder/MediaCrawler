@@ -23,13 +23,13 @@ class CrawlerFactory:
 async def main():
     # define command line params ...
     parser = argparse.ArgumentParser(description='Media crawler program.')
-    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy)', choices=["xhs", "dy"],
-                        default=config.PLATFORM)
+    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy)',
+                        choices=["xhs", "dy"], default=config.PLATFORM)
     parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)',
                         choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)
-
     parser.add_argument('--type', type=str, help='crawler type (search | detail)',
-                        choices=["search","detail"],default=config.CRAWLER_TYPE)
+                        choices=["search", "detail"], default=config.CRAWLER_TYPE)
+
     # init account pool
     account_pool = proxy_account_pool.create_account_pool()
 

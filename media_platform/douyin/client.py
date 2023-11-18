@@ -1,7 +1,7 @@
 import asyncio
 import copy
 import urllib.parse
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import execjs
 import httpx
@@ -129,7 +129,7 @@ class DOUYINClient:
         headers["Referer"] = urllib.parse.quote(referer_url, safe=':/')
         return await self.get("/aweme/v1/web/general/search/single/", params, headers=headers)
 
-    async def get_video_by_id(self, aweme_id: str):
+    async def get_video_by_id(self, aweme_id: str) -> Any:
         """
         DouYin Video Detail API
         :param aweme_id:
@@ -139,9 +139,10 @@ class DOUYINClient:
             "aweme_id": aweme_id
         }
         headers = copy.copy(self.headers)
-        headers["Cookie"] = "s_v_web_id=verify_leytkxgn_kvO5kOmO_SdMs_4t1o_B5ml_BUqtWM1mP6BF;"
+        # headers["Cookie"] = "s_v_web_id=verify_lol4a8dv_wpQ1QMyP_xemd_4wON_8Yzr_FJa8DN1vdY2m;"
         del headers["Origin"]
-        return await self.get("/aweme/v1/web/aweme/detail/", params, headers)
+        res = await self.get("/aweme/v1/web/aweme/detail/", params, headers)
+        return res.get("aweme_detail", {})
 
     async def get_aweme_comments(self, aweme_id: str, cursor: int = 0):
         """get note comments

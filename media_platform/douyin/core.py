@@ -1,7 +1,7 @@
 import asyncio
 import os
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from playwright.async_api import (BrowserContext, BrowserType, Page,
                                   async_playwright)
@@ -11,7 +11,7 @@ from base.base_crawler import AbstractCrawler
 from base.proxy_account_pool import AccountPool
 from models import douyin
 from tools import utils
-from var import request_keyword_var
+from var import crawler_type_var
 
 from .client import DOUYINClient
 from .exception import DataFetchError
@@ -64,20 +64,19 @@ class DouYinCrawler(AbstractCrawler):
                 )
                 await login_obj.begin()
                 await self.dy_client.update_cookies(browser_context=self.browser_context)
-
+            crawler_type_var.set(self.crawler_type)
             if self.crawler_type == "search":
                 # Search for notes and retrieve their comment information.
                 await self.search()
             elif self.crawler_type == "detail":
                 # Get the information and comments of the specified post
-                await self.get_specified_notes()
+                await self.get_specified_awemes()
 
             utils.logger.info("Douyin Crawler finished ...")
 
     async def search(self) -> None:
         utils.logger.info("Begin search douyin keywords")
         for keyword in config.KEYWORDS.split(","):
-            request_keyword_var.set(keyword)
             utils.logger.info(f"Current keyword: {keyword}")
             aweme_list: List[str] = []
             dy_limit_count = 10
@@ -101,10 +100,29 @@ class DouYinCrawler(AbstractCrawler):
             utils.logger.info(f"keyword:{keyword}, aweme_list:{aweme_list}")
             await self.batch_get_note_comments(aweme_list)
 
-    async def get_specified_notes(self):
+    async def get_specified_awemes(self):
         """Get the information and comments of the specified post"""
-        # todo douyin support
-        pass
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list = [
+            self.get_aweme_detail(aweme_id=aweme_id, semaphore=semaphore) for aweme_id in config.DY_SPECIFIED_ID_LIST
+        ]
+        aweme_details = await asyncio.gather(*task_list)
+        for aweme_detail in aweme_details:
+            if aweme_detail is not None:
+                await douyin.update_douyin_aweme(aweme_detail)
+        await self.batch_get_note_comments(config.DY_SPECIFIED_ID_LIST)
+
+    async def get_aweme_detail(self, aweme_id: str, semaphore: asyncio.Semaphore) -> Any:
+        """Get note detail"""
+        async with semaphore:
+            try:
+                return await self.dy_client.get_video_by_id(aweme_id)
+            except DataFetchError as ex:
+                utils.logger.error(f"Get aweme detail error: {ex}")
+                return None
+            except KeyError as ex:
+                utils.logger.error(f"have not fund note detail aweme_id:{aweme_id}, err: {ex}")
+                return None
 
     async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
         task_list: List[Task] = []

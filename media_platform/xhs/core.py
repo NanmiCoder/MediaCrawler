@@ -74,13 +74,12 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 await login_obj.begin()
                 await self.xhs_client.update_cookies(browser_context=self.browser_context)
 
+            crawler_type_var.set(self.crawler_type)
             if self.crawler_type == "search":
                 # Search for notes and retrieve their comment information.
-                crawler_type_var.set("search")
                 await self.search()
             elif self.crawler_type == "detail":
                 # Get the information and comments of the specified post
-                crawler_type_var.set("detail")
                 await self.get_specified_notes()
             else:
                 pass
