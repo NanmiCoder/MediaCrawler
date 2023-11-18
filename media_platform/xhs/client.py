@@ -186,7 +186,6 @@ class XHSClient:
             comments_res = await self.get_note_comments(note_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", False)
             comments_cursor = comments_res.get("cursor", "")
-            # thanks, @Akiqqqqqqq fix it issue
             # Check if 'comments' key exists in the response
             if "comments" not in comments_res:
                 # Handle the absence of 'comments' key appropriately
