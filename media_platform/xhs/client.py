@@ -186,6 +186,14 @@ class XHSClient:
             comments_res = await self.get_note_comments(note_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", False)
             comments_cursor = comments_res.get("cursor", "")
+            # thanks, @Akiqqqqqqq fix it issue
+            # Check if 'comments' key exists in the response
+            if "comments" not in comments_res:
+                # Handle the absence of 'comments' key appropriately
+                # For example, log an error message, break from the loop, etc.
+                # This is just an example:
+                print(f"No 'comments' key found in response: {comments_res}")
+                break
             comments = comments_res["comments"]
             if not is_fetch_sub_comments:
                 result.extend(comments)
