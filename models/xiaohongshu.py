@@ -8,7 +8,7 @@ from tortoise.models import Model
 
 import config
 from tools import utils
-from var import request_keyword_var
+from var import crawler_type_var
 
 
 class XhsBaseModel(Model):
@@ -101,9 +101,9 @@ async def update_xhs_note(note_item: Dict):
             await XHSNote.filter(note_id=note_id).update(**note_data.dict())
     else:
         # Below is a simple way to save it in CSV format.
-        source_keywords = request_keyword_var.get()
         pathlib.Path(f"data/xhs").mkdir(parents=True, exist_ok=True)
-        with open(f"data/xhs/notes_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+        save_file_name = f"data/xhs/{crawler_type_var.get()}_notes_{utils.get_current_date()}.csv"
+        with open(save_file_name, mode='a+', encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f)
             if f.tell() == 0:
                 writer.writerow(local_db_item.keys())
@@ -141,9 +141,9 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
             await XHSNoteComment.filter(comment_id=comment_id).update(**comment_data.dict())
     else:
         # Below is a simple way to save it in CSV format.
-        source_keywords = request_keyword_var.get()
         pathlib.Path(f"data/xhs").mkdir(parents=True, exist_ok=True)
-        with open(f"data/xhs/comment_{source_keywords}.csv", mode='a+', encoding="utf-8-sig", newline="") as f:
+        save_file_name = f"data/xhs/{crawler_type_var.get()}_comment_{utils.get_current_date()}.csv"
+        with open(save_file_name, mode='a+', encoding="utf-8-sig", newline="") as f:
             writer = csv.writer(f)
             if f.tell() == 0:
                 writer.writerow(local_db_item.keys())

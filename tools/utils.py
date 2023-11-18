@@ -267,3 +267,12 @@ def get_tracks(distance: int, level: str = "easy") -> List[int]:
         from . import easing
         _, tricks = easing.get_tracks(distance, seconds=2, ease_func="ease_out_expo")
         return tricks
+
+
+def get_current_time():
+    ISOTIMEFORMAT = '%Y-%m-%d %X'
+    return tme.strftime(ISOTIMEFORMAT, time.localtime())
+
+def get_current_date():
+    ISOTIMEFORMAT = '%Y-%m-%d'
+    return time.strftime(ISOTIMEFORMAT, time.localtime())

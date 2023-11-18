@@ -3,6 +3,7 @@ PLATFORM = "xhs"
 KEYWORDS = "python,golang"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""  # login by cookie, if login_type is cookie, you must set this value
+CRAWLER_TYPE = "search"
 
 # enable ip proxy
 ENABLE_IP_PROXY = False
@@ -24,3 +25,11 @@ CRAWLER_MAX_NOTES_COUNT = 20
 
 # max concurrency num
 MAX_CONCURRENCY_NUM = 10
+
+
+# specified note id list
+SPECIFIED_ID_LIST = [
+"6422c2750000000027000d88",
+"64ca1b73000000000b028dd2",
+"630d5b85000000001203ab41",
+]

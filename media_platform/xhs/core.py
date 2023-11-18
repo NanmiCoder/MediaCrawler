@@ -12,7 +12,7 @@ from base.base_crawler import AbstractCrawler
 from base.proxy_account_pool import AccountPool
 from models import xiaohongshu as xhs_model
 from tools import utils
-from var import request_keyword_var
+from var import crawler_type_var
 
 from .client import XHSClient
 from .exception import DataFetchError
@@ -22,6 +22,7 @@ from .login import XHSLogin
 class XiaoHongShuCrawler(AbstractCrawler):
     platform: str
     login_type: str
+    crawler_type: str
     context_page: Page
     xhs_client: XHSClient
     account_pool: AccountPool
@@ -31,10 +32,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
         self.index_url = "https://www.xiaohongshu.com"
         self.user_agent = utils.get_user_agent()
 
-    def init_config(self, platform: str, login_type: str, account_pool: AccountPool) -> None:
+    def init_config(self, platform: str, login_type: str, account_pool: AccountPool, crawler_type: str) -> None:
         self.platform = platform
         self.login_type = login_type
         self.account_pool = account_pool
+        self.crawler_type =crawler_type
 
     async def start(self) -> None:
         account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
@@ -72,8 +74,16 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 await login_obj.begin()
                 await self.xhs_client.update_cookies(browser_context=self.browser_context)
 
-            # Search for notes and retrieve their comment information.
-            await self.search()
+            if self.crawler_type == "search":
+                # Search for notes and retrieve their comment information.
+                crawler_type_var.set("search")
+                await self.search()
+            elif self.crawler_type == "detail":
+                # Get the information and comments of the specified post
+                crawler_type_var.set("detail")
+                await self.get_specified_notes()
+            else:
+                pass
 
             utils.logger.info("Xhs Crawler finished ...")
 
@@ -82,8 +92,6 @@ class XiaoHongShuCrawler(AbstractCrawler):
         utils.logger.info("Begin search xiaohongshu keywords")
         xhs_limit_count = 20  # xhs limit page fixed value
         for keyword in config.KEYWORDS.split(","):
-            # set keyword to context var
-            request_keyword_var.set(keyword)
             utils.logger.info(f"Current search keyword: {keyword}")
             page = 1
             while page * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
@@ -107,6 +115,19 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 utils.logger.info(f"Note details: {note_details}")
                 await self.batch_get_note_comments(note_id_list)
 
+    async def get_specified_notes(self):
+        """Get the information and comments of the specified post"""
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list = [
+            self.get_note_detail(note_id=note_id, semaphore=semaphore) for note_id in config.SPECIFIED_ID_LIST
+        ]
+        note_details = await asyncio.gather(*task_list)
+        for note_detail in note_details:
+            if note_detail is not None:
+                await xhs_model.update_xhs_note(note_detail)
+        await self.batch_get_note_comments(config.SPECIFIED_ID_LIST)
+
+
     async def get_note_detail(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """Get note detail"""
         async with semaphore:
@@ -114,6 +135,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 return await self.xhs_client.get_note_by_id(note_id)
             except DataFetchError as ex:
                 utils.logger.error(f"Get note detail error: {ex}")
+                return None
+            except KeyError as ex:
+                utils.logger.error(f"have not fund note detail note_id:{note_id}, err: {ex}")
                 return None
 
     async def batch_get_note_comments(self, note_list: List[str]):

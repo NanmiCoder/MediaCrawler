@@ -16,15 +16,21 @@
 
 - [x] 小红书登录（二维码、手机号、cookies）
 - [x] 小红书Sign请求签名
+- [x] 小红书指定关键词爬去
+- [x] 小红书指定帖子爬去
 - [x] 抖音Sign请求签名
-- [x] 代理池实现（手机号+IP）
-- [x] 并发执行爬虫请求
 - [x] 抖音登录（二维码、手机号、cookies）
 - [x] 抖音滑块（模拟滑动实现，准确率不太OK）
+- [x] 抖音指定关键爬取
 - [x] 支持登录成功后的上下文浏览器环境保留
+- [x] 代理池实现（手机号+IP）
+- [x] 并发执行爬虫请求
 - [x] 数据保存到CSV中（默认）
 - [x] 数据保持到数据库中（可选）
 
+## 待实现
+- [ ] 抖音指定帖子爬取
+- [ ] 快手爬虫实现
 
 ## 使用方法
 
@@ -51,13 +57,31 @@
 4. 运行爬虫程序
 
    ```shell
-   python main.py --platform xhs --lt qrcode
+   # 从配置文件中读取关键词搜索相关的帖子并爬去帖子信息与评论
+   python main.py --platform xhs --lt qrcode --type search
+   
+   # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
+   python main.py --platform xhs --lt qrcode --type detail
    ```
 
 5. 打开对应APP扫二维码登录
 
 6. 等待爬虫程序执行完毕，数据会保存到 `data/xhs` 目录下
 
+## 常见程序运行出错问题
+```shell
+# Q: 爬去抖音报错: `execjs._exceptions.ProgramError: SyntaxError: 缺少 ';'`
+# A: 该错误为缺少 nodejs 环境这个错误安装 nodejs 环境即可，版本为：`v16.8.0`
+
+# Q: 可以指定关键词爬取吗？
+# A: 在config/base_config.py 中 KEYWORDS 参数用于控制需要爬去的关键词
+
+# Q: 可以指定帖子爬去吗？
+# A：在config/base_config.py 中 SPECIFIED_ID_LIST 参数用于控制需要指定爬去的帖子ID列表
+
+# Q: 刚开始能爬取数据，过一段时间就是失效了？
+# A：出现这种情况多半是由于你的账号触发了平台风控机制了，❗️❗️请勿大规模对平台进行爬虫，影响平台。
+```
 
 ## 项目代码结构
 
