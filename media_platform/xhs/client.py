@@ -1,6 +1,7 @@
 import asyncio
 import json
-from typing import Dict, Optional
+from typing import Dict
+from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
@@ -70,7 +71,7 @@ class XHSClient:
         final_uri = uri
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
-                         f"{'&'.join([f'{k}={v}' for k, v in params.items()])}")
+                         f"{urlencode(params)}")
         headers = await self._pre_headers(final_uri)
         return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
 
