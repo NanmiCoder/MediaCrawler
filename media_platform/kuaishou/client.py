@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from typing import Dict
 import asyncio
 import json
+from urllib.parse import urlencode
 from typing import Dict, Optional
 
 import httpx
@@ -10,7 +10,6 @@ from playwright.async_api import BrowserContext, Page
 from tools import utils
 
 from .exception import DataFetchError, IPBlockError
-
 
 
 class KuaishouClient:
@@ -26,7 +25,7 @@ class KuaishouClient:
         self.proxies = proxies
         self.timeout = timeout
         self.headers = headers
-        self._host = "https://edith.xiaohongshu.com"
+        self._host = "https://www.kuaishou.com"
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
 
@@ -49,7 +48,7 @@ class KuaishouClient:
         final_uri = uri
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
-                         f"{'&'.join([f'{k}={v}' for k, v in params.items()])}")
+                         f"{urlencode(params)}")
         headers = await self._pre_headers(final_uri)
         return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
 
@@ -59,13 +58,18 @@ class KuaishouClient:
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=headers)
 
-    async def ping(self) -> bool:
+    async def pong(self) -> bool:
         """get a note to check if login state is ok"""
-        utils.logger.info("Begin to ping xhs...")
+        utils.logger.info("Begin pong kuaishou...")
         ping_flag = False
         try:
             pass
         except Exception as e:
-            utils.logger.error(f"Ping xhs failed: {e}, and try to login again...")
+            utils.logger.error(f"Pong kuaishou failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
+
+    async def update_cookies(self, browser_context: BrowserContext):
+        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+        self.headers["Cookie"] = cookie_str
+        self.cookie_dict = cookie_dict

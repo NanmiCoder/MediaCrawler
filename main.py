@@ -6,6 +6,7 @@ import config
 import db
 from base import proxy_account_pool
 from media_platform.douyin import DouYinCrawler
+from media_platform.kuaishou import KuaishouCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 
 
@@ -16,6 +17,8 @@ class CrawlerFactory:
             return XiaoHongShuCrawler()
         elif platform == "dy":
             return DouYinCrawler()
+        elif platform == "ks":
+            return KuaishouCrawler()
         else:
             raise ValueError("Invalid Media Platform Currently only supported xhs or dy ...")
 
@@ -23,8 +26,8 @@ class CrawlerFactory:
 async def main():
     # define command line params ...
     parser = argparse.ArgumentParser(description='Media crawler program.')
-    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy)',
-                        choices=["xhs", "dy"], default=config.PLATFORM)
+    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy | ks)',
+                        choices=["xhs", "dy", "ks"], default=config.PLATFORM)
     parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)',
                         choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)
     parser.add_argument('--type', type=str, help='crawler type (search | detail)',
