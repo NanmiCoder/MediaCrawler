@@ -11,8 +11,9 @@ from base.proxy_account_pool import AccountPool
 from tools import utils
 from var import crawler_type_var
 
-from .client import KuaishouClient
+from .client import KuaiShouClient
 from .login import KuaishouLogin
+from .exception import DataFetchError
 
 
 class KuaishouCrawler(AbstractCrawler):
@@ -20,7 +21,7 @@ class KuaishouCrawler(AbstractCrawler):
     login_type: str
     crawler_type: str
     context_page: Page
-    ks_client: KuaishouClient
+    ks_client: KuaiShouClient
     account_pool: AccountPool
     browser_context: BrowserContext
 
@@ -76,11 +77,57 @@ class KuaishouCrawler(AbstractCrawler):
             utils.logger.info("Kuaishou Crawler finished ...")
 
     async def search(self):
-        await asyncio.Event().wait()
+        utils.logger.info("Begin search kuaishou keywords")
+        ks_limit_count = 20  # kuaishou limit page fixed value
+        for keyword in config.KEYWORDS.split(","):
+            utils.logger.info(f"Current search keyword: {keyword}")
+            page = 1
+            while page * ks_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+                video_id_list: List[str] = []
+                videos_res = await self.ks_client.search_info_by_keyword(
+                    keyword=keyword,
+                    pcursor=str(page),
+                )
+                if not videos_res:
+                    utils.logger.error(f"search info by keyword:{keyword} not found data")
+                    continue
+                vision_search_photo = videos_res.get("visionSearchPhoto")
+                utils.logger.info(f"videos_res:{videos_res}")
+                semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+                task_list = [
+                    self.get_video_detail(feed_item.get("photo", {}).get("id"), semaphore)
+                    for feed_item in vision_search_photo.get("feeds", {})
+                ]
+                video_details = await asyncio.gather(*task_list)
+                for video_detail in video_details:
+                    if video_detail is not None:
+                        video_id_list.append(video_detail.get("id"))
+                page += 1
+                utils.logger.info(f"Video details: {video_details}")
+                await self.batch_get_note_comments(video_id_list)
 
+        await asyncio.Event().wait()
 
     async def get_specified_notes(self):
         pass
+
+    async def batch_get_note_comments(self, video_id_list: List[str]):
+        pass
+
+    async def get_video_detail(self, ):
+        pass
+
+    async def get_video_detail(self, video_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
+        """Get note detail"""
+        async with semaphore:
+            try:
+                return await self.ks_client.get_video_info(video_id)
+            except DataFetchError as ex:
+                utils.logger.error(f"Get note detail error: {ex}")
+                return None
+            except KeyError as ex:
+                utils.logger.error(f"have not fund note detail note_id:{note_id}, err: {ex}")
+                return None
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
         """Create proxy info for playwright and httpx"""
@@ -97,11 +144,11 @@ class KuaishouCrawler(AbstractCrawler):
         httpx_proxy = f"{config.IP_PROXY_PROTOCOL}{config.IP_PROXY_USER}:{config.IP_PROXY_PASSWORD}@{ip_proxy}"
         return phone, playwright_proxy, httpx_proxy
 
-    async def create_ks_client(self, httpx_proxy: Optional[str]) -> KuaishouClient:
+    async def create_ks_client(self, httpx_proxy: Optional[str]) -> KuaiShouClient:
         """Create xhs client"""
         utils.logger.info("Begin create kuaishou API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
-        xhs_client_obj = KuaishouClient(
+        xhs_client_obj = KuaiShouClient(
             proxies=httpx_proxy,
             headers={
                 "User-Agent": self.user_agent,

@@ -9,10 +9,11 @@ from playwright.async_api import BrowserContext, Page
 
 from tools import utils
 
+from .graphql import KuaiShouGraphQL
 from .exception import DataFetchError, IPBlockError
 
 
-class KuaishouClient:
+class KuaiShouClient:
     def __init__(
             self,
             timeout=10,
@@ -25,12 +26,17 @@ class KuaishouClient:
         self.proxies = proxies
         self.timeout = timeout
         self.headers = headers
-        self._host = "https://www.kuaishou.com"
+        self._host = "https://www.kuaishou.com/graphql"
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
+        self.graphql = KuaiShouGraphQL()
 
     async def _pre_headers(self, url: str, data=None):
-        pass
+        self.headers = {
+            "cookie":"kpf=PC_WEB; clientid=3; did=web_6e79b79fdeac627f5cf52f08cab4e6bd; kpn=KUAISHOU_VISION",
+            "content-type":"application/json"
+        }
+        return self.headers
 
     async def request(self, method, url, **kwargs) -> Dict:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
@@ -39,10 +45,10 @@ class KuaishouClient:
                 **kwargs
             )
         data: Dict = response.json()
-        if data["success"]:
-            return data.get("data", data.get("success", {}))
+        if data.get("errors"):
+            raise DataFetchError(data.get("errors", "unkonw error"))
         else:
-            raise DataFetchError(data.get("msg", None))
+            return data.get("data", {})
 
     async def get(self, uri: str, params=None) -> Dict:
         final_uri = uri
@@ -53,10 +59,9 @@ class KuaishouClient:
         return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
 
     async def post(self, uri: str, data: dict) -> Dict:
-        headers = await self._pre_headers(uri, data)
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return await self.request(method="POST", url=f"{self._host}{uri}",
-                                  data=json_str, headers=headers)
+                                  data=json_str, headers=self.headers)
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
@@ -73,3 +78,25 @@ class KuaishouClient:
         cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
+
+    async def search_info_by_keyword(self, keyword: str, pcursor: str):
+        """
+        KuaiShou Web Search API
+        :param keyword: search keyword
+        :param pcursor: limite page curson
+        :return:
+        """
+        params = {
+            "operationName": "visionSearchPhoto",
+            "variables": {
+                "keyword": keyword,
+                "pcursor": pcursor,
+                "page": "search"
+            },
+            "query": self.graphql.get("search_query")
+        }
+        return await self.post("", params)
+
+
+    async def get_video_info(self, video_id: str) -> Dict:
+        pass
