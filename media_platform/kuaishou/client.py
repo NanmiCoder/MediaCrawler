@@ -31,13 +31,6 @@ class KuaiShouClient:
         self.cookie_dict = cookie_dict
         self.graphql = KuaiShouGraphQL()
 
-    async def _pre_headers(self, url: str, data=None):
-        self.headers = {
-            "cookie":"kpf=PC_WEB; clientid=3; did=web_6e79b79fdeac627f5cf52f08cab4e6bd; kpn=KUAISHOU_VISION",
-            "content-type":"application/json"
-        }
-        return self.headers
-
     async def request(self, method, url, **kwargs) -> Dict:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
             response = await client.request(
@@ -55,8 +48,7 @@ class KuaiShouClient:
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
                          f"{urlencode(params)}")
-        headers = await self._pre_headers(final_uri)
-        return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
+        return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=self.headers)
 
     async def post(self, uri: str, data: dict) -> Dict:
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
@@ -81,12 +73,12 @@ class KuaiShouClient:
 
     async def search_info_by_keyword(self, keyword: str, pcursor: str):
         """
-        KuaiShou Web Search API
+        KuaiShou web search api
         :param keyword: search keyword
         :param pcursor: limite page curson
         :return:
         """
-        params = {
+        post_data = {
             "operationName": "visionSearchPhoto",
             "variables": {
                 "keyword": keyword,
@@ -95,8 +87,21 @@ class KuaiShouClient:
             },
             "query": self.graphql.get("search_query")
         }
-        return await self.post("", params)
+        return await self.post("", post_data)
 
 
-    async def get_video_info(self, video_id: str) -> Dict:
-        pass
+    async def get_video_info(self, photo_id: str) -> Dict:
+        """
+        Kuaishou web video detail api
+        :param photo_id:
+        :return:
+        """
+        post_data = {
+            "operationName": "visionVideoDetail",
+            "variables": {
+                "photoId": photo_id,
+                "page": "search"
+            },
+            "query": self.graphql.get("video_detail")
+        }
+        return await self.post("", post_data)

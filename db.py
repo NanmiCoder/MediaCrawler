@@ -8,6 +8,7 @@ async def init_db(create_db: bool = False) -> None:
     await Tortoise.init(
         db_url=RELATION_DB_URL,
         modules={'models': ['models']},
+        # modules={'models': ['models.kuaishou']}, # generate special table
         _create_db=create_db
     )
 

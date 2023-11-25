@@ -10,6 +10,7 @@ from base.base_crawler import AbstractCrawler
 from base.proxy_account_pool import AccountPool
 from tools import utils
 from var import crawler_type_var
+from models import kuaishou
 
 from .client import KuaiShouClient
 from .login import KuaishouLogin
@@ -91,42 +92,38 @@ class KuaishouCrawler(AbstractCrawler):
                 if not videos_res:
                     utils.logger.error(f"search info by keyword:{keyword} not found data")
                     continue
-                vision_search_photo = videos_res.get("visionSearchPhoto")
-                utils.logger.info(f"videos_res:{videos_res}")
-                semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                task_list = [
-                    self.get_video_detail(feed_item.get("photo", {}).get("id"), semaphore)
-                    for feed_item in vision_search_photo.get("feeds", {})
-                ]
-                video_details = await asyncio.gather(*task_list)
-                for video_detail in video_details:
-                    if video_detail is not None:
-                        video_id_list.append(video_detail.get("id"))
-                page += 1
-                utils.logger.info(f"Video details: {video_details}")
-                await self.batch_get_note_comments(video_id_list)
 
-        await asyncio.Event().wait()
+                vision_search_photo: Dict = videos_res.get("visionSearchPhoto")
+                if vision_search_photo.get("result") != 1:
+                    utils.logger.error(f"search info by keyword:{keyword} not found data ")
+                    continue
+
+                for video_detail in vision_search_photo.get("feeds"):
+                    video_id_list.append(video_detail.get("photo", {}).get("id"))
+                    await kuaishou.update_kuaishou_video(video_item=video_detail)
+
+                # batch fetch video comments
+                page += 1
+                await self.batch_get_video_comments(video_id_list)
 
     async def get_specified_notes(self):
         pass
 
-    async def batch_get_note_comments(self, video_id_list: List[str]):
-        pass
+    async def batch_get_video_comments(self, video_id_list: List[str]):
+        utils.logger.info(f"[batch_get_video_comments] video ids:{video_id_list}")
 
-    async def get_video_detail(self, ):
-        pass
-
-    async def get_video_detail(self, video_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
-        """Get note detail"""
+    async def get_video_info_task(self, video_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
+        """Get video detail task"""
         async with semaphore:
             try:
-                return await self.ks_client.get_video_info(video_id)
+                result = await self.ks_client.get_video_info(video_id)
+                utils.logger.info(f"Get video_id:{video_id} info result: {result} ...")
+                return result
             except DataFetchError as ex:
-                utils.logger.error(f"Get note detail error: {ex}")
+                utils.logger.error(f"Get video detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"have not fund note detail note_id:{note_id}, err: {ex}")
+                utils.logger.error(f"have not fund note detail video_id:{video_id}, err: {ex}")
                 return None
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:

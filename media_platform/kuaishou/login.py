@@ -28,7 +28,16 @@ class KuaishouLogin(AbstractLogin):
         self.cookie_str = cookie_str
 
     async def begin(self):
-        pass
+        """Start login xiaohongshu"""
+        utils.logger.info("Begin login kuaishou ...")
+        if self.login_type == "qrcode":
+            await self.login_by_qrcode()
+        elif self.login_type == "phone":
+            await self.login_by_mobile()
+        elif self.login_type == "cookie":
+            await self.login_by_cookies()
+        else:
+            raise ValueError("Invalid Login Type Currently only supported qrcode or phone or cookie ...")
 
     async def login_by_qrcode(self):
         pass
@@ -37,4 +46,11 @@ class KuaishouLogin(AbstractLogin):
         pass
 
     async def login_by_cookies(self):
-        pass
+        utils.logger.info("Begin login kuaishou by cookie ...")
+        for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
+            await self.browser_context.add_cookies([{
+                'name': key,
+                'value': value,
+                'domain': ".douyin.com",
+                'path': "/"
+            }])
