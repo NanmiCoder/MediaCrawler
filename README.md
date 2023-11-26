@@ -65,6 +65,10 @@
    
    # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
    python main.py --platform xhs --lt qrcode --type detail
+   
+   # 其他平台爬虫使用示例, 执行下面的命令查看
+    python3 main.py --help
+    
    ```
 
 5. 打开对应APP扫二维码登录

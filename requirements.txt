@@ -5,8 +5,8 @@ tenacity==8.2.2
 tornado==6.3.2
 PyExecJS==1.5.1
 opencv-python==4.7.0.72
-tortoise-orm[asyncmy]==0.19.3
+tortoise-orm
+aiomysql==0.2.0
 aerich==0.7.2
 numpy~=1.24.4
 redis~=4.6.0
-Pydantic==1.7
