@@ -1,0 +1,111 @@
+fragment photoContent on PhotoEntity {
+  __typename
+  id
+  duration
+  caption
+  originCaption
+  likeCount
+  viewCount
+  commentCount
+  realLikeCount
+  coverUrl
+  photoUrl
+  photoH265Url
+  manifest
+  manifestH265
+  videoResource
+  coverUrls {
+    url
+    __typename
+  }
+  timestamp
+  expTag
+  animatedCoverUrl
+  distance
+  videoRatio
+  liked
+  stereoType
+  profileUserTopPhoto
+  musicBlocked
+}
+
+fragment recoPhotoFragment on recoPhotoEntity {
+  __typename
+  id
+  duration
+  caption
+  originCaption
+  likeCount
+  viewCount
+  commentCount
+  realLikeCount
+  coverUrl
+  photoUrl
+  photoH265Url
+  manifest
+  manifestH265
+  videoResource
+  coverUrls {
+    url
+    __typename
+  }
+  timestamp
+  expTag
+  animatedCoverUrl
+  distance
+  videoRatio
+  liked
+  stereoType
+  profileUserTopPhoto
+  musicBlocked
+}
+
+fragment feedContent on Feed {
+  type
+  author {
+    id
+    name
+    headerUrl
+    following
+    headerUrls {
+      url
+      __typename
+    }
+    __typename
+  }
+  photo {
+    ...photoContent
+    ...recoPhotoFragment
+    __typename
+  }
+  canAddComment
+  llsid
+  status
+  currentPcursor
+  tags {
+    type
+    name
+    __typename
+  }
+  __typename
+}
+
+query visionSearchPhoto($keyword: String, $pcursor: String, $searchSessionId: String, $page: String, $webPageArea: String) {
+  visionSearchPhoto(keyword: $keyword, pcursor: $pcursor, searchSessionId: $searchSessionId, page: $page, webPageArea: $webPageArea) {
+    result
+    llsid
+    webPageArea
+    feeds {
+      ...feedContent
+      __typename
+    }
+    searchSessionId
+    pcursor
+    aladdinBanner {
+      imgUrl
+      link
+      __typename
+    }
+    __typename
+  }
+}
