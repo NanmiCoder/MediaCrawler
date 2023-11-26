@@ -69,7 +69,7 @@ async def update_douyin_aweme(aweme_item: Dict):
     interact_info = aweme_item.get("statistics", {})
     local_db_item = {
         "aweme_id": aweme_id,
-        "aweme_type": aweme_item.get("aweme_type"),
+        "aweme_type": str(aweme_item.get("aweme_type")),
         "title": aweme_item.get("desc", ""),
         "desc": aweme_item.get("desc", ""),
         "create_time": aweme_item.get("create_time"),
@@ -80,10 +80,10 @@ async def update_douyin_aweme(aweme_item: Dict):
         "user_signature": user_info.get("signature"),
         "nickname": user_info.get("nickname"),
         "avatar": user_info.get("avatar_thumb", {}).get("url_list", [""])[0],
-        "liked_count": interact_info.get("digg_count"),
-        "collected_count": interact_info.get("collect_count"),
-        "comment_count": interact_info.get("comment_count"),
-        "share_count": interact_info.get("share_count"),
+        "liked_count": str(interact_info.get("digg_count")),
+        "collected_count": str(interact_info.get("collect_count")),
+        "comment_count": str(interact_info.get("comment_count")),
+        "share_count": str(interact_info.get("share_count")),
         "ip_location": aweme_item.get("ip_label", ""),
         "last_modify_ts": utils.get_current_timestamp(),
         "aweme_url": f"https://www.douyin.com/video/{aweme_id}"
@@ -142,7 +142,7 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "user_signature": user_info.get("signature"),
         "nickname": user_info.get("nickname"),
         "avatar": avatar_info.get("url_list", [""])[0],
-        "sub_comment_count": comment_item.get("reply_comment_total", 0),
+        "sub_comment_count": str(comment_item.get("reply_comment_total", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
     }
     print(f"douyin aweme comment: {comment_id}, content: {local_db_item.get('content')}")
