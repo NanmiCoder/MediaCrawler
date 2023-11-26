@@ -122,28 +122,6 @@ class KuaiShouClient:
         }
         return await self.post("", post_data)
 
-    async def get_video_sub_comments(
-            self, note_id: str,
-            root_comment_id: str,
-            num: int = 30, cursor: str = ""
-    ):
-        """
-        get note sub comments
-        :param note_id: note id you want to fetch
-        :param root_comment_id: parent comment id
-        :param num: recommend 30, if num greater 30, it only return 30 comments
-        :param cursor: last you get cursor, defaults to ""
-        :return: {"has_more": true,"cursor": "6422442d000000000700dcdb",comments: [],"user_id": "63273a77000000002303cc9b","time": 1681566542930}
-        """
-        uri = "/api/sns/web/v2/comment/sub/page"
-        params = {
-            "note_id": note_id,
-            "root_comment_id": root_comment_id,
-            "num": num,
-            "cursor": cursor,
-        }
-        return await self.get(uri, params)
-
     async def get_video_all_comments(self, photo_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
                                      callback: Optional[Callable] = None, ):
         """
