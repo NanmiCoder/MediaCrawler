@@ -30,7 +30,7 @@ class KuaishouVideo(KuaishouBaseModel):
     desc = fields.TextField(null=True, description="视频描述")
     create_time = fields.BigIntField(description="视频发布时间戳", index=True)
     liked_count = fields.CharField(null=True, max_length=16, description="视频点赞数")
-    video_count = fields.CharField(null=True, max_length=16, description="视频浏览数量")
+    viewd_count = fields.CharField(null=True, max_length=16, description="视频浏览数量")
     video_url = fields.CharField(null=True, max_length=512, description="视频详情URL")
     video_cover_url = fields.CharField(null=True, max_length=512, description="视频封面图 URL")
     video_play_url = fields.CharField(null=True, max_length=512, description="视频播放 URL")
@@ -64,15 +64,15 @@ async def update_kuaishou_video(video_item: Dict):
     user_info = video_item.get("author", {})
     local_db_item = {
         "video_id": video_id,
-        "video_type": video_item.get("type"),
-        "title": photo_info.get("caption", ""),
-        "desc": photo_info.get("caption", ""),
+        "video_type": str(video_item.get("type")),
+        "title": photo_info.get("caption", "")[:500],
+        "desc": photo_info.get("caption", "")[:500],
         "create_time": photo_info.get("timestamp"),
         "user_id": user_info.get("id"),
         "nickname": user_info.get("name"),
         "avatar": user_info.get("headerUrl", ""),
-        "liked_count": photo_info.get("realLikeCount"),
-        "viewd_count": photo_info.get("viewCount"),
+        "liked_count": str(photo_info.get("realLikeCount")),
+        "viewd_count": str(photo_info.get("viewCount")),
         "last_modify_ts": utils.get_current_timestamp(),
         "video_url": f"https://www.kuaishou.com/short-video/{video_id}",
         "video_cover_url": photo_info.get("coverUrl", ""),
@@ -82,12 +82,12 @@ async def update_kuaishou_video(video_item: Dict):
     if config.IS_SAVED_DATABASED:
         if not await KuaishouVideo.filter(video_id=video_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()
-            kuaishou_video_pydantic = pydantic_model_creator(KuaishouVideo, name='KuaishouVideoCreate', exclude=('id',))
+            kuaishou_video_pydantic = pydantic_model_creator(KuaishouVideo, name='kuaishouVideoCreate', exclude=('id',))
             kuaishou_data = kuaishou_video_pydantic(**local_db_item)
             kuaishou_video_pydantic.model_validate(kuaishou_data)
             await KuaishouVideo.create(**kuaishou_data.model_dump())
         else:
-            kuaishou_video_pydantic = pydantic_model_creator(KuaishouVideo, name='KuaishouVideoUpdate',
+            kuaishou_video_pydantic = pydantic_model_creator(KuaishouVideo, name='kuaishouVideoUpdate',
                                                              exclude=('id', 'add_ts'))
             kuaishou_data = kuaishou_video_pydantic(**local_db_item)
             kuaishou_video_pydantic.model_validate(kuaishou_data)
@@ -111,28 +111,16 @@ async def batch_update_ks_video_comments(video_id: str, comments: List[Dict]):
 
 
 async def update_ks_video_comment(video_id: str, comment_item: Dict):
-    comment_video_id = comment_item.get("video_id")
-    if video_id != comment_video_id:
-        print(f"comment_video_id: {comment_video_id} != video_id: {video_id}")
-        return
-    user_info = comment_item.get("user", {})
-    comment_id = comment_item.get("cid")
-    avatar_info = user_info.get("avatar_medium", {}) or user_info.get("avatar_300x300", {}) or user_info.get(
-        "avatar_168x168", {}) or user_info.get("avatar_thumb", {}) or {}
+    comment_id = comment_item.get("commentId")
     local_db_item = {
         "comment_id": comment_id,
-        "create_time": comment_item.get("create_time"),
-        "ip_location": comment_item.get("ip_label", ""),
+        "create_time": comment_item.get("timestamp"),
         "video_id": video_id,
-        "content": comment_item.get("text"),
-        "user_id": user_info.get("uid"),
-        "sec_uid": user_info.get("sec_uid"),
-        "short_user_id": user_info.get("short_id"),
-        "user_unique_id": user_info.get("unique_id"),
-        "user_signature": user_info.get("signature"),
-        "nickname": user_info.get("nickname"),
-        "avatar": avatar_info.get("url_list", [""])[0],
-        "sub_comment_count": comment_item.get("reply_comment_total", 0),
+        "content": comment_item.get("content"),
+        "user_id": comment_item.get("authorId"),
+        "nickname": comment_item.get("authorName"),
+        "avatar": comment_item.get("headurl"),
+        "sub_comment_count": str(comment_item.get("subCommentCount", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
     }
     print(f"Kuaishou video comment: {comment_id}, content: {local_db_item.get('content')}")

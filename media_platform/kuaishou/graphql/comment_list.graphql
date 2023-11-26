@@ -1,0 +1,39 @@
+query commentListQuery($photoId: String, $pcursor: String) {
+  visionCommentList(photoId: $photoId, pcursor: $pcursor) {
+    commentCount
+    pcursor
+    rootComments {
+      commentId
+      authorId
+      authorName
+      content
+      headurl
+      timestamp
+      likedCount
+      realLikedCount
+      liked
+      status
+      authorLiked
+      subCommentCount
+      subCommentsPcursor
+      subComments {
+        commentId
+        authorId
+        authorName
+        content
+        headurl
+        timestamp
+        likedCount
+        realLikedCount
+        liked
+        status
+        authorLiked
+        replyToUserName
+        replyTo
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}

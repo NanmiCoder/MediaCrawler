@@ -1,10 +1,10 @@
 # 快手的数据传输是基于GraphQL实现的
 # 这个类负责获取一些GraphQL的schema
-import os
+from typing import  Dict
 
 
 class KuaiShouGraphQL:
-    graphql_queries = {}
+    graphql_queries: Dict[str, str]= {}
 
     def __init__(self):
         self.graphql_dir = "media_platform/kuaishou/graphql/"

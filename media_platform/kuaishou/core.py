@@ -1,5 +1,8 @@
 import asyncio
 import os
+import random
+import time
+from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
 from playwright.async_api import (BrowserContext, BrowserType, Page,
@@ -8,13 +11,13 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 import config
 from base.base_crawler import AbstractCrawler
 from base.proxy_account_pool import AccountPool
-from tools import utils
-from var import crawler_type_var
 from models import kuaishou
+from tools import utils
+from var import comment_tasks_var, crawler_type_var
 
 from .client import KuaiShouClient
-from .login import KuaishouLogin
 from .exception import DataFetchError
+from .login import KuaishouLogin
 
 
 class KuaishouCrawler(AbstractCrawler):
@@ -109,9 +112,6 @@ class KuaishouCrawler(AbstractCrawler):
     async def get_specified_notes(self):
         pass
 
-    async def batch_get_video_comments(self, video_id_list: List[str]):
-        utils.logger.info(f"[batch_get_video_comments] video ids:{video_id_list}")
-
     async def get_video_info_task(self, video_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """Get video detail task"""
         async with semaphore:
@@ -125,6 +125,52 @@ class KuaishouCrawler(AbstractCrawler):
             except KeyError as ex:
                 utils.logger.error(f"have not fund note detail video_id:{video_id}, err: {ex}")
                 return None
+
+    async def batch_get_video_comments(self, video_id_list: List[str]):
+        """
+        batch get video comments
+        :param video_id_list:
+        :return:
+        """
+        utils.logger.info(f"[batch_get_video_comments] video ids:{video_id_list}")
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list: List[Task] = []
+        for video_id in video_id_list:
+            task = asyncio.create_task(self.get_comments(video_id, semaphore), name=video_id)
+            task_list.append(task)
+
+        comment_tasks_var.set(task_list)
+        await asyncio.gather(*task_list)
+
+    async def get_comments(self, video_id: str, semaphore: asyncio.Semaphore):
+        """
+        get comment for video id
+        :param video_id:
+        :param semaphore:
+        :return:
+        """
+        async with semaphore:
+            try:
+                await self.ks_client.get_video_all_comments(
+                    photo_id=video_id,
+                    crawl_interval=random.random(),
+                    callback=kuaishou.batch_update_ks_video_comments
+                )
+            except DataFetchError as ex:
+                utils.logger.error(f"Get video_id: {video_id} comment error: {ex}")
+            except Exception as e:
+                utils.logger.error(f"map by been blocked, err:", e)
+                # use time.sleeep block main coroutine instead of asyncio.sleep and cacel running comment task
+                # maybe kuaishou block our request, we will take a nap and update the cookie again
+                current_running_tasks = comment_tasks_var.get()
+                for task in current_running_tasks:
+                    task.cancel()
+                time.sleep(20)
+                await self.context_page.goto(f"{self.index_url}?isHome=1")
+                await self.ks_client.update_cookies(browser_context=self.browser_context)
+
+
+
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
         """Create proxy info for playwright and httpx"""
