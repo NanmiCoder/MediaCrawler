@@ -74,7 +74,7 @@ class KuaishouCrawler(AbstractCrawler):
                 await self.search()
             elif self.crawler_type == "detail":
                 # Get the information and comments of the specified post
-                await self.get_specified_notes()
+                await self.get_specified_videos()
             else:
                 pass
 
@@ -109,8 +109,17 @@ class KuaishouCrawler(AbstractCrawler):
                 page += 1
                 await self.batch_get_video_comments(video_id_list)
 
-    async def get_specified_notes(self):
-        pass
+    async def get_specified_videos(self):
+        """Get the information and comments of the specified post"""
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list = [
+            self.get_video_info_task(video_id=video_id, semaphore=semaphore) for video_id in config.KS_SPECIFIED_ID_LIST
+        ]
+        video_details = await asyncio.gather(*task_list)
+        for video_detail in video_details:
+            if video_detail is not None:
+                await kuaishou.update_kuaishou_video(video_detail)
+        await self.batch_get_video_comments(config.KS_SPECIFIED_ID_LIST)
 
     async def get_video_info_task(self, video_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """Get video detail task"""
@@ -118,7 +127,7 @@ class KuaishouCrawler(AbstractCrawler):
             try:
                 result = await self.ks_client.get_video_info(video_id)
                 utils.logger.info(f"Get video_id:{video_id} info result: {result} ...")
-                return result
+                return result.get("visionVideoDetail")
             except DataFetchError as ex:
                 utils.logger.error(f"Get video detail error: {ex}")
                 return None
@@ -151,15 +160,16 @@ class KuaishouCrawler(AbstractCrawler):
         """
         async with semaphore:
             try:
+                utils.logger.info(f"[get_comments] bengin get video_id: {video_id} comments ...")
                 await self.ks_client.get_video_all_comments(
                     photo_id=video_id,
                     crawl_interval=random.random(),
                     callback=kuaishou.batch_update_ks_video_comments
                 )
             except DataFetchError as ex:
-                utils.logger.error(f"Get video_id: {video_id} comment error: {ex}")
+                utils.logger.error(f"[get_comments] get video_id: {video_id} comment error: {ex}")
             except Exception as e:
-                utils.logger.error(f"map by been blocked, err:", e)
+                utils.logger.error(f"[get_comments] may be been blocked, err:", e)
                 # use time.sleeep block main coroutine instead of asyncio.sleep and cacel running comment task
                 # maybe kuaishou block our request, we will take a nap and update the cookie again
                 current_running_tasks = comment_tasks_var.get()
@@ -168,9 +178,6 @@ class KuaishouCrawler(AbstractCrawler):
                 time.sleep(20)
                 await self.context_page.goto(f"{self.index_url}?isHome=1")
                 await self.ks_client.update_cookies(browser_context=self.browser_context)
-
-
-
 
     def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
         """Create proxy info for playwright and httpx"""

@@ -104,6 +104,7 @@ async def update_kuaishou_video(video_item: Dict):
 
 
 async def batch_update_ks_video_comments(video_id: str, comments: List[Dict]):
+    utils.logger.info(f"[batch_update_ks_video_comments] video_id:{video_id}, comments:{comments}")
     if not comments:
         return
     for comment_item in comments:
