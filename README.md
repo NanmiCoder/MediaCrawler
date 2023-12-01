@@ -15,7 +15,7 @@
 欢迎大家贡献代码提交PR
 
 [![极速HTTP代理-官网图](https://s2.loli.net/2023/11/30/RapQtL8A2w6TGfj.png)](https://www.jisuhttp.com/?pl=mAKphQ&plan=ZY&kd=Yang) 
-<br>目前爬虫正在用的IP代理：[极速HTTP代理](https://www.jisuhttp.com/?pl=mAKphQ&plan=ZY&kd=Yang), 新用户注册能送2000IP。
+<br>目前爬虫正在用的IP代理：[极速HTTP代理](https://www.jisuhttp.com/?pl=mAKphQ&plan=ZY&kd=Yang), 新用户注册认证最高送12000IP，0元试用
 
 ## 已实现
 
