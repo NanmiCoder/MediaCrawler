@@ -8,7 +8,7 @@ import time
 
 def get_current_timestamp() -> int:
     """
-    获取当前的时间戳：1701493264496
+    获取当前的时间戳(13 位)：1701493264496
     :return:
     """
     return int(time.time() * 1000)
@@ -65,3 +65,7 @@ def get_unix_time_from_time_str(time_str):
     except Exception as e:
         return 0
     pass
+
+
+def get_unix_timestamp():
+    return int(time.time())
