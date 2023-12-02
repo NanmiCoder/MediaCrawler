@@ -1,6 +1,6 @@
 # 快手的数据传输是基于GraphQL实现的
 # 这个类负责获取一些GraphQL的schema
-from typing import  Dict
+from typing import Dict
 
 
 class KuaiShouGraphQL:

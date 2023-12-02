@@ -61,6 +61,8 @@ class KuaishouVideoComment(KuaishouBaseModel):
 async def update_kuaishou_video(video_item: Dict):
     photo_info: Dict = video_item.get("photo", {})
     video_id = photo_info.get("id")
+    if not video_id:
+        return
     user_info = video_item.get("author", {})
     local_db_item = {
         "video_id": video_id,

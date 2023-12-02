@@ -9,8 +9,8 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 
 import config
 from base.base_crawler import AbstractCrawler
-from base.proxy_account_pool import AccountPool
 from models import xiaohongshu as xhs_model
+from proxy.proxy_account_pool import AccountPool
 from tools import utils
 from var import crawler_type_var
 

@@ -4,10 +4,10 @@ import sys
 
 import config
 import db
-from base import proxy_account_pool
 from media_platform.douyin import DouYinCrawler
 from media_platform.kuaishou import KuaishouCrawler
 from media_platform.xhs import XiaoHongShuCrawler
+from proxy import proxy_account_pool
 
 
 class CrawlerFactory:

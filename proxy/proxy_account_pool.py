@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Author  : relakkes@gmail.com
+# @Time    : 2023/12/2 11:18
+# @Desc    : IP 和 手机号 一一配对的账号代理池
+
 from typing import List, Optional, Set, Tuple
 
 import config
