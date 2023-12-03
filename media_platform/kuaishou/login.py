@@ -98,6 +98,6 @@ class KuaishouLogin(AbstractLogin):
             await self.browser_context.add_cookies([{
                 'name': key,
                 'value': value,
-                'domain': ".douyin.com",
+                'domain': ".kuaishou.com",
                 'path': "/"
             }])
