@@ -52,14 +52,14 @@ class BilibiliSign:
         salt = self.get_salt()
         wbi_sign = md5((query + salt).encode()).hexdigest()  # 计算 w_rid
         req_data['w_rid'] = wbi_sign
-        # print(urllib.parse.urlencode(req_data))
+        print(urllib.parse.urlencode(req_data))
         return req_data
 
 
 if __name__ == '__main__':
     _img_key = "7cd084941338484aae1ad9425b84077c"
     _sub_key = "4932caff0ff746eab6f01bf08b70ac45"
-    _search_url = "category_id=&search_type=video&ad_resource=5654&__refresh__=true&_extra=&context=&page=1&page_size=42&order=click&from_source=&from_spmid=333.337&platform=pc&highlight=1&single_column=0&keyword=python&qv_id=OQ8f2qtgYdBV1UoEnqXUNUl8LEDAdzsD&source_tag=3&gaia_vtoken=&dynamic_offset=0&web_location=1430654"
+    _search_url = "__refresh__=true&_extra=&ad_resource=5654&category_id=&context=&dynamic_offset=0&from_source=&from_spmid=333.337&gaia_vtoken=&highlight=1&keyword=python&order=click&page=1&page_size=20&platform=pc&qv_id=OQ8f2qtgYdBV1UoEnqXUNUl8LEDAdzsD&search_type=video&single_column=0&source_tag=3&web_location=1430654"
     _req_data = dict()
     for params in _search_url.split("&"):
         kvalues = params.split("=")

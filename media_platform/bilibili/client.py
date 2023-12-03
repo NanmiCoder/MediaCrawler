@@ -14,6 +14,7 @@ from tools import utils
 
 from .help import BilibiliSign
 from .exception import DataFetchError
+from .field import OrderType
 
 
 class BilibiliClient:
@@ -53,7 +54,7 @@ class BilibiliClient:
         :param req_data:
         :return:
         """
-        img_key, sub_key = self.get_wbi_keys()
+        img_key, sub_key = await self.get_wbi_keys()
         return BilibiliSign(img_key, sub_key).sign(req_data)
 
     async def get_wbi_keys(self) -> tuple[str, str]:
@@ -62,9 +63,10 @@ class BilibiliClient:
         :return:
         """
         local_storage = await self.playwright_page.evaluate("() => window.localStorage")
-        wbi_img_urls = local_storage.get("wbi_img_urls", "")
-        img_url, sub_url = wbi_img_urls.split("-")
-        if not img_url or not sub_url:
+        wbi_img_urls = local_storage.get("wbi_img_urls", "") or local_storage.get("wbi_img_url") + "-" + local_storage.get("wbi_sub_url")
+        if wbi_img_urls and "-" in wbi_img_urls:
+            img_url, sub_url = wbi_img_urls.split("-")
+        else:
             resp = await self.request(method="GET", url=self._host + "/x/web-interface/nav")
             img_url: str = resp['wbi_img']['img_url']
             sub_url: str = resp['wbi_img']['sub_url']
@@ -74,14 +76,14 @@ class BilibiliClient:
 
     async def get(self, uri: str, params=None) -> Dict:
         final_uri = uri
-        params = self.pre_request_data(params)
+        params = await self.pre_request_data(params)
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
                          f"{urlencode(params)}")
         return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=self.headers)
 
     async def post(self, uri: str, data: dict) -> Dict:
-        data = self.pre_request_data(data)
+        data = await self.pre_request_data(data)
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=self.headers)
@@ -102,21 +104,30 @@ class BilibiliClient:
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
 
-    async def search_info_by_keyword(self, keyword: str, pcursor: str):
+    async def search_video_by_keyword(self, keyword: str, page: int = 1, page_size: int = 20,
+                                      order: OrderType = OrderType.DEFAULT):
         """
         KuaiShou web search api
-        :param keyword: search keyword
-        :param pcursor: limite page curson
+        :param keyword: 搜索关键词
+        :param page: 分页参数具体第几页
+        :param page_size: 每一页参数的数量
+        :param order: 搜索结果排序，默认位综合排序
         :return:
         """
+        uri = "/x/web-interface/wbi/search/type"
         post_data = {
+            "search_type": "video",
+            "keyword": keyword,
+            "page": page,
+            "page_size": page_size,
+            "order": order.value
         }
-        return await self.post("", post_data)
+        return await self.get(uri, post_data)
 
-    async def get_video_info(self, photo_id: str) -> Dict:
+    async def get_video_info(self, video_id: str) -> Dict:
         """
         Kuaishou web video detail api
-        :param photo_id:
+        :param video_id:
         :return:
         """
         post_data = {
