@@ -96,9 +96,8 @@
 ```
 MediaCrawler
 ├── base 
-│   ├── base_crawler.py         # 项目的抽象类
-│   └── proxy_account_pool.py   # 账号与IP代理池
-├── browser_data                # 浏览器数据目录 
+│   └── base_crawler.py         # 项目的抽象类
+├── browser_data                # 换成用户的浏览器数据目录 
 ├── config 
 │   ├── account_config.py       # 账号代理池配置
 │   ├── base_config.py          # 基础配置
@@ -109,24 +108,23 @@ MediaCrawler
 │   └── stealth.min.js          # 去除浏览器自动化特征的JS
 ├── media_platform
 │   ├── douyin                  # 抖音crawler实现
-│   │   ├── client.py           # httpx 请求封装
-│   │   ├── core.py             # 核心实现
-│   │   ├── exception.py        # 异常处理
-│   │   ├── field.py            # 字段定义
-│   │   └── login.py            # 登录实现  
-│   └── xiaohongshu             # 小红书crawler实现
-│       ├── client.py           # API httpx 请求封装
-│       ├── core.py             # 核心实现
-│       ├── exception.py        # 异常处理
-│       ├── field.py            # 字段定义
-│       ├── help.py             # 辅助函数
-│       └── login.py            # 登录实现
+│   ├── xhs                     # 小红书crawler实现
+│   ├── bilibili                # B站crawler实现  
+│   └── kuaishou                # 快手crawler实现
 ├── modles 
 │   ├── douyin.py               # 抖音数据模型
-│   └── xiaohongshu.py          # 小红书数据模型 
+│   ├── xiaohongshu.py          # 小红书数据模型
+│   ├── kuaishou.py             # 快手数据模型
+│   └── bilibili.py             # B站数据模型 
 ├── tools
-│   └── utils.py                # 工具函数
+│   ├── utils.py                # 暴露给外部的工具函数
+│   ├── crawler_util.py         # 爬虫相关的工具函数
+│   ├── slider_util.py          # 滑块相关的工具函数
+│   ├── time_util.py            # 时间相关的工具函数
+│   └── easing.py               # 模拟滑动轨迹相关的函数
+├── db.py                       # DB ORM
 ├── main.py                     # 程序入口
+├── var.py                      # 上下文变量定义
 └── recv_sms_notification.py    # 短信转发器的HTTP SERVER接口
 ```
 ## 数据持久化
