@@ -133,8 +133,10 @@ class XHSClient:
         data = {"source_note_id": note_id}
         uri = "/api/sns/web/v1/feed"
         res = await self.post(uri, data)
-        res_dict: Dict = res["items"][0]["note_card"]
-        return res_dict
+        if res and res.get("items"):
+            res_dict: Dict = res["items"][0]["note_card"]
+            return res_dict
+        return dict()
 
     async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:
         """get note comments
