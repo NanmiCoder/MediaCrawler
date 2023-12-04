@@ -6,7 +6,7 @@
 from enum import Enum
 
 
-class OrderType(Enum):
+class SearchOrderType(Enum):
     # 综合排序
     DEFAULT = ""
 
@@ -21,3 +21,14 @@ class OrderType(Enum):
 
     # 最多收藏
     MOST_MARK = "stow"
+
+
+class CommentOrderType(Enum):
+    # 仅按热度
+    DEFAULT = 0
+
+    # 按热度+按时间
+    MIXED = 1
+
+    # 按时间
+    TIME = 2

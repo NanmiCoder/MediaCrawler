@@ -4,7 +4,7 @@
 # @Desc    : bilibili 请求客户端
 import asyncio
 import json
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, List
 from urllib.parse import urlencode
 
 import httpx
@@ -14,7 +14,7 @@ from tools import utils
 
 from .help import BilibiliSign
 from .exception import DataFetchError
-from .field import OrderType
+from .field import SearchOrderType, CommentOrderType
 
 
 class BilibiliClient:
@@ -63,7 +63,8 @@ class BilibiliClient:
         :return:
         """
         local_storage = await self.playwright_page.evaluate("() => window.localStorage")
-        wbi_img_urls = local_storage.get("wbi_img_urls", "") or local_storage.get("wbi_img_url") + "-" + local_storage.get("wbi_sub_url")
+        wbi_img_urls = local_storage.get("wbi_img_urls", "") or local_storage.get(
+            "wbi_img_url") + "-" + local_storage.get("wbi_sub_url")
         if wbi_img_urls and "-" in wbi_img_urls:
             img_url, sub_url = wbi_img_urls.split("-")
         else:
@@ -105,7 +106,7 @@ class BilibiliClient:
         self.cookie_dict = cookie_dict
 
     async def search_video_by_keyword(self, keyword: str, page: int = 1, page_size: int = 20,
-                                      order: OrderType = OrderType.DEFAULT):
+                                      order: SearchOrderType = SearchOrderType.DEFAULT):
         """
         KuaiShou web search api
         :param keyword: 搜索关键词
@@ -134,21 +135,31 @@ class BilibiliClient:
         }
         return await self.post("", post_data)
 
-    async def get_video_comments(self, photo_id: str, pcursor: str = "") -> Dict:
+    async def get_video_comments(self,
+                                 video_id: str,
+                                 order_mode: CommentOrderType = CommentOrderType.DEFAULT,
+                                 pagination_str: str = '{"offset":""}'
+                                 ) -> Dict:
         """get video comments
-        :param photo_id: photo id you want to fetch
-        :param pcursor: last you get pcursor, defaults to ""
+        :param video_id: 视频 ID
+        :param order_mode: 排序方式
+        :param pagination_str: 分页字符串，由 api 返回下一个评论请求的分页信息
         :return:
         """
+        uri = "/x/v2/reply/wbi/main"
         post_data = {
+            "oid": video_id,
+            "mode": order_mode.value,
+            "type": 1,
+            "pagination_str": pagination_str
         }
-        return await self.post("", post_data)
+        return await self.post(uri, post_data)
 
-    async def get_video_all_comments(self, photo_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
+    async def get_video_all_comments(self, video_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
                                      callback: Optional[Callable] = None, ):
         """
         get video all comments include sub comments
-        :param photo_id:
+        :param video_id:
         :param crawl_interval:
         :param is_fetch_sub_comments:
         :param callback:
@@ -156,19 +167,19 @@ class BilibiliClient:
         """
 
         result = []
-        pcursor = ""
-        while pcursor != "no_more":
-            comments_res = await self.get_video_comments(photo_id, pcursor)
-            vision_commen_list = comments_res.get("visionCommentList", {})
-            pcursor = vision_commen_list.get("pcursor", "")
-            comments = vision_commen_list.get("rootComments", [])
-
+        is_end = False
+        pagination_str = '{"offset":""}'
+        while not is_end:
+            comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, pagination_str)
+            curson_info: Dict = comments_res.get("data").get("cursor")
+            comment_list: List[Dict] = comments_res.get("replies", [])
+            is_end = curson_info.get("is_end")
+            pagination_str = curson_info.get("pagination_reply").get("next_offset")
             if callback:  # 如果有回调函数，就执行回调函数
-                await callback(photo_id, comments)
-
+                await callback(video_id, comment_list)
             await asyncio.sleep(crawl_interval)
             if not is_fetch_sub_comments:
-                result.extend(comments)
+                result.extend(comment_list)
                 continue
             # todo handle get sub comments
         return result
