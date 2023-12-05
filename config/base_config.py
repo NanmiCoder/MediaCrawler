@@ -26,6 +26,14 @@ CRAWLER_MAX_NOTES_COUNT = 20
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 10
 
+# 抖音每个视频抓取评论最大条数 (为0则不限制)
+DY_MAX_COMMENTS_PER_POST = 10
+
+# 抖音评论关键词筛选(只会留下包含关键词的评论,为空不限制)
+DY_COMMENT_KEYWORDS = [
+    "我"
+    # ........................
+]
 
 # 指定小红书需要爬虫的笔记ID列表
 XHS_SPECIFIED_ID_LIST = [
