@@ -54,7 +54,7 @@ class DouYinCrawler(AbstractCrawler):
             await self.context_page.goto(self.index_url)
 
             self.dy_client = await self.create_douyin_client(httpx_proxy)
-            if not await self.dy_client.ping(browser_context=self.browser_context):
+            if not await self.dy_client.pong(browser_context=self.browser_context):
                 login_obj = DouYinLogin(
                     login_type=self.login_type,
                     login_phone=account_phone,

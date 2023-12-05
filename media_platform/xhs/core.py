@@ -63,7 +63,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             # Create a client to interact with the xiaohongshu website.
             self.xhs_client = await self.create_xhs_client(httpx_proxy)
-            if not await self.xhs_client.ping():
+            if not await self.xhs_client.pong():
                 login_obj = XHSLogin(
                     login_type=self.login_type,
                     login_phone=account_phone,

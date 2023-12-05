@@ -54,6 +54,8 @@ class BilibiliClient:
         :param req_data:
         :return:
         """
+        if not req_data:
+            return {}
         img_key, sub_key = await self.get_wbi_keys()
         return BilibiliSign(img_key, sub_key).sign(req_data)
 
@@ -91,10 +93,14 @@ class BilibiliClient:
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
-        utils.logger.info("Begin pong kuaishou...")
+        utils.logger.info("Begin pong bilibili...")
         ping_flag = False
         try:
-            pass
+            check_login_uri = "/x/web-interface/nav"
+            response = await self.get(check_login_uri)
+            if response.get("isLogin"):
+                utils.logger.info("use cache login state get web interface successfull!")
+                ping_flag = True
         except Exception as e:
             utils.logger.error(f"Pong kuaishou failed: {e}, and try to login again...")
             ping_flag = False

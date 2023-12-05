@@ -81,9 +81,9 @@ class XHSClient:
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=headers)
 
-    async def ping(self) -> bool:
+    async def pong(self) -> bool:
         """get a note to check if login state is ok"""
-        utils.logger.info("Begin to ping xhs...")
+        utils.logger.info("Begin to pong xhs...")
         ping_flag = False
         try:
             note_card: Dict = await self.get_note_by_keyword(keyword="小红书")

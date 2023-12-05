@@ -86,7 +86,7 @@ class DOUYINClient:
         return await self.request(method="POST", url=f"{self._host}{uri}", data=data, headers=headers)
 
     @staticmethod
-    async def ping(browser_context: BrowserContext) -> bool:
+    async def pong(browser_context: BrowserContext) -> bool:
         _, cookie_dict = utils.convert_cookies(await browser_context.cookies())
         # todo send some api to test login status
         return cookie_dict.get("LOGIN_STATUS") == "1"

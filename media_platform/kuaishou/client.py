@@ -55,7 +55,8 @@ class KuaiShouClient:
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=self.headers)
 
-    async def pong(self) -> bool:
+    @staticmethod
+    async def pong() -> bool:
         """get a note to check if login state is ok"""
         utils.logger.info("Begin pong kuaishou...")
         ping_flag = False

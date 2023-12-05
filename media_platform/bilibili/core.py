@@ -22,7 +22,7 @@ from var import comment_tasks_var, crawler_type_var
 
 
 from .client import BilibiliClient
-from .field import OrderType
+from .field import SearchOrderType
 from .login import BilibiliLogin
 
 
@@ -102,7 +102,7 @@ class BilibiliCrawler(AbstractCrawler):
                     keyword=keyword,
                     page=page,
                     page_size=bili_limit_count,
-                    order=OrderType.DEFAULT,
+                    order=SearchOrderType.DEFAULT,
                 )
                 video_list: List[Dict] = videos_res.get("result")
                 for video_item in video_list:
