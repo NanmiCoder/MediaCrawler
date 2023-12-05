@@ -1,7 +1,7 @@
 import asyncio
 import copy
 import urllib.parse
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, List
 
 import execjs
 import httpx
@@ -54,7 +54,7 @@ class DOUYINClient:
             "platform": "PC",
             "screen_width": "1920",
             "screen_height": "1200",
-            #" webid": douyin_js_obj.call("get_web_id"),
+            # " webid": douyin_js_obj.call("get_web_id"),
             # "msToken": local_storage.get("xmst"),
             # "msToken": "abL8SeUTPa9-EToD8qfC7toScSADxpg6yLh2dbNcpWHzE0bT04txM_4UwquIcRvkRb9IU8sifwgM1Kwf1Lsld81o9Irt2_yNyUbbQPSUO8EfVlZJ_78FckDFnwVBVUVK",
         }
@@ -167,30 +167,59 @@ class DOUYINClient:
             crawl_interval: float = 1.0,
             is_fetch_sub_comments=False,
             callback: Optional[Callable] = None,
+            max_comments: int = None,  # 新增参数来限制评论数
+            keywords: List[str] = None  # 新增参数，用于关键字筛选
     ):
         """
-        get note all comments include sub comments
-        :param aweme_id:
-        :param crawl_interval:
-        :param is_fetch_sub_comments:
-        :param callback:
-        :return:
+        获取帖子的所有评论，包括子评论
+        :param aweme_id: 帖子ID
+        :param crawl_interval: 抓取间隔
+        :param is_fetch_sub_comments: 是否抓取子评论
+        :param callback: 回调函数，用于处理抓取到的评论
+        :param max_comments: 最大评论数限制，如果为0，则不限制评论数
+        :param keywords: 需要过滤的关键字列表
+        :return: 评论列表
         """
         result = []
         comments_has_more = 1
         comments_cursor = 0
-        while comments_has_more:
+        collected_comments_count = 0  # 已收集的评论数
+
+        while comments_has_more and (
+                max_comments is None or collected_comments_count < max_comments or max_comments == 0):
             comments_res = await self.get_aweme_comments(aweme_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", 0)
-            comments_cursor = comments_res.get("cursor", comments_cursor + 20)
-            comments = comments_res.get("comments")
+            comments_cursor = comments_res.get("cursor", 0)
+            comments = comments_res.get("comments", [])
             if not comments:
                 continue
+
+            # 在添加评论到结果列表之前进行关键字筛选
+            if keywords:
+                filtered_comments = [comment for comment in comments if
+                                     not any(keyword in comment.get("text", "") for keyword in keywords)]
+            else:
+                filtered_comments = comments
+
+            # 如果设置了最大评论数限制，并且不为0，只添加未超过该限制的评论
+            if max_comments is not None and max_comments > 0:
+                remaining_quota = max_comments - collected_comments_count
+                comments_to_add = filtered_comments[:remaining_quota]
+                result.extend(comments_to_add)
+                collected_comments_count += len(comments_to_add)
+            else:
+                result.extend(filtered_comments)
+                collected_comments_count += len(filtered_comments)
+
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(aweme_id, comments)
+
+            # 如果已经达到最大评论数（且最大评论数不为0），或者不需要子评论，结束循环
+            if max_comments is not None and 0 < max_comments <= collected_comments_count:
+                break
+
             await asyncio.sleep(crawl_interval)
             if not is_fetch_sub_comments:
-                result.extend(comments)
                 continue
             # todo fetch sub comments
         return result
