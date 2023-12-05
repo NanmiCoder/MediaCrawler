@@ -4,7 +4,7 @@
 # @Desc    : bilibili 请求客户端
 import asyncio
 import json
-from typing import Any, Callable, Dict, Optional, List
+from typing import Any, Callable, Dict, Optional, List, Tuple
 from urllib.parse import urlencode
 
 import httpx
@@ -59,7 +59,7 @@ class BilibiliClient:
         img_key, sub_key = await self.get_wbi_keys()
         return BilibiliSign(img_key, sub_key).sign(req_data)
 
-    async def get_wbi_keys(self) -> tuple[str, str]:
+    async def get_wbi_keys(self) -> Tuple[str, str]:
         """
         获取最新的 img_key 和 sub_key
         :return:
