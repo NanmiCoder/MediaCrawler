@@ -16,7 +16,6 @@ from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
 import config
 from base.base_crawler import AbstractLogin
 from tools import utils
-from base.base_crawler import AbstractLogin
 
 
 class BilibiliLogin(AbstractLogin):

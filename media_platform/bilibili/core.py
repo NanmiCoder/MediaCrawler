@@ -20,7 +20,6 @@ from proxy.proxy_account_pool import AccountPool
 from tools import utils
 from var import comment_tasks_var, crawler_type_var
 
-
 from .client import BilibiliClient
 from .field import SearchOrderType
 from .login import BilibiliLogin

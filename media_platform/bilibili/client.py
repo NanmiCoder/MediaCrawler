@@ -4,7 +4,7 @@
 # @Desc    : bilibili 请求客户端
 import asyncio
 import json
-from typing import Any, Callable, Dict, Optional, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import urlencode
 
 import httpx
@@ -12,9 +12,9 @@ from playwright.async_api import BrowserContext, Page
 
 from tools import utils
 
-from .help import BilibiliSign
 from .exception import DataFetchError
-from .field import SearchOrderType, CommentOrderType
+from .field import CommentOrderType, SearchOrderType
+from .help import BilibiliSign
 
 
 class BilibiliClient:

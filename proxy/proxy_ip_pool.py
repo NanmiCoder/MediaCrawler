@@ -2,8 +2,10 @@
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 13:45
 # @Desc    : ip代理池实现
+import json
+import pathlib
 import random
-from typing import List
+from typing import Dict, List
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -22,7 +24,7 @@ class ProxyIpPool:
 
     async def load_proxies(self) -> None:
         """
-        从 HTTP 代理商获取 IP 列表
+        解析
         :return:
         """
         self.proxy_list = await IpProxy.get_proxies(self.ip_pool_count)
