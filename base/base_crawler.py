@@ -5,7 +5,7 @@ from proxy.proxy_account_pool import AccountPool
 
 class AbstractCrawler(ABC):
     @abstractmethod
-    def init_config(self, platform: str, login_type: str, account_pool: AccountPool, crawler_type: str):
+    def init_config(self, platform: str, login_type: str, crawler_type: str):
         pass
 
     @abstractmethod

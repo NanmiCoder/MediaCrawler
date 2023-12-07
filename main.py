@@ -38,9 +38,6 @@ async def main():
     parser.add_argument('--type', type=str, help='crawler type (search | detail)',
                         choices=["search", "detail"], default=config.CRAWLER_TYPE)
 
-    # init account pool
-    account_pool = proxy_account_pool.create_account_pool()
-
     # init db
     if config.IS_SAVED_DATABASED:
         await db.init_db()
@@ -50,7 +47,6 @@ async def main():
     crawler.init_config(
         platform=args.platform,
         login_type=args.lt,
-        account_pool=account_pool,
         crawler_type=args.type
     )
     await crawler.start()

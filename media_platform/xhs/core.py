@@ -10,7 +10,7 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 import config
 from base.base_crawler import AbstractCrawler
 from models import xiaohongshu as xhs_model
-from proxy.proxy_account_pool import AccountPool
+from proxy.proxy_ip_pool import create_ip_pool, IpInfoModel
 from tools import utils
 from var import crawler_type_var
 
@@ -25,27 +25,30 @@ class XiaoHongShuCrawler(AbstractCrawler):
     crawler_type: str
     context_page: Page
     xhs_client: XHSClient
-    account_pool: AccountPool
     browser_context: BrowserContext
 
     def __init__(self) -> None:
         self.index_url = "https://www.xiaohongshu.com"
         self.user_agent = utils.get_user_agent()
 
-    def init_config(self, platform: str, login_type: str, account_pool: AccountPool, crawler_type: str) -> None:
+    def init_config(self, platform: str, login_type: str, crawler_type: str) -> None:
         self.platform = platform
         self.login_type = login_type
-        self.account_pool = account_pool
-        self.crawler_type =crawler_type
+        self.crawler_type = crawler_type
 
     async def start(self) -> None:
-        account_phone, playwright_proxy, httpx_proxy = self.create_proxy_info()
+        playwright_proxy_format, httpx_proxy_format = None, None
+        if config.ENABLE_IP_PROXY:
+            ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
+            ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
+            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
+
         async with async_playwright() as playwright:
             # Launch a browser context.
             chromium = playwright.chromium
             self.browser_context = await self.launch_browser(
                 chromium,
-                playwright_proxy,
+                None,
                 self.user_agent,
                 headless=config.HEADLESS
             )
@@ -62,11 +65,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
             await self.context_page.goto(self.index_url)
 
             # Create a client to interact with the xiaohongshu website.
-            self.xhs_client = await self.create_xhs_client(httpx_proxy)
+            self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
             if not await self.xhs_client.pong():
                 login_obj = XHSLogin(
                     login_type=self.login_type,
-                    login_phone=account_phone,
+                    login_phone="",  # input your phone number
                     browser_context=self.browser_context,
                     context_page=self.context_page,
                     cookie_str=config.COOKIES
@@ -126,7 +129,6 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 await xhs_model.update_xhs_note(note_detail)
         await self.batch_get_note_comments(config.XHS_SPECIFIED_ID_LIST)
 
-
     async def get_note_detail(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """Get note detail"""
         async with semaphore:
@@ -157,20 +159,18 @@ class XiaoHongShuCrawler(AbstractCrawler):
             for comment in all_comments:
                 await xhs_model.update_xhs_note_comment(note_id=note_id, comment_item=comment)
 
-    def create_proxy_info(self) -> Tuple[Optional[str], Optional[Dict], Optional[str]]:
-        """Create proxy info for playwright and httpx"""
-        # phone: 13012345671  ip_proxy: 111.122.xx.xx1:8888
-        phone, ip_proxy = self.account_pool.get_account()
-        if not config.ENABLE_IP_PROXY:
-            return phone, None, None
-        utils.logger.info("Begin proxy info for playwright and httpx ...")
+    @staticmethod
+    def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
+        """format proxy info for playwright and httpx"""
         playwright_proxy = {
-            "server": f"{config.IP_PROXY_PROTOCOL}{ip_proxy}",
-            "username": config.IP_PROXY_USER,
-            "password": config.IP_PROXY_PASSWORD,
+            "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
+            "username": ip_proxy_info.user,
+            "password": ip_proxy_info.password,
         }
-        httpx_proxy = f"{config.IP_PROXY_PROTOCOL}{config.IP_PROXY_USER}:{config.IP_PROXY_PASSWORD}@{ip_proxy}"
-        return phone, playwright_proxy, httpx_proxy
+        httpx_proxy = {
+            f"{ip_proxy_info.protocol}{ip_proxy_info.ip}":f"{ip_proxy_info.protocol}{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
+        }
+        return playwright_proxy, httpx_proxy
 
     async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XHSClient:
         """Create xhs client"""

@@ -6,7 +6,10 @@ COOKIES = ""
 CRAWLER_TYPE = "search"
 
 # 是否开启 IP 代理
-ENABLE_IP_PROXY = False
+ENABLE_IP_PROXY = True
+
+# 代理IP池数量
+IP_PROXY_POOL_COUNT = 2
 
 # 重试时间
 RETRY_INTERVAL = 60 * 30  # 30 minutes
@@ -49,4 +52,10 @@ DY_SPECIFIED_ID_LIST = [
 "7280854932641664319",
 "7202432992642387233"
 # ........................
+]
+
+
+# 指定快手平台需要爬取的ID列表
+KS_SPECIFIED_ID_LIST = [
+
 ]
