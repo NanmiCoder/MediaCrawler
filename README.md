@@ -73,60 +73,15 @@
 
 7. 等待爬虫程序执行完毕，数据会保存到 `data/xhs` 目录下
 
-## 常见程序运行出错问题
-```shell
-# Q: 爬取抖音报错: `execjs._exceptions.ProgramError: SyntaxError: 缺少 ';'`
-# A: 该错误为缺少 nodejs 环境这个错误安装 nodejs 环境即可，版本为：`v16.8.0`
+## 如何使用 IP 代理
+➡️➡️➡️ [IP代理使用方法](docs/代理使用.md)
 
-# Q: 可以指定关键词爬取吗？
-# A: 在config/base_config.py 中 KEYWORDS 参数用于控制需要爬去的关键词
-
-# Q: 可以指定帖子爬去吗？
-# A：在config/base_config.py 中 XHS_SPECIFIED_ID_LIST 参数用于控制需要指定爬去的帖子ID列表
-
-# Q: 刚开始能爬取数据，过一段时间就是失效了？
-# A：出现这种情况多半是由于你的账号触发了平台风控机制了，❗️❗️请勿大规模对平台进行爬虫，影响平台。
-
-# Q: 如何更换登录账号？
-# A：删除项目根目录下的 brower_data/ 文件夹即可
-```
+## 运行报错常见问题Q&A
+➡️➡️➡️ [常见问题](docs/常见问题.md)
 
 ## 项目代码结构
+➡️➡️➡️ [项目代码接口说明](docs/项目代码结构.md)
 
-```
-MediaCrawler
-├── base 
-│   └── base_crawler.py         # 项目的抽象类
-├── browser_data                # 换成用户的浏览器数据目录 
-├── config 
-│   ├── account_config.py       # 账号代理池配置
-│   ├── base_config.py          # 基础配置
-│   └── db_config.py            # 数据库配置
-├── data                        # 数据保存目录  
-├── libs 
-│   ├── douyin.js               # 抖音Sign函数
-│   └── stealth.min.js          # 去除浏览器自动化特征的JS
-├── media_platform
-│   ├── douyin                  # 抖音crawler实现
-│   ├── xhs                     # 小红书crawler实现
-│   ├── bilibili                # B站crawler实现  
-│   └── kuaishou                # 快手crawler实现
-├── modles 
-│   ├── douyin.py               # 抖音数据模型
-│   ├── xiaohongshu.py          # 小红书数据模型
-│   ├── kuaishou.py             # 快手数据模型
-│   └── bilibili.py             # B站数据模型 
-├── tools
-│   ├── utils.py                # 暴露给外部的工具函数
-│   ├── crawler_util.py         # 爬虫相关的工具函数
-│   ├── slider_util.py          # 滑块相关的工具函数
-│   ├── time_util.py            # 时间相关的工具函数
-│   └── easing.py               # 模拟滑动轨迹相关的函数
-├── db.py                       # DB ORM
-├── main.py                     # 程序入口
-├── var.py                      # 上下文变量定义
-└── recv_sms_notification.py    # 短信转发器的HTTP SERVER接口
-```
 ## 数据持久化
 
 ![数据持久化](https://s2.loli.net/2023/07/24/ZTcGWz8jPAy7b5M.png)
@@ -138,27 +93,8 @@ MediaCrawler
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
 
 
-## 关于手机号+验证码登录的说明
-
-当在浏览器模拟人为发起手机号登录请求时,使用短信转发软件将验证码发送至爬虫端回填,完成自动登录
-
-准备工作：
-
-- 安卓机1台（IOS没去研究，理论上监控短信也是可行的）
-- 安装短信转发软件 [参考仓库](https://github.com/pppscn/SmsForwarder)
-- 转发软件中配置WEBHOOK相关的信息，主要分为 消息模板（请查看本项目中的recv_sms_notification.py）、一个能push短信通知的API地址
-- push的API地址一般是需要绑定一个域名的（当然也可以是内网的IP地址），我用的是内网穿透方式，会有一个免费的域名绑定到内网的web
-  server，内网穿透工具 [ngrok](https://ngrok.com/docs/)
-- 安装redis并设置一个密码 [redis安装](https://www.cnblogs.com/hunanzp/p/12304622.html)
-- 执行 `python recv_sms_notification.py` 等待短信转发器发送HTTP通知
-- 执行手机号登录的爬虫程序 `python main.py --platform xhs --lt phone`
-
-备注：
-
-- 小红书这边一个手机号一天只能发10条短信（悠着点），目前在发验证码时还未触发滑块验证，估计多了之后也会有~
-- 短信转发软件会不会监控自己手机上其他短信内容？（理论上应该不会，因为[短信转发仓库](https://github.com/pppscn/SmsForwarder)
-star还是蛮多的）
-
+## 手机号登录说明
+➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
 
 ## 参考
 
