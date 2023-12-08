@@ -6,7 +6,7 @@ COOKIES = ""
 CRAWLER_TYPE = "search"
 
 # 是否开启 IP 代理
-ENABLE_IP_PROXY = True
+ENABLE_IP_PROXY = False
 
 # 代理IP池数量
 IP_PROXY_POOL_COUNT = 2
