@@ -90,7 +90,7 @@
 
 打赏时您可以备注名称，我会将您添加至打赏列表中。
 <p>
-  <img alt="打赏-微信" src="static/images/wechat_pay.jpeg" style="width: 200px;margin-right: 4px;" />
+  <img alt="打赏-微信" src="static/images/wechat_pay.jpeg" style="width: 200px;margin-right: 140px;" />
   <img alt="打赏-支付宝" src="static/images/zfb_pay.jpeg" style="width: 200px" />
 </p>
 
