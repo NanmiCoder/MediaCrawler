@@ -10,7 +10,7 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 import config
 from base.base_crawler import AbstractCrawler
 from models import xiaohongshu as xhs_model
-from proxy.proxy_ip_pool import create_ip_pool, IpInfoModel
+from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from tools import utils
 from var import crawler_type_var
 

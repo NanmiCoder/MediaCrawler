@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 23:26
 # @Desc    : bilibili 请求参数签名
@@ -52,7 +52,6 @@ class BilibiliSign:
         salt = self.get_salt()
         wbi_sign = md5((query + salt).encode()).hexdigest()  # 计算 w_rid
         req_data['w_rid'] = wbi_sign
-        print(urllib.parse.urlencode(req_data))
         return req_data
 
 
@@ -67,5 +66,5 @@ if __name__ == '__main__':
         value = kvalues[1]
         _req_data[key] = value
     print("pre req_data", _req_data)
-    _req_data = BilibiliSign(img_key=_img_key, sub_key=_sub_key).sign(req_data=_req_data)
+    _req_data = BilibiliSign(img_key=_img_key, sub_key=_sub_key).sign(req_data={"aid":170001})
     print(_req_data)

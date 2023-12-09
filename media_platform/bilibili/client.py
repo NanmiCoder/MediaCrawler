@@ -77,9 +77,10 @@ class BilibiliClient:
         sub_key = sub_url.rsplit('/', 1)[1].split('.')[0]
         return img_key, sub_key
 
-    async def get(self, uri: str, params=None) -> Dict:
+    async def get(self, uri: str, params=None, enable_params_sign: bool = True) -> Dict:
         final_uri = uri
-        params = await self.pre_request_data(params)
+        if enable_params_sign:
+            params = await self.pre_request_data(params)
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
                          f"{urlencode(params)}")
@@ -102,7 +103,7 @@ class BilibiliClient:
                 utils.logger.info("use cache login state get web interface successfull!")
                 ping_flag = True
         except Exception as e:
-            utils.logger.error(f"Pong kuaishou failed: {e}, and try to login again...")
+            utils.logger.error(f"Pong bilibili failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
 
@@ -133,23 +134,25 @@ class BilibiliClient:
 
     async def get_video_info(self, video_id: str) -> Dict:
         """
-        Kuaishou web video detail api
+        Bilibli web video detail api
         :param video_id:
         :return:
         """
-        post_data = {
+        uri = "/x/web-interface/view/detail"
+        params = {
+            "aid": video_id
         }
-        return await self.post("", post_data)
+        return await self.get(uri, params, enable_params_sign=False)
 
     async def get_video_comments(self,
                                  video_id: str,
                                  order_mode: CommentOrderType = CommentOrderType.DEFAULT,
-                                 pagination_str: str = '{"offset":""}'
+                                 next: int = 0
                                  ) -> Dict:
         """get video comments
         :param video_id: 视频 ID
         :param order_mode: 排序方式
-        :param pagination_str: 分页字符串，由 api 返回下一个评论请求的分页信息
+        :param next: 评论页选择
         :return:
         """
         uri = "/x/v2/reply/wbi/main"
@@ -157,9 +160,10 @@ class BilibiliClient:
             "oid": video_id,
             "mode": order_mode.value,
             "type": 1,
-            "pagination_str": pagination_str
+            "ps": 20,
+            "next": next
         }
-        return await self.post(uri, post_data)
+        return await self.get(uri, post_data)
 
     async def get_video_all_comments(self, video_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
                                      callback: Optional[Callable] = None, ):
@@ -174,13 +178,13 @@ class BilibiliClient:
 
         result = []
         is_end = False
-        pagination_str = '{"offset":""}'
+        next_page =0
         while not is_end:
-            comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, pagination_str)
-            curson_info: Dict = comments_res.get("data").get("cursor")
+            comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, next_page)
+            curson_info: Dict = comments_res.get("cursor")
             comment_list: List[Dict] = comments_res.get("replies", [])
             is_end = curson_info.get("is_end")
-            pagination_str = curson_info.get("pagination_reply").get("next_offset")
+            next_page = curson_info.get("next")
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(video_id, comment_list)
             await asyncio.sleep(crawl_interval)
