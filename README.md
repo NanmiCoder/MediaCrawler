@@ -81,19 +81,35 @@
 ## 项目代码结构
 ➡️➡️➡️ [项目代码结构说明](docs/项目代码结构.md)
 
-## 数据持久化
+## 手机号登录说明
+➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
 
-![数据持久化](https://s2.loli.net/2023/07/24/ZTcGWz8jPAy7b5M.png)
+## 打赏
 
-## 支持一下
+如果觉得项目不错的话可以打赏哦。您的支持就是我最大的动力！
 
+打赏时您可以备注名称，我会将您添加至打赏列表中。
+<p>
+  <img alt="打赏-微信" src="static/images/wechat_pay.jpeg" style="width: 200px;margin-right: 4px;" />
+  <img alt="打赏-支付宝" src="static/images/zfb_pay.jpeg" style="width: 200px" />
+</p>
+
+## 捐赠信息
+
+PS：如果打赏时请备注捐赠者，如有遗漏请联系我添加（有时候消息多可能会漏掉，十分抱歉）
+
+| 捐赠者    | 捐赠金额   | 捐赠日期       |
+|--------|--------|------------|
+| 坠落     | 50 元   | 2023-11-08 |
+| 一呆     | 20 元   | 2023-12-01 |
+
+## star 趋势图
 - 如果该项目对你有帮助，star一下 ❤️❤️❤️
 
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
 
 
-## 手机号登录说明
-➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
+
 
 ## 参考
 
