@@ -146,17 +146,37 @@ class BilibiliCrawler(AbstractCrawler):
         """
         async with semaphore:
             try:
-                utils.logger.info(f"[get_comments] bengin get video_id: {video_id} comments ...")
-                await self.bili_client.get_video_all_comments(
+                utils.logger.info(f"[get_comments] begin get video_id: {video_id} comments ...")
+                # Read keyword and quantity from config
+                keywords = config.COMMENT_KEYWORDS
+                max_comments = config.MAX_COMMENTS_PER_POST
+
+                # Download comments
+                all_comments = await self.bili_client.get_video_all_comments(
                     video_id=video_id,
                     crawl_interval=random.random(),
-                    callback=bilibili.batch_update_bilibili_video_comments
                 )
+
+                # Filter comments by keyword
+                if keywords:
+                    filtered_comments = [
+                        comment for comment in all_comments if
+                        any(keyword in comment["content"]["message"] for keyword in keywords)
+                    ]
+                else:
+                    filtered_comments = all_comments
+
+                # Limit the number of comments
+                if max_comments > 0:
+                    filtered_comments = filtered_comments[:max_comments]
+
+                # Update bilibili video comments
+                await bilibili.batch_update_bilibili_video_comments(video_id, filtered_comments)
+
             except DataFetchError as ex:
                 utils.logger.error(f"[get_comments] get video_id: {video_id} comment error: {ex}")
             except Exception as e:
                 utils.logger.error(f"[get_comments] may be been blocked, err:", e)
-
 
     async def get_specified_videos(self):
         """

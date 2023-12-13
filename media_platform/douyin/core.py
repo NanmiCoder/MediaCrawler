@@ -132,7 +132,7 @@ class DouYinCrawler(AbstractCrawler):
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         for aweme_id in aweme_list:
             task = asyncio.create_task(
-                self.get_comments(aweme_id, semaphore, max_comments=config.DY_MAX_COMMENTS_PER_POST), name=aweme_id)
+                self.get_comments(aweme_id, semaphore, max_comments=config.MAX_COMMENTS_PER_POST), name=aweme_id)
             task_list.append(task)
         await asyncio.wait(task_list)
 
@@ -143,7 +143,7 @@ class DouYinCrawler(AbstractCrawler):
                 comments = await self.dy_client.get_aweme_all_comments(
                     aweme_id=aweme_id,
                     max_comments=max_comments, # 最大数量
-                    keywords=config.DY_COMMENT_KEYWORDS  # 关键词列表
+                    keywords=config.COMMENT_KEYWORDS  # 关键词列表
                 )
                 # 现在返回的 comments 已经是经过关键词筛选的
                 await douyin.batch_update_dy_aweme_comments(aweme_id, comments)

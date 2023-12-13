@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 import httpx
 from playwright.async_api import BrowserContext, Page
 
+import config
 from tools import utils
 
 from .exception import DataFetchError, IPBlockError
@@ -124,7 +125,7 @@ class KuaiShouClient:
         return await self.post("", post_data)
 
     async def get_video_all_comments(self, photo_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
-                                     callback: Optional[Callable] = None, ):
+                                     callback: Optional[Callable] = None):
         """
         get video all comments include sub comments
         :param photo_id:
@@ -136,18 +137,33 @@ class KuaiShouClient:
 
         result = []
         pcursor = ""
-        while pcursor != "no_more":
+        count = 0  # 计数器，记录已获取的评论数量
+
+        while pcursor != "no_more" and (
+                config.MAX_COMMENTS_PER_POST == 0 or count < config.MAX_COMMENTS_PER_POST):
             comments_res = await self.get_video_comments(photo_id, pcursor)
             vision_commen_list = comments_res.get("visionCommentList", {})
             pcursor = vision_commen_list.get("pcursor", "")
             comments = vision_commen_list.get("rootComments", [])
 
-            if callback:  # 如果有回调函数，就执行回调函数
-                await callback(photo_id, comments)
+            filtered_comments = []  # 存储经过关键词筛选后的评论
 
+            for comment in comments:
+                content = comment.get("content", "")
+
+                if not config.COMMENT_KEYWORDS or any(keyword in content for keyword in config.COMMENT_KEYWORDS):
+                    filtered_comments.append(comment)
+
+                    count += 1
+                    if config.MAX_COMMENTS_PER_POST != 0 and count >= config.MAX_COMMENTS_PER_POST:
+                        break
+
+            if callback:  # 如果有回调函数，就执行回调函数
+                await callback(photo_id, filtered_comments)
+
+            result.extend(filtered_comments)
             await asyncio.sleep(crawl_interval)
             if not is_fetch_sub_comments:
-                result.extend(comments)
                 continue
             # todo handle get sub comments
         return result
