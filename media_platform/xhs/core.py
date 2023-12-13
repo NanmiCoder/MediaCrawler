@@ -152,11 +152,27 @@ class XiaoHongShuCrawler(AbstractCrawler):
         await asyncio.gather(*task_list)
 
     async def get_comments(self, note_id: str, semaphore: asyncio.Semaphore):
-        """Get note comments"""
+        """Get note comments with keyword filtering and quantity limitation"""
         async with semaphore:
             utils.logger.info(f"Begin get note id comments {note_id}")
             all_comments = await self.xhs_client.get_note_all_comments(note_id=note_id, crawl_interval=random.random())
+
+            # 从配置文件中读取关键词和数量限制
+            keywords = getattr(config, 'COMMENT_KEYWORDS', [])
+            max_comments = getattr(config, 'MAX_COMMENTS_PER_POST', 0)
+
+            # 过滤评论
+            filtered_comments = []
             for comment in all_comments:
+                # 检查评论内容是否包含关键词
+                if not keywords or any(keyword in comment['content'] for keyword in keywords):
+                    filtered_comments.append(comment)
+                    # 如果达到最大评论数量限制，则停止添加更多评论
+                    if max_comments and len(filtered_comments) >= max_comments:
+                        break
+
+            # 更新或保存过滤后的评论
+            for comment in filtered_comments:
                 await xhs_model.update_xhs_note_comment(note_id=note_id, comment_item=comment)
 
     @staticmethod
