@@ -196,8 +196,10 @@ class DOUYINClient:
 
             # 在添加评论到结果列表之前进行关键字筛选
             if keywords:
-                filtered_comments = [comment for comment in comments if
-                                     not any(keyword in comment.get("text", "") for keyword in keywords)]
+                filtered_comments = []
+                for comment in comments:
+                    if any(keyword in comment.get("text", "") for keyword in keywords):
+                        filtered_comments.append(comment)
             else:
                 filtered_comments = comments
 
