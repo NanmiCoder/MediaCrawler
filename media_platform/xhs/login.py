@@ -28,13 +28,17 @@ class XHSLogin(AbstractLogin):
         self.login_phone = login_phone
         self.cookie_str = cookie_str
 
-    @retry(stop=stop_after_attempt(20), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
+    @retry(stop=stop_after_attempt(120), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
         """
             Check if the current login status is successful and return True otherwise return False
             retry decorator will retry 20 times if the return value is False, and the retry interval is 1 second
             if max retry times reached, raise RetryError
         """
+
+        if "请通过验证" in await self.context_page.content():
+            utils.logger.info("登录过程中出现验证码，请手动验证")
+
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
         current_web_session = cookie_dict.get("web_session")
@@ -157,7 +161,7 @@ class XHSLogin(AbstractLogin):
         partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
         asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
 
-        utils.logger.info(f"waiting for scan code login, remaining time is 20s")
+        utils.logger.info(f"waiting for scan code login, remaining time is 120s")
         try:
             await self.check_login_state(no_logged_in_session)
         except RetryError:

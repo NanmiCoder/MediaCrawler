@@ -14,8 +14,8 @@ IP_PROXY_POOL_COUNT = 2
 # 重试时间
 RETRY_INTERVAL = 60 * 30  # 30 minutes
 
-# playwright headless
-HEADLESS = True
+# 无头浏览器的标识，True:开启 False 关闭（会打开一个浏览器）
+HEADLESS = False
 
 # 是否保存登录状态
 SAVE_LOGIN_STATE = True
