@@ -102,6 +102,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     keyword=keyword,
                     page=page,
                 )
+                utils.logger.info("Search notes res:", notes_res)
                 semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                 task_list = [
                     self.get_note_detail(post_item.get("id"), semaphore)
