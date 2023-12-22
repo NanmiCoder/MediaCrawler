@@ -8,7 +8,7 @@
 目前能抓取小红书、抖音、快手、B站的视频、图片、评论、点赞、转发等信息。
 
 原理：利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
-通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低。
+通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低  
 爬虫技术交流群：[949715256](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=NFz-oY7Pek3gpG5zbLJFHARlB8lKL94f&authKey=FlxIQK99Uu90wddNV5W%2FBga6T6lXU5BRqyTTc26f2P2ZK5OW%2BDhHp7MwviX%2BbrPa&noverify=0&group_code=949715256),同时欢迎大家贡献代码提交PR
 
 
@@ -29,48 +29,50 @@
 
 ## 使用方法
 
-1. 创建 python 虚拟环境
-   ```shell
+### 创建并激活 python 虚拟环境
+   ```shell   
+   # 进入项目根目录
+   cd MediaCrawler
+   
+   # 创建虚拟环境
    python3 -m venv venv
+   
+   # macos & linux 激活虚拟环境
+   source venv/bin/activate
+
+   # windows 激活虚拟环境
+   venv\Scripts\activate
+
    ```
 
-2. 安装依赖库
+### 安装依赖库
 
    ```shell
-   pip install -r requirements.txt
+   pip3 install -r requirements.txt
    ```
 
-3. 安装playwright浏览器驱动
+### 安装 playwright浏览器驱动
 
    ```shell
    playwright install
    ```
 
-4. 是否保存数据到DB中
-
-   如果选择开启，则需要配置数据库连接信息，`config/db_config.py` 中的 `IS_SAVED_DATABASED`和`RELATION_DB_URL` 变量。然后执行以下命令初始化数据库信息，生成相关的数据库表结构：
-
-   ```shell
-   python db.py
-   ```
-
-5. 运行爬虫程序
+### 运行爬虫程序
 
    ```shell
    # 从配置文件中读取关键词搜索相关的帖子并爬去帖子信息与评论
-   python main.py --platform xhs --lt qrcode --type search
+   python3 main.py --platform xhs --lt qrcode --type search
    
    # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
-   python main.py --platform xhs --lt qrcode --type detail
+   python3 main.py --platform xhs --lt qrcode --type detail
    
    # 其他平台爬虫使用示例, 执行下面的命令查看
-    python3 main.py --help
-    
+   python3 main.py --help    
    ```
 
-6. 打开对应APP扫二维码登录
+打开对应APP扫二维码登录
 
-7. 等待爬虫程序执行完毕，数据会保存到 `data/xhs` 目录下
+等待爬虫程序执行完毕，数据会保存到 `data/xhs` 目录下
 
 ## 如何使用 IP 代理
 ➡️➡️➡️ [IP代理使用方法](docs/代理使用.md)
