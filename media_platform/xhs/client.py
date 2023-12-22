@@ -136,7 +136,7 @@ class XHSClient:
         if res and res.get("items"):
             res_dict: Dict = res["items"][0]["note_card"]
             return res_dict
-        utils.logger.error("[xhs.client.get_note_by_id] get note empty and res:", res)
+        utils.logger.error(f"[xhs.client.get_note_by_id] get note empty and res:{res}")
         return dict()
 
     async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:

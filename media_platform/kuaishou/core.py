@@ -172,7 +172,7 @@ class KuaishouCrawler(AbstractCrawler):
             except DataFetchError as ex:
                 utils.logger.error(f"[get_comments] get video_id: {video_id} comment error: {ex}")
             except Exception as e:
-                utils.logger.error(f"[get_comments] may be been blocked, err:", e)
+                utils.logger.error(f"[get_comments] may be been blocked, err:{e}")
                 # use time.sleeep block main coroutine instead of asyncio.sleep and cacel running comment task
                 # maybe kuaishou block our request, we will take a nap and update the cookie again
                 current_running_tasks = comment_tasks_var.get()

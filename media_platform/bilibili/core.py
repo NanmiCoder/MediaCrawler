@@ -176,7 +176,7 @@ class BilibiliCrawler(AbstractCrawler):
             except DataFetchError as ex:
                 utils.logger.error(f"[get_comments] get video_id: {video_id} comment error: {ex}")
             except Exception as e:
-                utils.logger.error(f"[get_comments] may be been blocked, err:", e)
+                utils.logger.error(f"[get_comments] may be been blocked, err:{e}")
 
     async def get_specified_videos(self):
         """
