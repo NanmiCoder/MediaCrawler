@@ -85,7 +85,7 @@ async def update_bilibili_video(video_item: Dict):
         "video_url": f"https://www.bilibili.com/video/av{video_id}",
         "video_cover_url": video_item_view.get("pic", ""),
     }
-    utils.logger.info(f"bilibili video id:{video_id}, title:{local_db_item.get('title')}")
+    utils.logger.info(f"[models.bilibili.update_bilibili_video] bilibili video id:{video_id}, title:{local_db_item.get('title')}")
     if config.IS_SAVED_DATABASED:
         if not await BilibiliVideo.filter(video_id=video_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()
@@ -131,7 +131,7 @@ async def update_bilibili_video_comment(video_id: str, comment_item: Dict):
         "sub_comment_count": str(comment_item.get("rcount", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
     }
-    utils.logger.info(f"Bilibili video comment: {comment_id}, content: {local_db_item.get('content')}")
+    utils.logger.info(f"[models.bilibili.update_bilibili_video_comment] Bilibili video comment: {comment_id}, content: {local_db_item.get('content')}")
     if config.IS_SAVED_DATABASED:
         if not await BilibiliComment.filter(comment_id=comment_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()

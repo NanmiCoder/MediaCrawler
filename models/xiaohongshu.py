@@ -86,7 +86,7 @@ async def update_xhs_note(note_item: Dict):
         "last_modify_ts": utils.get_current_timestamp(),
         "note_url": f"https://www.xiaohongshu.com/explore/{note_id}"
     }
-    print("xhs note:", local_db_item)
+    utils.logger.info(f"[models.xiaohongshu.update_xhs_note] xhs note: {local_db_item}")
     if config.IS_SAVED_DATABASED:
         if not await XHSNote.filter(note_id=note_id).first():
             local_db_item["add_ts"] = utils.get_current_timestamp()
@@ -125,7 +125,7 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
         "sub_comment_count": comment_item.get("sub_comment_count"),
         "last_modify_ts": utils.get_current_timestamp(),
     }
-    print("xhs note comment:", local_db_item)
+    utils.logger.info(f"[models.xiaohongshu.update_xhs_note_comment] xhs note comment:{local_db_item}")
     if config.IS_SAVED_DATABASED:
         if not await XHSNoteComment.filter(comment_id=comment_id).first():
             local_db_item["add_ts"] = utils.get_current_timestamp()

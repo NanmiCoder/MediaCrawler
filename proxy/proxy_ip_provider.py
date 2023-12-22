@@ -115,7 +115,7 @@ class JiSuHttpProxy(ProxyProvider):
         ip_infos = []
         async with httpx.AsyncClient() as client:
             url = self.api_path + "/fetchips" + '?' + urlencode(self.params)
-            utils.logger.info(f"[JiSuHttpProxy] get ip proxy url:{url}")
+            utils.logger.info(f"[JiSuHttpProxy.get_proxies] get ip proxy url:{url}")
             response = await client.get(url, headers={
                 "User-Agent": "MediaCrawler https://github.com/NanmiCoder/MediaCrawler"})
             res_dict: Dict = response.json()

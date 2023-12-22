@@ -88,7 +88,7 @@ async def update_douyin_aweme(aweme_item: Dict):
         "last_modify_ts": utils.get_current_timestamp(),
         "aweme_url": f"https://www.douyin.com/video/{aweme_id}"
     }
-    print(f"douyin aweme id:{aweme_id}, title:{local_db_item.get('title')}")
+    utils.logger.info(f"[models.douyin.update_douyin_aweme] douyin aweme id:{aweme_id}, title:{local_db_item.get('title')}")
     if config.IS_SAVED_DATABASED:
         if not await DouyinAweme.filter(aweme_id=aweme_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()
@@ -123,7 +123,7 @@ async def batch_update_dy_aweme_comments(aweme_id: str, comments: List[Dict]):
 async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
     comment_aweme_id = comment_item.get("aweme_id")
     if aweme_id != comment_aweme_id:
-        print(f"comment_aweme_id: {comment_aweme_id} != aweme_id: {aweme_id}")
+        utils.logger.error(f"[models.douyin.update_dy_aweme_comment] comment_aweme_id: {comment_aweme_id} != aweme_id: {aweme_id}")
         return
     user_info = comment_item.get("user", {})
     comment_id = comment_item.get("cid")
@@ -145,7 +145,7 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "sub_comment_count": str(comment_item.get("reply_comment_total", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
     }
-    print(f"douyin aweme comment: {comment_id}, content: {local_db_item.get('content')}")
+    utils.logger.info(f"[models.douyin.update_dy_aweme_comment] douyin aweme comment: {comment_id}, content: {local_db_item.get('content')}")
     if config.IS_SAVED_DATABASED:
         if not await DouyinAwemeComment.filter(comment_id=comment_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()

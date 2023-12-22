@@ -34,7 +34,7 @@ MAX_COMMENTS_PER_POST = 10
 
 # 评论关键词筛选(只会留下包含关键词的评论,为空不限制)
 COMMENT_KEYWORDS = [
-    "我"
+    # "真棒"
     # ........................
 ]
 
@@ -56,9 +56,10 @@ DY_SPECIFIED_ID_LIST = [
 # 指定快手平台需要爬取的ID列表
 KS_SPECIFIED_ID_LIST = []
 
-# 指定B站平台需要爬取的视频ID列表
+# 指定B站平台需要爬取的视频bvid列表
 BILI_SPECIFIED_ID_LIST = [
-    "416252543",
-    "976148468"
+    "BV1d54y1g7db",
+    "BV1Sz4y1U77N",
+    "BV14Q4y1n7jz",
     # ........................
 ]

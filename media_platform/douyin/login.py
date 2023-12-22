@@ -47,7 +47,7 @@ class DouYinLogin(AbstractLogin):
         elif self.login_type == "cookie":
             await self.login_by_cookies()
         else:
-            raise ValueError("Invalid Login Type Currently only supported qrcode or phone or cookie ...")
+            raise ValueError("[DouYinLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
 
         # 如果页面重定向到滑动验证码页面，需要再次滑动滑块
         await asyncio.sleep(6)
@@ -56,16 +56,16 @@ class DouYinLogin(AbstractLogin):
             await self.check_page_display_slider(move_step=3, slider_level="hard")
 
         # check login state
-        utils.logger.info(f"login finished then check login state ...")
+        utils.logger.info(f"[DouYinLogin.begin] login finished then check login state ...")
         try:
             await self.check_login_state()
         except RetryError:
-            utils.logger.info("login failed please confirm ...")
+            utils.logger.info("[DouYinLogin.begin] login failed please confirm ...")
             sys.exit()
 
         # wait for redirect
         wait_redirect_seconds = 5
-        utils.logger.info(f"Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+        utils.logger.info(f"[DouYinLogin.begin] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
     @retry(stop=stop_after_attempt(20), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
@@ -84,21 +84,21 @@ class DouYinLogin(AbstractLogin):
             # check dialog box is auto popup and wait for 10 seconds
             await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 10)
         except Exception as e:
-            utils.logger.error(f"login dialog box does not pop up automatically, error: {e}")
-            utils.logger.info("login dialog box does not pop up automatically, we will manually click the login button")
+            utils.logger.error(f"[DouYinLogin.popup_login_dialog] login dialog box does not pop up automatically, error: {e}")
+            utils.logger.info("[DouYinLogin.popup_login_dialog] login dialog box does not pop up automatically, we will manually click the login button")
             login_button_ele = self.context_page.locator("xpath=//p[text() = '登录']")
             await login_button_ele.click()
             await asyncio.sleep(0.5)
 
     async def login_by_qrcode(self):
-        utils.logger.info("Begin login douyin by qrcode...")
+        utils.logger.info("[DouYinLogin.login_by_qrcode] Begin login douyin by qrcode...")
         qrcode_img_selector = "xpath=//article[@class='web-login']//img"
         base64_qrcode_img = await utils.find_login_qrcode(
             self.context_page,
             selector=qrcode_img_selector
         )
         if not base64_qrcode_img:
-            utils.logger.info("login qrcode not found please confirm ...")
+            utils.logger.info("[DouYinLogin.login_by_qrcode] login qrcode not found please confirm ...")
             sys.exit()
 
         # show login qrcode
@@ -109,7 +109,7 @@ class DouYinLogin(AbstractLogin):
         await asyncio.sleep(2)
 
     async def login_by_mobile(self):
-        utils.logger.info("Begin login douyin by mobile ...")
+        utils.logger.info("[DouYinLogin.login_by_mobile] Begin login douyin by mobile ...")
         mobile_tap_ele = self.context_page.locator("xpath=//li[text() = '验证码登录']")
         await mobile_tap_ele.click()
         await self.context_page.wait_for_selector("xpath=//article[@class='web-login-mobile-code']")
@@ -124,7 +124,7 @@ class DouYinLogin(AbstractLogin):
         redis_obj = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         while max_get_sms_code_time > 0:
-            utils.logger.info(f"get douyin sms code from redis remaining time {max_get_sms_code_time}s ...")
+            utils.logger.info(f"[DouYinLogin.login_by_mobile] get douyin sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"dy_{self.login_phone}"
             sms_code_value = redis_obj.get(sms_code_key)
@@ -157,7 +157,7 @@ class DouYinLogin(AbstractLogin):
         slider_verify_success = False
         while not slider_verify_success:
             if max_slider_try_times <= 0:
-                utils.logger.error("slider verify failed ...")
+                utils.logger.error("[DouYinLogin.check_page_display_slider] slider verify failed ...")
                 sys.exit()
             try:
                 await self.move_slider(back_selector, gap_selector, move_step, slider_level)
@@ -166,20 +166,20 @@ class DouYinLogin(AbstractLogin):
                 # 如果滑块滑动慢了，或者验证失败了，会提示操作过慢，这里点一下刷新按钮
                 page_content = await self.context_page.content()
                 if "操作过慢" in page_content or "提示重新操作" in page_content:
-                    utils.logger.info("slider verify failed, retry ...")
+                    utils.logger.info("[DouYinLogin.check_page_display_slider] slider verify failed, retry ...")
                     await self.context_page.click(selector="//a[contains(@class, 'secsdk_captcha_refresh')]")
                     continue
 
                 # 滑动成功后，等待滑块消失
                 await self.context_page.wait_for_selector(selector=back_selector, state="hidden", timeout=1000)
                 # 如果滑块消失了，说明验证成功了，跳出循环，如果没有消失，说明验证失败了，上面这一行代码会抛出异常被捕获后继续循环滑动验证码
-                utils.logger.info("slider verify success ...")
+                utils.logger.info("[DouYinLogin.check_page_display_slider] slider verify success ...")
                 slider_verify_success = True
             except Exception as e:
-                utils.logger.error(f"slider verify failed, error: {e}")
+                utils.logger.error(f"[DouYinLogin.check_page_display_slider] slider verify failed, error: {e}")
                 await asyncio.sleep(1)
                 max_slider_try_times -= 1
-                utils.logger.info(f"remaining slider try times: {max_slider_try_times}")
+                utils.logger.info(f"[DouYinLogin.check_page_display_slider] remaining slider try times: {max_slider_try_times}")
                 continue
 
     async def move_slider(self, back_selector: str, gap_selector: str, move_step: int = 10, slider_level="easy"):
@@ -236,7 +236,7 @@ class DouYinLogin(AbstractLogin):
         await self.context_page.mouse.up()
 
     async def login_by_cookies(self):
-        utils.logger.info("Begin login douyin by cookie ...")
+        utils.logger.info("[DouYinLogin.login_by_cookies] Begin login douyin by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
             await self.browser_context.add_cookies([{
                 'name': key,

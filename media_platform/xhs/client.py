@@ -83,14 +83,14 @@ class XHSClient:
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
-        utils.logger.info("Begin to pong xhs...")
+        utils.logger.info("[XHSClient.pong] Begin to pong xhs...")
         ping_flag = False
         try:
             note_card: Dict = await self.get_note_by_keyword(keyword="小红书")
             if note_card.get("items"):
                 ping_flag = True
         except Exception as e:
-            utils.logger.error(f"Ping xhs failed: {e}, and try to login again...")
+            utils.logger.error(f"[XHSClient.pong] Ping xhs failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
 
@@ -136,7 +136,7 @@ class XHSClient:
         if res and res.get("items"):
             res_dict: Dict = res["items"][0]["note_card"]
             return res_dict
-        utils.logger.error(f"[xhs.client.get_note_by_id] get note empty and res:{res}")
+        utils.logger.error(f"[XHSClient.get_note_by_id] get note empty and res:{res}")
         return dict()
 
     async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:
@@ -195,7 +195,7 @@ class XHSClient:
                 # Handle the absence of 'comments' key appropriately
                 # For example, log an error message, break from the loop, etc.
                 # This is just an example:
-                print(f"No 'comments' key found in response: {comments_res}")
+                utils.logger.info(f"[XHSClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
                 break
             comments = comments_res["comments"]
             if not is_fetch_sub_comments:

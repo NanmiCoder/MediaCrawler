@@ -80,7 +80,7 @@ async def update_kuaishou_video(video_item: Dict):
         "video_cover_url": photo_info.get("coverUrl", ""),
         "video_play_url": photo_info.get("photoUrl", ""),
     }
-    print(f"Kuaishou video id:{video_id}, title:{local_db_item.get('title')}")
+    utils.logger.info(f"[models.kuaishou.update_kuaishou_video] Kuaishou video id:{video_id}, title:{local_db_item.get('title')}")
     if config.IS_SAVED_DATABASED:
         if not await KuaishouVideo.filter(video_id=video_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()
@@ -106,7 +106,7 @@ async def update_kuaishou_video(video_item: Dict):
 
 
 async def batch_update_ks_video_comments(video_id: str, comments: List[Dict]):
-    utils.logger.info(f"[batch_update_ks_video_comments] video_id:{video_id}, comments:{comments}")
+    utils.logger.info(f"[KuaishouVideoComment.batch_update_ks_video_comments] video_id:{video_id}, comments:{comments}")
     if not comments:
         return
     for comment_item in comments:
@@ -126,7 +126,7 @@ async def update_ks_video_comment(video_id: str, comment_item: Dict):
         "sub_comment_count": str(comment_item.get("subCommentCount", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
     }
-    print(f"Kuaishou video comment: {comment_id}, content: {local_db_item.get('content')}")
+    utils.logger.info(f"[models.kuaishou.update_ks_video_comment] Kuaishou video comment: {comment_id}, content: {local_db_item.get('content')}")
     if config.IS_SAVED_DATABASED:
         if not await KuaishouVideoComment.filter(comment_id=comment_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()

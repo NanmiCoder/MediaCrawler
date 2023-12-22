@@ -75,12 +75,12 @@ class DouYinCrawler(AbstractCrawler):
                 # Get the information and comments of the specified post
                 await self.get_specified_awemes()
 
-            utils.logger.info("Douyin Crawler finished ...")
+            utils.logger.info("[DouYinCrawler.start] Douyin Crawler finished ...")
 
     async def search(self) -> None:
-        utils.logger.info("Begin search douyin keywords")
+        utils.logger.info("[DouYinCrawler.search] Begin search douyin keywords")
         for keyword in config.KEYWORDS.split(","):
-            utils.logger.info(f"Current keyword: {keyword}")
+            utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
             dy_limit_count = 10
             page = 0
@@ -89,7 +89,7 @@ class DouYinCrawler(AbstractCrawler):
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
                                                                             offset=page * dy_limit_count)
                 except DataFetchError:
-                    utils.logger.error(f"search douyin keyword: {keyword} failed")
+                    utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
                     break
                 page += 1
                 for post_item in posts_res.get("data"):
@@ -100,7 +100,7 @@ class DouYinCrawler(AbstractCrawler):
                         continue
                     aweme_list.append(aweme_info.get("aweme_id", ""))
                     await douyin.update_douyin_aweme(aweme_item=aweme_info)
-            utils.logger.info(f"keyword:{keyword}, aweme_list:{aweme_list}")
+            utils.logger.info(f"[DouYinCrawler.search] keyword:{keyword}, aweme_list:{aweme_list}")
             await self.batch_get_note_comments(aweme_list)
 
     async def get_specified_awemes(self):
@@ -121,10 +121,10 @@ class DouYinCrawler(AbstractCrawler):
             try:
                 return await self.dy_client.get_video_by_id(aweme_id)
             except DataFetchError as ex:
-                utils.logger.error(f"Get aweme detail error: {ex}")
+                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] Get aweme detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"have not fund note detail aweme_id:{aweme_id}, err: {ex}")
+                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] have not fund note detail aweme_id:{aweme_id}, err: {ex}")
                 return None
 
     async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
@@ -147,9 +147,9 @@ class DouYinCrawler(AbstractCrawler):
                 )
                 # 现在返回的 comments 已经是经过关键词筛选的
                 await douyin.batch_update_dy_aweme_comments(aweme_id, comments)
-                utils.logger.info(f"aweme_id: {aweme_id} comments have all been obtained and filtered ...")
+                utils.logger.info(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} comments have all been obtained and filtered ...")
             except DataFetchError as e:
-                utils.logger.error(f"aweme_id: {aweme_id} get comments failed, error: {e}")
+                utils.logger.error(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} get comments failed, error: {e}")
 
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
@@ -213,4 +213,4 @@ class DouYinCrawler(AbstractCrawler):
     async def close(self) -> None:
         """Close browser context"""
         await self.browser_context.close()
-        utils.logger.info("Browser context closed ...")
+        utils.logger.info("[DouYinCrawler.close] Browser context closed ...")

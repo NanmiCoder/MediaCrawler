@@ -16,7 +16,7 @@ async def init_db(create_db: bool = False) -> None:
 async def init():
     await init_db(create_db=True)
     await Tortoise.generate_schemas()
-    utils.logger.info("Init DB Success!")
+    utils.logger.info("[db.init] Init DB Success!")
 
 
 if __name__ == '__main__':

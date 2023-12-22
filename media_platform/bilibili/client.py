@@ -4,7 +4,7 @@
 # @Desc    : bilibili 请求客户端
 import asyncio
 import json
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 import httpx
@@ -94,16 +94,16 @@ class BilibiliClient:
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
-        utils.logger.info("Begin pong bilibili...")
+        utils.logger.info("[BilibiliClient.pong] Begin pong bilibili...")
         ping_flag = False
         try:
             check_login_uri = "/x/web-interface/nav"
             response = await self.get(check_login_uri)
             if response.get("isLogin"):
-                utils.logger.info("use cache login state get web interface successfull!")
+                utils.logger.info("[BilibiliClient.pong] Use cache login state get web interface successfull!")
                 ping_flag = True
         except Exception as e:
-            utils.logger.error(f"Pong bilibili failed: {e}, and try to login again...")
+            utils.logger.error(f"[BilibiliClient.pong] Pong bilibili failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
 
@@ -132,16 +132,22 @@ class BilibiliClient:
         }
         return await self.get(uri, post_data)
 
-    async def get_video_info(self, video_id: str) -> Dict:
+    async def get_video_info(self, aid: Union[int, None] = None, bvid: Union[str, None] = None) -> Dict:
         """
-        Bilibli web video detail api
-        :param video_id:
+        Bilibli web video detail api, aid 和 bvid任选一个参数
+        :param aid: 稿件avid
+        :param bvid: 稿件bvid
         :return:
         """
+        if not aid and not bvid:
+            raise ValueError("请提供 aid 或 bvid 中的至少一个参数")
+
         uri = "/x/web-interface/view/detail"
-        params = {
-            "aid": video_id
-        }
+        params = dict()
+        if aid:
+            params.update({"aid": aid})
+        else:
+            params.update({"bvid": bvid})
         return await self.get(uri, params, enable_params_sign=False)
 
     async def get_video_comments(self,

@@ -59,12 +59,12 @@ class KuaiShouClient:
     @staticmethod
     async def pong() -> bool:
         """get a note to check if login state is ok"""
-        utils.logger.info("Begin pong kuaishou...")
+        utils.logger.info("[KuaiShouClient.pong] Begin pong kuaishou...")
         ping_flag = False
         try:
             pass
         except Exception as e:
-            utils.logger.error(f"Pong kuaishou failed: {e}, and try to login again...")
+            utils.logger.error(f"[KuaiShouClient.pong] Pong kuaishou failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
 
