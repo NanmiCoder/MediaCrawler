@@ -23,9 +23,9 @@ from var import comment_tasks_var, crawler_type_var
 
 from .client import WeiboClient
 from .exception import DataFetchError
-from .login import WeiboLogin
 from .field import SearchType
 from .help import filter_search_result_card
+from .login import WeiboLogin
 
 
 class WeiboCrawler(AbstractCrawler):
@@ -38,7 +38,7 @@ class WeiboCrawler(AbstractCrawler):
 
     def __init__(self):
         self.index_url = "https://m.weibo.cn"
-        self.user_agent = utils.get_user_agent()
+        self.user_agent = utils.get_mobile_user_agent()
 
     def init_config(self, platform: str, login_type: str, crawler_type: str):
         self.platform = platform
@@ -85,7 +85,7 @@ class WeiboCrawler(AbstractCrawler):
                 await self.search()
             elif self.crawler_type == "detail":
                 # Get the information and comments of the specified post
-                pass
+                await self.get_specified_notes()
             else:
                 pass
             utils.logger.info("[WeiboCrawler.start] Bilibili Crawler finished ...")
@@ -109,12 +109,104 @@ class WeiboCrawler(AbstractCrawler):
                 note_id_list: List[str] = []
                 note_list = filter_search_result_card(search_res.get("cards"))
                 for note_item in note_list:
-                    if note_item :
+                    if note_item:
                         mblog: Dict = note_item.get("mblog")
                         note_id_list.append(mblog.get("id"))
                         await weibo.update_weibo_note(note_item)
 
                 page += 1
+                await self.batch_get_notes_comments(note_id_list)
+
+    async def get_specified_notes(self):
+        """
+        get specified notes info
+        :return:
+        """
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list = [
+            self.get_note_info_task(note_id=note_id, semaphore=semaphore) for note_id in
+            config.WEIBO_SPECIFIED_ID_LIST
+        ]
+        video_details = await asyncio.gather(*task_list)
+        for note_item in video_details:
+            if note_item:
+                await weibo.update_weibo_note(note_item)
+        await self.batch_get_notes_comments(config.WEIBO_SPECIFIED_ID_LIST)
+
+    async def get_note_info_task(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
+        """
+        Get note detail task
+        :param note_id:
+        :param semaphore:
+        :return:
+        """
+        async with semaphore:
+            try:
+                result = await self.wb_client.get_note_info_by_id(note_id)
+                return result
+            except DataFetchError as ex:
+                utils.logger.error(f"[WeiboCrawler.get_note_info_task] Get note detail error: {ex}")
+                return None
+            except KeyError as ex:
+                utils.logger.error(
+                    f"[WeiboCrawler.get_note_info_task] have not fund note detail note_id:{note_id}, err: {ex}")
+                return None
+
+    async def batch_get_notes_comments(self, note_id_list: List[str]):
+        """
+        batch get notes comments
+        :param note_id_list:
+        :return:
+        """
+        utils.logger.info(f"[WeiboCrawler.batch_get_notes_comments] note ids:{note_id_list}")
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list: List[Task] = []
+        for note_id in note_id_list:
+            task = asyncio.create_task(self.get_note_comments(note_id, semaphore), name=note_id)
+            task_list.append(task)
+        await asyncio.gather(*task_list)
+
+    async def get_note_comments(self, note_id: str, semaphore: asyncio.Semaphore):
+        """
+        get comment for note id
+        :param note_id:
+        :param semaphore:
+        :return:
+        """
+        async with semaphore:
+            try:
+                utils.logger.info(f"[WeiboCrawler.get_note_comments] begin get note_id: {note_id} comments ...")
+
+                # Read keyword and quantity from config
+                keywords = config.COMMENT_KEYWORDS
+                max_comments = config.MAX_COMMENTS_PER_POST
+
+                # Download comments
+                all_comments = await self.wb_client.get_note_all_comments(
+                    note_id=note_id,
+                    crawl_interval=random.random(),
+                )
+
+                # Filter comments by keyword
+                if keywords:
+                    filtered_comments = [
+                        comment for comment in all_comments if
+                        any(keyword in comment["content"]["message"] for keyword in keywords)
+                    ]
+                else:
+                    filtered_comments = all_comments
+
+                # Limit the number of comments
+                if max_comments > 0:
+                    filtered_comments = filtered_comments[:max_comments]
+
+                # Update weibo note comments
+                await weibo.batch_update_weibo_note_comments(note_id, filtered_comments)
+
+            except DataFetchError as ex:
+                utils.logger.error(f"[WeiboCrawler.get_note_comments] get note_id: {note_id} comment error: {ex}")
+            except Exception as e:
+                utils.logger.error(f"[WeiboCrawler.get_note_comments] may be been blocked, err:{e}")
 
     async def create_weibo_client(self, httpx_proxy: Optional[str]) -> WeiboClient:
         """Create xhs client"""

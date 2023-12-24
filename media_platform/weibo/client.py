@@ -4,7 +4,9 @@
 # @Desc    : 微博爬虫 API 请求 client
 
 import asyncio
+import copy
 import json
+import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
@@ -47,12 +49,15 @@ class WeiboClient:
         else:
             return data.get("data", {})
 
-    async def get(self, uri: str, params=None) -> Dict:
+    async def get(self, uri: str, params=None, headers=None) -> Dict:
         final_uri = uri
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
                          f"{urlencode(params)}")
-        return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=self.headers)
+
+        if headers is None:
+            headers = self.headers
+        return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
 
     async def post(self, uri: str, data: dict) -> Dict:
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
@@ -96,3 +101,78 @@ class WeiboClient:
             "page": page,
         }
         return await self.get(uri, params)
+
+    async def get_note_comments(self, mid_id: str, max_id: int) -> Dict:
+        """get notes comments
+        :param mid_id: 微博ID
+        :param max_id: 分页参数ID
+        :return:
+        """
+        uri = "/comments/hotflow"
+        params = {
+            "id": mid_id,
+            "mid": mid_id,
+            "max_id_type": 0,
+        }
+        if max_id > 0:
+            params.update({"max_id": max_id})
+
+        referer_url = f"https://m.weibo.cn/detail/{mid_id}"
+        headers = copy.copy(self.headers)
+        headers["Referer"] = referer_url
+
+        return await self.get(uri, params, headers=headers)
+
+    async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
+                                    callback: Optional[Callable] = None, ):
+        """
+        get note all comments include sub comments
+        :param note_id:
+        :param crawl_interval:
+        :param is_fetch_sub_comments:
+        :param callback:
+        :return:
+        """
+
+        result = []
+        is_end = False
+        max_id = -1
+        while not is_end:
+            comments_res = await self.get_note_comments(note_id, max_id)
+            max_id: int = comments_res.get("max_id")
+            comment_list: List[Dict] = comments_res.get("data", [])
+            is_end = max_id == 0
+            if callback:  # 如果有回调函数，就执行回调函数
+                await callback(note_id, comment_list)
+            await asyncio.sleep(crawl_interval)
+            if not is_fetch_sub_comments:
+                result.extend(comment_list)
+                continue
+            # todo handle get sub comments
+        return result
+
+    async def get_note_info_by_id(self, note_id: str) -> Dict:
+        """
+        根据帖子ID获取详情
+        :param note_id:
+        :return:
+        """
+        url = f"{self._host}/detail/{note_id}"
+        async with httpx.AsyncClient(proxies=self.proxies) as client:
+            response = await client.request(
+                "GET", url, timeout=self.timeout, headers=self.headers
+            )
+            if response.status_code != 200:
+                raise DataFetchError(f"get weibo detail err: {response.text}")
+            match = re.search(r'var \$render_data = (\[.*?\])\[0\]', response.text, re.DOTALL)
+            if match:
+                render_data_json = match.group(1)
+                render_data_dict = json.loads(render_data_json)
+                note_detail = render_data_dict[0].get("status")
+                note_item = {
+                    "mblog": note_detail
+                }
+                return note_item
+            else:
+                utils.logger.info(f"[WeiboClient.get_note_info_by_id] 未找到$render_data的值")
+                return dict()

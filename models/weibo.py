@@ -91,19 +91,19 @@ async def update_weibo_note(note_item: Dict):
         "avatar": user_info.get("profile_image_url", ""),
     }
     utils.logger.info(
-        f"[models.weibo.update_weibo_video] weibo note id:{note_id}, title:{local_db_item.get('content')[:24]} ...")
+        f"[models.weibo.update_weibo_note] weibo note id:{note_id}, title:{local_db_item.get('content')[:24]} ...")
     if config.IS_SAVED_DATABASED:
         if not await WeiboNote.filter(note_id=note_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()
-            weibo_video_pydantic = pydantic_model_creator(WeiboNote, name='WeiboNoteCreate', exclude=('id',))
-            weibo_data = weibo_video_pydantic(**local_db_item)
-            weibo_video_pydantic.model_validate(weibo_data)
+            weibo_note_pydantic = pydantic_model_creator(WeiboNote, name='WeiboNoteCreate', exclude=('id',))
+            weibo_data = weibo_note_pydantic(**local_db_item)
+            weibo_note_pydantic.model_validate(weibo_data)
             await WeiboNote.create(**weibo_data.model_dump())
         else:
-            weibo_video_pydantic = pydantic_model_creator(WeiboNote, name='WeiboNoteUpdate',
+            weibo_note_pydantic = pydantic_model_creator(WeiboNote, name='WeiboNoteUpdate',
                                                           exclude=('id', 'add_ts'))
-            weibo_data = weibo_video_pydantic(**local_db_item)
-            weibo_video_pydantic.model_validate(weibo_data)
+            weibo_data = weibo_note_pydantic(**local_db_item)
+            weibo_note_pydantic.model_validate(weibo_data)
             await WeiboNote.filter(note_id=note_id).update(**weibo_data.model_dump())
     else:
         # Below is a simple way to save it in CSV format.
@@ -116,23 +116,22 @@ async def update_weibo_note(note_item: Dict):
             writer.writerow(local_db_item.values())
 
 
-async def batch_update_weibo_video_comments(video_id: str, comments: List[Dict]):
+async def batch_update_weibo_note_comments(note_id: str, comments: List[Dict]):
     if not comments:
         return
     for comment_item in comments:
-        await update_weibo_video_comment(video_id, comment_item)
+        await update_weibo_note_comment(note_id, comment_item)
 
 
-async def update_weibo_video_comment(note_id: str, comment_item: Dict):
+async def update_weibo_note_comment(note_id: str, comment_item: Dict):
     comment_id = str(comment_item.get("id"))
-    content: Dict = comment_item.get("text")
-    user_info: Dict = comment_item.get("member")
+    user_info: Dict = comment_item.get("user")
     local_db_item = {
         "comment_id": comment_id,
         "create_time": utils.rfc2822_to_timestamp(comment_item.get("created_at")),
         "create_date_time": str(utils.rfc2822_to_china_datetime(comment_item.get("created_at"))),
         "note_id": note_id,
-        "content": content.get("message"),
+        "content": comment_item.get("text"),
         "sub_comment_count": str(comment_item.get("total_number", 0)),
         "comment_like_count": str(comment_item.get("like_count", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
@@ -146,7 +145,7 @@ async def update_weibo_video_comment(note_id: str, comment_item: Dict):
         "avatar": user_info.get("profile_image_url", ""),
     }
     utils.logger.info(
-        f"[models.weibo.update_weibo_video_comment] Weibo note comment: {comment_id}, content: {local_db_item.get('content','')[:24]} ...")
+        f"[models.weibo.update_weibo_note_comment] Weibo note comment: {comment_id}, content: {local_db_item.get('content','')[:24]} ...")
     if config.IS_SAVED_DATABASED:
         if not await WeiboComment.filter(comment_id=comment_id).exists():
             local_db_item["add_ts"] = utils.get_current_timestamp()

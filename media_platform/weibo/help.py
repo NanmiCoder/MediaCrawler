@@ -3,7 +3,7 @@
 # @Time    : 2023/12/24 17:37
 # @Desc    :
 
-from typing import List, Dict
+from typing import Dict, List
 
 
 def filter_search_result_card(card_list: List[Dict]) -> List[Dict]:

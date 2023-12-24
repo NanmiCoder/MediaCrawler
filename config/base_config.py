@@ -27,10 +27,10 @@ USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 CRAWLER_MAX_NOTES_COUNT = 20
 
 # 并发爬虫数量控制
-MAX_CONCURRENCY_NUM = 10
+MAX_CONCURRENCY_NUM = 4
 
 # 每个视频/帖子抓取评论最大条数 (为0则不限制)
-MAX_COMMENTS_PER_POST = 10
+MAX_COMMENTS_PER_POST = 0
 
 # 评论关键词筛选(只会留下包含关键词的评论,为空不限制)
 COMMENT_KEYWORDS = [
@@ -61,5 +61,11 @@ BILI_SPECIFIED_ID_LIST = [
     "BV1d54y1g7db",
     "BV1Sz4y1U77N",
     "BV14Q4y1n7jz",
+    # ........................
+]
+
+# 指定微博平台需要爬取的帖子列表
+WEIBO_SPECIFIED_ID_LIST = [
+    "4982041758140155",
     # ........................
 ]
