@@ -35,14 +35,14 @@ class WeiboNote(WeiboBaseModel):
     note_id = fields.CharField(max_length=64, index=True, description="帖子ID")
     content = fields.TextField(null=True, description="帖子正文内容")
     create_time = fields.BigIntField(description="帖子发布时间戳", index=True)
-    create_date_time = fields.BigIntField(description="帖子发布日期时间", index=True)
+    create_date_time = fields.CharField(description="帖子发布日期时间",max_length=32, index=True)
     liked_count = fields.CharField(null=True, max_length=16, description="帖子点赞数")
     comments_count = fields.CharField(null=True, max_length=16, description="帖子评论数量")
     shared_count = fields.CharField(null=True, max_length=16, description="帖子转发数量")
     note_url = fields.CharField(null=True, max_length=512, description="帖子详情URL")
 
     class Meta:
-        table = "weibo_video"
+        table = "weibo_note"
         table_description = "微博帖子"
 
     def __str__(self):
@@ -54,7 +54,7 @@ class WeiboComment(WeiboBaseModel):
     note_id = fields.CharField(max_length=64, index=True, description="帖子ID")
     content = fields.TextField(null=True, description="评论内容")
     create_time = fields.BigIntField(description="评论时间戳")
-    create_date_time = fields.BigIntField(description="评论日期时间", index=True)
+    create_date_time = fields.CharField(description="评论日期时间", max_length=32, index=True)
     comment_like_count = fields.CharField(max_length=16, description="评论点赞数量")
     sub_comment_count = fields.CharField(max_length=16, description="评论回复数")
 
@@ -75,16 +75,16 @@ async def update_weibo_note(note_item: Dict):
         "note_id": note_id,
         "content": mblog.get("text"),
         "create_time": utils.rfc2822_to_timestamp(mblog.get("created_at")),
-        "create_date_time": utils.rfc2822_to_china_datetime(mblog.get("created_at")),
-        "liked_count": mblog.get("attitudes_count", 0),
-        "comments_count": mblog.get("comments_count", 0),
-        "shared_count": mblog.get("reposts_count", 0),
+        "create_date_time": str(utils.rfc2822_to_china_datetime(mblog.get("created_at"))),
+        "liked_count": str(mblog.get("attitudes_count", 0)),
+        "comments_count": str(mblog.get("comments_count", 0)),
+        "shared_count": str(mblog.get("reposts_count", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
         "note_url": f"https://m.weibo.cn/detail/{note_id}",
         "ip_location": mblog.get("region_name", "").replace("发布于 ", ""),
 
         # 用户信息
-        "user_id": user_info.get("id"),
+        "user_id": str(user_info.get("id")),
         "nickname": user_info.get("screen_name", ""),
         "gender": user_info.get("gender", ""),
         "profile_url": user_info.get("profile_url", ""),
@@ -130,7 +130,7 @@ async def update_weibo_video_comment(note_id: str, comment_item: Dict):
     local_db_item = {
         "comment_id": comment_id,
         "create_time": utils.rfc2822_to_timestamp(comment_item.get("created_at")),
-        "create_date_time": utils.rfc2822_to_china_datetime(comment_item.get("created_at")),
+        "create_date_time": str(utils.rfc2822_to_china_datetime(comment_item.get("created_at"))),
         "note_id": note_id,
         "content": content.get("message"),
         "sub_comment_count": str(comment_item.get("total_number", 0)),
@@ -139,7 +139,7 @@ async def update_weibo_video_comment(note_id: str, comment_item: Dict):
         "ip_location": comment_item.get("source", "").replace("来自", ""),
 
         # 用户信息
-        "user_id": user_info.get("id"),
+        "user_id": str(user_info.get("id")),
         "nickname": user_info.get("screen_name", ""),
         "gender": user_info.get("gender", ""),
         "profile_url": user_info.get("profile_url", ""),
