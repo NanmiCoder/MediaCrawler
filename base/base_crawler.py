@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from proxy.proxy_account_pool import AccountPool
-
 
 class AbstractCrawler(ABC):
     @abstractmethod

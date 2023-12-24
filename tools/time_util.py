@@ -4,6 +4,7 @@
 # @Desc    : 时间相关的工具函数
 
 import time
+from datetime import datetime, timezone, timedelta
 
 
 def get_current_timestamp() -> int:
@@ -69,3 +70,37 @@ def get_unix_time_from_time_str(time_str):
 
 def get_unix_timestamp():
     return int(time.time())
+
+
+def rfc2822_to_china_datetime(rfc2822_time):
+    # 定义RFC 2822格式
+    rfc2822_format = "%a %b %d %H:%M:%S %z %Y"
+
+    # 将RFC 2822时间字符串转换为datetime对象
+    dt_object = datetime.strptime(rfc2822_time, rfc2822_format)
+
+    # 将datetime对象的时区转换为中国时区
+    dt_object_china = dt_object.astimezone(timezone(timedelta(hours=8)))
+    return dt_object_china
+
+
+def rfc2822_to_timestamp(rfc2822_time):
+    # 定义RFC 2822格式
+    rfc2822_format = "%a %b %d %H:%M:%S %z %Y"
+
+    # 将RFC 2822时间字符串转换为datetime对象
+    dt_object = datetime.strptime(rfc2822_time, rfc2822_format)
+
+    # 将datetime对象转换为UTC时间
+    dt_utc = dt_object.replace(tzinfo=timezone.utc)
+
+    # 计算UTC时间对应的Unix时间戳
+    timestamp = int(dt_utc.timestamp())
+
+    return timestamp
+
+
+if __name__ == '__main__':
+    # 示例用法
+    _rfc2822_time = "Sat Dec 23 17:12:54 +0800 2023"
+    print(rfc2822_to_china_datetime(_rfc2822_time))

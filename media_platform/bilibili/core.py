@@ -86,8 +86,8 @@ class BilibiliCrawler(AbstractCrawler):
                 await self.get_specified_videos()
             else:
                 pass
-            utils.logger.info("Bilibili Crawler finished ...")
-        pass
+            utils.logger.info("[BilibiliCrawler.start] Bilibili Crawler finished ...")
+
 
     async def search(self):
         """
@@ -220,7 +220,7 @@ class BilibiliCrawler(AbstractCrawler):
 
     async def create_bilibili_client(self, httpx_proxy: Optional[str]) -> BilibiliClient:
         """Create xhs client"""
-        utils.logger.info("[BilibiliCrawler.create_bilibili_client] Begin create xiaohongshu API client ...")
+        utils.logger.info("[BilibiliCrawler.create_bilibili_client] Begin create bilibili API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         bilibili_client_obj = BilibiliClient(
             proxies=httpx_proxy,
