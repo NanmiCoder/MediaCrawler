@@ -69,9 +69,12 @@ class WeiboClient:
         utils.logger.info("[WeiboClient.pong] Begin pong weibo...")
         ping_flag = False
         try:
-            pass
+            uri  = "/api/config"
+            resp_data: Dict = await self.request(method="GET", url=f"{self._host}{uri}", headers=self.headers)
+            if resp_data.get("login"):
+                ping_flag = True
         except Exception as e:
-            utils.logger.error(f"[BilibiliClient.pong] Pong weibo failed: {e}, and try to login again...")
+            utils.logger.error(f"[WeiboClient.pong] Pong weibo failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
 

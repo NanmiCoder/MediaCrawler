@@ -7,9 +7,8 @@
 import asyncio
 import os
 import random
-import time
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 from playwright.async_api import (BrowserContext, BrowserType, Page,
                                   async_playwright)
@@ -19,7 +18,7 @@ from base.base_crawler import AbstractCrawler
 from models import weibo
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from tools import utils
-from var import comment_tasks_var, crawler_type_var
+from var import crawler_type_var
 
 from .client import WeiboClient
 from .exception import DataFetchError
@@ -37,8 +36,8 @@ class WeiboCrawler(AbstractCrawler):
     browser_context: BrowserContext
 
     def __init__(self):
-        self.index_url = "https://m.weibo.cn"
-        self.user_agent = utils.get_mobile_user_agent()
+        self.index_url = "https://www.weibo.com"
+        self.user_agent = utils.get_user_agent()
 
     def init_config(self, platform: str, login_type: str, crawler_type: str):
         self.platform = platform
@@ -215,7 +214,7 @@ class WeiboCrawler(AbstractCrawler):
         weibo_client_obj = WeiboClient(
             proxies=httpx_proxy,
             headers={
-                "User-Agent": self.user_agent,
+                "User-Agent": utils.get_mobile_user_agent(),
                 "Cookie": cookie_str,
                 "Origin": "https://m.weibo.cn",
                 "Referer": "https://m.weibo.cn",

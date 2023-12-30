@@ -32,7 +32,7 @@ class WeiboLogin(AbstractLogin):
 
     async def begin(self):
         """Start login weibo"""
-        utils.logger.info("[WeiboLogin.begin] Begin login Bilibili ...")
+        utils.logger.info("[WeiboLogin.begin] Begin login weibo ...")
         if self.login_type == "qrcode":
             await self.login_by_qrcode()
         elif self.login_type == "phone":
@@ -44,7 +44,7 @@ class WeiboLogin(AbstractLogin):
                 "[WeiboLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
 
     @retry(stop=stop_after_attempt(20), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
-    async def check_login_state(self) -> bool:
+    async def check_login_state(self, no_logged_in_session: str) -> bool:
         """
             Check if the current login status is successful and return True otherwise return False
             retry decorator will retry 20 times if the return value is False, and the retry interval is 1 second
@@ -52,22 +52,45 @@ class WeiboLogin(AbstractLogin):
         """
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
-        if cookie_dict.get("SESSDATA", "") or cookie_dict.get("DedeUserID"):
+        current_web_session = cookie_dict.get("WBPSESS")
+        if current_web_session != no_logged_in_session:
             return True
         return False
+
+    async def popup_login_dialog(self):
+        """If the login dialog box does not pop up automatically, we will manually click the login button"""
+        dialog_selector = "xpath=//div[@class='woo-modal-main']"
+        try:
+            # check dialog box is auto popup and wait for 10 seconds
+            await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 10)
+        except Exception as e:
+            utils.logger.error(
+                f"[WeiboLogin.popup_login_dialog] login dialog box does not pop up automatically, error: {e}")
+            utils.logger.info(
+                "[WeiboLogin.popup_login_dialog] login dialog box does not pop up automatically, we will manually click the login button")
+
+            # 向下滚动1000像素
+            await self.context_page.mouse.wheel(0,500)
+            await asyncio.sleep(2)
+
+            try:
+                # click login button
+                login_button_ele = self.context_page.locator(
+                    "xpath=//a[text()='登录']"
+                )
+                await login_button_ele.click()
+                await asyncio.sleep(0.5)
+            except Exception as e:
+                utils.logger.info(f"[WeiboLogin.popup_login_dialog] manually click the login button faield maybe login dialog Appear：{e}")
 
     async def login_by_qrcode(self):
         """login weibo website and keep webdriver login state"""
         utils.logger.info("[WeiboLogin.login_by_qrcode] Begin login weibo by qrcode ...")
 
-        # click login button
-        login_button_ele = self.context_page.locator(
-            "xpath=//div[@class='right-entry__outside go-login-btn']//div"
-        )
-        await login_button_ele.click()
+        await self.popup_login_dialog()
 
         # find login qrcode
-        qrcode_img_selector = "//div[@class='login-scan-box']//img"
+        qrcode_img_selector = "//div[@class='woo-modal-main']//img"
         base64_qrcode_img = await utils.find_login_qrcode(
             self.context_page,
             selector=qrcode_img_selector
@@ -81,8 +104,14 @@ class WeiboLogin(AbstractLogin):
         asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
 
         utils.logger.info(f"[WeiboLogin.login_by_qrcode] Waiting for scan code login, remaining time is 20s")
+
+        # get not logged session
+        current_cookie = await self.browser_context.cookies()
+        _, cookie_dict = utils.convert_cookies(current_cookie)
+        no_logged_in_session = cookie_dict.get("WBPSESS")
+
         try:
-            await self.check_login_state()
+            await self.check_login_state(no_logged_in_session)
         except RetryError:
             utils.logger.info("[WeiboLogin.login_by_qrcode] Login weibo failed by qrcode login method ...")
             sys.exit()
