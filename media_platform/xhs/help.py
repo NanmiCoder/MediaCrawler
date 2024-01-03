@@ -257,6 +257,30 @@ def get_search_id():
     return base36encode((e + t))
 
 
+img_cdns = [
+    "https://sns-img-qc.xhscdn.com",
+    "https://sns-img-hw.xhscdn.com",
+    "https://sns-img-bd.xhscdn.com",
+    "https://sns-img-qn.xhscdn.com",
+]
+
+def get_img_url_by_trace_id(trace_id: str, format_type: str = "png"):
+    return f"{random.choice(img_cdns)}/{trace_id}?imageView2/format/{format_type}"
+
+
+def get_img_urls_by_trace_id(trace_id: str, format_type: str = "png"):
+    return [f"{cdn}/{trace_id}?imageView2/format/{format_type}" for cdn in img_cdns]
+
+
+def get_trace_id(img_url: str):
+    return img_url.split("/")[-1]
+
+
 if __name__ == '__main__':
-    a = get_b3_trace_id()
-    print(a)
+    _img_url = "https://sns-img-bd.xhscdn.com/7a3abfaf-90c1-a828-5de7-022c80b92aa3"
+    # 获取一个图片地址在多个cdn下的url地址
+    # final_img_urls = get_img_urls_by_trace_id(get_trace_id(_img_url))
+    final_img_url = get_img_url_by_trace_id(get_trace_id(_img_url))
+    print(final_img_url)
+
+
