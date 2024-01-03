@@ -123,7 +123,7 @@ async def update_bilibili_video_comment(video_id: str, comment_item: Dict):
     local_db_item = {
         "comment_id": comment_id,
         "create_time": comment_item.get("ctime"),
-        "video_id": video_id,
+        "video_id": str(video_id),
         "content": content.get("message"),
         "user_id": user_info.get("mid"),
         "nickname": user_info.get("uname"),
