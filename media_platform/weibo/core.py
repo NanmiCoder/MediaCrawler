@@ -37,7 +37,9 @@ class WeiboCrawler(AbstractCrawler):
 
     def __init__(self):
         self.index_url = "https://www.weibo.com"
+        self.mobile_index_url = "https://m.weibo.cn"
         self.user_agent = utils.get_user_agent()
+        self.mobile_user_agent = utils.get_mobile_user_agent()
 
     def init_config(self, platform: str, login_type: str, crawler_type: str):
         self.platform = platform
@@ -57,13 +59,13 @@ class WeiboCrawler(AbstractCrawler):
             self.browser_context = await self.launch_browser(
                 chromium,
                 None,
-                self.user_agent,
+                self.mobile_user_agent,
                 headless=config.HEADLESS
             )
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
             await self.browser_context.add_init_script(path="libs/stealth.min.js")
             self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+            await self.context_page.goto(self.mobile_index_url)
 
             # Create a client to interact with the xiaohongshu website.
             self.wb_client = await self.create_weibo_client(httpx_proxy_format)
@@ -75,7 +77,14 @@ class WeiboCrawler(AbstractCrawler):
                     context_page=self.context_page,
                     cookie_str=config.COOKIES
                 )
+                await self.context_page.goto(self.index_url)
+                await asyncio.sleep(1)
                 await login_obj.begin()
+
+                # 登录成功后重定向到手机端的网站，再更新手机端登录成功的cookie
+                utils.logger.info("[WeiboCrawler.start] redirect weibo mobile homepage and update cookies on mobile platform")
+                await self.context_page.goto(self.mobile_index_url)
+                await asyncio.sleep(2)
                 await self.wb_client.update_cookies(browser_context=self.browser_context)
 
             crawler_type_var.set(self.crawler_type)
@@ -183,7 +192,7 @@ class WeiboCrawler(AbstractCrawler):
                 # Download comments
                 all_comments = await self.wb_client.get_note_all_comments(
                     note_id=note_id,
-                    crawl_interval=random.random(),
+                    crawl_interval=random.randint(1,10), # 微博对API的限流比较严重，所以延时提高一些
                 )
 
                 # Filter comments by keyword

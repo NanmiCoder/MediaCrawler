@@ -43,6 +43,7 @@ class WeiboLogin(AbstractLogin):
             raise ValueError(
                 "[WeiboLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
 
+
     @retry(stop=stop_after_attempt(20), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
         """
@@ -61,8 +62,8 @@ class WeiboLogin(AbstractLogin):
         """If the login dialog box does not pop up automatically, we will manually click the login button"""
         dialog_selector = "xpath=//div[@class='woo-modal-main']"
         try:
-            # check dialog box is auto popup and wait for 10 seconds
-            await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 10)
+            # check dialog box is auto popup and wait for 4 seconds
+            await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 4)
         except Exception as e:
             utils.logger.error(
                 f"[WeiboLogin.popup_login_dialog] login dialog box does not pop up automatically, error: {e}")
@@ -71,12 +72,12 @@ class WeiboLogin(AbstractLogin):
 
             # 向下滚动1000像素
             await self.context_page.mouse.wheel(0,500)
-            await asyncio.sleep(2)
+            await asyncio.sleep(0.5)
 
             try:
                 # click login button
                 login_button_ele = self.context_page.locator(
-                    "xpath=//a[text()='登录']"
+                    "xpath=//a[text()='登录']",
                 )
                 await login_button_ele.click()
                 await asyncio.sleep(0.5)

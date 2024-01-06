@@ -7,7 +7,7 @@ import asyncio
 import copy
 import json
 import re
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional
 from urllib.parse import urlencode
 
 import httpx
@@ -73,6 +73,8 @@ class WeiboClient:
             resp_data: Dict = await self.request(method="GET", url=f"{self._host}{uri}", headers=self.headers)
             if resp_data.get("login"):
                 ping_flag = True
+            else:
+                utils.logger.error(f"[WeiboClient.pong] cookie may be invalid and again login...")
         except Exception as e:
             utils.logger.error(f"[WeiboClient.pong] Pong weibo failed: {e}, and try to login again...")
             ping_flag = False
