@@ -38,12 +38,10 @@ class ProxyIpPool:
 
         utils.logger.info(f"[ProxyIpPool.is_valid_proxy] testing {proxy.ip} is it valid ")
         try:
-            httpx_proxy = f"{proxy.protocol}{proxy.ip}:{proxy.port}"
-            proxy_auth = httpx.BasicAuth(proxy.user, proxy.password)
-            proxies = {
-                f"{proxy.protocol}{proxy.ip}": httpx_proxy
+            httpx_proxy = {
+                f"{proxy.protocol}": f"http://{proxy.user}:{proxy.password}@{proxy.ip}:{proxy.port}"
             }
-            async with httpx.AsyncClient(proxies=proxies, auth=proxy_auth) as client:
+            async with httpx.AsyncClient(proxies=httpx_proxy) as client:
                 response = await client.get(self.valid_ip_url)
             if response.status_code == 200:
                 return True

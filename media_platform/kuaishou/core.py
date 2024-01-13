@@ -191,7 +191,7 @@ class KuaishouCrawler(AbstractCrawler):
             "password": ip_proxy_info.password,
         }
         httpx_proxy = {
-            f"{ip_proxy_info.protocol}{ip_proxy_info.ip}": f"{ip_proxy_info.protocol}{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
+            f"{ip_proxy_info.protocol}": f"http://{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
         }
         return playwright_proxy, httpx_proxy
 
