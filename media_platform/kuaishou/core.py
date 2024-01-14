@@ -10,8 +10,8 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 
 import config
 from base.base_crawler import AbstractCrawler
-from models import kuaishou
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
+from store import kuaishou as kuaishou_store
 from tools import utils
 from var import comment_tasks_var, crawler_type_var
 
@@ -106,7 +106,7 @@ class KuaishouCrawler(AbstractCrawler):
 
                 for video_detail in vision_search_photo.get("feeds"):
                     video_id_list.append(video_detail.get("photo", {}).get("id"))
-                    await kuaishou.update_kuaishou_video(video_item=video_detail)
+                    await kuaishou_store.update_kuaishou_video(video_item=video_detail)
 
                 # batch fetch video comments
                 page += 1
@@ -121,7 +121,7 @@ class KuaishouCrawler(AbstractCrawler):
         video_details = await asyncio.gather(*task_list)
         for video_detail in video_details:
             if video_detail is not None:
-                await kuaishou.update_kuaishou_video(video_detail)
+                await kuaishou_store.update_kuaishou_video(video_detail)
         await self.batch_get_video_comments(config.KS_SPECIFIED_ID_LIST)
 
     async def get_video_info_task(self, video_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
@@ -167,7 +167,7 @@ class KuaishouCrawler(AbstractCrawler):
                 await self.ks_client.get_video_all_comments(
                     photo_id=video_id,
                     crawl_interval=random.random(),
-                    callback=kuaishou.batch_update_ks_video_comments
+                    callback=kuaishou_store.batch_update_ks_video_comments
                 )
             except DataFetchError as ex:
                 utils.logger.error(f"[KuaishouCrawler.get_comments] get video_id: {video_id} comment error: {ex}")

@@ -6,19 +6,18 @@
 import asyncio
 import os
 import random
-import time
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 from playwright.async_api import (BrowserContext, BrowserType, Page,
                                   async_playwright)
 
 import config
 from base.base_crawler import AbstractCrawler
-from models import bilibili
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
+from store import bilibili as bilibili_store
 from tools import utils
-from var import comment_tasks_var, crawler_type_var
+from var import crawler_type_var
 
 from .client import BilibiliClient
 from .exception import DataFetchError
@@ -88,7 +87,6 @@ class BilibiliCrawler(AbstractCrawler):
                 pass
             utils.logger.info("[BilibiliCrawler.start] Bilibili Crawler finished ...")
 
-
     async def search(self):
         """
         search bilibili video with keywords
@@ -118,7 +116,7 @@ class BilibiliCrawler(AbstractCrawler):
                 for video_item in video_items:
                     if video_item:
                         video_id_list.append(video_item.get("View").get("aid"))
-                        await bilibili.update_bilibili_video(video_item)
+                        await bilibili_store.update_bilibili_video(video_item)
 
                 page += 1
                 await self.batch_get_video_comments(video_id_list)
@@ -150,7 +148,7 @@ class BilibiliCrawler(AbstractCrawler):
                 await self.bili_client.get_video_all_comments(
                     video_id=video_id,
                     crawl_interval=random.random(),
-                    callback=bilibili.batch_update_bilibili_video_comments
+                    callback=bilibili_store.batch_update_bilibili_video_comments
                 )
 
             except DataFetchError as ex:
@@ -176,7 +174,7 @@ class BilibiliCrawler(AbstractCrawler):
                 video_aid: str = video_item_view.get("aid")
                 if video_aid:
                     video_aids_list.append(video_aid)
-                await bilibili.update_bilibili_video(video_detail)
+                await bilibili_store.update_bilibili_video(video_detail)
         await self.batch_get_video_comments(video_aids_list)
 
     async def get_video_info_task(self, aid: int, bvid: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
@@ -195,7 +193,8 @@ class BilibiliCrawler(AbstractCrawler):
                 utils.logger.error(f"[BilibiliCrawler.get_video_info_task] Get video detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"[BilibiliCrawler.get_video_info_task] have not fund note detail video_id:{bvid}, err: {ex}")
+                utils.logger.error(
+                    f"[BilibiliCrawler.get_video_info_task] have not fund note detail video_id:{bvid}, err: {ex}")
                 return None
 
     async def create_bilibili_client(self, httpx_proxy: Optional[str]) -> BilibiliClient:

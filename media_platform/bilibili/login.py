@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 18:44
-# @Desc    : bilibli登录类实现
+# @Desc    : bilibli登录实现类
 
 import asyncio
 import functools

@@ -10,7 +10,7 @@ from playwright.async_api import BrowserContext, Page
 import config
 from tools import utils
 
-from .exception import DataFetchError, IPBlockError
+from .exception import DataFetchError
 from .graphql import KuaiShouGraphQL
 
 
@@ -56,13 +56,21 @@ class KuaiShouClient:
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=self.headers)
 
-    @staticmethod
-    async def pong() -> bool:
+    async def pong(self) -> bool:
         """get a note to check if login state is ok"""
         utils.logger.info("[KuaiShouClient.pong] Begin pong kuaishou...")
         ping_flag = False
         try:
-            pass
+            post_data = {
+                "operationName": "visionProfileUserList",
+                "variables": {
+                    "ftype": 1,
+                },
+                "query": self.graphql.get("vision_profile")
+            }
+            res = await self.post("", post_data)
+            if res.get("visionProfileUserList", {}).get("result") == 1:
+                ping_flag = True
         except Exception as e:
             utils.logger.error(f"[KuaiShouClient.pong] Pong kuaishou failed: {e}, and try to login again...")
             ping_flag = False

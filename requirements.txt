@@ -11,3 +11,4 @@ aerich==0.7.2
 numpy~=1.24.4
 redis~=4.6.0
 pydantic==2.5.2
+aiofiles~=23.2.1

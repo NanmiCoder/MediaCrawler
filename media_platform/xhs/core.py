@@ -9,8 +9,8 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 
 import config
 from base.base_crawler import AbstractCrawler
-from models import xiaohongshu as xhs_model
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
+from store import xhs as xhs_store
 from tools import utils
 from var import crawler_type_var
 
@@ -112,7 +112,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 note_details = await asyncio.gather(*task_list)
                 for note_detail in note_details:
                     if note_detail is not None:
-                        await xhs_model.update_xhs_note(note_detail)
+                        await xhs_store.update_xhs_note(note_detail)
                         note_id_list.append(note_detail.get("note_id"))
                 page += 1
                 utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
@@ -127,7 +127,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         note_details = await asyncio.gather(*task_list)
         for note_detail in note_details:
             if note_detail is not None:
-                await xhs_model.update_xhs_note(note_detail)
+                await xhs_store.update_xhs_note(note_detail)
         await self.batch_get_note_comments(config.XHS_SPECIFIED_ID_LIST)
 
     async def get_note_detail(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
@@ -174,7 +174,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             # 更新或保存过滤后的评论
             for comment in filtered_comments:
-                await xhs_model.update_xhs_note_comment(note_id=note_id, comment_item=comment)
+                await xhs_store.update_xhs_note_comment(note_id=note_id, comment_item=comment)
 
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
