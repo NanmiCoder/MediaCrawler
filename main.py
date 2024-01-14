@@ -40,7 +40,7 @@ async def main():
                         choices=["search", "detail"], default=config.CRAWLER_TYPE)
 
     # init db
-    if config.IS_SAVED_DATABASED:
+    if config.SAVE_DATA_OPTION == "db":
         await db.init_db()
 
     args = parser.parse_args()

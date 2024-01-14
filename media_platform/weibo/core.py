@@ -15,8 +15,8 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 
 import config
 from base.base_crawler import AbstractCrawler
-from models import weibo
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
+from store import weibo as weibo_store
 from tools import utils
 from var import crawler_type_var
 
@@ -120,7 +120,7 @@ class WeiboCrawler(AbstractCrawler):
                     if note_item:
                         mblog: Dict = note_item.get("mblog")
                         note_id_list.append(mblog.get("id"))
-                        await weibo.update_weibo_note(note_item)
+                        await weibo_store.update_weibo_note(note_item)
 
                 page += 1
                 await self.batch_get_notes_comments(note_id_list)
@@ -138,7 +138,7 @@ class WeiboCrawler(AbstractCrawler):
         video_details = await asyncio.gather(*task_list)
         for note_item in video_details:
             if note_item:
-                await weibo.update_weibo_note(note_item)
+                await weibo_store.update_weibo_note(note_item)
         await self.batch_get_notes_comments(config.WEIBO_SPECIFIED_ID_LIST)
 
     async def get_note_info_task(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
@@ -184,33 +184,11 @@ class WeiboCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 utils.logger.info(f"[WeiboCrawler.get_note_comments] begin get note_id: {note_id} comments ...")
-
-                # Read keyword and quantity from config
-                keywords = config.COMMENT_KEYWORDS
-                max_comments = config.MAX_COMMENTS_PER_POST
-
-                # Download comments
-                all_comments = await self.wb_client.get_note_all_comments(
+                await self.wb_client.get_note_all_comments(
                     note_id=note_id,
                     crawl_interval=random.randint(1,10), # 微博对API的限流比较严重，所以延时提高一些
+                    callback=weibo_store.batch_update_weibo_note_comments
                 )
-
-                # Filter comments by keyword
-                if keywords:
-                    filtered_comments = [
-                        comment for comment in all_comments if
-                        any(keyword in comment["content"]["message"] for keyword in keywords)
-                    ]
-                else:
-                    filtered_comments = all_comments
-
-                # Limit the number of comments
-                if max_comments > 0:
-                    filtered_comments = filtered_comments[:max_comments]
-
-                # Update weibo note comments
-                await weibo.batch_update_weibo_note_comments(note_id, filtered_comments)
-
             except DataFetchError as ex:
                 utils.logger.error(f"[WeiboCrawler.get_note_comments] get note_id: {note_id} comment error: {ex}")
             except Exception as e:

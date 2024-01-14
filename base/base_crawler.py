@@ -39,3 +39,13 @@ class AbstractLogin(ABC):
     @abstractmethod
     async def login_by_cookies(self):
         pass
+
+
+class AbstractStore(ABC):
+    @abstractmethod
+    async def store_content(self, content_item: Dict):
+        pass
+
+    @abstractmethod
+    async def store_comment(self, comment_item: Dict):
+        pass

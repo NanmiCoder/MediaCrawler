@@ -11,7 +11,7 @@ class KuaiShouGraphQL:
         self.load_graphql_queries()
 
     def load_graphql_queries(self):
-        graphql_files = ["search_query.graphql", "video_detail.graphql", "comment_list.graphql"]
+        graphql_files = ["search_query.graphql", "video_detail.graphql", "comment_list.graphql", "vision_profile.graphql"]
 
         for file in graphql_files:
             with open(self.graphql_dir + file, mode="r") as f:

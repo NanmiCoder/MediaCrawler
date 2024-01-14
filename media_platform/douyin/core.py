@@ -8,8 +8,8 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 
 import config
 from base.base_crawler import AbstractCrawler
-from models import douyin
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
+from store import douyin as douyin_store
 from tools import utils
 from var import crawler_type_var
 
@@ -99,7 +99,7 @@ class DouYinCrawler(AbstractCrawler):
                     except TypeError:
                         continue
                     aweme_list.append(aweme_info.get("aweme_id", ""))
-                    await douyin.update_douyin_aweme(aweme_item=aweme_info)
+                    await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
             utils.logger.info(f"[DouYinCrawler.search] keyword:{keyword}, aweme_list:{aweme_list}")
             await self.batch_get_note_comments(aweme_list)
 
@@ -112,7 +112,7 @@ class DouYinCrawler(AbstractCrawler):
         aweme_details = await asyncio.gather(*task_list)
         for aweme_detail in aweme_details:
             if aweme_detail is not None:
-                await douyin.update_douyin_aweme(aweme_detail)
+                await douyin_store.update_douyin_aweme(aweme_detail)
         await self.batch_get_note_comments(config.DY_SPECIFIED_ID_LIST)
 
     async def get_aweme_detail(self, aweme_id: str, semaphore: asyncio.Semaphore) -> Any:
@@ -146,7 +146,7 @@ class DouYinCrawler(AbstractCrawler):
                     keywords=config.COMMENT_KEYWORDS  # 关键词列表
                 )
                 # 现在返回的 comments 已经是经过关键词筛选的
-                await douyin.batch_update_dy_aweme_comments(aweme_id, comments)
+                await douyin_store.batch_update_dy_aweme_comments(aweme_id, comments)
                 utils.logger.info(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} comments have all been obtained and filtered ...")
             except DataFetchError as e:
                 utils.logger.error(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} get comments failed, error: {e}")
