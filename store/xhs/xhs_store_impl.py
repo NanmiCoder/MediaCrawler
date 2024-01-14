@@ -3,6 +3,8 @@
 # @Time    : 2024/1/14 16:58
 # @Desc    : 小红书存储实现类
 import csv
+import json
+import os
 import pathlib
 from typing import Dict
 
@@ -120,8 +122,59 @@ class XhsDbStoreImplement(AbstractStore):
 
 
 class XhsJsonStoreImplement(AbstractStore):
+    json_store_path: str = "data/xhs"
+
+    def make_save_file_name(self, store_type: str) -> str:
+        """
+        make save file name by store type
+        Args:
+            store_type: Save type contains content and comments（contents | comments）
+
+        Returns:
+
+        """
+        return f"{self.json_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json"
+
+    async def save_data_to_json(self, save_item: Dict, store_type: str):
+        """
+        Below is a simple way to save it in json format.
+        Args:
+            save_item: save content dict info
+            store_type: Save type contains content and comments（contents | comments）
+
+        Returns:
+
+        """
+        pathlib.Path(self.json_store_path).mkdir(parents=True, exist_ok=True)
+        save_file_name = self.make_save_file_name(store_type=store_type)
+        save_data = []
+
+        if os.path.exists(save_file_name):
+            async with aiofiles.open(save_file_name, 'r', encoding='utf-8') as file:
+                save_data = json.loads(await file.read())
+
+        save_data.append(save_item)
+        async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
+            await file.write(json.dumps(save_data, ensure_ascii=False))
+
     async def store_content(self, content_item: Dict):
-        pass
+        """
+        content JSON storage implementation
+        Args:
+            content_item:
+
+        Returns:
+
+        """
+        await self.save_data_to_json(content_item, "contents")
 
     async def store_comment(self, comment_item: Dict):
-        pass
+        """
+        comment JSON storage implementatio
+        Args:
+            comment_item:
+
+        Returns:
+
+        """
+        await self.save_data_to_json(comment_item, "comments")

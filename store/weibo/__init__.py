@@ -15,7 +15,7 @@ class WeibostoreFactory:
     STORES = {
         "csv": WeiboCsvStoreImplement,
         "db": WeiboDbStoreImplement,
-        "json": BiliJsonStoreImplement
+        "json": WeiboJsonStoreImplement
     }
 
     @staticmethod
