@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Dict
+from typing import Callable, Dict, List, Optional
 from urllib.parse import urlencode
 
 import httpx
@@ -34,7 +34,16 @@ class XHSClient:
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
 
-    async def _pre_headers(self, url: str, data=None):
+    async def _pre_headers(self, url: str, data=None) -> Dict:
+        """
+        请求头参数签名
+        Args:
+            url:
+            data:
+
+        Returns:
+
+        """
         encrypt_params = await self.playwright_page.evaluate("([url, data]) => window._webmsxyw(url,data)", [url, data])
         local_storage = await self.playwright_page.evaluate("() => window.localStorage")
         signs = sign(
@@ -54,6 +63,16 @@ class XHSClient:
         return self.headers
 
     async def request(self, method, url, **kwargs) -> Dict:
+        """
+        封装httpx的公共请求方法，对请求响应做一些处理
+        Args:
+            method: 请求方法
+            url: 请求的URL
+            **kwargs: 其他请求参数，例如请求头、请求体等
+
+        Returns:
+
+        """
         async with httpx.AsyncClient(proxies=self.proxies) as client:
             response = await client.request(
                 method, url, timeout=self.timeout,
@@ -68,6 +87,15 @@ class XHSClient:
             raise DataFetchError(data.get("msg", None))
 
     async def get(self, uri: str, params=None) -> Dict:
+        """
+        GET请求，对请求头签名
+        Args:
+            uri: 请求路由
+            params: 请求参数
+
+        Returns:
+
+        """
         final_uri = uri
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
@@ -76,12 +104,26 @@ class XHSClient:
         return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
 
     async def post(self, uri: str, data: dict) -> Dict:
+        """
+        POST请求，对请求头签名
+        Args:
+            uri: 请求路由
+            data: 请求体参数
+
+        Returns:
+
+        """
         headers = await self._pre_headers(uri, data)
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=headers)
 
     async def pong(self) -> bool:
+        """
+        用于检查登录态是否失效了
+        Returns:
+
+        """
         """get a note to check if login state is ok"""
         utils.logger.info("[XHSClient.pong] Begin to pong xhs...")
         ping_flag = False
@@ -95,6 +137,14 @@ class XHSClient:
         return ping_flag
 
     async def update_cookies(self, browser_context: BrowserContext):
+        """
+        API客户端提供的更新cookies方法，一般情况下登录成功后会调用此方法
+        Args:
+            browser_context: 浏览器上下文对象
+
+        Returns:
+
+        """
         cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
@@ -105,14 +155,17 @@ class XHSClient:
             sort: SearchSortType = SearchSortType.GENERAL,
             note_type: SearchNoteType = SearchNoteType.ALL
     ) -> Dict:
-        """search note by keyword
+        """
+        根据关键词搜索笔记
+        Args:
+            keyword: 关键词参数
+            page: 分页第几页
+            page_size: 分页数据长度
+            sort: 搜索结果排序指定
+            note_type: 搜索的笔记类型
 
-        :param keyword: what notes you want to search
-        :param page: page number, defaults to 1
-        :param page_size: page size, defaults to 20
-        :param sort: sort ordering, defaults to SearchSortType.GENERAL
-        :param note_type: note type, defaults to SearchNoteType.ALL
-        :return: {has_more: true, items: []}
+        Returns:
+
         """
         uri = "/api/sns/web/v1/search/notes"
         data = {
@@ -127,8 +180,12 @@ class XHSClient:
 
     async def get_note_by_id(self, note_id: str) -> Dict:
         """
-        :param note_id: note_id you want to fetch
-        :return: {"time":1679019883000,"user":{"nickname":"nickname","avatar":"avatar","user_id":"user_id"},"image_list":[{"url":"https://sns-img-qc.xhscdn.com/c8e505ca-4e5f-44be-fe1c-ca0205a38bad","trace_id":"1000g00826s57r6cfu0005ossb1e9gk8c65d0c80","file_id":"c8e505ca-4e5f-44be-fe1c-ca0205a38bad","height":1920,"width":1440}],"tag_list":[{"id":"5be78cdfdb601f000100d0bc","name":"jk","type":"topic"}],"desc":"裙裙","interact_info":{"followed":false,"liked":false,"liked_count":"1732","collected":false,"collected_count":"453","comment_count":"30","share_count":"41"},"at_user_list":[],"last_update_time":1679019884000,"note_id":"6413cf6b00000000270115b5","type":"normal","title":"title"}
+        获取笔记详情API
+        Args:
+            note_id:笔记ID
+
+        Returns:
+
         """
         data = {"source_note_id": note_id}
         uri = "/api/sns/web/v1/feed"
@@ -140,10 +197,14 @@ class XHSClient:
         return dict()
 
     async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:
-        """get note comments
-        :param note_id: note id you want to fetch
-        :param cursor: last you get cursor, defaults to ""
-        :return: {"has_more": true,"cursor": "6422442d000000000700dcdb",comments: [],"user_id": "63273a77000000002303cc9b","time": 1681566542930}
+        """
+        获取一级评论的API
+        Args:
+            note_id: 笔记ID
+            cursor: 分页游标
+
+        Returns:
+
         """
         uri = "/api/sns/web/v2/comment/page"
         params = {
@@ -152,18 +213,17 @@ class XHSClient:
         }
         return await self.get(uri, params)
 
-    async def get_note_sub_comments(
-            self, note_id: str,
-            root_comment_id: str,
-            num: int = 30, cursor: str = ""
-    ):
+    async def get_note_sub_comments(self, note_id: str, root_comment_id: str, num: int = 30, cursor: str = ""):
         """
-        get note sub comments
-        :param note_id: note id you want to fetch
-        :param root_comment_id: parent comment id
-        :param num: recommend 30, if num greater 30, it only return 30 comments
-        :param cursor: last you get cursor, defaults to ""
-        :return: {"has_more": true,"cursor": "6422442d000000000700dcdb",comments: [],"user_id": "63273a77000000002303cc9b","time": 1681566542930}
+        获取指定父评论下的子评论的API
+        Args:
+            note_id: 子评论的帖子ID
+            root_comment_id: 根评论ID
+            num: 分页数量
+            cursor: 分页游标
+
+        Returns:
+
         """
         uri = "/api/sns/web/v2/comment/sub/page"
         params = {
@@ -174,15 +234,18 @@ class XHSClient:
         }
         return await self.get(uri, params)
 
-    async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False):
+    async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0,
+                                    callback: Optional[Callable] = None) -> List[Dict]:
         """
-        get note all comments include sub comments
-        :param note_id:
-        :param crawl_interval:
-        :param is_fetch_sub_comments:
-        :return:
-        """
+        获取指定笔记下的所有一级评论，该方法会一直查找一个帖子下的所有评论信息
+        Args:
+            note_id: 笔记ID
+            crawl_interval: 爬取一次笔记的延迟单位（秒）
+            callback: 一次笔记爬取结束后
 
+        Returns:
+
+        """
         result = []
         comments_has_more = True
         comments_cursor = ""
@@ -190,34 +253,13 @@ class XHSClient:
             comments_res = await self.get_note_comments(note_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", False)
             comments_cursor = comments_res.get("cursor", "")
-            # Check if 'comments' key exists in the response
             if "comments" not in comments_res:
-                # Handle the absence of 'comments' key appropriately
-                # For example, log an error message, break from the loop, etc.
-                # This is just an example:
-                utils.logger.info(f"[XHSClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
+                utils.logger.info(
+                    f"[XHSClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
                 break
             comments = comments_res["comments"]
-            if not is_fetch_sub_comments:
-                result.extend(comments)
-                continue
-            # handle get sub comments
-            for comment in comments:
-                result.append(comment)
-                cur_sub_comment_count = int(comment["sub_comment_count"])
-                cur_sub_comments = comment["sub_comments"]
-                result.extend(cur_sub_comments)
-                sub_comments_has_more = comment["sub_comment_has_more"] and len(
-                    cur_sub_comments) < cur_sub_comment_count
-                sub_comment_cursor = comment["sub_comment_cursor"]
-                while sub_comments_has_more:
-                    page_num = 30
-                    sub_comments_res = await self.get_note_sub_comments(note_id, comment["id"], num=page_num,
-                                                                        cursor=sub_comment_cursor)
-                    sub_comments = sub_comments_res["comments"]
-                    sub_comments_has_more = sub_comments_res["has_more"] and len(sub_comments) == page_num
-                    sub_comment_cursor = sub_comments_res["cursor"]
-                    result.extend(sub_comments)
-                    await asyncio.sleep(crawl_interval)
+            if callback:
+                await callback(note_id, comments)
             await asyncio.sleep(crawl_interval)
+            result.extend(comments)
         return result

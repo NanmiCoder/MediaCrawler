@@ -2,6 +2,7 @@
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/1/14 16:58
 # @Desc    : 小红书存储实现类
+import asyncio
 import csv
 import json
 import os
@@ -123,6 +124,7 @@ class XhsDbStoreImplement(AbstractStore):
 
 class XhsJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/xhs"
+    lock = asyncio.Lock()
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -149,13 +151,14 @@ class XhsJsonStoreImplement(AbstractStore):
         save_file_name = self.make_save_file_name(store_type=store_type)
         save_data = []
 
-        if os.path.exists(save_file_name):
-            async with aiofiles.open(save_file_name, 'r', encoding='utf-8') as file:
-                save_data = json.loads(await file.read())
+        async with self.lock:
+            if os.path.exists(save_file_name):
+                async with aiofiles.open(save_file_name, 'r', encoding='utf-8') as file:
+                    save_data = json.loads(await file.read())
 
-        save_data.append(save_item)
-        async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
-            await file.write(json.dumps(save_data, ensure_ascii=False))
+            save_data.append(save_item)
+            async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
+                await file.write(json.dumps(save_data, ensure_ascii=False))
 
     async def store_content(self, content_item: Dict):
         """

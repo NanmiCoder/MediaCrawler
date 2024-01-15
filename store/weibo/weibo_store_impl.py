@@ -2,6 +2,7 @@
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/1/14 21:35
 # @Desc    : 微博存储实现类
+import asyncio
 import csv
 import json
 import os
@@ -124,6 +125,7 @@ class WeiboDbStoreImplement(AbstractStore):
 
 class WeiboJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/weibo"
+    lock = asyncio.Lock()
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -150,13 +152,15 @@ class WeiboJsonStoreImplement(AbstractStore):
         save_file_name = self.make_save_file_name(store_type=store_type)
         save_data = []
 
-        if os.path.exists(save_file_name):
-            async with aiofiles.open(save_file_name, 'r', encoding='utf-8') as file:
-                save_data = json.loads(await file.read())
+        async with self.lock:
+            if os.path.exists(save_file_name):
+                async with aiofiles.open(save_file_name, 'r', encoding='utf-8') as file:
+                    save_data = json.loads(await file.read())
 
-        save_data.append(save_item)
-        async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
-            await file.write(json.dumps(save_data, ensure_ascii=False))
+            save_data.append(save_item)
+            async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
+                await file.write(json.dumps(save_data, ensure_ascii=False))
+
 
     async def store_content(self, content_item: Dict):
         """

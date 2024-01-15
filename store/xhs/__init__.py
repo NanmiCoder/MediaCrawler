@@ -54,6 +54,11 @@ async def update_xhs_note(note_item: Dict):
     utils.logger.info(f"[store.xhs.update_xhs_note] xhs note: {local_db_item}")
     await XhsStoreFactory.create_store().store_content(local_db_item)
 
+async def batch_update_xhs_note_comments(note_id: str, comments: List[Dict]):
+    if not comments:
+        return
+    for comment_item in comments:
+        await update_xhs_note_comment(note_id, comment_item)
 
 async def update_xhs_note_comment(note_id: str, comment_item: Dict):
     user_info = comment_item.get("user_info", {})

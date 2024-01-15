@@ -11,9 +11,6 @@ ENABLE_IP_PROXY = False
 # 代理IP池数量
 IP_PROXY_POOL_COUNT = 2
 
-# 重试时间
-RETRY_INTERVAL = 60 * 30  # 30 minutes
-
 # 设置为True不会打开浏览器（无头浏览器），设置False会打开一个浏览器（小红书如果一直扫码登录不通过，打开浏览器手动过一下滑动验证码）
 HEADLESS = True
 

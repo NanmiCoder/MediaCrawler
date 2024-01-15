@@ -139,12 +139,14 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] Get note detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] have not fund note detail note_id:{note_id}, err: {ex}")
+                utils.logger.error(
+                    f"[XiaoHongShuCrawler.get_note_detail] have not fund note detail note_id:{note_id}, err: {ex}")
                 return None
 
     async def batch_get_note_comments(self, note_list: List[str]):
         """Batch get note comments"""
-        utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_list}")
+        utils.logger.info(
+            f"[XiaoHongShuCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for note_id in note_list:
@@ -156,25 +158,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
         """Get note comments with keyword filtering and quantity limitation"""
         async with semaphore:
             utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
-            all_comments = await self.xhs_client.get_note_all_comments(note_id=note_id, crawl_interval=random.random())
-
-            # 从配置文件中读取关键词和数量限制
-            keywords = getattr(config, 'COMMENT_KEYWORDS', [])
-            max_comments = getattr(config, 'MAX_COMMENTS_PER_POST', 0)
-
-            # 过滤评论
-            filtered_comments = []
-            for comment in all_comments:
-                # 检查评论内容是否包含关键词
-                if not keywords or any(keyword in comment['content'] for keyword in keywords):
-                    filtered_comments.append(comment)
-                    # 如果达到最大评论数量限制，则停止添加更多评论
-                    if max_comments and len(filtered_comments) >= max_comments:
-                        break
-
-            # 更新或保存过滤后的评论
-            for comment in filtered_comments:
-                await xhs_store.update_xhs_note_comment(note_id=note_id, comment_item=comment)
+            await self.xhs_client.get_note_all_comments(
+                note_id=note_id,
+                crawl_interval=random.random(),
+                callback=xhs_store.batch_update_xhs_note_comments
+            )
 
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
