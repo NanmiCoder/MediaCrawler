@@ -29,8 +29,6 @@ CRAWLER_MAX_NOTES_COUNT = 20
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 4
 
-# 每个视频/帖子抓取评论最大条数 (为0则不限制)
-MAX_COMMENTS_PER_POST = 0
 
 # 评论关键词筛选(只会留下包含关键词的评论,为空不限制)
 COMMENT_KEYWORDS = [

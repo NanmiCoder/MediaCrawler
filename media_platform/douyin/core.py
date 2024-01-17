@@ -1,5 +1,6 @@
 import asyncio
 import os
+import random
 from asyncio import Task
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -132,21 +133,20 @@ class DouYinCrawler(AbstractCrawler):
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         for aweme_id in aweme_list:
             task = asyncio.create_task(
-                self.get_comments(aweme_id, semaphore, max_comments=config.MAX_COMMENTS_PER_POST), name=aweme_id)
+                self.get_comments(aweme_id, semaphore), name=aweme_id)
             task_list.append(task)
         await asyncio.wait(task_list)
 
-    async def get_comments(self, aweme_id: str, semaphore: asyncio.Semaphore, max_comments: int = None) -> None:
+    async def get_comments(self, aweme_id: str, semaphore: asyncio.Semaphore) -> None:
         async with semaphore:
             try:
                 # 将关键词列表传递给 get_aweme_all_comments 方法
                 comments = await self.dy_client.get_aweme_all_comments(
                     aweme_id=aweme_id,
-                    max_comments=max_comments, # 最大数量
-                    keywords=config.COMMENT_KEYWORDS  # 关键词列表
+                    crawl_interval=random.random(),
+                    callback=douyin_store.batch_update_dy_aweme_comments
+
                 )
-                # 现在返回的 comments 已经是经过关键词筛选的
-                await douyin_store.batch_update_dy_aweme_comments(aweme_id, comments)
                 utils.logger.info(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} comments have all been obtained and filtered ...")
             except DataFetchError as e:
                 utils.logger.error(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} get comments failed, error: {e}")
