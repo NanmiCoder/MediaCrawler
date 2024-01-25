@@ -107,7 +107,7 @@ class XhsDbStoreImplement(AbstractStore):
 
         """
         from .xhs_store_db_types import XHSNoteComment
-        comment_id = comment_item.get("id")
+        comment_id = comment_item.get("comment_id")
         if not await XHSNoteComment.filter(comment_id=comment_id).first():
             comment_item["add_ts"] = utils.get_current_timestamp()
             comment_pydantic = pydantic_model_creator(XHSNoteComment, name="CommentPydanticCreate", exclude=('id',))
