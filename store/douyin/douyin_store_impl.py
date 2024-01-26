@@ -120,7 +120,7 @@ class DouyinDbStoreImplement(AbstractStore):
                                                       exclude=('id', 'add_ts'))
             comment_data = comment_pydantic(**comment_item)
             comment_pydantic.model_validate(comment_data)
-            await DouyinAwemeComment.filter(comment_id=comment_item).update(**comment_data.model_dump())
+            await DouyinAwemeComment.filter(comment_id=comment_id).update(**comment_data.model_dump())
 
 
 class DouyinJsonStoreImplement(AbstractStore):
