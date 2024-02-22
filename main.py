@@ -51,6 +51,9 @@ async def main():
         crawler_type=args.type
     )
     await crawler.start()
+    
+    if config.SAVE_DATA_OPTION == "db":
+        await db.close()
 
 
 if __name__ == '__main__':

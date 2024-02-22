@@ -18,6 +18,8 @@ async def init_db(create_db: bool = False) -> None:
         _create_db=create_db
     )
 
+async def close() -> None:
+    await Tortoise.close_connections()
 
 async def init():
     await init_db(create_db=True)
