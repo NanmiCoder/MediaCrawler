@@ -258,6 +258,19 @@ class XHSClient:
                     f"[XHSClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
                 break
             comments = comments_res["comments"]
+
+            for comment in comments:
+                root_comment_id = comment.get("id")
+                sub_comments_has_more = comment.get("sub_comment_has_more")
+                sub_comments_cursor = comment.get("sub_comment_cursor")
+                while sub_comments_has_more:
+                    sub_comments_res = await self.get_note_sub_comments(note_id, root_comment_id,
+                                                                        cursor=sub_comments_cursor)
+                    sub_comments_has_more = sub_comments_res.get("has_more", False)
+                    sub_comments_cursor = sub_comments_res.get("cursor", "")
+                    sub_comments = sub_comments_res.get("comments", [])
+                    comment["sub_comments"].extend(sub_comments)
+
             if callback:
                 await callback(note_id, comments)
             await asyncio.sleep(crawl_interval)

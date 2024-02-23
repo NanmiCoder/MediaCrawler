@@ -63,6 +63,8 @@ async def batch_update_xhs_note_comments(note_id: str, comments: List[Dict]):
 async def update_xhs_note_comment(note_id: str, comment_item: Dict):
     user_info = comment_item.get("user_info", {})
     comment_id = comment_item.get("id")
+    sub_comment_count = int(comment_item.get("sub_comment_count"))
+    sub_comments = await update_xhs_note_subcomment(comment_item.get("sub_comments")) if sub_comment_count > 0 else []
     local_db_item = {
         "comment_id": comment_id,
         "create_time": comment_item.get("create_time"),
@@ -73,7 +75,24 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
         "nickname": user_info.get("nickname"),
         "avatar": user_info.get("image"),
         "sub_comment_count": comment_item.get("sub_comment_count"),
+        "sub_comments": sub_comments,
         "last_modify_ts": utils.get_current_timestamp(),
     }
     utils.logger.info(f"[store.xhs.update_xhs_note_comment] xhs note comment:{local_db_item}")
     await XhsStoreFactory.create_store().store_comment(local_db_item)
+
+async def update_xhs_note_subcomment(subcomment_items: Dict):
+    subcomments = []
+    for subcomment_item in subcomment_items:
+        user_info = subcomment_item.get("user_info")
+        local_db_item = {
+            "comment_id": subcomment_item.get("comment_id"),
+            "create_time": subcomment_item.get("create_time"),
+            "ip_location": subcomment_item.get("ip_location"),
+            "note_id": subcomment_item.get("note_id"),
+            "content": subcomment_item.get("content"),
+            "user_id": user_info.get("user_id"),
+            "nickname": user_info.get("nickname"),
+        }
+        subcomments.append(local_db_item)
+    return subcomments
