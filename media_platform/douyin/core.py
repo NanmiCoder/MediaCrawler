@@ -17,6 +17,7 @@ from var import crawler_type_var
 from .client import DOUYINClient
 from .exception import DataFetchError
 from .login import DouYinLogin
+from .field import PublishTimeType
 
 
 class DouYinCrawler(AbstractCrawler):
@@ -88,7 +89,9 @@ class DouYinCrawler(AbstractCrawler):
             while (page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 try:
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
-                                                                            offset=page * dy_limit_count)
+                                                                            offset=page * dy_limit_count,
+                                                                            publish_time=PublishTimeType.UNLIMITED
+                                                                            )
                 except DataFetchError:
                     utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
                     break
