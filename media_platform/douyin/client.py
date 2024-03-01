@@ -125,6 +125,7 @@ class DOUYINClient:
             "count": 10  # must be set to 10
         }
         referer_url = "https://www.douyin.com/search/" + keyword
+        referer_url += f"?publish_time={publish_time.value}&sort_type={sort_type.value}&type=general"
         headers = copy.copy(self.headers)
         headers["Referer"] = urllib.parse.quote(referer_url, safe=':/')
         return await self.get("/aweme/v1/web/general/search/single/", params, headers=headers)
