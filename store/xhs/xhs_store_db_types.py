@@ -25,6 +25,7 @@ class XHSNote(XhsBaseModel):
     type = fields.CharField(null=True, max_length=16, description="笔记类型(normal | video)")
     title = fields.CharField(null=True, max_length=255, description="笔记标题")
     desc = fields.TextField(null=True, description="笔记描述")
+    video_url = fields.TextField(null=True, description="视频地址")
     time = fields.BigIntField(description="笔记发布时间戳", index=True)
     last_update_time = fields.BigIntField(description="笔记最后更新时间戳")
     liked_count = fields.CharField(null=True, max_length=16, description="笔记点赞数")
@@ -32,6 +33,7 @@ class XHSNote(XhsBaseModel):
     comment_count = fields.CharField(null=True, max_length=16, description="笔记评论数")
     share_count = fields.CharField(null=True, max_length=16, description="笔记分享数")
     image_list = fields.TextField(null=True, description="笔记封面图片列表")
+    tag_list = fields.TextField(null=True, description="标签列表")
     note_url = fields.CharField(null=True, max_length=255, description="笔记详情页的URL")
 
     class Meta:
@@ -55,3 +57,19 @@ class XHSNoteComment(XhsBaseModel):
 
     def __str__(self):
         return f"{self.comment_id} - {self.content}"
+
+
+class XhsCreator(XhsBaseModel):
+    desc = fields.TextField(null=True, description="用户描述")
+    gender = fields.CharField(null=True, max_length=1, description="性别")
+    follows = fields.CharField(null=True, max_length=16, description="关注数")
+    fans = fields.CharField(null=True, max_length=16, description="粉丝数")
+    interaction = fields.CharField(null=True, max_length=16, description="获赞和收藏数")
+    # follows = fields.IntField(description="关注数")
+    # fans = fields.IntField(description="粉丝数")
+    # interaction = fields.IntField(description="获赞和收藏数")
+    tag_list = fields.TextField(null=True, description="标签列表") # json字符串
+
+    class Meta:
+        table = "xhs_creator"
+        table_description = "小红书博主"

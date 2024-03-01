@@ -3,6 +3,7 @@ PLATFORM = "xhs"
 KEYWORDS = "python,golang"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
+SORT_TYPE="popularity_descending" # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
 CRAWLER_TYPE = "search"
 
 # 是否开启 IP 代理
@@ -68,5 +69,13 @@ BILI_SPECIFIED_ID_LIST = [
 # 指定微博平台需要爬取的帖子列表
 WEIBO_SPECIFIED_ID_LIST = [
     "4982041758140155",
+    # ........................
+]
+
+# 指定小红书创作者ID列表
+XHS_CREATOR_ID_LIST = [
+    "59d8cb33de5fb4696bf17217",
+    "61b87386000000001000b18b",
+    "5e8558100000000001005bc5",
     # ........................
 ]
