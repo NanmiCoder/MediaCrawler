@@ -72,6 +72,17 @@ class XhsCsvStoreImplement(AbstractStore):
         """
         await self.save_data_to_csv(save_item=comment_item, store_type="comments")
 
+    async def store_creator(self, creator: Dict):
+        """
+        Xiaohongshu content CSV storage implementation
+        Args:
+            creator: creator dict
+
+        Returns:
+
+        """
+        await self.save_data_to_csv(save_item=creator, store_type="creator")
+
 
 class XhsDbStoreImplement(AbstractStore):
     async def store_content(self, content_item: Dict):
@@ -120,6 +131,31 @@ class XhsDbStoreImplement(AbstractStore):
             comment_data = comment_pydantic(**comment_item)
             comment_pydantic.model_validate(comment_data)
             await XHSNoteComment.filter(comment_id=comment_id).update(**comment_data.model_dump())
+
+    async def store_creator(self, creator: Dict):
+        """
+        Xiaohongshu content DB storage implementation
+        Args:
+            creator: creator dict
+
+        Returns:
+
+        """
+        from .xhs_store_db_types import XhsCreator
+        user_id = creator.get("user_id")
+        if not await XhsCreator.filter(user_id=user_id).first():
+            creator["add_ts"] = utils.get_current_timestamp()
+            creator["last_modify_ts"] = creator["add_ts"]
+            creator_pydantic = pydantic_model_creator(XhsCreator, name="CreatorPydanticCreate", exclude=('id',))
+            creator_data = creator_pydantic(**creator)
+            creator_pydantic.model_validate(creator_data)
+            await XhsCreator.create(**creator_data.model_dump())
+        else:
+            creator["last_modify_ts"] = utils.get_current_timestamp()
+            creator_pydantic = pydantic_model_creator(XhsCreator, name="CreatorPydanticUpdate", exclude=('id', 'add_ts',))
+            creator_data = creator_pydantic(**creator)
+            creator_pydantic.model_validate(creator_data)
+            await XhsCreator.filter(user_id=user_id).update(**creator_data.model_dump())
 
 
 class XhsJsonStoreImplement(AbstractStore):
@@ -181,3 +217,14 @@ class XhsJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(comment_item, "comments")
+    
+    async def store_creator(self, creator: Dict):
+        """
+        Xiaohongshu content JSON storage implementation
+        Args:
+            creator: creator dict
+
+        Returns:
+
+        """
+        await self.save_data_to_json(creator, "creator")

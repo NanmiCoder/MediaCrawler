@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from typing import Callable, Dict, List, Optional
 from urllib.parse import urlencode
 
@@ -73,11 +74,18 @@ class XHSClient:
         Returns:
 
         """
+        # return response.text
+        return_response = kwargs.pop('return_response', False)
+
         async with httpx.AsyncClient(proxies=self.proxies) as client:
             response = await client.request(
                 method, url, timeout=self.timeout,
                 **kwargs
             )
+        
+        if return_response:
+            return response.text
+        
         data: Dict = response.json()
         if data["success"]:
             return data.get("data", data.get("success", {}))
@@ -177,6 +185,56 @@ class XHSClient:
             "note_type": note_type.value
         }
         return await self.post(uri, data)
+
+    async def get_creator_info_and_notes(self, creator: str) -> Dict:
+        """
+        获取博主的信息和第一页的笔记
+        Args:
+            creator: 博主ID
+        Returns:
+            {"creator":{}, "notes":[]}
+        """
+        path = '/user/profile/'+creator
+        content = await self.request(method="GET", url=f"https://www.xiaohongshu.com{path}", return_response=True)
+        match = re.search(r'<script>window.__INITIAL_STATE__=(.+)<\/script>', content, re.M)
+
+        if match == None:
+            return {}
+        
+        info = json.loads(match.group(1).replace(':undefined', ':null'), strict=False)
+        if info == None:
+            return {}
+        
+        return {
+            'creator': info.get('user').get('userPageData'),
+            'notes': info.get('user').get('notes')[0],
+            'cursor': info.get('user').get('noteQueries')[0].get('cursor'),
+            'has_more_notes': info.get('user').get('noteQueries')[0].get('hasMore')
+        }
+
+    async def get_notes_by_creator(
+            self, creator: str,
+            cursor: str, 
+            page_size: int = 30
+    ) -> Dict:
+        """
+        获取博主的笔记
+        Args:
+            creator: 博主ID
+            cursor: 上一页最后一条笔记的ID
+            page_size: 分页数据长度
+
+        Returns:
+
+        """
+        uri = "/api/sns/web/v1/user_posted"
+        data = {
+            "user_id": creator,
+            "cursor": cursor,
+            "num": page_size,
+            "image_formats": "jpg,webp,avif"
+        }
+        return await self.get(uri, data)
 
     async def get_note_by_id(self, note_id: str) -> Dict:
         """
