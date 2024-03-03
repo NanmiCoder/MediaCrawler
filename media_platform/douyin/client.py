@@ -114,7 +114,7 @@ class DOUYINClient:
         :return:
         """
         params = {
-            "keyword": keyword,
+            "keyword": urllib.parse.quote(keyword),
             "search_channel": search_channel.value,
             "sort_type": sort_type.value,
             "publish_time": publish_time.value,
