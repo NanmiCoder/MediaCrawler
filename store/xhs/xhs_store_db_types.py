@@ -50,6 +50,7 @@ class XHSNoteComment(XhsBaseModel):
     note_id = fields.CharField(max_length=64, description="笔记ID")
     content = fields.TextField(description="评论内容")
     sub_comment_count = fields.IntField(description="子评论数量")
+    pictures = fields.CharField(null=True, max_length=512, description="评论的图片集合")
 
     class Meta:
         table = "xhs_note_comment"

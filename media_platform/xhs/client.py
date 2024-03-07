@@ -267,7 +267,9 @@ class XHSClient:
         uri = "/api/sns/web/v2/comment/page"
         params = {
             "note_id": note_id,
-            "cursor": cursor
+            "cursor": cursor,
+            "top_comment_id":"",
+            "image_formats": "jpg,webp,avif"
         }
         return await self.get(uri, params)
 
