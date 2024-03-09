@@ -12,6 +12,7 @@
 
 爬虫技术交流群：[949715256](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=NFz-oY7Pek3gpG5zbLJFHARlB8lKL94f&authKey=FlxIQK99Uu90wddNV5W%2FBga6T6lXU5BRqyTTc26f2P2ZK5OW%2BDhHp7MwviX%2BbrPa&noverify=0&group_code=949715256)，同时欢迎大家贡献代码提交PR
 
+视频配置教程：[MediaCrawler视频入门教程](https://space.bilibili.com/434377496/channel/series)
 
 ## 感谢下列Sponsors对本仓库赞助
 成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
