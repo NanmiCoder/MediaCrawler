@@ -132,6 +132,10 @@ class DouYinCrawler(AbstractCrawler):
                 return None
 
     async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
+        if not config.ENABLE_GET_COMMENTS:
+            utils.logger.info(f"[DouYinCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            return
+
         task_list: List[Task] = []
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         for aweme_id in aweme_list:
@@ -145,7 +149,7 @@ class DouYinCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 # 将关键词列表传递给 get_aweme_all_comments 方法
-                comments = await self.dy_client.get_aweme_all_comments(
+                await self.dy_client.get_aweme_all_comments(
                     aweme_id=aweme_id,
                     crawl_interval=random.random(),
                     callback=douyin_store.batch_update_dy_aweme_comments

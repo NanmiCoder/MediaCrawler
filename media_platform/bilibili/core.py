@@ -127,6 +127,10 @@ class BilibiliCrawler(AbstractCrawler):
         :param video_id_list:
         :return:
         """
+        if not config.ENABLE_GET_COMMENTS:
+            utils.logger.info(f"[BilibiliCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            return
+
         utils.logger.info(f"[BilibiliCrawler.batch_get_video_comments] video ids:{video_id_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []

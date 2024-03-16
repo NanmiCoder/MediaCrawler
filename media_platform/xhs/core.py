@@ -105,7 +105,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 notes_res = await self.xhs_client.get_note_by_keyword(
                     keyword=keyword,
                     page=page,
-                    sort=SearchSortType(config.SORT_TYPE) if config.SORT_TYPE!='' else SearchSortType.GENERAL,
+                    sort=SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != '' else SearchSortType.GENERAL,
                 )
                 utils.logger.info(f"[XiaoHongShuCrawler.search] Search notes res:{notes_res}")
                 semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
@@ -122,7 +122,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 page += 1
                 utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
                 await self.batch_get_note_comments(note_id_list)
-    
+
     async def get_creators_and_notes(self) -> None:
         """Get creator's notes and retrieve their comment information."""
         utils.logger.info("[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators")
@@ -151,7 +151,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
                     # save creator info
                     await xhs_store.save_creator(creator, creator_and_notes_info.get('creator'))
-                    utils.logger.info(f"[XiaoHongShuCrawler.get_creators_and_notes] save creator info:{creator_and_notes_info.get('creator')}")
+                    utils.logger.info(
+                        f"[XiaoHongShuCrawler.get_creators_and_notes] save creator info:{creator_and_notes_info.get('creator')}")
                 else:
                     # get notes
                     notes = await self.xhs_client.get_notes_by_creator(creator, cursor)
@@ -164,7 +165,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     cursor = notes.get('cursor')
                     has_more_notes = notes.get('has_more_notes')
                     notes_res = notes.get('notes')
-                    utils.logger.info(f"[XiaoHongShuCrawler.get_creators_and_notes] get creator's notes res:{notes_res}")
+                    utils.logger.info(
+                        f"[XiaoHongShuCrawler.get_creators_and_notes] get creator's notes res:{notes_res}")
 
                 semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                 task_list = [
@@ -211,6 +213,10 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def batch_get_note_comments(self, note_list: List[str]):
         """Batch get note comments"""
+        if not config.ENABLE_GET_COMMENTS:
+            utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            return
+
         utils.logger.info(
             f"[XiaoHongShuCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)

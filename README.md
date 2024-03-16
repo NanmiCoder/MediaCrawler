@@ -60,6 +60,7 @@
 ### 运行爬虫程序
 
    ```shell
+   # 默认没有开启评论爬取模式，有需要请到配置文件中指定
    # 从配置文件中读取关键词搜索相关的帖子并爬去帖子信息与评论
    python main.py --platform xhs --lt qrcode --type search
    

@@ -3,7 +3,7 @@ PLATFORM = "xhs"
 KEYWORDS = "python,golang"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
-SORT_TYPE="popularity_descending" # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+SORT_TYPE = "popularity_descending"  # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
 CRAWLER_TYPE = "search"
 
 # 是否开启 IP 代理
@@ -19,7 +19,7 @@ HEADLESS = True
 SAVE_LOGIN_STATE = True
 
 # 数据保存类型选项配置,支持三种类型：csv、db、json
-SAVE_DATA_OPTION = "json" # csv or db or json
+SAVE_DATA_OPTION = "json"  # csv or db or json
 
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
@@ -30,12 +30,8 @@ CRAWLER_MAX_NOTES_COUNT = 20
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 4
 
-
-# 评论关键词筛选(只会留下包含关键词的评论,为空不限制)
-COMMENT_KEYWORDS = [
-    # "真棒"
-    # ........................
-]
+# 是否开启爬评论模式, 默认不开启爬评论
+ENABLE_GET_COMMENTS = False
 
 # 指定小红书需要爬虫的笔记ID列表
 XHS_SPECIFIED_ID_LIST = [

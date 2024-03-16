@@ -166,6 +166,10 @@ class WeiboCrawler(AbstractCrawler):
         :param note_id_list:
         :return:
         """
+        if not config.ENABLE_GET_COMMENTS:
+            utils.logger.info(f"[WeiboCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            return
+
         utils.logger.info(f"[WeiboCrawler.batch_get_notes_comments] note ids:{note_id_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
