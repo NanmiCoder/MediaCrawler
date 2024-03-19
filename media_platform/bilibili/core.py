@@ -18,6 +18,9 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import bilibili as bilibili_store
 from tools import utils
 from var import crawler_type_var
+import io
+import time
+import yt_dlp
 
 from .client import BilibiliClient
 from .exception import DataFetchError
@@ -83,6 +86,11 @@ class BilibiliCrawler(AbstractCrawler):
             elif self.crawler_type == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_videos()
+
+            elif self.crawler_type == "download_video":
+                # Download video from bilibili
+                for video_id in config.BILI_SPECIFIED_ID_LIST:
+                    await self.download_video_given_url(video_id, path=f'./video/{video_id}')
             else:
                 pass
             utils.logger.info("[BilibiliCrawler.start] Bilibili Crawler finished ...")
@@ -120,6 +128,22 @@ class BilibiliCrawler(AbstractCrawler):
 
                 page += 1
                 await self.batch_get_video_comments(video_id_list)
+    async def download_video_given_url(self, video_id: str, path):
+        ydl_opts = {
+        #'format': f'bestvideo[height<={video_quality}]+bestaudio/best[height<={video_quality}]',
+        'format': 'bestvideo+bestaudio/best',
+        'outtmpl': f'{path}/%(id)s_%(title).20s.%(ext)s',  # 文件名为视频ID和标题的前20个字符，保存到指定路径
+        }
+        video_id = f'https://www.bilibili.com/video/{video_id}'
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            start = time.time()
+            result = ydl.download([video_id])
+            end = time.time()
+            if result != 0:
+                utils.logger.error('Fail to download %s', video_id)
+            utils.logger.info('Time for download video %.2f sec', end-start)
+            # 保存到指定路径
+            return
 
     async def batch_get_video_comments(self, video_id_list: List[str]):
         """
