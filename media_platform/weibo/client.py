@@ -119,12 +119,16 @@ class WeiboClient:
             "mid": mid_id,
             "max_id_type": 0,
         }
-        if max_id > 0:
-            params.update({"max_id": max_id})
-
+        
         referer_url = f"https://m.weibo.cn/detail/{mid_id}"
         headers = copy.copy(self.headers)
         headers["Referer"] = referer_url
+        
+        #Debug:在第一次拉取评论的时候不传入cookie(这会导致请求失败),在后续拉取评论时传入cookie
+        if max_id > 0:
+            params.update({"max_id": max_id})
+        else:
+            headers.update({"Cookie": ""})
 
         return await self.get(uri, params, headers=headers)
 
