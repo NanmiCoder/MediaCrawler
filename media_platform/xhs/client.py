@@ -1,12 +1,13 @@
 import asyncio
 import json
 import re
-from typing import Callable, Dict, List, Optional, Union, Any
+from typing import Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
 
+from base.base_crawler import AbstactApiClient
 from tools import utils
 
 from .exception import DataFetchError, IPBlockError
@@ -14,7 +15,7 @@ from .field import SearchNoteType, SearchSortType
 from .help import get_search_id, sign
 
 
-class XiaoHongShuClient:
+class XiaoHongShuClient(AbstactApiClient):
     def __init__(
             self,
             timeout=10,

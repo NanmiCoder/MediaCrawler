@@ -55,3 +55,17 @@ class AbstractStore(ABC):
     # @abstractmethod
     async def store_creator(self, creator: Dict):
         pass
+
+
+class AbstactApiClient(ABC):
+    @abstractmethod
+    async def request(self, method, url, **kwargs):
+        pass
+
+    @abstractmethod
+    async def update_cookies(self, browser_context: BrowserContext):
+        pass
+
+    @abstractmethod
+    async def pong(self):
+        pass

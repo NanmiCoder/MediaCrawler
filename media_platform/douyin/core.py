@@ -16,8 +16,8 @@ from var import crawler_type_var
 
 from .client import DOUYINClient
 from .exception import DataFetchError
-from .login import DouYinLogin
 from .field import PublishTimeType
+from .login import DouYinLogin
 
 
 class DouYinCrawler(AbstractCrawler):
