@@ -14,10 +14,10 @@ from store import xhs as xhs_store
 from tools import utils
 from var import crawler_type_var
 
-from .client import XHSClient
+from .client import XiaoHongShuClient
 from .exception import DataFetchError
 from .field import SearchSortType
-from .login import XHSLogin
+from .login import XiaoHongShuLogin
 
 
 class XiaoHongShuCrawler(AbstractCrawler):
@@ -25,7 +25,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
     login_type: str
     crawler_type: str
     context_page: Page
-    xhs_client: XHSClient
+    xhs_client: XiaoHongShuClient
     browser_context: BrowserContext
 
     def __init__(self) -> None:
@@ -68,7 +68,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
             # Create a client to interact with the xiaohongshu website.
             self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
             if not await self.xhs_client.pong():
-                login_obj = XHSLogin(
+                login_obj = XiaoHongShuLogin(
                     login_type=self.login_type,
                     login_phone="",  # input your phone number
                     browser_context=self.browser_context,
@@ -219,11 +219,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
         }
         return playwright_proxy, httpx_proxy
 
-    async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XHSClient:
+    async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XiaoHongShuClient:
         """Create xhs client"""
         utils.logger.info("[XiaoHongShuCrawler.create_xhs_client] Begin create xiaohongshu API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
-        xhs_client_obj = XHSClient(
+        xhs_client_obj = XiaoHongShuClient(
             proxies=httpx_proxy,
             headers={
                 "User-Agent": self.user_agent,

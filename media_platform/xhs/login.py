@@ -13,7 +13,7 @@ from base.base_crawler import AbstractLogin
 from tools import utils
 
 
-class XHSLogin(AbstractLogin):
+class XiaoHongShuLogin(AbstractLogin):
 
     def __init__(self,
                  login_type: str,
@@ -37,7 +37,7 @@ class XHSLogin(AbstractLogin):
         """
 
         if "请通过验证" in await self.context_page.content():
-            utils.logger.info("[XHSLogin.check_login_state] 登录过程中出现验证码，请手动验证")
+            utils.logger.info("[XiaoHongShuLogin.check_login_state] 登录过程中出现验证码，请手动验证")
 
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
@@ -48,7 +48,7 @@ class XHSLogin(AbstractLogin):
 
     async def begin(self):
         """Start login xiaohongshu"""
-        utils.logger.info("[XHSLogin.begin] Begin login xiaohongshu ...")
+        utils.logger.info("[XiaoHongShuLogin.begin] Begin login xiaohongshu ...")
         if self.login_type == "qrcode":
             await self.login_by_qrcode()
         elif self.login_type == "phone":
@@ -56,11 +56,11 @@ class XHSLogin(AbstractLogin):
         elif self.login_type == "cookie":
             await self.login_by_cookies()
         else:
-            raise ValueError("[XHSLogin.begin]I nvalid Login Type Currently only supported qrcode or phone or cookies ...")
+            raise ValueError("[XiaoHongShuLogin.begin]I nvalid Login Type Currently only supported qrcode or phone or cookies ...")
 
     async def login_by_mobile(self):
         """Login xiaohongshu by mobile"""
-        utils.logger.info("[XHSLogin.login_by_mobile] Begin login xiaohongshu by mobile ...")
+        utils.logger.info("[XiaoHongShuLogin.login_by_mobile] Begin login xiaohongshu by mobile ...")
         await asyncio.sleep(1)
         try:
             # 小红书进入首页后，有可能不会自动弹出登录框，需要手动点击登录按钮
@@ -77,7 +77,7 @@ class XHSLogin(AbstractLogin):
             )
             await element.click()
         except Exception as e:
-            utils.logger.info("[XHSLogin.login_by_mobile] have not found mobile button icon and keep going ...")
+            utils.logger.info("[XiaoHongShuLogin.login_by_mobile] have not found mobile button icon and keep going ...")
 
         await asyncio.sleep(1)
         login_container_ele = await self.context_page.wait_for_selector("div.login-container")
@@ -93,7 +93,7 @@ class XHSLogin(AbstractLogin):
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         no_logged_in_session = ""
         while max_get_sms_code_time > 0:
-            utils.logger.info(f"[XHSLogin.login_by_mobile] get sms code from redis remaining time {max_get_sms_code_time}s ...")
+            utils.logger.info(f"[XiaoHongShuLogin.login_by_mobile] get sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"xhs_{self.login_phone}"
             sms_code_value = redis_obj.get(sms_code_key)
@@ -119,16 +119,16 @@ class XHSLogin(AbstractLogin):
         try:
             await self.check_login_state(no_logged_in_session)
         except RetryError:
-            utils.logger.info("[XHSLogin.login_by_mobile] Login xiaohongshu failed by mobile login method ...")
+            utils.logger.info("[XiaoHongShuLogin.login_by_mobile] Login xiaohongshu failed by mobile login method ...")
             sys.exit()
 
         wait_redirect_seconds = 5
-        utils.logger.info(f"[XHSLogin.login_by_mobile] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+        utils.logger.info(f"[XiaoHongShuLogin.login_by_mobile] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
     async def login_by_qrcode(self):
         """login xiaohongshu website and keep webdriver login state"""
-        utils.logger.info("[XHSLogin.login_by_qrcode] Begin login xiaohongshu by qrcode ...")
+        utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] Begin login xiaohongshu by qrcode ...")
         # login_selector = "div.login-container > div.left > div.qrcode > img"
         qrcode_img_selector = "xpath=//img[@class='qrcode-img']"
         # find login qrcode
@@ -137,7 +137,7 @@ class XHSLogin(AbstractLogin):
             selector=qrcode_img_selector
         )
         if not base64_qrcode_img:
-            utils.logger.info("[XHSLogin.login_by_qrcode] login failed , have not found qrcode please check ....")
+            utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] login failed , have not found qrcode please check ....")
             # if this website does not automatically popup login dialog box, we will manual click login button
             await asyncio.sleep(0.5)
             login_button_ele = self.context_page.locator("xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button")
@@ -161,20 +161,20 @@ class XHSLogin(AbstractLogin):
         partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
         asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
 
-        utils.logger.info(f"[XHSLogin.login_by_qrcode] waiting for scan code login, remaining time is 120s")
+        utils.logger.info(f"[XiaoHongShuLogin.login_by_qrcode] waiting for scan code login, remaining time is 120s")
         try:
             await self.check_login_state(no_logged_in_session)
         except RetryError:
-            utils.logger.info("[XHSLogin.login_by_qrcode] Login xiaohongshu failed by qrcode login method ...")
+            utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] Login xiaohongshu failed by qrcode login method ...")
             sys.exit()
 
         wait_redirect_seconds = 5
-        utils.logger.info(f"[XHSLogin.login_by_qrcode] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+        utils.logger.info(f"[XiaoHongShuLogin.login_by_qrcode] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
     async def login_by_cookies(self):
         """login xiaohongshu website by cookies"""
-        utils.logger.info("[XHSLogin.login_by_cookies] Begin login xiaohongshu by cookie ...")
+        utils.logger.info("[XiaoHongShuLogin.login_by_cookies] Begin login xiaohongshu by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
             if key != "web_session":  # only set web_session cookie attr
                 continue

@@ -14,7 +14,7 @@ from .field import SearchNoteType, SearchSortType
 from .help import get_search_id, sign
 
 
-class XHSClient:
+class XiaoHongShuClient:
     def __init__(
             self,
             timeout=10,
@@ -134,14 +134,14 @@ class XHSClient:
 
         """
         """get a note to check if login state is ok"""
-        utils.logger.info("[XHSClient.pong] Begin to pong xhs...")
+        utils.logger.info("[XiaoHongShuClient.pong] Begin to pong xhs...")
         ping_flag = False
         try:
             note_card: Dict = await self.get_note_by_keyword(keyword="小红书")
             if note_card.get("items"):
                 ping_flag = True
         except Exception as e:
-            utils.logger.error(f"[XHSClient.pong] Ping xhs failed: {e}, and try to login again...")
+            utils.logger.error(f"[XiaoHongShuClient.pong] Ping xhs failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
 
@@ -202,7 +202,7 @@ class XHSClient:
         if res and res.get("items"):
             res_dict: Dict = res["items"][0]["note_card"]
             return res_dict
-        utils.logger.error(f"[XHSClient.get_note_by_id] get note empty and res:{res}")
+        utils.logger.error(f"[XiaoHongShuClient.get_note_by_id] get note empty and res:{res}")
         return dict()
 
     async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:
@@ -266,7 +266,7 @@ class XHSClient:
             comments_cursor = comments_res.get("cursor", "")
             if "comments" not in comments_res:
                 utils.logger.info(
-                    f"[XHSClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
+                    f"[XiaoHongShuClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
                 break
             comments = comments_res["comments"]
             if callback:
@@ -337,11 +337,11 @@ class XHSClient:
             notes_has_more = notes_res.get("has_more", False)
             notes_cursor = notes_res.get("cursor", "")
             if "notes" not in notes_res:
-                utils.logger.info(f"[XHSClient.get_all_notes_by_creator] No 'notes' key found in response: {notes_res}")
+                utils.logger.info(f"[XiaoHongShuClient.get_all_notes_by_creator] No 'notes' key found in response: {notes_res}")
                 break
 
             notes = notes_res["notes"]
-            utils.logger.info(f"[XHSClient.get_all_notes_by_creator] got user_id:{user_id} notes len : {len(notes)}")
+            utils.logger.info(f"[XiaoHongShuClient.get_all_notes_by_creator] got user_id:{user_id} notes len : {len(notes)}")
             if callback:
                 await callback(notes)
             await asyncio.sleep(crawl_interval)
