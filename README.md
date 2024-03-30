@@ -43,6 +43,7 @@
    cd MediaCrawler
    
    # 创建虚拟环境
+   # 注意python 版本需要3.7 - 3.9 
    python -m venv venv
    
    # macos & linux 激活虚拟环境
