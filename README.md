@@ -17,6 +17,9 @@
 
 我新开的爬虫教程Github仓库 [CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial) ，感兴趣的朋友可以关注一下，持续更新，主打一个免费.
 
+MediaCrawler视频教程课程已录制完结，包含入门教程使用、源码剖析、如何参与开源项目并贡献代码、wechatpayv3 SDK开源仓库代码贡献、MediaCrawlerPro重构技术方案...<br>
+抖音学浪课程链接：https://v.douyin.com/iYeQFyAf/ 
+
 ## 感谢下列Sponsors对本仓库赞助
 <a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne">全球ip代理超新星</a>
 <a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne" target="_blank"><img src="https://s2.loli.net/2024/03/18/LKJaWcIHQl92ip5.jpg" alt="IPCola,  全球ip代理超新星-官网图"></a><br>
