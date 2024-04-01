@@ -35,12 +35,14 @@
    ```
 
 ### 在py中运行爬虫程序
+
    ```py
    # 在py文件中导入并使用（功能已封装，调用craw函数即可）：
-   from mediacrawler import craw
+   from mediacrawler.main import craw
    ```
 
 ### 通过命令行运行爬虫程序
+
    ```shell
    # 在mediacrawler文件夹下运行
    cd mediacrawler
@@ -57,17 +59,25 @@
    python main.py --help    
    ```
 
+### 程序配置
+
+绝大部分设置以全局属性的形式保存在 `mediacrawler/config` 文件夹目录下，外部调用时通过以下方式进行修改
+
+   ```py
+   import mediacrawler.config as config
+   config.xxx.xxx = xxx
+   ```
+
 ### 数据保存
+
 - 支持保存到关系型数据库（Mysql、PgSQL等）
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
 
 
 ## 运行报错常见问题Q&A
-> 遇到问题先自行搜索解决下，现在AI很火，用ChatGPT大多情况下能解决你的问题 [免费的ChatGPT](https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk)  
 
 ➡️➡️➡️ [常见问题](docs/常见问题.md)
-
 
 ## 项目代码结构
 ➡️➡️➡️ [项目代码结构说明](docs/项目代码结构.md)
