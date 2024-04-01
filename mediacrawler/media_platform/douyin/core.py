@@ -54,7 +54,7 @@ class DouYinCrawler(AbstractCrawler):
                 headless=config.HEADLESS
             )
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
-            await self.browser_context.add_init_script(path="libs/stealth.min.js")
+            await self.browser_context.add_init_script(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../libs/stealth.min.js"))
             self.context_page = await self.browser_context.new_page()
             await self.context_page.goto(self.index_url)
 

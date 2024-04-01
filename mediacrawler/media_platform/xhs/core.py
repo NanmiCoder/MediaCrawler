@@ -53,8 +53,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 self.user_agent,
                 headless=config.HEADLESS
             )
+            
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
-            await self.browser_context.add_init_script(path="libs/stealth.min.js")
+            await self.browser_context.add_init_script(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../libs/stealth.min.js"))
             # add a cookie attribute webId to avoid the appearance of a sliding captcha on the webpage
             await self.browser_context.add_cookies([{
                 'name': "webId",
