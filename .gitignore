@@ -162,7 +162,7 @@ cython_debug/
 *.xml
 *.iml
 .idea
-/temp_image/
-/browser_data/
-/data/
-/cache
+temp_image/
+browser_data/
+data/
+cache

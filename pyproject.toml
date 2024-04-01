@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "mediacrawler"
+version = "0.1.0"
+description = ""
+authors = ["McDj26 <2645370670@qq.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <=3.9"
+httpx = "0.24.0"
+pillow = "9.5.0"
+playwright = "1.33.0"
+tenacity = "8.2.2"
+tornado = "6.3.2"
+pyexecjs = "1.5.1"
+opencv-python = "4.7.0.72"
+tortoise-orm = "0.20.0"
+aiomysql = "0.2.0"
+aerich = "0.7.2"
+numpy = ">=1.24.4,<1.25.0"
+redis = ">=4.6.0,<4.7.0"
+pydantic = "2.5.2"
+aiofiles = ">=23.2.1,<23.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
