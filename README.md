@@ -24,6 +24,9 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 <a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne">全球ip代理超新星</a>
 <a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne" target="_blank"><img src="https://s2.loli.net/2024/03/18/LKJaWcIHQl92ip5.jpg" alt="IPCola,  全球ip代理超新星-官网图"></a><br>
 <br>
+
+<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
+
 成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
 
 ## 功能列表
@@ -100,7 +103,7 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 
 
 ## 运行报错常见问题Q&A
-> 遇到问题先自行搜索解决下，现在AI很火，用ChatGPT大多情况下能解决你的问题 [免费的ChatGPT](https://sider.ai/invited?c=8e03db1a973401fdf114ed9cf9f8c183)  
+> 遇到问题先自行搜索解决下，现在AI很火，用ChatGPT大多情况下能解决你的问题 [免费的ChatGPT](https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk)  
 
 ➡️➡️➡️ [常见问题](docs/常见问题.md)
 
