@@ -43,38 +43,23 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 
 ## 使用方法
 
-### 创建并激活 python 虚拟环境
-   ```shell   
-   # 进入项目根目录
-   cd MediaCrawler
-   
-   # 创建虚拟环境
-   # 注意python 版本需要3.7 - 3.9 
-   python -m venv venv
-   
-   # macos & linux 激活虚拟环境
-   source venv/bin/activate
-
-   # windows 激活虚拟环境
-   venv\Scripts\activate
-
-   ```
-
-### 安装依赖库
-
-   ```shell
-   pip3 install -r requirements.txt
-   ```
-
 ### 安装 playwright浏览器驱动
 
    ```shell
    playwright install
    ```
 
-### 运行爬虫程序
+### 在py中运行爬虫程序
+   ```py
+   # 在py文件中导入并使用（功能已封装，调用craw函数即可）：
+   from mediacrawler import craw
+   ```
 
+### 通过命令行运行爬虫程序
    ```shell
+   # 在mediacrawler文件夹下运行
+   cd mediacrawler
+
    # 从配置文件中读取关键词搜索相关的帖子并爬去帖子信息与评论
    python main.py --platform xhs --lt qrcode --type search
    
@@ -87,19 +72,10 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
    python main.py --help    
    ```
 
-
 ### 数据保存
 - 支持保存到关系型数据库（Mysql、PgSQL等）
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
-
-## 打赏
-免费开源不易，如果项目帮到你了，可以给我打赏哦，您的支持就是我最大的动力！
-<div style="display: flex;justify-content: space-between;width: 100%">
-    <p><img alt="打赏-微信" src="static/images/wechat_pay.jpeg" style="width: 100%;height: 100%" ></p>
-    <p><img alt="打赏-支付宝" src="static/images/zfb_pay.png"   style="width: 100%;height: 100%" ></p>
-</div>
-
 
 
 ## 运行报错常见问题Q&A
@@ -113,15 +89,6 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 
 ## 手机号登录说明
 ➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
-
-
-
-## star 趋势图
-- 如果该项目对你有帮助，star一下 ❤️❤️❤️
-
-[![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
-
-
 
 
 ## 参考
