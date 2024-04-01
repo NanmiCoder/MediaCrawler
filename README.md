@@ -24,8 +24,8 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 <a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne">全球ip代理超新星</a>
 <a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne" target="_blank"><img src="https://s2.loli.net/2024/03/18/LKJaWcIHQl92ip5.jpg" alt="IPCola,  全球ip代理超新星-官网图"></a><br>
 <br>
-
 <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
+<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk" target="_blank"><img src="https://s2.loli.net/2024/04/01/jK8drZ2bxTg67q9.png" ></a>
 
 成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
 
