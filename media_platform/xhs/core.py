@@ -96,7 +96,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def search(self) -> None:
         """Search for notes and retrieve their comment information."""
         utils.logger.info("[XiaoHongShuCrawler.search] Begin search xiaohongshu keywords")
-        xhs_limit_count = min(20, max(1, config.CRAWLER_MAX_NOTES_COUNT))  # xhs limit page fixed value
+        xhs_limit_count = 20  # xhs limit page fixed value
+        if config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
+            config.CRAWLER_MAX_NOTES_COUNT = xhs_limit_count
         for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
             page = 1

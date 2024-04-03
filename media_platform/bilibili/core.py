@@ -93,7 +93,9 @@ class BilibiliCrawler(AbstractCrawler):
         :return:
         """
         utils.logger.info("[BilibiliCrawler.search] Begin search bilibli keywords")
-        bili_limit_count = min(20, max(1, config.CRAWLER_MAX_NOTES_COUNT))  # bilibili limit page fixed value
+        bili_limit_count =20  # bilibili limit page fixed value
+        if config.CRAWLER_MAX_NOTES_COUNT < bili_limit_count:
+            config.CRAWLER_MAX_NOTES_COUNT = bili_limit_count
         for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"[BilibiliCrawler.search] Current search keyword: {keyword}")
             page = 1

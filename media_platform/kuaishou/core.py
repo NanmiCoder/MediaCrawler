@@ -85,7 +85,9 @@ class KuaishouCrawler(AbstractCrawler):
 
     async def search(self):
         utils.logger.info("[KuaishouCrawler.search] Begin search kuaishou keywords")
-        ks_limit_count = min(20, max(1, config.CRAWLER_MAX_NOTES_COUNT))  # kuaishou limit page fixed value
+        ks_limit_count = 20  # kuaishou limit page fixed value
+        if config.CRAWLER_MAX_NOTES_COUNT < ks_limit_count:
+            config.CRAWLER_MAX_NOTES_COUNT = ks_limit_count
         for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"[KuaishouCrawler.search] Current search keyword: {keyword}")
             page = 1
