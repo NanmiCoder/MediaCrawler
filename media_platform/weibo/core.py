@@ -104,7 +104,7 @@ class WeiboCrawler(AbstractCrawler):
         :return:
         """
         utils.logger.info("[WeiboCrawler.search] Begin search weibo keywords")
-        weibo_limit_count = 10
+        weibo_limit_count = min(10, max(1, config.CRAWLER_MAX_NOTES_COUNT))
         for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"[WeiboCrawler.search] Current search keyword: {keyword}")
             page = 1

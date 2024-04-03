@@ -84,7 +84,7 @@ class DouYinCrawler(AbstractCrawler):
         for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
-            dy_limit_count = 10
+            dy_limit_count = min(10, max(1, config.CRAWLER_MAX_NOTES_COUNT))
             page = 0
             while (page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 try:
