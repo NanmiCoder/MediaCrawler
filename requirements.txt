@@ -1,6 +1,6 @@
 httpx==0.24.0
 Pillow==9.5.0
-playwright==1.33.0
+playwright==1.42.0
 tenacity==8.2.2
 tornado==6.3.2
 PyExecJS==1.5.1
