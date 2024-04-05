@@ -96,7 +96,7 @@ class WeiboCrawler(AbstractCrawler):
                 await self.get_specified_notes()
             else:
                 pass
-            utils.logger.info("[WeiboCrawler.start] Bilibili Crawler finished ...")
+            utils.logger.info("[WeiboCrawler.start] Weibo Crawler finished ...")
 
     async def search(self):
         """
