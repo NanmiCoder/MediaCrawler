@@ -10,7 +10,6 @@ import pathlib
 from typing import Dict
 
 import aiofiles
-from tortoise.contrib.pydantic import pydantic_model_creator
 
 from base.base_crawler import AbstractStore
 from tools import utils
@@ -83,7 +82,6 @@ class KuaishouDbStoreImplement(AbstractStore):
 
         """
 
-
         from .kuaishou_store_sql import (add_new_content,
                                          query_content_by_content_id,
                                          update_content_by_content_id)
@@ -114,7 +112,6 @@ class KuaishouDbStoreImplement(AbstractStore):
             await add_new_comment(comment_item)
         else:
             await update_comment_by_comment_id(comment_id, comment_item=comment_item)
-
 
 
 class KuaishouJsonStoreImplement(AbstractStore):
@@ -154,7 +151,6 @@ class KuaishouJsonStoreImplement(AbstractStore):
             save_data.append(save_item)
             async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
                 await file.write(json.dumps(save_data, ensure_ascii=False))
-
 
     async def store_content(self, content_item: Dict):
         """

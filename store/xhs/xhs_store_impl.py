@@ -10,12 +10,10 @@ import pathlib
 from typing import Dict
 
 import aiofiles
-from tortoise.contrib.pydantic import pydantic_model_creator
 
 from base.base_crawler import AbstractStore
-from db import AsyncMysqlDB
 from tools import utils
-from var import crawler_type_var, media_crawler_db_var
+from var import crawler_type_var
 
 
 class XhsCsvStoreImplement(AbstractStore):

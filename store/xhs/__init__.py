@@ -7,7 +7,6 @@ from typing import List
 import config
 
 from . import xhs_store_impl
-from .xhs_store_db_types import *
 from .xhs_store_impl import *
 
 
@@ -24,7 +23,6 @@ class XhsStoreFactory:
         if not store_class:
             raise ValueError("[XhsStoreFactory.create_store] Invalid save option only supported csv or db or json ...")
         return store_class()
-
 
 
 async def update_xhs_note(note_item: Dict):
@@ -117,7 +115,8 @@ async def save_creator(user_id: str, creator: Dict):
         'follows': follows,
         'fans': fans,
         'interaction': interaction,
-        'tag_list': json.dumps({tag.get('tagType'): tag.get('name') for tag in creator.get('tags')}, ensure_ascii=False),
+        'tag_list': json.dumps({tag.get('tagType'): tag.get('name') for tag in creator.get('tags')},
+                               ensure_ascii=False),
         "last_modify_ts": utils.get_current_timestamp(),
     }
     utils.logger.info(f"[store.xhs.save_creator] creator:{local_db_item}")

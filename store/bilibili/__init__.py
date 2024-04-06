@@ -7,7 +7,6 @@ from typing import List
 
 import config
 
-from .bilibili_store_db_types import *
 from .bilibili_store_impl import *
 
 

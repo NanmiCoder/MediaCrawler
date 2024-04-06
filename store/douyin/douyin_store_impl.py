@@ -10,7 +10,6 @@ import pathlib
 from typing import Dict
 
 import aiofiles
-from tortoise.contrib.pydantic import pydantic_model_creator
 
 from base.base_crawler import AbstractStore
 from tools import utils
