@@ -82,20 +82,17 @@ class BiliDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .bilibili_store_db_types import BilibiliVideo
+
+        from .bilibili_store_sql import (add_new_content,
+                                         query_content_by_content_id,
+                                         update_content_by_content_id)
         video_id = content_item.get("video_id")
-        if not await BilibiliVideo.filter(video_id=video_id).exists():
+        video_detail: Dict = await query_content_by_content_id(content_id=video_id)
+        if not video_detail:
             content_item["add_ts"] = utils.get_current_timestamp()
-            bilibili_video_pydantic = pydantic_model_creator(BilibiliVideo, name='BilibiliVideoCreate', exclude=('id',))
-            bilibili_data = bilibili_video_pydantic(**content_item)
-            bilibili_video_pydantic.model_validate(bilibili_data)
-            await BilibiliVideo.create(**bilibili_data.model_dump())
+            await add_new_content(content_item)
         else:
-            bilibili_video_pydantic = pydantic_model_creator(BilibiliVideo, name='BilibiliVideoUpdate',
-                                                             exclude=('id', 'add_ts'))
-            bilibili_data = bilibili_video_pydantic(**content_item)
-            bilibili_video_pydantic.model_validate(bilibili_data)
-            await BilibiliVideo.filter(video_id=video_id).update(**bilibili_data.model_dump())
+            await update_content_by_content_id(video_id, content_item=content_item)
 
     async def store_comment(self, comment_item: Dict):
         """
@@ -106,21 +103,17 @@ class BiliDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .bilibili_store_db_types import BilibiliComment
+
+        from .bilibili_store_sql import (add_new_comment,
+                                         query_comment_by_comment_id,
+                                         update_comment_by_comment_id)
         comment_id = comment_item.get("comment_id")
-        if not await BilibiliComment.filter(comment_id=comment_id).exists():
+        comment_detail: Dict = await query_comment_by_comment_id(comment_id=comment_id)
+        if not comment_detail:
             comment_item["add_ts"] = utils.get_current_timestamp()
-            comment_pydantic = pydantic_model_creator(BilibiliComment, name='BilibiliVideoCommentCreate',
-                                                      exclude=('id',))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await BilibiliComment.create(**comment_data.model_dump())
+            await add_new_comment(comment_item)
         else:
-            comment_pydantic = pydantic_model_creator(BilibiliComment, name='BilibiliVideoCommentUpdate',
-                                                      exclude=('id', 'add_ts'))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await BilibiliComment.filter(comment_id=comment_id).update(**comment_data.model_dump())
+            await update_comment_by_comment_id(comment_id, comment_item=comment_item)
 
 
 class BiliJsonStoreImplement(AbstractStore):

@@ -13,8 +13,9 @@ import aiofiles
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from base.base_crawler import AbstractStore
+from db import AsyncMysqlDB
 from tools import utils
-from var import crawler_type_var
+from var import crawler_type_var, media_crawler_db_var
 
 
 class XhsCsvStoreImplement(AbstractStore):
@@ -94,19 +95,16 @@ class XhsDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .xhs_store_db_types import XHSNote
+        from .xhs_store_sql import (add_new_content,
+                                    query_content_by_content_id,
+                                    update_content_by_content_id)
         note_id = content_item.get("note_id")
-        if not await XHSNote.filter(note_id=note_id).first():
+        note_detail: Dict = await query_content_by_content_id(content_id=note_id)
+        if not note_detail:
             content_item["add_ts"] = utils.get_current_timestamp()
-            note_pydantic = pydantic_model_creator(XHSNote, name="XHSPydanticCreate", exclude=('id',))
-            note_data = note_pydantic(**content_item)
-            note_pydantic.model_validate(note_data)
-            await XHSNote.create(**note_data.model_dump())
+            await add_new_content(content_item)
         else:
-            note_pydantic = pydantic_model_creator(XHSNote, name="XHSPydanticUpdate", exclude=('id', 'add_ts'))
-            note_data = note_pydantic(**content_item)
-            note_pydantic.model_validate(note_data)
-            await XHSNote.filter(note_id=note_id).update(**note_data.model_dump())
+            await update_content_by_content_id(note_id, content_item=content_item)
 
     async def store_comment(self, comment_item: Dict):
         """
@@ -117,20 +115,16 @@ class XhsDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .xhs_store_db_types import XHSNoteComment
+        from .xhs_store_sql import (add_new_comment,
+                                    query_comment_by_comment_id,
+                                    update_comment_by_comment_id)
         comment_id = comment_item.get("comment_id")
-        if not await XHSNoteComment.filter(comment_id=comment_id).first():
+        comment_detail: Dict = await query_comment_by_comment_id(comment_id=comment_id)
+        if not comment_detail:
             comment_item["add_ts"] = utils.get_current_timestamp()
-            comment_pydantic = pydantic_model_creator(XHSNoteComment, name="CommentPydanticCreate", exclude=('id',))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await XHSNoteComment.create(**comment_data.model_dump())
+            await add_new_comment(comment_item)
         else:
-            comment_pydantic = pydantic_model_creator(XHSNoteComment, name="CommentPydanticUpdate",
-                                                      exclude=('id', 'add_ts',))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await XHSNoteComment.filter(comment_id=comment_id).update(**comment_data.model_dump())
+            await update_comment_by_comment_id(comment_id, comment_item=comment_item)
 
     async def store_creator(self, creator: Dict):
         """
@@ -141,21 +135,15 @@ class XhsDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .xhs_store_db_types import XhsCreator
+        from .xhs_store_sql import (add_new_creator, query_creator_by_user_id,
+                                    update_creator_by_user_id)
         user_id = creator.get("user_id")
-        if not await XhsCreator.filter(user_id=user_id).first():
+        user_detail: Dict = await query_creator_by_user_id(user_id)
+        if not user_detail:
             creator["add_ts"] = utils.get_current_timestamp()
-            creator["last_modify_ts"] = creator["add_ts"]
-            creator_pydantic = pydantic_model_creator(XhsCreator, name="CreatorPydanticCreate", exclude=('id',))
-            creator_data = creator_pydantic(**creator)
-            creator_pydantic.model_validate(creator_data)
-            await XhsCreator.create(**creator_data.model_dump())
+            await add_new_creator(creator)
         else:
-            creator["last_modify_ts"] = utils.get_current_timestamp()
-            creator_pydantic = pydantic_model_creator(XhsCreator, name="CreatorPydanticUpdate", exclude=('id', 'add_ts',))
-            creator_data = creator_pydantic(**creator)
-            creator_pydantic.model_validate(creator_data)
-            await XhsCreator.filter(user_id=user_id).update(**creator_data.model_dump())
+            await update_creator_by_user_id(user_id, creator)
 
 
 class XhsJsonStoreImplement(AbstractStore):
@@ -217,7 +205,7 @@ class XhsJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(comment_item, "comments")
-    
+
     async def store_creator(self, creator: Dict):
         """
         Xiaohongshu content JSON storage implementation

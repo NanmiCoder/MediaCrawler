@@ -82,20 +82,17 @@ class WeiboDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .weibo_store_db_types import WeiboNote
+
+        from .weibo_store_sql import (add_new_content,
+                                      query_content_by_content_id,
+                                      update_content_by_content_id)
         note_id = content_item.get("note_id")
-        if not await WeiboNote.filter(note_id=note_id).exists():
+        note_detail: Dict = await query_content_by_content_id(content_id=note_id)
+        if not note_detail:
             content_item["add_ts"] = utils.get_current_timestamp()
-            weibo_note_pydantic = pydantic_model_creator(WeiboNote, name='WeiboNoteCreate', exclude=('id',))
-            weibo_data = weibo_note_pydantic(**content_item)
-            weibo_note_pydantic.model_validate(weibo_data)
-            await WeiboNote.create(**weibo_data.model_dump())
+            await add_new_content(content_item)
         else:
-            weibo_note_pydantic = pydantic_model_creator(WeiboNote, name='WeiboNoteUpdate',
-                                                         exclude=('id', 'add_ts'))
-            weibo_data = weibo_note_pydantic(**content_item)
-            weibo_note_pydantic.model_validate(weibo_data)
-            await WeiboNote.filter(note_id=note_id).update(**weibo_data.model_dump())
+            await update_content_by_content_id(note_id, content_item=content_item)
 
     async def store_comment(self, comment_item: Dict):
         """
@@ -106,21 +103,16 @@ class WeiboDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .weibo_store_db_types import WeiboComment
+        from .weibo_store_sql import (add_new_comment,
+                                      query_comment_by_comment_id,
+                                      update_comment_by_comment_id)
         comment_id = comment_item.get("comment_id")
-        if not await WeiboComment.filter(comment_id=comment_id).exists():
+        comment_detail: Dict = await query_comment_by_comment_id(comment_id=comment_id)
+        if not comment_detail:
             comment_item["add_ts"] = utils.get_current_timestamp()
-            comment_pydantic = pydantic_model_creator(WeiboComment, name='WeiboNoteCommentCreate',
-                                                      exclude=('id',))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await WeiboComment.create(**comment_data.model_dump())
+            await add_new_comment(comment_item)
         else:
-            comment_pydantic = pydantic_model_creator(WeiboComment, name='WeiboNoteCommentUpdate',
-                                                      exclude=('id', 'add_ts'))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await WeiboComment.filter(comment_id=comment_id).update(**comment_data.model_dump())
+            await update_comment_by_comment_id(comment_id, comment_item=comment_item)
 
 
 class WeiboJsonStoreImplement(AbstractStore):
@@ -160,7 +152,6 @@ class WeiboJsonStoreImplement(AbstractStore):
             save_data.append(save_item)
             async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
                 await file.write(json.dumps(save_data, ensure_ascii=False))
-
 
     async def store_content(self, content_item: Dict):
         """

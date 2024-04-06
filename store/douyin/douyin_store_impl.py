@@ -82,20 +82,19 @@ class DouyinDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .douyin_store_db_types import DouyinAweme
+
+        from .douyin_store_sql import (add_new_content,
+                                       query_content_by_content_id,
+                                       update_content_by_content_id)
         aweme_id = content_item.get("aweme_id")
-        if not await DouyinAweme.filter(aweme_id=aweme_id).exists():
+        aweme_detail: Dict = await query_content_by_content_id(content_id=aweme_id)
+        if not aweme_detail:
             content_item["add_ts"] = utils.get_current_timestamp()
-            douyin_aweme_pydantic = pydantic_model_creator(DouyinAweme, name='DouyinAwemeCreate', exclude=('id',))
-            douyin_data = douyin_aweme_pydantic(**content_item)
-            douyin_aweme_pydantic.model_validate(douyin_data)
-            await DouyinAweme.create(**douyin_data.dict())
+            if aweme_detail.get("title"):
+                await add_new_content(content_item)
         else:
-            douyin_aweme_pydantic = pydantic_model_creator(DouyinAweme, name='DouyinAwemeUpdate',
-                                                           exclude=('id', 'add_ts'))
-            douyin_data = douyin_aweme_pydantic(**content_item)
-            douyin_aweme_pydantic.model_validate(douyin_data)
-            await DouyinAweme.filter(aweme_id=aweme_id).update(**douyin_data.model_dump())
+            await update_content_by_content_id(aweme_id, content_item=content_item)
+
 
     async def store_comment(self, comment_item: Dict):
         """
@@ -106,21 +105,16 @@ class DouyinDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .douyin_store_db_types import DouyinAwemeComment
+        from .douyin_store_sql import (add_new_comment,
+                                       query_comment_by_comment_id,
+                                       update_comment_by_comment_id)
         comment_id = comment_item.get("comment_id")
-        if not await DouyinAwemeComment.filter(comment_id=comment_id).exists():
+        comment_detail: Dict = await query_comment_by_comment_id(comment_id=comment_id)
+        if not comment_detail:
             comment_item["add_ts"] = utils.get_current_timestamp()
-            comment_pydantic = pydantic_model_creator(DouyinAwemeComment, name='DouyinAwemeCommentCreate',
-                                                      exclude=('id',))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await DouyinAwemeComment.create(**comment_data.model_dump())
+            await add_new_comment(comment_item)
         else:
-            comment_pydantic = pydantic_model_creator(DouyinAwemeComment, name='DouyinAwemeCommentUpdate',
-                                                      exclude=('id', 'add_ts'))
-            comment_data = comment_pydantic(**comment_item)
-            comment_pydantic.model_validate(comment_data)
-            await DouyinAwemeComment.filter(comment_id=comment_id).update(**comment_data.model_dump())
+            await update_comment_by_comment_id(comment_id, comment_item=comment_item)
 
 
 class DouyinJsonStoreImplement(AbstractStore):
