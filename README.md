@@ -19,9 +19,6 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 抖音学浪课程链接：https://v.douyin.com/iYeQFyAf/ 
 
 ## 感谢下列Sponsors对本仓库赞助
-<a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne">全球ip代理超新星</a>
-<a href="https://dashboard.ipcola.com/register?referral_code=vkybwyucyuidpne" target="_blank"><img src="https://s2.loli.net/2024/03/18/LKJaWcIHQl92ip5.jpg" alt="IPCola,  全球ip代理超新星-官网图"></a><br>
-<br>
 <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
 <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk" target="_blank"><img src="https://s2.loli.net/2024/04/01/jK8drZ2bxTg67q9.png" ></a>
 
@@ -39,7 +36,11 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 ## MediaCrawler爬虫项目交流群：
 > 7天有效期，自动更新
 
-![img.png](static/images/2群二维码.png)
+<div style="max-width: 200px">  
+
+![img.png](static/images/3群二维码.jpg)
+
+</div>
 
 
 ## 使用方法
