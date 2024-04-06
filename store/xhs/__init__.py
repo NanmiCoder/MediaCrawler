@@ -118,6 +118,7 @@ async def save_creator(user_id: str, creator: Dict):
         'fans': fans,
         'interaction': interaction,
         'tag_list': json.dumps({tag.get('tagType'): tag.get('name') for tag in creator.get('tags')}, ensure_ascii=False),
+        "last_modify_ts": utils.get_current_timestamp(),
     }
     utils.logger.info(f"[store.xhs.save_creator] creator:{local_db_item}")
     await XhsStoreFactory.create_store().store_creator(local_db_item)
