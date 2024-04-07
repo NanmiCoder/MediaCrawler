@@ -335,6 +335,10 @@ class XiaoHongShuClient(AbstactApiClient):
         notes_cursor = ""
         while notes_has_more:
             notes_res = await self.get_notes_by_creator(user_id, notes_cursor)
+            if not notes_res:
+                utils.logger.error(f"[XiaoHongShuClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data.")
+                break
+
             notes_has_more = notes_res.get("has_more", False)
             notes_cursor = notes_res.get("cursor", "")
             if "notes" not in notes_res:

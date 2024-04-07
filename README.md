@@ -33,15 +33,6 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 | B 站 |     ✅     |   ✅   | ✕     |   ✅   |       ✅       |   ✅    |  ✅   |   ✅    |   ✕   |
 | 微博  |     ✅      |   ✅    | ✕     |   ✅    |       ✅        |    ✅    |   ✅   |    ✅    |   ✕   |
 
-## MediaCrawler爬虫项目交流群：
-> 7天有效期，自动更新
-
-<div style="max-width: 200px">  
-
-![img.png](static/images/3群二维码.jpg)
-
-</div>
-
 
 ## 使用方法
 
@@ -94,6 +85,14 @@ MediaCrawler视频教程课程已录制完结，包含入门教程使用、源�
 - 支持保存到关系型数据库（Mysql、PgSQL等）
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
+
+## MediaCrawler爬虫项目交流群：
+> 7天有效期，自动更新, 如果人满了可以加作者wx拉进群: yzglan，备注来自github.
+
+<div style="max-width: 200px">  
+<p><img alt="打赏-微信" src="static/images/3群二维码.jpg" style="width: 200px;height: 100%" ></p>
+</div>
+
 
 ## 打赏
 免费开源不易，如果项目帮到你了，可以给我打赏哦，您的支持就是我最大的动力！
