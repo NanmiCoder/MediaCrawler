@@ -89,7 +89,7 @@ class DouyinDbStoreImplement(AbstractStore):
         aweme_detail: Dict = await query_content_by_content_id(content_id=aweme_id)
         if not aweme_detail:
             content_item["add_ts"] = utils.get_current_timestamp()
-            if aweme_detail.get("title"):
+            if content_item.get("title"):
                 await add_new_content(content_item)
         else:
             await update_content_by_content_id(aweme_id, content_item=content_item)
