@@ -10,7 +10,6 @@ import pathlib
 from typing import Dict
 
 import aiofiles
-
 from base.base_crawler import AbstractStore
 from tools import utils
 from var import crawler_type_var

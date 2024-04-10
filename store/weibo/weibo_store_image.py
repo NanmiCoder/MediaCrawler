@@ -3,11 +3,12 @@
 # @Time    : 2024/4/9 17:35
 # @Desc    : 微博保存图片类
 import pathlib
-
-from tools import utils
-from base.base_crawler import AbstractStoreImage
-import aiofiles
 from typing import Dict
+
+import aiofiles
+from base.base_crawler import AbstractStoreImage
+from tools import utils
+
 
 class WeiboStoreImage(AbstractStoreImage):
     image_store_path: str = "data/weibo/images"
