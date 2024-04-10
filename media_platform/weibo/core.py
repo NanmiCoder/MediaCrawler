@@ -10,11 +10,10 @@ import random
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
-from playwright.async_api import (BrowserContext, BrowserType, Page,
-                                  async_playwright)
-
 import config
 from base.base_crawler import AbstractCrawler
+from playwright.async_api import (BrowserContext, BrowserType, Page,
+                                  async_playwright)
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import weibo as weibo_store
 from tools import utils
@@ -121,8 +120,10 @@ class WeiboCrawler(AbstractCrawler):
                 for note_item in note_list:
                     if note_item:
                         mblog: Dict = note_item.get("mblog")
-                        note_id_list.append(mblog.get("id"))
-                        await weibo_store.update_weibo_note(note_item)
+                        if mblog:
+                            note_id_list.append(mblog.get("id"))
+                            await weibo_store.update_weibo_note(note_item)
+                            await self.get_note_images(mblog)
 
                 page += 1
                 await self.batch_get_notes_comments(note_id_list)
@@ -199,6 +200,28 @@ class WeiboCrawler(AbstractCrawler):
                 utils.logger.error(f"[WeiboCrawler.get_note_comments] get note_id: {note_id} comment error: {ex}")
             except Exception as e:
                 utils.logger.error(f"[WeiboCrawler.get_note_comments] may be been blocked, err:{e}")
+
+    async def get_note_images(self, mblog: Dict):
+        """
+        get note images
+        :param mblog:
+        :return:
+        """
+        if not config.ENABLE_GET_IMAGES:
+            utils.logger.info(f"[WeiboCrawler.get_note_images] Crawling image mode is not enabled")
+            return
+        
+        pics: Dict = mblog.get("pics")
+        if not pics:
+            return
+        for pic in pics:
+            url = pic.get("url")
+            if not url:
+                continue
+            content = await self.wb_client.get_note_image(url)
+            if content != None:
+                extension_file_name = url.split(".")[-1]
+                await weibo_store.update_weibo_note_image(pic["pid"], content, extension_file_name)
 
     async def create_weibo_client(self, httpx_proxy: Optional[str]) -> WeiboClient:
         """Create xhs client"""

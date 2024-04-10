@@ -56,6 +56,12 @@ class AbstractStore(ABC):
     async def store_creator(self, creator: Dict):
         pass
 
+class AbstractStoreImage(ABC):
+    #TODO: support all platform
+    # only weibo is supported
+    # @abstractmethod
+    async def store_image(self, image_content_item: Dict):
+        pass
 
 class AbstactApiClient(ABC):
     @abstractmethod

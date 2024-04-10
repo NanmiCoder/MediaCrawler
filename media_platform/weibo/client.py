@@ -12,7 +12,6 @@ from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
-
 from tools import utils
 
 from .exception import DataFetchError
@@ -35,6 +34,7 @@ class WeiboClient:
         self._host = "https://m.weibo.cn"
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
+        self._image_agent_host = "https://i1.wp.com/"
 
     async def request(self, method, url, **kwargs) -> Any:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
@@ -181,3 +181,25 @@ class WeiboClient:
             else:
                 utils.logger.info(f"[WeiboClient.get_note_info_by_id] 未找到$render_data的值")
                 return dict()
+
+    async def get_note_image(self, image_url: str) -> bytes:
+        image_url = image_url[8:] # 去掉 https://
+        sub_url = image_url.split("/")
+        image_url = ""
+        for i in range(len(sub_url)):
+            if i == 1:
+                image_url += "large/" #都获取高清大图
+            elif i == len(sub_url) - 1:
+                image_url += sub_url[i]
+            else:
+                image_url += sub_url[i] + "/"
+        # 微博图床对外存在防盗链，所以需要代理访问
+        # 由于微博图片是通过 i1.wp.com 来访问的，所以需要拼接一下
+        final_uri = (f"{self._image_agent_host}" f"{image_url}")
+        async with httpx.AsyncClient(proxies=self.proxies) as client:
+            response = await client.request("GET", final_uri, timeout=self.timeout)
+            if not response.reason_phrase == "OK":
+                utils.logger.error(f"[WeiboClient.get_note_image] request {final_uri} err, res:{response.text}")
+                return None
+            else:
+                return response.content
