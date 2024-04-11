@@ -225,7 +225,7 @@ class XiaoHongShuClient(AbstactApiClient):
         }
         return await self.get(uri, params)
 
-    async def get_note_sub_comments(self, note_id: str, root_comment_id: str, num: int = 30, cursor: str = ""):
+    async def get_note_sub_comments(self, note_id: str, root_comment_id: str, num: int = 10, cursor: str = ""):
         """
         获取指定父评论下的子评论的API
         Args:
@@ -272,6 +272,39 @@ class XiaoHongShuClient(AbstactApiClient):
             comments = comments_res["comments"]
             if callback:
                 await callback(note_id, comments)
+            await asyncio.sleep(crawl_interval)
+            result.extend(comments)
+        return result
+    
+    async def get_comment_all_sub_comments(self, note_id: str, root_comment_id: str, sub_comment_cursor: str, 
+                                    sub_comments: List[Dict], crawl_interval: float = 1.0,
+                                    callback: Optional[Callable] = None) -> List[Dict]:
+        """
+        获取指定笔记下指定一级评论下的所有二级评论, 该方法会一直查找一个一级评论下的所有二级评论信息
+        Args:
+            note_id: 笔记ID
+            root_comment_id: 一级评论ID
+            sub_comment_cursor: 二级评论的初始分页游标
+            sub_comments: 爬取一级评论默认携带的二级评论列表
+            crawl_interval: 爬取一次评论的延迟单位（秒）
+            callback: 一次评论爬取结束后
+
+        Returns:
+        
+        """
+        result = []
+        sub_comment_has_more = True
+        while sub_comment_has_more:
+            comments_res = await self.get_note_sub_comments(note_id, root_comment_id, 10, sub_comment_cursor)
+            sub_comment_has_more = comments_res.get("has_more", False)
+            sub_comment_cursor = comments_res.get("cursor", "")
+            if "comments" not in comments_res:
+                utils.logger.info(
+                    f"[XiaoHongShuClient.get_comment_all_sub_comments] No 'comments' key found in response: {comments_res}")
+                break
+            comments = comments_res["comments"]
+            if callback:
+                await callback(note_id, sub_comments)
             await asyncio.sleep(crawl_interval)
             result.extend(comments)
         return result

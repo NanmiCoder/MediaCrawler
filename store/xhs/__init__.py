@@ -89,6 +89,34 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
     }
     utils.logger.info(f"[store.xhs.update_xhs_note_comment] xhs note comment:{local_db_item}")
     await XhsStoreFactory.create_store().store_comment(local_db_item)
+    
+async def batch_update_xhs_note_sub_comments(note_id: str, comments: List[Dict]):
+    if not comments:
+        return
+    for comment_item in comments:
+        await update_xhs_note_sub_comment(note_id, comment_item)
+
+
+async def update_xhs_note_sub_comment(note_id: str, comment_item: Dict):
+    user_info = comment_item.get("user_info", {})
+    target_comment = comment_item.get("target_comment")
+    comment_id = comment_item.get("id")
+    comment_pictures = [item.get("url_default", "") for item in comment_item.get("pictures", [])]
+    local_db_item = {
+        "comment_id": comment_id,
+        "target_comment_id": target_comment.get('id'),
+        "create_time": comment_item.get("create_time"),
+        "ip_location": comment_item.get("ip_location"),
+        "note_id": note_id,
+        "content": comment_item.get("content"),
+        "user_id": user_info.get("user_id"),
+        "nickname": user_info.get("nickname"),
+        "avatar": user_info.get("image"),
+        "pictures": ",".join(comment_pictures),
+        "last_modify_ts": utils.get_current_timestamp(),
+    }
+    utils.logger.info(f"[store.xhs.update_xhs_note_sub_comment] xhs note comment:{local_db_item}")
+    await XhsStoreFactory.create_store().store_sub_comment(local_db_item)
 
 
 async def save_creator(user_id: str, creator: Dict):

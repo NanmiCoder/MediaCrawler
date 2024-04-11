@@ -146,3 +146,49 @@ async def update_creator_by_user_id(user_id: str, creator_item: Dict) -> int:
     async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
     effect_row: int = await async_db_conn.update_table("xhs_creator", creator_item, "user_id", user_id)
     return effect_row
+
+
+async def query_sub_comment_by_comment_id(comment_id: str) -> Dict:
+    """
+    查询一条二级评论内容
+    Args:
+        comment_id:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    sql: str = f"select * from xhs_note_sub_comment where comment_id = '{comment_id}'"
+    rows: List[Dict] = await async_db_conn.query(sql)
+    if len(rows) > 0:
+        return rows[0]
+    return dict()
+
+
+async def add_new_sub_comment(comment_item: Dict) -> int:
+    """
+    新增一条二级评论记录
+    Args:
+        comment_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    last_row_id: int = await async_db_conn.item_to_table("xhs_note_sub_comment", comment_item)
+    return last_row_id
+
+
+async def update_sub_comment_by_comment_id(comment_id: str, comment_item: Dict) -> int:
+    """
+    更新增一条二级评论记录
+    Args:
+        comment_id:
+        comment_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    effect_row: int = await async_db_conn.update_table("xhs_note_sub_comment", comment_item, "comment_id", comment_id)
+    return effect_row

@@ -123,7 +123,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         note_id_list.append(note_detail.get("note_id"))
                 page += 1
                 utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
-                await self.batch_get_note_comments(note_id_list)
+                note_comments = await self.batch_get_note_comments(note_id_list)
+                await self.batch_get_sub_comments(note_comments)
+                
 
     async def get_creators_and_notes(self) -> None:
         """Get creator's notes and retrieve their comment information."""
@@ -183,11 +185,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     f"[XiaoHongShuCrawler.get_note_detail] have not fund note detail note_id:{note_id}, err: {ex}")
                 return None
 
-    async def batch_get_note_comments(self, note_list: List[str]):
+    async def batch_get_note_comments(self, note_list: List[str]) -> List[Dict]:
         """Batch get note comments"""
         if not config.ENABLE_GET_COMMENTS:
             utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
-            return
+            return None
 
         utils.logger.info(
             f"[XiaoHongShuCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_list}")
@@ -196,16 +198,58 @@ class XiaoHongShuCrawler(AbstractCrawler):
         for note_id in note_list:
             task = asyncio.create_task(self.get_comments(note_id, semaphore), name=note_id)
             task_list.append(task)
-        await asyncio.gather(*task_list)
+        note_comments = await asyncio.gather(*task_list)
+        # 这里是每个note_id的评论列表，可以将其合并成一个列表, 方便后续操作
+        note_comments = [comment for comments in note_comments for comment in comments]
+        return note_comments
 
-    async def get_comments(self, note_id: str, semaphore: asyncio.Semaphore):
+    async def get_comments(self, note_id: str, semaphore: asyncio.Semaphore) -> List[Dict]:
         """Get note comments with keyword filtering and quantity limitation"""
         async with semaphore:
             utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
-            await self.xhs_client.get_note_all_comments(
+            return await self.xhs_client.get_note_all_comments(
                 note_id=note_id,
                 crawl_interval=random.random(),
                 callback=xhs_store.batch_update_xhs_note_comments
+            )
+            
+    async def batch_get_sub_comments(self, note_comments: List[Dict]):
+        """Batch get note sub_comments"""
+        if not config.ENABLE_GET_SUB_COMMENTS:
+            utils.logger.info(f"[XiaoHongShuCrawler.batch_get_sub_comments] Crawling sub_comment mode is not enabled")
+            return
+
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list: List[Task] = []
+        for note_comment in note_comments:
+            note_id = note_comment.get("note_id")
+            sub_comments = note_comment.get("sub_comments")
+            if sub_comments:
+                await xhs_store.batch_update_xhs_note_sub_comments(note_id, sub_comments)
+                
+            sub_comment_has_more = note_comment.get("sub_comment_has_more")
+            if not sub_comment_has_more:
+                continue
+            
+            root_comment_id = note_comment.get("id")
+            sub_comment_cursor = note_comment.get("sub_comment_cursor") 
+            task = asyncio.create_task(self.get_sub_comments(note_id, root_comment_id,
+                                    sub_comment_cursor, sub_comments, semaphore), name=note_id)
+            task_list.append(task)
+        await asyncio.gather(*task_list)
+    
+    async def get_sub_comments(self, note_id: str, root_comment_id: str, sub_comment_cursor: str,
+                                    sub_comments: List[Dict], semaphore: asyncio.Semaphore) -> List[Dict]:
+        """Get note sub_comments with keyword filtering and quantity limitation"""
+        async with semaphore:
+            utils.logger.info(f"[XiaoHongShuCrawler.get_sub_comments] Begin get note id sub_comments {note_id}")
+            await self.xhs_client.get_comment_all_sub_comments(
+                note_id=note_id,
+                root_comment_id=root_comment_id,
+                sub_comment_cursor=sub_comment_cursor,
+                sub_comments=sub_comments,
+                crawl_interval=random.random(),
+                callback=xhs_store.batch_update_xhs_note_sub_comments
             )
 
     @staticmethod
