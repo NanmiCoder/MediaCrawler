@@ -1,9 +1,10 @@
 # 基础配置
 PLATFORM = "xhs"
-KEYWORDS = "python,golang"
-LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
-COOKIES = ""
-SORT_TYPE = "popularity_descending"  # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+KEYWORDS = "杭州春花、杭州春天、杭州樱花、杭州油菜花、杭州桃花、杭州杜鹃花、太子湾郁金香、杭州玉兰花、杭州揪树《东岳庙古揪树)、西溪花朝节"
+# LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
+LOGIN_TYPE = "cookie"
+COOKIES = "yYdJq8SK8ixjyYdJq8S2Yi4d4jVEWWyKyv2kyl9iET87JSq8ITv92h888yyq4qq8qy24f0KY"
+SORT_TYPE = "time_descending"  # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
 CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 
 # 是否开启 IP 代理
@@ -16,7 +17,7 @@ IP_PROXY_POOL_COUNT = 2
 IP_PROXY_PROVIDER_NAME = "jishuhttp"
 
 # 设置为True不会打开浏览器（无头浏览器），设置False会打开一个浏览器（小红书如果一直扫码登录不通过，打开浏览器手动过一下滑动验证码）
-HEADLESS = True
+HEADLESS = False
 
 # 是否保存登录状态
 SAVE_LOGIN_STATE = True
@@ -28,16 +29,16 @@ SAVE_DATA_OPTION = "json"  # csv or db or json
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
 # 爬取视频/帖子的数量控制
-CRAWLER_MAX_NOTES_COUNT = 20
+CRAWLER_MAX_NOTES_COUNT = 200
+
+# 爬取开始页数
+START_PAGE = 10
 
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 4
 
-# 是否开启爬图片模式, 默认不开启爬图片
-ENABLE_GET_IMAGES = False
-
 # 是否开启爬评论模式, 默认不开启爬评论
-ENABLE_GET_COMMENTS = False
+ENABLE_GET_COMMENTS = True
 
 # 指定小红书需要爬虫的笔记ID列表
 XHS_SPECIFIED_ID_LIST = [
