@@ -38,7 +38,11 @@ async def main():
                         choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)
     parser.add_argument('--type', type=str, help='crawler type (search | detail | creator)',
                         choices=["search", "detail", "creator"], default=config.CRAWLER_TYPE)
-
+    parser.add_argument('--start', type=int, help='crawler type (number of start page)',
+                         default=config.START_PAGE)
+    parser.add_argument('--keyword', type=str, help='crawler type (please input keywords)',
+                         default=config.KEYWORDS)
+    
     # init db
     if config.SAVE_DATA_OPTION == "db":
         await db.init_db()
@@ -48,7 +52,9 @@ async def main():
     crawler.init_config(
         platform=args.platform,
         login_type=args.lt,
-        crawler_type=args.type
+        crawler_type=args.type,
+        start_page=args.start,
+        keyword=args.key
     )
     await crawler.start()
     

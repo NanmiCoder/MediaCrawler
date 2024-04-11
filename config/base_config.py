@@ -27,6 +27,9 @@ SAVE_DATA_OPTION = "json"  # csv or db or json
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
+# 爬取开始页数 默认从第一页开始
+START_PAGE = 1
+
 # 爬取视频/帖子的数量控制
 CRAWLER_MAX_NOTES_COUNT = 20
 
