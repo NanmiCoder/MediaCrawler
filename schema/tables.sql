@@ -281,4 +281,11 @@ CREATE TABLE `xhs_note_comment` (
   KEY `idx_xhs_note_co_create__204f8d` (`create_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='小红书笔记评论';
 
+-- ----------------------------
+-- alter table xhs_note_comment to support parent_comment_id
+-- ----------------------------
+ALTER TABLE `xhs_note_comment`
+ADD COLUMN `parent_comment_id` VARCHAR(64) DEFAULT NULL COMMENT '父评论ID';
+
+
 SET FOREIGN_KEY_CHECKS = 1;
