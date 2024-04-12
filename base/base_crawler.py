@@ -55,12 +55,7 @@ class AbstractStore(ABC):
     # @abstractmethod
     async def store_creator(self, creator: Dict):
         pass
-    
-    # TODO support all platform
-    # only xhs is supported, so @abstractmethod is commented
-    # @abstractmethod
-    async def store_sub_comment(self, sub_comment_items: Dict):
-        pass
+
 
 class AbstractStoreImage(ABC):
     #TODO: support all platform

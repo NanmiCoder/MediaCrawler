@@ -81,17 +81,6 @@ class XhsCsvStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_csv(save_item=creator, store_type="creator")
-    
-    async def store_sub_comment(self, sub_comment_items: Dict):
-        """
-        Xiaohongshu sub_comments CSV storage implementation
-        Args:
-            sub_comment_items: sub_comments item dict
-
-        Returns:
-
-        """
-        await self.save_data_to_csv(save_item=sub_comment_items, store_type="sub_comments")
 
 
 class XhsDbStoreImplement(AbstractStore):
@@ -154,26 +143,6 @@ class XhsDbStoreImplement(AbstractStore):
         else:
             await update_creator_by_user_id(user_id, creator)
             
-    async def store_sub_comment(self, sub_comment_items: Dict):
-        """
-        Xiaohongshu content DB storage implementation
-        Args:
-            sub_comment_items: comment item dict
-
-        Returns:
-
-        """
-        from .xhs_store_sql import (add_new_sub_comment,
-                                    query_sub_comment_by_comment_id,
-                                    update_sub_comment_by_comment_id)
-        comment_id = sub_comment_items.get("comment_id")
-        comment_detail: Dict = await query_sub_comment_by_comment_id(comment_id=comment_id)
-        if not comment_detail:
-            sub_comment_items["add_ts"] = utils.get_current_timestamp()
-            await add_new_sub_comment(sub_comment_items)
-        else:
-            await update_sub_comment_by_comment_id(comment_id, comment_item=sub_comment_items)
-
 
 class XhsJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/xhs"
@@ -246,13 +215,3 @@ class XhsJsonStoreImplement(AbstractStore):
         """
         await self.save_data_to_json(creator, "creator")
         
-    async def store_sub_comment(self, sub_comment_items: Dict):
-        """
-        sub_comment JSON storage implementatio
-        Args:
-            sub_comment_items:
-
-        Returns:
-
-        """
-        await self.save_data_to_json(sub_comment_items, "sub_comments")

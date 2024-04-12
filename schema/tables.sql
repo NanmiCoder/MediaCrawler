@@ -282,26 +282,10 @@ CREATE TABLE `xhs_note_comment` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='小红书笔记评论';
 
 -- ----------------------------
--- Table structure for xhs_note_sub_comment
+-- alter table xhs_note_comment to support parent_comment_id
 -- ----------------------------
-DROP TABLE IF EXISTS `xhs_note_sub_comment`;
-CREATE TABLE `xhs_note_sub_comment` (
-  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `user_id` varchar(64) NOT NULL COMMENT '用户ID',
-  `nickname` varchar(64) DEFAULT NULL COMMENT '用户昵称',
-  `avatar` varchar(255) DEFAULT NULL COMMENT '用户头像地址',
-  `ip_location` varchar(255) DEFAULT NULL COMMENT '评论时的IP地址',
-  `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
-  `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
-  `comment_id` varchar(64) NOT NULL COMMENT '评论ID',
-  `target_comment_id` varchar(64) NOT NULL COMMENT '被评论的评论ID',
-  `create_time` bigint NOT NULL COMMENT '评论时间戳',
-  `note_id` varchar(64) NOT NULL COMMENT '笔记ID',
-  `content` longtext NOT NULL COMMENT '评论内容',
-  `pictures` varchar(512) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_xhs_note_co_comment_8e8349` (`comment_id`),
-  KEY `idx_xhs_note_co_create__204f8d` (`create_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='小红书笔记二级评论';
+ALTER TABLE `xhs_note_comment`
+ADD COLUMN `parent_comment_id` VARCHAR(64) DEFAULT NULL COMMENT '父评论ID';
+
 
 SET FOREIGN_KEY_CHECKS = 1;
