@@ -142,7 +142,7 @@ class XhsDbStoreImplement(AbstractStore):
             await add_new_creator(creator)
         else:
             await update_creator_by_user_id(user_id, creator)
-            
+
 
 class XhsJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/xhs"
@@ -214,4 +214,3 @@ class XhsJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(creator, "creator")
-        
