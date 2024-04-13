@@ -40,10 +40,12 @@ class WeiboCrawler(AbstractCrawler):
         self.user_agent = utils.get_user_agent()
         self.mobile_user_agent = utils.get_mobile_user_agent()
 
-    def init_config(self, platform: str, login_type: str, crawler_type: str):
+    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str):
         self.platform = platform
         self.login_type = login_type
         self.crawler_type = crawler_type
+        self.start_page = start_page
+        self.keyword = keyword
 
     async def start(self):
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -106,10 +108,16 @@ class WeiboCrawler(AbstractCrawler):
         weibo_limit_count = 10  # weibo limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < weibo_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = weibo_limit_count
-        for keyword in config.KEYWORDS.split(","):
+        start_page = self.start_page
+        for keyword in self.keyword.split(","):
             utils.logger.info(f"[WeiboCrawler.search] Current search keyword: {keyword}")
             page = 1
-            while page * weibo_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            while (page - start_page + 1) * weibo_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+                if page < start_page:
+                    utils.logger.info(f"[WeiboCrawler.search] Skip page: {page}")
+                    page += 1
+                    continue
+                
                 search_res = await self.wb_client.get_note_by_keyword(
                     keyword=keyword,
                     page=page,

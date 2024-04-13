@@ -32,10 +32,12 @@ class DouYinCrawler(AbstractCrawler):
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
         self.index_url = "https://www.douyin.com"
 
-    def init_config(self, platform: str, login_type: str, crawler_type: str) -> None:
+    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str) -> None:
         self.platform = platform
         self.login_type = login_type
         self.crawler_type = crawler_type
+        self.start_page = start_page
+        self.keyword = keyword
 
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -84,11 +86,16 @@ class DouYinCrawler(AbstractCrawler):
         dy_limit_count = 10  # douyin limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < dy_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
-        for keyword in config.KEYWORDS.split(","):
+        start_page = self.start_page  # start page number
+        for keyword in self.keyword.split(","):
             utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
             page = 0
-            while (page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+                if page < start_page:
+                    utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
+                    page += 1
+                    continue
                 try:
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
                                                                             offset=page * dy_limit_count,

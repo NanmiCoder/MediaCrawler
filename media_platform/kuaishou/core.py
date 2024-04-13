@@ -32,10 +32,12 @@ class KuaishouCrawler(AbstractCrawler):
         self.index_url = "https://www.kuaishou.com"
         self.user_agent = utils.get_user_agent()
 
-    def init_config(self, platform: str, login_type: str, crawler_type: str):
+    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str):
         self.platform = platform
         self.login_type = login_type
         self.crawler_type = crawler_type
+        self.start_page = start_page
+        self.keyword = keyword
 
     async def start(self):
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -88,10 +90,16 @@ class KuaishouCrawler(AbstractCrawler):
         ks_limit_count = 20  # kuaishou limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < ks_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = ks_limit_count
-        for keyword in config.KEYWORDS.split(","):
+        start_page = self.start_page
+        for keyword in self.keyword.split(","):
             utils.logger.info(f"[KuaishouCrawler.search] Current search keyword: {keyword}")
             page = 1
-            while page * ks_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            while (page - start_page + 1) * ks_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+                if page < start_page:
+                    utils.logger.info(f"[KuaishouCrawler.search] Skip page: {page}")
+                    page += 1
+                    continue
+                
                 video_id_list: List[str] = []
                 videos_res = await self.ks_client.search_info_by_keyword(
                     keyword=keyword,
