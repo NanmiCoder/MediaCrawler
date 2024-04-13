@@ -63,7 +63,7 @@ class AbstractStoreImage(ABC):
     async def store_image(self, image_content_item: Dict):
         pass
 
-class AbstactApiClient(ABC):
+class AbstractApiClient(ABC):
     @abstractmethod
     async def request(self, method, url, **kwargs):
         pass

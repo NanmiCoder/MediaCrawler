@@ -7,7 +7,7 @@ import execjs
 import httpx
 from playwright.async_api import BrowserContext, Page
 
-from base.base_crawler import AbstactApiClient
+from base.base_crawler import AbstractApiClient
 from tools import utils
 from var import request_keyword_var
 
@@ -15,7 +15,7 @@ from .exception import *
 from .field import *
 
 
-class DOUYINClient(AbstactApiClient):
+class DOUYINClient(AbstractApiClient):
     def __init__(
             self,
             timeout=30,

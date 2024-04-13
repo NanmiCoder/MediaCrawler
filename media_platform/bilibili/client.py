@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 import httpx
 from playwright.async_api import BrowserContext, Page
 
-from base.base_crawler import AbstactApiClient
+from base.base_crawler import AbstractApiClient
 from tools import utils
 
 from .exception import DataFetchError
@@ -18,7 +18,7 @@ from .field import CommentOrderType, SearchOrderType
 from .help import BilibiliSign
 
 
-class BilibiliClient(AbstactApiClient):
+class BilibiliClient(AbstractApiClient):
     def __init__(
             self,
             timeout=10,

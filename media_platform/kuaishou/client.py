@@ -8,14 +8,14 @@ import httpx
 from playwright.async_api import BrowserContext, Page
 
 import config
-from base.base_crawler import AbstactApiClient
+from base.base_crawler import AbstractApiClient
 from tools import utils
 
 from .exception import DataFetchError
 from .graphql import KuaiShouGraphQL
 
 
-class KuaiShouClient(AbstactApiClient):
+class KuaiShouClient(AbstractApiClient):
     def __init__(
             self,
             timeout=10,
