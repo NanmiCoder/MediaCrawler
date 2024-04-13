@@ -40,7 +40,7 @@ async def main():
                         choices=["search", "detail", "creator"], default=config.CRAWLER_TYPE)
     parser.add_argument('--start', type=int, help='crawler type (number of start page)',
                          default=config.START_PAGE)
-    parser.add_argument('--keyword', type=str, help='crawler type (please input keywords)',
+    parser.add_argument('--keywords', type=str, help='crawler type (please input keywords)',
                          default=config.KEYWORDS)
     
     # init db
@@ -54,7 +54,7 @@ async def main():
         login_type=args.lt,
         crawler_type=args.type,
         start_page=args.start,
-        keyword=args.key
+        keyword=args.keywords
     )
     await crawler.start()
     
