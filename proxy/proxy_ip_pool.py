@@ -70,10 +70,10 @@ class ProxyIpPool:
             await self._reload_proxies()
 
         proxy = random.choice(self.proxy_list)
+        self.proxy_list.remove(proxy) # 取出来一个IP就应该移出掉
         if self.enable_validate_ip:
             if not await self._is_valid_proxy(proxy):
                 raise Exception("[ProxyIpPool.get_proxy] current ip invalid and again get it")
-        self.proxy_list.remove(proxy)
         return proxy
 
     async def _reload_proxies(self):
