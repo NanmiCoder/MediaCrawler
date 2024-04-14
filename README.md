@@ -91,7 +91,7 @@
 > 7天有效期，自动更新, 如果人满了可以加作者wx拉进群: yzglan，备注来自github.
 
 <div style="max-width: 200px">  
-<p><img alt="4群二维码" src="static/images/4群二维码.png" style="width: 200px;height: 100%" ></p>
+<p><img alt="4群二维码" src="static/images/5群二维码.JPG" style="width: 200px;height: 100%" ></p>
 </div>
 
 
