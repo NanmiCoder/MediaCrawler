@@ -56,7 +56,7 @@ class XiaoHongShuLogin(AbstractLogin):
         elif self.login_type == "cookie":
             await self.login_by_cookies()
         else:
-            raise ValueError("[XiaoHongShuLogin.begin]I nvalid Login Type Currently only supported qrcode or phone or cookies ...")
+            raise ValueError("[XiaoHongShuLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookies ...")
 
     async def login_by_mobile(self):
         """Login xiaohongshu by mobile"""
