@@ -6,6 +6,7 @@ import pathlib
 from typing import Dict
 
 import aiofiles
+
 from base.base_crawler import AbstractStoreImage
 from tools import utils
 

@@ -12,6 +12,7 @@ from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
+
 from tools import utils
 
 from .exception import DataFetchError
