@@ -46,7 +46,7 @@ def parse_kuaidaili_proxy(proxy_info: str) -> KuaidailiProxyModel:
 
 
 class KuaiDaiLiProxy(ProxyProvider):
-    def __init__(self, kdl_user_name: str, kdl_user_pwd: str):
+    def __init__(self, kdl_user_name: str, kdl_user_pwd: str, kdl_secret_id: str, kdl_signature: str):
         """
 
         Args:
@@ -56,11 +56,13 @@ class KuaiDaiLiProxy(ProxyProvider):
         self.kdl_user_name = kdl_user_name
         self.kdl_user_pwd = kdl_user_pwd
         self.api_base = "https://dps.kdlapi.com/"
+        self.secret_id = kdl_secret_id
+        self.signature = kdl_signature
         self.ip_cache = RedisDbIpCache()
         self.proxy_brand_name = ProviderNameEnum.KUAI_DAILI_PROVIDER.value
         self.params = {
-            "secret_id": "onl8885qqpz1r85uhmud",
-            "signature": "kq929uc9w1awnyevd5v5njnnu8kgl6pw",
+            "secret_id": self.secret_id,
+            "signature": self.signature,
             "pt": 1,
             "format": "json",
             "sep": 1,
@@ -125,6 +127,8 @@ def new_kuai_daili_proxy() -> KuaiDaiLiProxy:
 
     """
     return KuaiDaiLiProxy(
+        kdl_secret_id=os.getenv("kdl_secret_id", "你的快代理secert_id"),
+        kdl_signature=os.getenv("kdl_signature", "你的快代理签名"),
         kdl_user_name=os.getenv("kdl_user_name", "你的快代理用户名"),
         kdl_user_pwd=os.getenv("kdl_user_pwd", "你的快代理密码"),
     )
