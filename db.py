@@ -6,6 +6,7 @@ import asyncio
 from typing import Dict
 from urllib.parse import urlparse
 
+import aiofiles
 import aiomysql
 
 import config
@@ -62,6 +63,7 @@ async def init_db():
     await init_mediacrawler_db()
     utils.logger.info("[init_db] end init mediacrawler db connect object")
 
+
 async def close():
     """
     关闭连接池
@@ -74,5 +76,21 @@ async def close():
         db_pool.close()
 
 
+async def init_table_schema():
+    """
+    用来初始化数据库表结构，请在第一次需要创建表结构的时候使用，多次执行该函数会将已有的表以及数据全部删除
+    Returns:
+
+    """
+    utils.logger.info("[init_table_schema] begin init mysql table schema ...")
+    await init_mediacrawler_db()
+    async_db_obj: AsyncMysqlDB = media_crawler_db_var.get()
+    async with aiofiles.open("schema/tables.sql", mode="r") as f:
+        schema_sql = await f.read()
+        await async_db_obj.execute(schema_sql)
+        utils.logger.info("[init_table_schema] mediacrawler table schema init successful")
+        await close()
+
+
 if __name__ == '__main__':
-    asyncio.run(init_db())
+    asyncio.get_event_loop().run_until_complete(init_table_schema())
