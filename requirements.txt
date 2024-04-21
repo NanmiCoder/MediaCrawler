@@ -9,3 +9,4 @@ redis~=4.6.0
 pydantic==2.5.2
 aiofiles~=23.2.1
 fastapi==0.110.2
+uvicorn==0.29.0
