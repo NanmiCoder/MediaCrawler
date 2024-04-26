@@ -14,10 +14,20 @@ import aiofiles
 from base.base_crawler import AbstractStore
 from tools import utils
 from var import crawler_type_var
-
+def calculatet_number_of_files(file_store_path: str) -> int:
+    """计算数据保存文件的前部分排序数字，支持每次运行代码不写到同一个文件中
+    Args:
+        file_store_path;
+    Returns:
+        file nums
+    """
+    if not os.path.exists(file_store_path):
+        return 1
+    return max([int(file_name.split("_")[0])for file_name in os.listdir(file_store_path)])+1
 
 class DouyinCsvStoreImplement(AbstractStore):
     csv_store_path: str = "data/douyin"
+    file_count:int=calculatet_number_of_files(csv_store_path)
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -28,7 +38,7 @@ class DouyinCsvStoreImplement(AbstractStore):
         Returns: eg: data/douyin/search_comments_20240114.csv ...
 
         """
-        return f"{self.csv_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.csv"
+        return f"{self.csv_store_path}/{self.file_count}_{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.csv"
 
     async def save_data_to_csv(self, save_item: Dict, store_type: str):
         """
@@ -119,6 +129,7 @@ class DouyinDbStoreImplement(AbstractStore):
 class DouyinJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/douyin"
     lock = asyncio.Lock()
+    file_count:int=calculatet_number_of_files(json_store_path)
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -129,7 +140,9 @@ class DouyinJsonStoreImplement(AbstractStore):
         Returns:
 
         """
-        return f"{self.json_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json"
+
+
+        return f"{self.json_store_path}/{self.file_count}_{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json"
 
     async def save_data_to_json(self, save_item: Dict, store_type: str):
         """
