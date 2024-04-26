@@ -274,7 +274,7 @@ def get_img_urls_by_trace_id(trace_id: str, format_type: str = "png"):
 
 def get_trace_id(img_url: str):
     # 浏览器端上传的图片多了 /spectrum/ 这个路径
-    return f"spectrum/{img_url.split("/")[-1]}" if img_url.find("spectrum") != -1 else img_url.split("/")[-1]
+    return f"spectrum/{img_url.split('/')[-1]}" if img_url.find("spectrum") != -1 else img_url.split("/")[-1]
 
 
 if __name__ == '__main__':
