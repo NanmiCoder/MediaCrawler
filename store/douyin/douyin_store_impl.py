@@ -14,7 +14,9 @@ import aiofiles
 from base.base_crawler import AbstractStore
 from tools import utils
 from var import crawler_type_var
-def calculatet_number_of_files(file_store_path: str) -> int:
+
+
+def calculate_number_of_files(file_store_path: str) -> int:
     """计算数据保存文件的前部分排序数字，支持每次运行代码不写到同一个文件中
     Args:
         file_store_path;
@@ -23,11 +25,14 @@ def calculatet_number_of_files(file_store_path: str) -> int:
     """
     if not os.path.exists(file_store_path):
         return 1
-    return max([int(file_name.split("_")[0])for file_name in os.listdir(file_store_path)])+1
+    try:
+        return max([int(file_name.split("_")[0])for file_name in os.listdir(file_store_path)])+1
+    except ValueError:
+        return 1
 
 class DouyinCsvStoreImplement(AbstractStore):
     csv_store_path: str = "data/douyin"
-    file_count:int=calculatet_number_of_files(csv_store_path)
+    file_count:int=calculate_number_of_files(csv_store_path)
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -129,7 +134,7 @@ class DouyinDbStoreImplement(AbstractStore):
 class DouyinJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/douyin"
     lock = asyncio.Lock()
-    file_count:int=calculatet_number_of_files(json_store_path)
+    file_count:int=calculate_number_of_files(json_store_path)
 
     def make_save_file_name(self, store_type: str) -> str:
         """
