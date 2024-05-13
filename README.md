@@ -69,6 +69,9 @@
 ### 运行爬虫程序
 
    ```shell
+   ### 项目默认是没有开启评论爬取模式，如需评论请在config/base_config.py中的 ENABLE_GET_COMMENTS 变量修改
+   ### 一些其他支持项，也可以在config/base_config.py查看功能，写的有中文注释
+   
    # 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
    python main.py --platform xhs --lt qrcode --type search
    
