@@ -44,7 +44,7 @@ class WeiboLogin(AbstractLogin):
                 "[WeiboLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
 
 
-    @retry(stop=stop_after_attempt(20), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
+    @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
         """
             Check if the current login status is successful and return True otherwise return False

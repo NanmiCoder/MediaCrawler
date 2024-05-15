@@ -28,7 +28,7 @@ class XiaoHongShuLogin(AbstractLogin):
         self.login_phone = login_phone
         self.cookie_str = cookie_str
 
-    @retry(stop=stop_after_attempt(120), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
+    @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
         """
             Check if the current login status is successful and return True otherwise return False
