@@ -95,7 +95,7 @@
 > 7天有效期，自动更新, 如果人满了可以加作者wx拉进群: yzglan，备注来自github.
 
 <div style="max-width: 200px">  
-<p><img alt="8群二维码" src="static/images/8群二维码.JPG" style="width: 200px;height: 100%" ></p>
+<p><img alt="9群二维码" src="static/images/9群二维码.PNG" style="width: 200px;height: 100%" ></p>
 </div>
 
 
@@ -114,6 +114,8 @@
 > 遇到问题先自行搜索解决下，现在AI很火，用ChatGPT大多情况下能解决你的问题 [免费的ChatGPT](https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk)  
 
 ➡️➡️➡️ [常见问题](docs/常见问题.md)
+
+抖音使用Playwright登录现在会出现滑块验证 + 短信验证，手动过一下
 
 
 ## 项目代码结构

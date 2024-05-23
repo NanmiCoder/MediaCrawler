@@ -86,10 +86,12 @@ class DOUYINClient(AbstractApiClient):
         headers = headers or self.headers
         return await self.request(method="POST", url=f"{self._host}{uri}", data=data, headers=headers)
 
-    @staticmethod
-    async def pong(browser_context: BrowserContext) -> bool:
+    async def pong(self, browser_context: BrowserContext) -> bool:
+        local_storage = await self.playwright_page.evaluate("() => window.localStorage")
+        if local_storage.get("HasUserLogin", "") == "1":
+            return True
+
         _, cookie_dict = utils.convert_cookies(await browser_context.cookies())
-        # todo send some api to test login status
         return cookie_dict.get("LOGIN_STATUS") == "1"
 
     async def update_cookies(self, browser_context: BrowserContext):

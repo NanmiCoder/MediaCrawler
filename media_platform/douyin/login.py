@@ -73,8 +73,19 @@ class DouYinLogin(AbstractLogin):
         """Check if the current login status is successful and return True otherwise return False"""
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
+
+        for page in self.browser_context.pages:
+            try:
+                local_storage = await page.evaluate("() => window.localStorage")
+                if local_storage.get("HasUserLogin", "") == "1":
+                    return True
+            except Exception as e:
+                utils.logger.warn(f"[DouYinLogin] check_login_state waring: {e}")
+                await asyncio.sleep(1)
+
         if cookie_dict.get("LOGIN_STATUS") == "1":
             return True
+
         return False
 
     async def popup_login_dialog(self):

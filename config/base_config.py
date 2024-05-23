@@ -19,7 +19,7 @@ IP_PROXY_PROVIDER_NAME = "kuaidaili"
 # 设置False会打开一个浏览器
 # 小红书如果一直扫码登录不通过，打开浏览器手动过一下滑动验证码
 # 抖音如果一直提示失败，打开浏览器看下是否扫码登录之后出现了手机号验证，如果出现了手动过一下再试。
-HEADLESS = True
+HEADLESS = False
 
 # 是否保存登录状态
 SAVE_LOGIN_STATE = True
