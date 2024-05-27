@@ -80,8 +80,8 @@ class DouYinLogin(AbstractLogin):
                 if local_storage.get("HasUserLogin", "") == "1":
                     return True
             except Exception as e:
-                utils.logger.warn(f"[DouYinLogin] check_login_state waring: {e}")
-                await asyncio.sleep(1)
+                # utils.logger.warn(f"[DouYinLogin] check_login_state waring: {e}")
+                await asyncio.sleep(0.1)
 
         if cookie_dict.get("LOGIN_STATUS") == "1":
             return True
