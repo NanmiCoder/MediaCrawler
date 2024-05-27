@@ -89,3 +89,9 @@ XHS_CREATOR_ID_LIST = [
     "63e36c9a000000002703502b",
     # ........................
 ]
+
+# 指定Dy创作者ID列表(sec_id)
+DY_CREATOR_ID_LIST = [
+    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # ........................
+]
