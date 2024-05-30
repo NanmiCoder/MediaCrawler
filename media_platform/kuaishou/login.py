@@ -21,7 +21,7 @@ class KuaishouLogin(AbstractLogin):
                  login_phone: Optional[str] = "",
                  cookie_str: str = ""
                  ):
-        self.login_type = login_type
+        config.LOGIN_TYPE = login_type
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
@@ -30,14 +30,15 @@ class KuaishouLogin(AbstractLogin):
     async def begin(self):
         """Start login xiaohongshu"""
         utils.logger.info("[KuaishouLogin.begin] Begin login kuaishou ...")
-        if self.login_type == "qrcode":
+        if config.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
-        elif self.login_type == "phone":
+        elif config.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
-        elif self.login_type == "cookie":
+        elif config.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
-            raise ValueError("[KuaishouLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
+            raise ValueError(
+                "[KuaishouLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
 
     @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self) -> bool:
@@ -55,7 +56,8 @@ class KuaishouLogin(AbstractLogin):
 
     async def login_by_qrcode(self):
         """login kuaishou website and keep webdriver login state"""
-        utils.logger.info("[KuaishouLogin.login_by_qrcode] Begin login kuaishou by qrcode ...")
+        utils.logger.info(
+            "[KuaishouLogin.login_by_qrcode] Begin login kuaishou by qrcode ...")
 
         # click login button
         login_button_ele = self.context_page.locator(
@@ -70,30 +72,36 @@ class KuaishouLogin(AbstractLogin):
             selector=qrcode_img_selector
         )
         if not base64_qrcode_img:
-            utils.logger.info("[KuaishouLogin.login_by_qrcode] login failed , have not found qrcode please check ....")
+            utils.logger.info(
+                "[KuaishouLogin.login_by_qrcode] login failed , have not found qrcode please check ....")
             sys.exit()
 
-
         # show login qrcode
-        partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
-        asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
+        partial_show_qrcode = functools.partial(
+            utils.show_qrcode, base64_qrcode_img)
+        asyncio.get_running_loop().run_in_executor(
+            executor=None, func=partial_show_qrcode)
 
-        utils.logger.info(f"[KuaishouLogin.login_by_qrcode] waiting for scan code login, remaining time is 20s")
+        utils.logger.info(
+            f"[KuaishouLogin.login_by_qrcode] waiting for scan code login, remaining time is 20s")
         try:
             await self.check_login_state()
         except RetryError:
-            utils.logger.info("[KuaishouLogin.login_by_qrcode] Login kuaishou failed by qrcode login method ...")
+            utils.logger.info(
+                "[KuaishouLogin.login_by_qrcode] Login kuaishou failed by qrcode login method ...")
             sys.exit()
 
         wait_redirect_seconds = 5
-        utils.logger.info(f"[KuaishouLogin.login_by_qrcode] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+        utils.logger.info(
+            f"[KuaishouLogin.login_by_qrcode] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
     async def login_by_mobile(self):
         pass
 
     async def login_by_cookies(self):
-        utils.logger.info("[KuaishouLogin.login_by_cookies] Begin login kuaishou by cookie ...")
+        utils.logger.info(
+            "[KuaishouLogin.login_by_cookies] Begin login kuaishou by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
             await self.browser_context.add_cookies([{
                 'name': key,

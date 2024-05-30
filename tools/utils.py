@@ -1,3 +1,4 @@
+import argparse
 import logging
 
 from .crawler_util import *
@@ -15,6 +16,17 @@ def init_loging_config():
     _logger = logging.getLogger("MediaCrawler")
     _logger.setLevel(level)
     return _logger
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 logger = init_loging_config()

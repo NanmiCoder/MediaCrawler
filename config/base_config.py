@@ -1,10 +1,36 @@
+import argparse
+
+from tools.utils import str2bool
+
+# 读取command arg
+parser = argparse.ArgumentParser(description='Media crawler program.')
+parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy | ks | bili | wb)',
+                    choices=["xhs", "dy", "ks", "bili", "wb"])
+parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)',
+                    choices=["qrcode", "phone", "cookie"])
+parser.add_argument('--type', type=str, help='crawler type (search | detail | creator)',
+                    choices=["search", "detail", "creator"])
+parser.add_argument('--start', type=int,
+                    help='number of start page')
+parser.add_argument('--keywords', type=str,
+                    help='please input keywords')
+parser.add_argument('--get_comment', type=str2bool,
+                    help='whether to crawl level one comment')
+parser.add_argument('--get_sub_comment', type=str2bool,
+                    help='whether to crawl level two comment')
+
+
+args = parser.parse_args()
+
 # 基础配置
-PLATFORM = "xhs"
-KEYWORDS = "python,golang"
-LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
+PLATFORM = args.platform if args.platform else "xhs"
+KEYWORDS = args.keywords if args.keywords else "python,golang"
+LOGIN_TYPE = args.lt if args.lt else "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
-SORT_TYPE = "popularity_descending"  # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
-CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
+# 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+SORT_TYPE = "popularity_descending"
+# 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
+CRAWLER_TYPE = args.type if args.type else "search"
 
 # 是否开启 IP 代理
 ENABLE_IP_PROXY = False
@@ -31,7 +57,7 @@ SAVE_DATA_OPTION = "json"  # csv or db or json
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
 # 爬取开始页数 默认从第一页开始
-START_PAGE = 1
+START_PAGE = args.start if args.start else 1
 
 # 爬取视频/帖子的数量控制
 CRAWLER_MAX_NOTES_COUNT = 20
@@ -43,11 +69,11 @@ MAX_CONCURRENCY_NUM = 4
 ENABLE_GET_IMAGES = False
 
 # 是否开启爬评论模式, 默认不开启爬评论
-ENABLE_GET_COMMENTS = False
+ENABLE_GET_COMMENTS = args.get_comment if args.get_comment else False
 
 # 是否开启爬二级评论模式, 默认不开启爬二级评论, 目前仅支持 xhs
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
-ENABLE_GET_SUB_COMMENTS = False
+ENABLE_GET_SUB_COMMENTS = args.get_sub_comment if args.get_sub_comment else False
 
 # 指定小红书需要爬虫的笔记ID列表
 XHS_SPECIFIED_ID_LIST = [

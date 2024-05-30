@@ -21,9 +21,6 @@ from .login import KuaishouLogin
 
 
 class KuaishouCrawler(AbstractCrawler):
-    platform: str
-    login_type: str
-    crawler_type: str
     context_page: Page
     ks_client: KuaiShouClient
     browser_context: BrowserContext
@@ -32,19 +29,13 @@ class KuaishouCrawler(AbstractCrawler):
         self.index_url = "https://www.kuaishou.com"
         self.user_agent = utils.get_user_agent()
 
-    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str):
-        self.platform = platform
-        self.login_type = login_type
-        self.crawler_type = crawler_type
-        self.start_page = start_page
-        self.keyword = keyword
-
     async def start(self):
         playwright_proxy_format, httpx_proxy_format = None, None
         if config.ENABLE_IP_PROXY:
             ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
+            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(
+                ip_proxy_info)
 
         async with async_playwright() as playwright:
             # Launch a browser context.
@@ -64,7 +55,7 @@ class KuaishouCrawler(AbstractCrawler):
             self.ks_client = await self.create_ks_client(httpx_proxy_format)
             if not await self.ks_client.pong():
                 login_obj = KuaishouLogin(
-                    login_type=self.login_type,
+                    login_type=config.LOGIN_TYPE,
                     login_phone=httpx_proxy_format,
                     browser_context=self.browser_context,
                     context_page=self.context_page,
@@ -73,49 +64,56 @@ class KuaishouCrawler(AbstractCrawler):
                 await login_obj.begin()
                 await self.ks_client.update_cookies(browser_context=self.browser_context)
 
-            crawler_type_var.set(self.crawler_type)
-            if self.crawler_type == "search":
+            crawler_type_var.set(config.CRAWLER_TYPE)
+            if config.CRAWLER_TYPE == "search":
                 # Search for notes and retrieve their comment information.
                 await self.search()
-            elif self.crawler_type == "detail":
+            elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_videos()
             else:
                 pass
 
-            utils.logger.info("[KuaishouCrawler.start] Kuaishou Crawler finished ...")
+            utils.logger.info(
+                "[KuaishouCrawler.start] Kuaishou Crawler finished ...")
 
     async def search(self):
-        utils.logger.info("[KuaishouCrawler.search] Begin search kuaishou keywords")
+        utils.logger.info(
+            "[KuaishouCrawler.search] Begin search kuaishou keywords")
         ks_limit_count = 20  # kuaishou limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < ks_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = ks_limit_count
-        start_page = self.start_page
-        for keyword in self.keyword.split(","):
-            utils.logger.info(f"[KuaishouCrawler.search] Current search keyword: {keyword}")
+        start_page = config.START_PAGE
+        for keyword in config.KEYWORDS.split(","):
+            utils.logger.info(
+                f"[KuaishouCrawler.search] Current search keyword: {keyword}")
             page = 1
             while (page - start_page + 1) * ks_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
-                    utils.logger.info(f"[KuaishouCrawler.search] Skip page: {page}")
+                    utils.logger.info(
+                        f"[KuaishouCrawler.search] Skip page: {page}")
                     page += 1
                     continue
-                
+
                 video_id_list: List[str] = []
                 videos_res = await self.ks_client.search_info_by_keyword(
                     keyword=keyword,
                     pcursor=str(page),
                 )
                 if not videos_res:
-                    utils.logger.error(f"[KuaishouCrawler.search] search info by keyword:{keyword} not found data")
+                    utils.logger.error(
+                        f"[KuaishouCrawler.search] search info by keyword:{keyword} not found data")
                     continue
 
                 vision_search_photo: Dict = videos_res.get("visionSearchPhoto")
                 if vision_search_photo.get("result") != 1:
-                    utils.logger.error(f"[KuaishouCrawler.search] search info by keyword:{keyword} not found data ")
+                    utils.logger.error(
+                        f"[KuaishouCrawler.search] search info by keyword:{keyword} not found data ")
                     continue
 
                 for video_detail in vision_search_photo.get("feeds"):
-                    video_id_list.append(video_detail.get("photo", {}).get("id"))
+                    video_id_list.append(
+                        video_detail.get("photo", {}).get("id"))
                     await kuaishou_store.update_kuaishou_video(video_item=video_detail)
 
                 # batch fetch video comments
@@ -139,13 +137,16 @@ class KuaishouCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 result = await self.ks_client.get_video_info(video_id)
-                utils.logger.info(f"[KuaishouCrawler.get_video_info_task] Get video_id:{video_id} info result: {result} ...")
+                utils.logger.info(
+                    f"[KuaishouCrawler.get_video_info_task] Get video_id:{video_id} info result: {result} ...")
                 return result.get("visionVideoDetail")
             except DataFetchError as ex:
-                utils.logger.error(f"[KuaishouCrawler.get_video_info_task] Get video detail error: {ex}")
+                utils.logger.error(
+                    f"[KuaishouCrawler.get_video_info_task] Get video detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"[KuaishouCrawler.get_video_info_task] have not fund note detail video_id:{video_id}, err: {ex}")
+                utils.logger.error(
+                    f"[KuaishouCrawler.get_video_info_task] have not fund note detail video_id:{video_id}, err: {ex}")
                 return None
 
     async def batch_get_video_comments(self, video_id_list: List[str]):
@@ -155,14 +156,17 @@ class KuaishouCrawler(AbstractCrawler):
         :return:
         """
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(f"[KuaishouCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            utils.logger.info(
+                f"[KuaishouCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
             return
 
-        utils.logger.info(f"[KuaishouCrawler.batch_get_video_comments] video ids:{video_id_list}")
+        utils.logger.info(
+            f"[KuaishouCrawler.batch_get_video_comments] video ids:{video_id_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for video_id in video_id_list:
-            task = asyncio.create_task(self.get_comments(video_id, semaphore), name=video_id)
+            task = asyncio.create_task(self.get_comments(
+                video_id, semaphore), name=video_id)
             task_list.append(task)
 
         comment_tasks_var.set(task_list)
@@ -177,16 +181,19 @@ class KuaishouCrawler(AbstractCrawler):
         """
         async with semaphore:
             try:
-                utils.logger.info(f"[KuaishouCrawler.get_comments] begin get video_id: {video_id} comments ...")
+                utils.logger.info(
+                    f"[KuaishouCrawler.get_comments] begin get video_id: {video_id} comments ...")
                 await self.ks_client.get_video_all_comments(
                     photo_id=video_id,
                     crawl_interval=random.random(),
                     callback=kuaishou_store.batch_update_ks_video_comments
                 )
             except DataFetchError as ex:
-                utils.logger.error(f"[KuaishouCrawler.get_comments] get video_id: {video_id} comment error: {ex}")
+                utils.logger.error(
+                    f"[KuaishouCrawler.get_comments] get video_id: {video_id} comment error: {ex}")
             except Exception as e:
-                utils.logger.error(f"[KuaishouCrawler.get_comments] may be been blocked, err:{e}")
+                utils.logger.error(
+                    f"[KuaishouCrawler.get_comments] may be been blocked, err:{e}")
                 # use time.sleeep block main coroutine instead of asyncio.sleep and cacel running comment task
                 # maybe kuaishou block our request, we will take a nap and update the cookie again
                 current_running_tasks = comment_tasks_var.get()
@@ -211,7 +218,8 @@ class KuaishouCrawler(AbstractCrawler):
 
     async def create_ks_client(self, httpx_proxy: Optional[str]) -> KuaiShouClient:
         """Create xhs client"""
-        utils.logger.info("[KuaishouCrawler.create_ks_client] Begin create kuaishou API client ...")
+        utils.logger.info(
+            "[KuaishouCrawler.create_ks_client] Begin create kuaishou API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         xhs_client_obj = KuaiShouClient(
             proxies=httpx_proxy,
@@ -235,10 +243,11 @@ class KuaishouCrawler(AbstractCrawler):
             headless: bool = True
     ) -> BrowserContext:
         """Launch browser and create browser context"""
-        utils.logger.info("[KuaishouCrawler.launch_browser] Begin create browser context ...")
+        utils.logger.info(
+            "[KuaishouCrawler.launch_browser] Begin create browser context ...")
         if config.SAVE_LOGIN_STATE:
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
-                                         config.USER_DATA_DIR % self.platform)  # type: ignore
+                                         config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
@@ -249,7 +258,8 @@ class KuaishouCrawler(AbstractCrawler):
             )
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)  # type: ignore
+            # type: ignore
+            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)
             browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent

@@ -21,9 +21,6 @@ from .login import XiaoHongShuLogin
 
 
 class XiaoHongShuCrawler(AbstractCrawler):
-    platform: str
-    login_type: str
-    crawler_type: str
     context_page: Page
     xhs_client: XiaoHongShuClient
     browser_context: BrowserContext
@@ -32,19 +29,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
         self.index_url = "https://www.xiaohongshu.com"
         self.user_agent = utils.get_user_agent()
 
-    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str) -> None:
-        self.platform = platform
-        self.login_type = login_type
-        self.crawler_type = crawler_type
-        self.start_page = start_page
-        self.keyword = keyword
-
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
         if config.ENABLE_IP_PROXY:
             ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
+            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(
+                ip_proxy_info)
 
         async with async_playwright() as playwright:
             # Launch a browser context.
@@ -71,7 +62,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
             self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
             if not await self.xhs_client.pong():
                 login_obj = XiaoHongShuLogin(
-                    login_type=self.login_type,
+                    login_type=config.LOGIN_TYPE,
                     login_phone="",  # input your phone number
                     browser_context=self.browser_context,
                     context_page=self.context_page,
@@ -80,34 +71,38 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 await login_obj.begin()
                 await self.xhs_client.update_cookies(browser_context=self.browser_context)
 
-            crawler_type_var.set(self.crawler_type)
-            if self.crawler_type == "search":
+            crawler_type_var.set(config.CRAWLER_TYPE)
+            if config.CRAWLER_TYPE == "search":
                 # Search for notes and retrieve their comment information.
                 await self.search()
-            elif self.crawler_type == "detail":
+            elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_notes()
-            elif self.crawler_type == "creator":
+            elif config.CRAWLER_TYPE == "creator":
                 # Get creator's information and their notes and comments
                 await self.get_creators_and_notes()
             else:
                 pass
 
-            utils.logger.info("[XiaoHongShuCrawler.start] Xhs Crawler finished ...")
+            utils.logger.info(
+                "[XiaoHongShuCrawler.start] Xhs Crawler finished ...")
 
     async def search(self) -> None:
         """Search for notes and retrieve their comment information."""
-        utils.logger.info("[XiaoHongShuCrawler.search] Begin search xiaohongshu keywords")
+        utils.logger.info(
+            "[XiaoHongShuCrawler.search] Begin search xiaohongshu keywords")
         xhs_limit_count = 20  # xhs limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = xhs_limit_count
-        start_page = self.start_page
-        for keyword in self.keyword.split(","):
-            utils.logger.info(f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
+        start_page = config.START_PAGE
+        for keyword in config.KEYWORDS.split(","):
+            utils.logger.info(
+                f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
             page = 1
             while (page - start_page + 1) * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
-                    utils.logger.info(f"[XiaoHongShuCrawler.search] Skip page {page}")
+                    utils.logger.info(
+                        f"[XiaoHongShuCrawler.search] Skip page {page}")
                     page += 1
                     continue
 
@@ -116,9 +111,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     notes_res = await self.xhs_client.get_note_by_keyword(
                         keyword=keyword,
                         page=page,
-                        sort=SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != '' else SearchSortType.GENERAL,
+                        sort=SearchSortType(
+                            config.SORT_TYPE) if config.SORT_TYPE != '' else SearchSortType.GENERAL,
                     )
-                    utils.logger.info(f"[XiaoHongShuCrawler.search] Search notes res:{notes_res}")
+                    utils.logger.info(
+                        f"[XiaoHongShuCrawler.search] Search notes res:{notes_res}")
                     semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                     task_list = [
                         self.get_note_detail(post_item.get("id"), semaphore)
@@ -131,15 +128,18 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             await xhs_store.update_xhs_note(note_detail)
                             note_id_list.append(note_detail.get("note_id"))
                     page += 1
-                    utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
+                    utils.logger.info(
+                        f"[XiaoHongShuCrawler.search] Note details: {note_details}")
                     await self.batch_get_note_comments(note_id_list)
                 except DataFetchError:
-                    utils.logger.error("[XiaoHongShuCrawler.search] Get note detail error")
+                    utils.logger.error(
+                        "[XiaoHongShuCrawler.search] Get note detail error")
                     break
 
     async def get_creators_and_notes(self) -> None:
         """Get creator's notes and retrieve their comment information."""
-        utils.logger.info("[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators")
+        utils.logger.info(
+            "[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators")
         for user_id in config.XHS_CREATOR_ID_LIST:
             # get creator detail info from web html content
             createor_info: Dict = await self.xhs_client.get_creator_info(user_id=user_id)
@@ -153,7 +153,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 callback=self.fetch_creator_notes_detail
             )
 
-            note_ids = [note_item.get("note_id") for note_item in all_notes_list]
+            note_ids = [note_item.get("note_id")
+                        for note_item in all_notes_list]
             await self.batch_get_note_comments(note_ids)
 
     async def fetch_creator_notes_detail(self, note_list: List[Dict]):
@@ -188,7 +189,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
             try:
                 return await self.xhs_client.get_note_by_id(note_id)
             except DataFetchError as ex:
-                utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] Get note detail error: {ex}")
+                utils.logger.error(
+                    f"[XiaoHongShuCrawler.get_note_detail] Get note detail error: {ex}")
                 return None
             except KeyError as ex:
                 utils.logger.error(
@@ -198,7 +200,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def batch_get_note_comments(self, note_list: List[str]):
         """Batch get note comments"""
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            utils.logger.info(
+                f"[XiaoHongShuCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
             return
 
         utils.logger.info(
@@ -206,14 +209,16 @@ class XiaoHongShuCrawler(AbstractCrawler):
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for note_id in note_list:
-            task = asyncio.create_task(self.get_comments(note_id, semaphore), name=note_id)
+            task = asyncio.create_task(self.get_comments(
+                note_id, semaphore), name=note_id)
             task_list.append(task)
         await asyncio.gather(*task_list)
 
     async def get_comments(self, note_id: str, semaphore: asyncio.Semaphore):
         """Get note comments with keyword filtering and quantity limitation"""
         async with semaphore:
-            utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
+            utils.logger.info(
+                f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
             await self.xhs_client.get_note_all_comments(
                 note_id=note_id,
                 crawl_interval=random.random(),
@@ -235,7 +240,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XiaoHongShuClient:
         """Create xhs client"""
-        utils.logger.info("[XiaoHongShuCrawler.create_xhs_client] Begin create xiaohongshu API client ...")
+        utils.logger.info(
+            "[XiaoHongShuCrawler.create_xhs_client] Begin create xiaohongshu API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         xhs_client_obj = XiaoHongShuClient(
             proxies=httpx_proxy,
@@ -259,12 +265,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
             headless: bool = True
     ) -> BrowserContext:
         """Launch browser and create browser context"""
-        utils.logger.info("[XiaoHongShuCrawler.launch_browser] Begin create browser context ...")
+        utils.logger.info(
+            "[XiaoHongShuCrawler.launch_browser] Begin create browser context ...")
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
-                                         config.USER_DATA_DIR % self.platform)  # type: ignore
+                                         config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
@@ -275,7 +282,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
             )
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)  # type: ignore
+            # type: ignore
+            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)
             browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent
@@ -285,4 +293,5 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def close(self):
         """Close browser context"""
         await self.browser_context.close()
-        utils.logger.info("[XiaoHongShuCrawler.close] Browser context closed ...")
+        utils.logger.info(
+            "[XiaoHongShuCrawler.close] Browser context closed ...")

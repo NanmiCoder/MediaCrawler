@@ -168,3 +168,5 @@ cython_debug/
 /cache
 
 */.DS_Store
+
+.vscode

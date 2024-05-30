@@ -21,30 +21,22 @@ from .login import DouYinLogin
 
 
 class DouYinCrawler(AbstractCrawler):
-    platform: str
-    login_type: str
-    crawler_type: str
     context_page: Page
     dy_client: DOUYINClient
     browser_context: BrowserContext
 
     def __init__(self) -> None:
-        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
+        # fixed
+        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
         self.index_url = "https://www.douyin.com"
-
-    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str) -> None:
-        self.platform = platform
-        self.login_type = login_type
-        self.crawler_type = crawler_type
-        self.start_page = start_page
-        self.keyword = keyword
 
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
         if config.ENABLE_IP_PROXY:
             ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
+            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(
+                ip_proxy_info)
 
         async with async_playwright() as playwright:
             # Launch a browser context.
@@ -63,32 +55,35 @@ class DouYinCrawler(AbstractCrawler):
             self.dy_client = await self.create_douyin_client(httpx_proxy_format)
             if not await self.dy_client.pong(browser_context=self.browser_context):
                 login_obj = DouYinLogin(
-                    login_type=self.login_type,
-                    login_phone="", # you phone number
+                    login_type=config.LOGIN_TYPE,
+                    login_phone="",  # you phone number
                     browser_context=self.browser_context,
                     context_page=self.context_page,
                     cookie_str=config.COOKIES
                 )
                 await login_obj.begin()
                 await self.dy_client.update_cookies(browser_context=self.browser_context)
-            crawler_type_var.set(self.crawler_type)
-            if self.crawler_type == "search":
+            crawler_type_var.set(config.CRAWLER_TYPE)
+            if config.CRAWLER_TYPE == "search":
                 # Search for notes and retrieve their comment information.
                 await self.search()
-            elif self.crawler_type == "detail":
+            elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_awemes()
 
-            utils.logger.info("[DouYinCrawler.start] Douyin Crawler finished ...")
+            utils.logger.info(
+                "[DouYinCrawler.start] Douyin Crawler finished ...")
 
     async def search(self) -> None:
-        utils.logger.info("[DouYinCrawler.search] Begin search douyin keywords")
+        utils.logger.info(
+            "[DouYinCrawler.search] Begin search douyin keywords")
         dy_limit_count = 10  # douyin limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < dy_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
-        start_page = self.start_page  # start page number
-        for keyword in self.keyword.split(","):
-            utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
+        start_page = config.START_PAGE  # start page number
+        for keyword in config.KEYWORDS.split(","):
+            utils.logger.info(
+                f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
             page = 0
             while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
@@ -102,23 +97,27 @@ class DouYinCrawler(AbstractCrawler):
                                                                             publish_time=PublishTimeType.UNLIMITED
                                                                             )
                 except DataFetchError:
-                    utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
+                    utils.logger.error(
+                        f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
                     break
 
                 page += 1
                 if "data" not in posts_res:
-                    utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed，账号也许被风控了。")
+                    utils.logger.error(
+                        f"[DouYinCrawler.search] search douyin keyword: {keyword} failed，账号也许被风控了。")
                     break
 
                 for post_item in posts_res.get("data"):
                     try:
                         aweme_info: Dict = post_item.get("aweme_info") or \
-                                           post_item.get("aweme_mix_info", {}).get("mix_items")[0]
+                            post_item.get("aweme_mix_info", {}
+                                          ).get("mix_items")[0]
                     except TypeError:
                         continue
                     aweme_list.append(aweme_info.get("aweme_id", ""))
                     await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
-            utils.logger.info(f"[DouYinCrawler.search] keyword:{keyword}, aweme_list:{aweme_list}")
+            utils.logger.info(
+                f"[DouYinCrawler.search] keyword:{keyword}, aweme_list:{aweme_list}")
             await self.batch_get_note_comments(aweme_list)
 
     async def get_specified_awemes(self):
@@ -139,15 +138,18 @@ class DouYinCrawler(AbstractCrawler):
             try:
                 return await self.dy_client.get_video_by_id(aweme_id)
             except DataFetchError as ex:
-                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] Get aweme detail error: {ex}")
+                utils.logger.error(
+                    f"[DouYinCrawler.get_aweme_detail] Get aweme detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] have not fund note detail aweme_id:{aweme_id}, err: {ex}")
+                utils.logger.error(
+                    f"[DouYinCrawler.get_aweme_detail] have not fund note detail aweme_id:{aweme_id}, err: {ex}")
                 return None
 
     async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(f"[DouYinCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            utils.logger.info(
+                f"[DouYinCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
             return
 
         task_list: List[Task] = []
@@ -156,7 +158,7 @@ class DouYinCrawler(AbstractCrawler):
             task = asyncio.create_task(
                 self.get_comments(aweme_id, semaphore), name=aweme_id)
             task_list.append(task)
-        if len(task_list) > 0 :
+        if len(task_list) > 0:
             await asyncio.wait(task_list)
 
     async def get_comments(self, aweme_id: str, semaphore: asyncio.Semaphore) -> None:
@@ -169,9 +171,11 @@ class DouYinCrawler(AbstractCrawler):
                     callback=douyin_store.batch_update_dy_aweme_comments
 
                 )
-                utils.logger.info(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} comments have all been obtained and filtered ...")
+                utils.logger.info(
+                    f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} comments have all been obtained and filtered ...")
             except DataFetchError as e:
-                utils.logger.error(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} get comments failed, error: {e}")
+                utils.logger.error(
+                    f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} get comments failed, error: {e}")
 
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
@@ -214,7 +218,7 @@ class DouYinCrawler(AbstractCrawler):
         """Launch browser and create browser context"""
         if config.SAVE_LOGIN_STATE:
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
-                                         config.USER_DATA_DIR % self.platform)  # type: ignore
+                                         config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
@@ -225,7 +229,8 @@ class DouYinCrawler(AbstractCrawler):
             )  # type: ignore
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)  # type: ignore
+            # type: ignore
+            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)
             browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 user_agent=user_agent

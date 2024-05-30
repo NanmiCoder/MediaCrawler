@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import sys
 
@@ -25,39 +24,19 @@ class CrawlerFactory:
     def create_crawler(platform: str) -> AbstractCrawler:
         crawler_class = CrawlerFactory.CRAWLERS.get(platform)
         if not crawler_class:
-            raise ValueError("Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
+            raise ValueError(
+                "Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
         return crawler_class()
 
 
 async def main():
-    # define command line params ...
-    parser = argparse.ArgumentParser(description='Media crawler program.')
-    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy | ks | bili | wb)',
-                        choices=["xhs", "dy", "ks", "bili", "wb"], default=config.PLATFORM)
-    parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)',
-                        choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)
-    parser.add_argument('--type', type=str, help='crawler type (search | detail | creator)',
-                        choices=["search", "detail", "creator"], default=config.CRAWLER_TYPE)
-    parser.add_argument('--start', type=int, help='crawler type (number of start page)',
-                         default=config.START_PAGE)
-    parser.add_argument('--keywords', type=str, help='crawler type (please input keywords)',
-                         default=config.KEYWORDS)
-    
     # init db
     if config.SAVE_DATA_OPTION == "db":
         await db.init_db()
 
-    args = parser.parse_args()
-    crawler = CrawlerFactory.create_crawler(platform=args.platform)
-    crawler.init_config(
-        platform=args.platform,
-        login_type=args.lt,
-        crawler_type=args.type,
-        start_page=args.start,
-        keyword=args.keywords
-    )
+    crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
+
     await crawler.start()
-    
     if config.SAVE_DATA_OPTION == "db":
         await db.close()
 
