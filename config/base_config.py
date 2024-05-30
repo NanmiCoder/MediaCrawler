@@ -18,6 +18,8 @@ parser.add_argument('--get_comment', type=str2bool,
                     help='whether to crawl level one comment')
 parser.add_argument('--get_sub_comment', type=str2bool,
                     help='whether to crawl level two comment')
+parser.add_argument('--save_data_option', type=str,
+                    help='where to save the data (csv or db or json)')
 
 
 args = parser.parse_args()
@@ -51,7 +53,7 @@ HEADLESS = False
 SAVE_LOGIN_STATE = True
 
 # 数据保存类型选项配置,支持三种类型：csv、db、json
-SAVE_DATA_OPTION = "json"  # csv or db or json
+SAVE_DATA_OPTION = args.save_data_option if args.save_data_option else "json"
 
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
