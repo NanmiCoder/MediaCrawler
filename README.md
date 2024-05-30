@@ -13,26 +13,17 @@
 原理：利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
 通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低
 
-## 视频教程
-> 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个课程，从设计出发一步步带你如何使用，门槛大大降低，同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
-> 课程售价非常非常的便宜，几杯咖啡的事儿.<br>
-> 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
-
-
-## 感谢下列Sponsors对本仓库赞助
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk" target="_blank"><img src="https://s2.loli.net/2024/04/01/jK8drZ2bxTg67q9.png" ></a>
-
-成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
 
 ## 功能列表
-| 平台  | Cookie 登录 | 二维码登录 | 手机号登录 | 关键词搜索 | 指定视频/帖子 ID 爬取 | 登录状态缓存 | 数据保存 | IP 代理池 | 滑块验证码 |
-|:---:|:---------:|:-----:|:-----:|:-----:|:-------------:|:------:|:----:|:------:|:-----:|
-| 小红书 |     ✅     |   ✅   | ✅     |   ✅   |       ✅       |   ✅    |  ✅   |   ✅    |   ✕   |
-| 抖音  |     ✅     |   ✅   | ✅     |   ✅   |       ✅       |   ✅    |  ✅   |   ✅    |   ✅   |
-| 快手  |     ✅     |   ✅   | ✕     |   ✅   |       ✅       |   ✅    |  ✅   |   ✅    |    ✕   |
-| B 站 |     ✅     |   ✅   | ✕     |   ✅   |       ✅       |   ✅    |  ✅   |   ✅    |   ✕   |
-| 微博  |     ✅      |   ✅    | ✕     |   ✅    |       ✅        |    ✅    |   ✅   |    ✅    |   ✕   |
+> 下面不支持的项目，相关的代码架构已经搭建好，只需要实现对应的方法即可，欢迎大家提交PR
+
+| 平台  | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 |
+|-----|-------|----------|------|--------|-------|-------|
+| 小红书 | ✅     | ✅        | ✅    | ✅      | ✅     | ✅     |
+| 抖音  | ✅     | ✅        | ❌    | ✅       | ✅     | ✅     |
+| 快手  | ✅     | ✅        | ❌    | ❌      | ✅     | ✅     |
+| B 站 | ✅     | ✅        | ✅    | ❌      | ✅     | ✅     |
+| 微博  | ✅     | ✅        | ❌    | ❌      | ✅     | ✅     |
 
 
 ## 使用方法
@@ -84,12 +75,31 @@
    python main.py --help    
    ```
 
-
 ### 数据保存
 - 支持保存到关系型数据库（Mysql、PgSQL等）
     - 执行 `python db.py` 初始化数据库数据库表结构（只在首次执行）
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
+
+
+## 开发者服务
+- 付费咨询：提供 200 元/小时的咨询服务，帮你快速解决项目中遇到的问题。
+- 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题
+  <p><img alt="知识星球" src="static/images/xingqiu.jpeg" style="width: 100%;" ></p>
+- 课程服务：
+  > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个课程，从设计出发一步步带你如何使用，门槛大大降低，同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
+  > 课程售价非常非常的便宜，几杯咖啡的事儿.<br>
+  > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
+
+
+
+## 感谢下列Sponsors对本仓库赞助
+<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
+<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk" target="_blank"><img src="https://s2.loli.net/2024/04/01/jK8drZ2bxTg67q9.png" ></a>
+
+成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
+
+
 
 ## MediaCrawler爬虫项目交流群：
 > 7天有效期，自动更新, 如果人满了可以加作者wx拉进群: yzglan，备注来自github.

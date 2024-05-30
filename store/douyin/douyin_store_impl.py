@@ -26,13 +26,14 @@ def calculate_number_of_files(file_store_path: str) -> int:
     if not os.path.exists(file_store_path):
         return 1
     try:
-        return max([int(file_name.split("_")[0])for file_name in os.listdir(file_store_path)])+1
+        return max([int(file_name.split("_")[0]) for file_name in os.listdir(file_store_path)]) + 1
     except ValueError:
         return 1
 
+
 class DouyinCsvStoreImplement(AbstractStore):
     csv_store_path: str = "data/douyin"
-    file_count:int=calculate_number_of_files(csv_store_path)
+    file_count: int = calculate_number_of_files(csv_store_path)
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -65,7 +66,7 @@ class DouyinCsvStoreImplement(AbstractStore):
 
     async def store_content(self, content_item: Dict):
         """
-        Xiaohongshu content CSV storage implementation
+        Douyin content CSV storage implementation
         Args:
             content_item: note item dict
 
@@ -76,7 +77,7 @@ class DouyinCsvStoreImplement(AbstractStore):
 
     async def store_comment(self, comment_item: Dict):
         """
-        Xiaohongshu comment CSV storage implementation
+        Douyin comment CSV storage implementation
         Args:
             comment_item: comment item dict
 
@@ -84,6 +85,17 @@ class DouyinCsvStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_csv(save_item=comment_item, store_type="comments")
+
+    async def store_creator(self, creator: Dict):
+        """
+        Douyin creator CSV storage implementation
+        Args:
+            creator: creator item dict
+
+        Returns:
+
+        """
+        await self.save_data_to_csv(save_item=creator, store_type="creator")
 
 
 class DouyinDbStoreImplement(AbstractStore):
@@ -109,7 +121,6 @@ class DouyinDbStoreImplement(AbstractStore):
         else:
             await update_content_by_content_id(aweme_id, content_item=content_item)
 
-
     async def store_comment(self, comment_item: Dict):
         """
         Douyin content DB storage implementation
@@ -130,11 +141,29 @@ class DouyinDbStoreImplement(AbstractStore):
         else:
             await update_comment_by_comment_id(comment_id, comment_item=comment_item)
 
+    async def store_creator(self, creator: Dict):
+        """
+        Douyin content DB storage implementation
+        Args:
+            creator: creator dict
+
+        Returns:
+
+        """
+        from .douyin_store_sql import (add_new_creator, query_creator_by_user_id,
+                                    update_creator_by_user_id)
+        user_id = creator.get("user_id")
+        user_detail: Dict = await query_creator_by_user_id(user_id)
+        if not user_detail:
+            creator["add_ts"] = utils.get_current_timestamp()
+            await add_new_creator(creator)
+        else:
+            await update_creator_by_user_id(user_id, creator)
 
 class DouyinJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/douyin"
     lock = asyncio.Lock()
-    file_count:int=calculate_number_of_files(json_store_path)
+    file_count: int = calculate_number_of_files(json_store_path)
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -145,7 +174,6 @@ class DouyinJsonStoreImplement(AbstractStore):
         Returns:
 
         """
-
 
         return f"{self.json_store_path}/{self.file_count}_{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json"
 
@@ -193,3 +221,15 @@ class DouyinJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(comment_item, "comments")
+
+
+    async def store_creator(self, creator: Dict):
+        """
+        Douyin creator CSV storage implementation
+        Args:
+            creator: creator item dict
+
+        Returns:
+
+        """
+        await self.save_data_to_json(save_item=creator, store_type="creator")

@@ -24,6 +24,8 @@ class DouYinCrawler(AbstractCrawler):
     context_page: Page
     dy_client: DOUYINClient
     browser_context: BrowserContext
+    start_page: int
+    keyword: str
 
     def __init__(self) -> None:
         # fixed
@@ -70,6 +72,9 @@ class DouYinCrawler(AbstractCrawler):
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_awemes()
+            elif self.crawler_type == "creator":
+                # Get the information and comments of the specified creator
+                await self.get_creators_and_videos()
 
             utils.logger.info(
                 "[DouYinCrawler.start] Douyin Crawler finished ...")
@@ -147,6 +152,9 @@ class DouYinCrawler(AbstractCrawler):
                 return None
 
     async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
+        """
+        Batch get note comments
+        """
         if not config.ENABLE_GET_COMMENTS:
             utils.logger.info(
                 f"[DouYinCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
@@ -176,6 +184,41 @@ class DouYinCrawler(AbstractCrawler):
             except DataFetchError as e:
                 utils.logger.error(
                     f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} get comments failed, error: {e}")
+
+    async def get_creators_and_videos(self) -> None:
+        """
+        Get the information and videos of the specified creator
+        """
+        utils.logger.info(
+            "[DouYinCrawler.get_creators_and_videos] Begin get douyin creators")
+        for user_id in config.DY_CREATOR_ID_LIST:
+            creator_info: Dict = await self.dy_client.get_user_info(user_id)
+            if creator_info:
+                await douyin_store.save_creator(user_id, creator=creator_info)
+
+            # Get all video information of the creator
+            all_video_list = await self.dy_client.get_all_user_aweme_posts(
+                sec_user_id=user_id,
+                callback=self.fetch_creator_video_detail
+            )
+
+            video_ids = [video_item.get("aweme_id")
+                         for video_item in all_video_list]
+            await self.batch_get_note_comments(video_ids)
+
+    async def fetch_creator_video_detail(self, video_list: List[Dict]):
+        """
+        Concurrently obtain the specified post list and save the data
+        """
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list = [
+            self.get_aweme_detail(post_item.get("aweme_id"), semaphore) for post_item in video_list
+        ]
+
+        note_details = await asyncio.gather(*task_list)
+        for aweme_item in note_details:
+            if aweme_item is not None:
+                await douyin_store.update_douyin_aweme(aweme_item)
 
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
