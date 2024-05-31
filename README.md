@@ -85,8 +85,8 @@
 ## 开发者服务
 - 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题
   <p>
-  <img alt="星球图片" src="static/images/xingqiu.jpg" style="width: auto;height: 250px" >
-  <img alt="星球图片" src="static/images/xingqiu_yh.png" style="width: auto;height: 250px" >
+  <img alt="星球图片" src="static/images/xingqiu.jpg" style="width: auto;height: 400px" >
+  <img alt="星球图片" src="static/images/xingqiu_yh.png" style="width: auto;height: 400px" >
   </p>
   前20个入驻星球的小伙伴，将获得新人券50元，还剩14张。
   <br>
@@ -102,6 +102,7 @@
 <a href="https://www.jetbrains.com/?from=NanmiCoder/MediaCrawler" target="_blank">
     <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="100" height="100">
 </a>
+<br>
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
 
 成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
