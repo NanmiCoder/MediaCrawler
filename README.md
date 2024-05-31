@@ -83,19 +83,26 @@
 
 
 ## 开发者服务
-- 付费咨询：提供 200 元/小时的咨询服务，帮你快速解决项目中遇到的问题。
 - 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题
-  <p><img alt="知识星球" src="static/images/xingqiu.jpeg" style="width: 100%;" ></p>
-- 课程服务：
-  > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个课程，从设计出发一步步带你如何使用，门槛大大降低，同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
+  <p>
+  <img alt="星球图片" src="static/images/xingqiu.jpg" style="width: auto;height: 250px" >
+  <img alt="星球图片" src="static/images/xingqiu_yh.png" style="width: auto;height: 250px" >
+  </p>
+  前20个入驻星球的小伙伴，将获得新人券50元，还剩14张。
+  <br>
+- 视频课程：
+  > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个视频课程，从设计出发一步步带你如何使用，门槛大大降低，同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
   > 课程售价非常非常的便宜，几杯咖啡的事儿.<br>
   > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
 
 
 
 ## 感谢下列Sponsors对本仓库赞助
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk" target="_blank"><img src="https://s2.loli.net/2024/04/01/jK8drZ2bxTg67q9.png" ></a>
+- 感谢 [JetBrains](https://www.jetbrains.com/?from=gaowei-space/markdown-blog) 对本项目的支持！
+<a href="https://www.jetbrains.com/?from=NanmiCoder/MediaCrawler" target="_blank">
+    <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="100" height="100">
+</a>
+- <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
 
 成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
 
@@ -105,7 +112,7 @@
 > 7天有效期，自动更新, 如果人满了可以加作者wx拉进群: yzglan，备注来自github.
 
 <div style="max-width: 200px">  
-<p><img alt="9群二维码" src="static/images/9群二维码.PNG" style="width: 200px;height: 100%" ></p>
+<p><img alt="9群二维码" src="static/images/9群二维码.JPG" style="width: 200px;height: 100%" ></p>
 </div>
 
 
