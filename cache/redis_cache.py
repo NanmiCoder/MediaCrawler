@@ -3,18 +3,18 @@
 # @Name    : 程序员阿江-Relakkes
 # @Time    : 2024/5/29 22:57
 # @Desc    : RedisCache实现
-import os
 import pickle
 import time
-from typing import Any
+from typing import Any, List
 
-from abs_cache import Cache
 from redis import Redis
 
+from cache.abs_cache import AbstractCache
 from config import db_config
 
 
-class RedisCache(Cache):
+class RedisCache(AbstractCache):
+
     def __init__(self) -> None:
         # 连接redis, 返回redis客户端
         self._redis_client = self._connet_redis()
@@ -53,12 +53,19 @@ class RedisCache(Cache):
         """
         self._redis_client.set(key, pickle.dumps(value), ex=expire_time)
 
+    def keys(self, pattern: str) -> List[str]:
+        """
+        获取所有符合pattern的key
+        """
+        return [key.decode() for key in self._redis_client.keys(pattern)]
+
 
 if __name__ == '__main__':
     redis_cache = RedisCache()
     # basic usage
     redis_cache.set("name", "程序员阿江-Relakkes", 1)
     print(redis_cache.get("name"))  # Relakkes
+    print(redis_cache.keys("*"))  # ['name']
     time.sleep(2)
     print(redis_cache.get("name"))  # None
 

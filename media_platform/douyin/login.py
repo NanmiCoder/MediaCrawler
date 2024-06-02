@@ -3,7 +3,6 @@ import functools
 import sys
 from typing import Optional
 
-import redis
 from playwright.async_api import BrowserContext, Page
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
@@ -11,6 +10,7 @@ from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
 
 import config
 from base.base_crawler import AbstractLogin
+from cache.cache_factory import CacheFactory
 from tools import utils
 
 
@@ -129,13 +129,13 @@ class DouYinLogin(AbstractLogin):
 
         # 检查是否有滑动验证码
         await self.check_page_display_slider(move_step=10, slider_level="easy")
-        redis_obj = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
+        cache_client = CacheFactory.create_cache(config.CACHE_TYPE_MEMORY)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         while max_get_sms_code_time > 0:
             utils.logger.info(f"[DouYinLogin.login_by_mobile] get douyin sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"dy_{self.login_phone}"
-            sms_code_value = redis_obj.get(sms_code_key)
+            sms_code_value = cache_client.get(sms_code_key)
             if not sms_code_value:
                 max_get_sms_code_time -= 1
                 continue

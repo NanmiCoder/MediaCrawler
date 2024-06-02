@@ -2,14 +2,14 @@
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 11:18
 # @Desc    : 爬虫 IP 获取实现
-# @Url     : 现在实现了极速HTTP的接口，官网地址：https://www.jisuhttp.com/?pl=mAKphQ&plan=ZY&kd=Yang
+# @Url     : 快代理HTTP实现，官方文档：https://www.kuaidaili.com/?ref=ldwkjqipvz6c
 import json
 from abc import ABC, abstractmethod
-from typing import Dict, List
-
-import redis
+from typing import List
 
 import config
+from cache.abs_cache import AbstractCache
+from cache.cache_factory import CacheFactory
 from tools import utils
 
 from .types import IpInfoModel
@@ -30,9 +30,9 @@ class ProxyProvider(ABC):
         pass
 
 
-class RedisDbIpCache:
+class IpCache:
     def __init__(self):
-        self.redis_client = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
+        self.cache_client: AbstractCache = CacheFactory.create_cache(cache_type=config.CACHE_TYPE_MEMORY)
 
     def set_ip(self, ip_key: str, ip_value_info: str, ex: int):
         """
@@ -42,7 +42,7 @@ class RedisDbIpCache:
         :param ex:
         :return:
         """
-        self.redis_client.set(name=ip_key, value=ip_value_info, ex=ex)
+        self.cache_client.set(key=ip_key, value=ip_value_info, expire_time=ex)
 
     def load_all_ip(self, proxy_brand_name: str) -> List[IpInfoModel]:
         """
@@ -51,13 +51,13 @@ class RedisDbIpCache:
         :return:
         """
         all_ip_list: List[IpInfoModel] = []
-        all_ip_keys: List[bytes] = self.redis_client.keys(pattern=f"{proxy_brand_name}_*")
+        all_ip_keys: List[str] = self.cache_client.keys(pattern=f"{proxy_brand_name}_*")
         try:
             for ip_key in all_ip_keys:
-                ip_value = self.redis_client.get(ip_key)
+                ip_value = self.cache_client.get(ip_key)
                 if not ip_value:
                     continue
                 all_ip_list.append(IpInfoModel(**json.loads(ip_value)))
         except Exception as e:
-            utils.logger.error("[RedisDbIpCache.load_all_ip] get ip err from redis db", e)
+            utils.logger.error("[IpCache.load_all_ip] get ip err from redis db", e)
         return all_ip_list

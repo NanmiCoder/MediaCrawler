@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/4/5 09:32
-# @Desc    : 极速HTTP代理提供类实现,官网地址：https://www.jisuhttp.com?pl=zG3Jna
+# @Desc    : 已废弃！！！！！倒闭了！！！极速HTTP 代理IP实现
 import os
 from typing import Dict, List
 from urllib.parse import urlencode
 
 import httpx
 
-from proxy import IpGetError, ProxyProvider, RedisDbIpCache
+from proxy import IpCache, IpGetError, ProxyProvider
 from proxy.types import IpInfoModel
 from tools import utils
 
@@ -31,7 +31,7 @@ class JiSuHttpProxy(ProxyProvider):
             "pw": "1",  # 是否使用账密验证， 1：是，0：否，否表示白名单验证；默认为0
             "se": "1",  # 返回JSON格式时是否显示IP过期时间， 1：显示，0：不显示；默认为0
         }
-        self.ip_cache = RedisDbIpCache()
+        self.ip_cache = IpCache()
 
     async def get_proxies(self, num: int) -> List[IpInfoModel]:
         """

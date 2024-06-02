@@ -9,7 +9,7 @@ from typing import Dict, List
 import httpx
 from pydantic import BaseModel, Field
 
-from proxy import IpGetError, IpInfoModel, ProxyProvider, RedisDbIpCache
+from proxy import IpCache, IpInfoModel, ProxyProvider
 from proxy.types import ProviderNameEnum
 from tools import utils
 
@@ -58,7 +58,7 @@ class KuaiDaiLiProxy(ProxyProvider):
         self.api_base = "https://dps.kdlapi.com/"
         self.secret_id = kdl_secret_id
         self.signature = kdl_signature
-        self.ip_cache = RedisDbIpCache()
+        self.ip_cache = IpCache()
         self.proxy_brand_name = ProviderNameEnum.KUAI_DAILI_PROVIDER.value
         self.params = {
             "secret_id": self.secret_id,

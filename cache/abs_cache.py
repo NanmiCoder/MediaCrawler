@@ -5,10 +5,10 @@
 # @Desc    : 抽象类
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 
-class Cache(ABC):
+class AbstractCache(ABC):
 
     @abstractmethod
     def get(self, key: str) -> Optional[Any]:
@@ -28,6 +28,15 @@ class Cache(ABC):
         :param key: 键
         :param value: 值
         :param expire_time: 过期时间
+        :return:
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def keys(self, pattern: str) -> List[str]:
+        """
+        获取所有符合pattern的key
+        :param pattern: 匹配模式
         :return:
         """
         raise NotImplementedError

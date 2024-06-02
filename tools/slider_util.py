@@ -39,7 +39,7 @@ class Slide:
                           "q=0.8,application/signed-exchange;v=b3;q=0.9",
                 "Accept-Encoding": "gzip, deflate, br",
                 "Accept-Language": "zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,ja;q=0.6",
-                "Cache-Control": "max-age=0",
+                "AbstractCache-Control": "max-age=0",
                 "Connection": "keep-alive",
                 "Host": urlparse(img).hostname,
                 "Upgrade-Insecure-Requests": "1",

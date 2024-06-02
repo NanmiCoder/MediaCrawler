@@ -1,17 +1,18 @@
 import re
 from typing import List
 
-import redis
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 
 import config
+from cache.abs_cache import AbstractCache
+from cache.cache_factory import CacheFactory
 from tools import utils
 
 app = FastAPI()
 
-redis_client = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
+cache_client : AbstractCache = CacheFactory.create_cache(cache_type=config.CACHE_TYPE_MEMORY)
 
 
 class SmsNotification(BaseModel):
@@ -53,7 +54,7 @@ def receive_sms_notification(sms: SmsNotification):
     if sms_code:
         # Save the verification code in Redis and set the expiration time to 3 minutes.
         key = f"{sms.platform}_{sms.current_number}"
-        redis_client.set(key, sms_code, ex=60 * 3)
+        cache_client.set(key, sms_code, expire_time=60 * 3)
 
     return {"status": "ok"}
 
