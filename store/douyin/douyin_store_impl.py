@@ -150,8 +150,9 @@ class DouyinDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        from .douyin_store_sql import (add_new_creator, query_creator_by_user_id,
-                                    update_creator_by_user_id)
+        from .douyin_store_sql import (add_new_creator,
+                                       query_creator_by_user_id,
+                                       update_creator_by_user_id)
         user_id = creator.get("user_id")
         user_detail: Dict = await query_creator_by_user_id(user_id)
         if not user_detail:
