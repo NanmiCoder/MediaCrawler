@@ -70,6 +70,7 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         return
     user_info = comment_item.get("user", {})
     comment_id = comment_item.get("cid")
+    parent_comment_id = comment_item.get("reply_id", "0")
     avatar_info = user_info.get("avatar_medium", {}) or user_info.get("avatar_300x300", {}) or user_info.get(
         "avatar_168x168", {}) or user_info.get("avatar_thumb", {}) or {}
     save_comment_item = {
@@ -87,6 +88,7 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "avatar": avatar_info.get("url_list", [""])[0],
         "sub_comment_count": str(comment_item.get("reply_comment_total", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
+        "parent_comment_id": parent_comment_id
     }
     utils.logger.info(
         f"[store.douyin.update_dy_aweme_comment] douyin aweme comment: {comment_id}, content: {save_comment_item.get('content')}")
