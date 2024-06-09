@@ -13,6 +13,7 @@ from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
 from base.base_crawler import AbstractLogin
+import config
 from tools import utils
 
 
@@ -24,7 +25,7 @@ class BilibiliLogin(AbstractLogin):
                  login_phone: Optional[str] = "",
                  cookie_str: str = ""
                  ):
-        self.login_type = login_type
+        config.LOGIN_TYPE = login_type
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
@@ -33,11 +34,11 @@ class BilibiliLogin(AbstractLogin):
     async def begin(self):
         """Start login bilibili"""
         utils.logger.info("[BilibiliLogin.begin] Begin login Bilibili ...")
-        if self.login_type == "qrcode":
+        if config.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
-        elif self.login_type == "phone":
+        elif config.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
-        elif self.login_type == "cookie":
+        elif config.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
             raise ValueError(

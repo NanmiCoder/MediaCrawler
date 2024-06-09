@@ -26,9 +26,6 @@ from .login import BilibiliLogin
 
 
 class BilibiliCrawler(AbstractCrawler):
-    platform: str
-    login_type: str
-    crawler_type: str
     context_page: Page
     bili_client: BilibiliClient
     browser_context: BrowserContext
@@ -36,13 +33,6 @@ class BilibiliCrawler(AbstractCrawler):
     def __init__(self):
         self.index_url = "https://www.bilibili.com"
         self.user_agent = utils.get_user_agent()
-
-    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str):
-        self.platform = platform
-        self.login_type = login_type
-        self.crawler_type = crawler_type
-        self.start_page = start_page
-        self.keyword = keyword
 
     async def start(self):
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -70,7 +60,7 @@ class BilibiliCrawler(AbstractCrawler):
             self.bili_client = await self.create_bilibili_client(httpx_proxy_format)
             if not await self.bili_client.pong():
                 login_obj = BilibiliLogin(
-                    login_type=self.login_type,
+                    login_type=config.LOGIN_TYPE,
                     login_phone="",  # your phone number
                     browser_context=self.browser_context,
                     context_page=self.context_page,
@@ -79,11 +69,11 @@ class BilibiliCrawler(AbstractCrawler):
                 await login_obj.begin()
                 await self.bili_client.update_cookies(browser_context=self.browser_context)
 
-            crawler_type_var.set(self.crawler_type)
-            if self.crawler_type == "search":
+            crawler_type_var.set(config.CRAWLER_TYPE)
+            if config.CRAWLER_TYPE == "search":
                 # Search for video and retrieve their comment information.
                 await self.search()
-            elif self.crawler_type == "detail":
+            elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_videos()
             else:
@@ -101,8 +91,8 @@ class BilibiliCrawler(AbstractCrawler):
         bili_limit_count = 20  # bilibili limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < bili_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = bili_limit_count
-        start_page = self.start_page  # start page number
-        for keyword in self.keyword.split(","):
+        start_page = config.START_PAGE  # start page number
+        for keyword in config.KEYWORDS.split(","):
             utils.logger.info(
                 f"[BilibiliCrawler.search] Current search keyword: {keyword}")
             page = 1
@@ -271,7 +261,7 @@ class BilibiliCrawler(AbstractCrawler):
             # feat issue #14
             # we will save login state to avoid login every time
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
-                                         config.USER_DATA_DIR % self.platform)  # type: ignore
+                                         config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
