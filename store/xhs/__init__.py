@@ -42,24 +42,24 @@ async def update_xhs_note(note_item: Dict):
         "note_id": note_item.get("note_id"),
         "type": note_item.get("type"),
         "title": note_item.get("title") or note_item.get("desc", "")[:255],
-        "desc": note_item.get("desc", ""),
+        # "desc": note_item.get("desc", ""),
         "video_url": video_url,
         "time": note_item.get("time"),
         "last_update_time": note_item.get("last_update_time", 0),
         "user_id": user_info.get("user_id"),
         "nickname": user_info.get("nickname"),
-        "avatar": user_info.get("avatar"),
+        # "avatar": user_info.get("avatar"),
         "liked_count": interact_info.get("liked_count"),
         "collected_count": interact_info.get("collected_count"),
         "comment_count": interact_info.get("comment_count"),
         "share_count": interact_info.get("share_count"),
-        "ip_location": note_item.get("ip_location", ""),
-        "image_list": ','.join([img.get('url', '') for img in image_list]),
+        # "ip_location": note_item.get("ip_location", ""),
+        "image_list": image_list,
         "tag_list": ','.join([tag.get('name', '') for tag in tag_list if tag.get('type') == 'topic']),
         "last_modify_ts": utils.get_current_timestamp(),
         "note_url": f"https://www.xiaohongshu.com/explore/{note_id}"
     }
-    utils.logger.info(f"[store.xhs.update_xhs_note] xhs note: {local_db_item}")
+    utils.logger.info(f"[store.xhs.update_xhs_note] xhs note {note_item.get('note_id')} SUCCESS!")
     await XhsStoreFactory.create_store().store_content(local_db_item)
 
 

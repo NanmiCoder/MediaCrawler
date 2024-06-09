@@ -142,19 +142,19 @@ class XiaoHongShuCrawler(AbstractCrawler):
         utils.logger.info("[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators")
         for user_id in config.XHS_CREATOR_ID_LIST:
             # get creator detail info from web html content
-            createor_info: Dict = await self.xhs_client.get_creator_info(user_id=user_id)
-            if createor_info:
-                await xhs_store.save_creator(user_id, creator=createor_info)
+            # createor_info: Dict = await self.xhs_client.get_creator_info(user_id=user_id)
+            # if createor_info:
+            #     await xhs_store.save_creator(user_id, creator=createor_info)
 
             # Get all note information of the creator
             all_notes_list = await self.xhs_client.get_all_notes_by_creator(
                 user_id=user_id,
-                crawl_interval=random.random(),
+                crawl_interval=random.randint(30, 60),  # 每一版 30 个笔记爬完以后休息半分钟到一分钟
                 callback=self.fetch_creator_notes_detail
             )
 
-            note_ids = [note_item.get("note_id") for note_item in all_notes_list]
-            await self.batch_get_note_comments(note_ids)
+            # note_ids = [note_item.get("note_id") for note_item in all_notes_list]
+            # await self.batch_get_note_comments(note_ids)
 
     async def fetch_creator_notes_detail(self, note_list: List[Dict]):
         """
@@ -185,15 +185,16 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def get_note_detail(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """Get note detail"""
         async with semaphore:
-            try:
-                return await self.xhs_client.get_note_by_id(note_id)
-            except DataFetchError as ex:
-                utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] Get note detail error: {ex}")
-                return None
-            except KeyError as ex:
-                utils.logger.error(
-                    f"[XiaoHongShuCrawler.get_note_detail] have not fund note detail note_id:{note_id}, err: {ex}")
-                return None
+            for retry_idx in range(config.MAX_RETRY):
+                try:
+                    res = await self.xhs_client.get_note_by_id(note_id)
+                    await asyncio.sleep(random.randint(0, 2))
+                    return res
+                except DataFetchError as ex:
+                    utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] Get note detail error: {ex}, retrying for {retry_idx + 1}/{config.MAX_RETRY}")
+                except KeyError as ex:
+                    utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] have not fund note detail note_id:{note_id}, err: {ex}, retrying for {retry_idx + 1}/{config.MAX_RETRY}")
+            return None
 
     async def batch_get_note_comments(self, note_list: List[str]):
         """Batch get note comments"""

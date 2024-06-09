@@ -3,22 +3,13 @@ import asyncio
 import sys
 
 import config
-import db
 from base.base_crawler import AbstractCrawler
-from media_platform.bilibili import BilibiliCrawler
-from media_platform.douyin import DouYinCrawler
-from media_platform.kuaishou import KuaishouCrawler
-from media_platform.weibo import WeiboCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 
 
 class CrawlerFactory:
     CRAWLERS = {
-        "xhs": XiaoHongShuCrawler,
-        "dy": DouYinCrawler,
-        "ks": KuaishouCrawler,
-        "bili": BilibiliCrawler,
-        "wb": WeiboCrawler
+        "xhs": XiaoHongShuCrawler
     }
 
     @staticmethod
@@ -32,8 +23,8 @@ class CrawlerFactory:
 async def main():
     # define command line params ...
     parser = argparse.ArgumentParser(description='Media crawler program.')
-    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy | ks | bili | wb)',
-                        choices=["xhs", "dy", "ks", "bili", "wb"], default=config.PLATFORM)
+    parser.add_argument('--platform', type=str, help='Media platform select (xhs)',
+                        choices=["xhs"], default=config.PLATFORM)
     parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)',
                         choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)
     parser.add_argument('--type', type=str, help='crawler type (search | detail | creator)',
@@ -42,10 +33,6 @@ async def main():
                          default=config.START_PAGE)
     parser.add_argument('--keywords', type=str, help='crawler type (please input keywords)',
                          default=config.KEYWORDS)
-    
-    # init db
-    if config.SAVE_DATA_OPTION == "db":
-        await db.init_db()
 
     args = parser.parse_args()
     crawler = CrawlerFactory.create_crawler(platform=args.platform)
@@ -57,10 +44,6 @@ async def main():
         keyword=args.keywords
     )
     await crawler.start()
-    
-    if config.SAVE_DATA_OPTION == "db":
-        await db.close()
-
 
 if __name__ == '__main__':
     try:

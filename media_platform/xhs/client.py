@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+from string import Template
 from typing import Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
@@ -188,6 +189,44 @@ class XiaoHongShuClient(AbstractApiClient):
             "note_type": note_type.value
         }
         return await self.post(uri, data)
+    
+    async def get_watermark_free_image_list(self, note_id: str) -> Dict:
+        """
+        获取无水印的图像链接
+        """
+        uri = f"/explore/{note_id}"
+        html_content = await self.request("GET", self._domain + uri, return_response=True, headers=self.headers)
+        match = re.search(r'<script>window.__INITIAL_STATE__=(.+)<\/script>', html_content, re.M)
+
+        if match is None:
+            return {}
+
+        info = json.loads(match.group(1).replace(':undefined', ':null'), strict=False)
+        if info is None:
+            return {}
+        
+        PicNoWaterMarkUrlTemplate = Template('https://ci.xiaohongshu.com/$trace_id?imageView2/2/w/0/format/jpg/v3')
+        note = info['note']['noteDetailMap']
+        image_name_urls = {}
+        for _, value in note.items():
+            imageList = value['note']['imageList']
+            for item in imageList:
+                if item.get('livePhoto', False):
+                    continue
+                trace_id = item['urlDefault']
+                trace_id_start = trace_id.rindex('/')
+                trace_id_end = trace_id.rindex('!')
+                trace_id = trace_id[trace_id_start + 1: trace_id_end]
+                image_url = PicNoWaterMarkUrlTemplate.safe_substitute(dict(trace_id=trace_id))
+
+                image_name_urls[trace_id] = dict(
+                    url=image_url,
+                    height=item['height'],
+                    width=item['width']
+                )
+
+        return image_name_urls
+
 
     async def get_note_by_id(self, note_id: str) -> Dict:
         """
@@ -203,6 +242,9 @@ class XiaoHongShuClient(AbstractApiClient):
         res = await self.post(uri, data)
         if res and res.get("items"):
             res_dict: Dict = res["items"][0]["note_card"]
+            # replace image_list with watermark-free image_list
+            image_list = await self.get_watermark_free_image_list(res_dict['note_id'])
+            res_dict['image_list'] = image_list
             return res_dict
         utils.logger.error(f"[XiaoHongShuClient.get_note_by_id] get note empty and res:{res}")
         return dict()
@@ -397,6 +439,7 @@ class XiaoHongShuClient(AbstractApiClient):
             utils.logger.info(f"[XiaoHongShuClient.get_all_notes_by_creator] got user_id:{user_id} notes len : {len(notes)}")
             if callback:
                 await callback(notes)
+            utils.logger.info(f"[XiaoHongShuClient.get_all_notes_by_creator] finished processing {len(notes)} notes, sleep for {crawl_interval} seconds")
             await asyncio.sleep(crawl_interval)
             result.extend(notes)
         return result
