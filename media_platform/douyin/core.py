@@ -21,26 +21,13 @@ from .login import DouYinLogin
 
 
 class DouYinCrawler(AbstractCrawler):
-    platform: str
-    login_type: str
-    crawler_type: str
     context_page: Page
     dy_client: DOUYINClient
     browser_context: BrowserContext
-    start_page: int
-    keyword: str
 
     def __init__(self) -> None:
-        self.start_page = None
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
         self.index_url = "https://www.douyin.com"
-
-    def init_config(self, platform: str, login_type: str, crawler_type: str, start_page: int, keyword: str) -> None:
-        self.platform = platform
-        self.login_type = login_type
-        self.crawler_type = crawler_type
-        self.start_page = start_page
-        self.keyword = keyword
 
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -66,7 +53,7 @@ class DouYinCrawler(AbstractCrawler):
             self.dy_client = await self.create_douyin_client(httpx_proxy_format)
             if not await self.dy_client.pong(browser_context=self.browser_context):
                 login_obj = DouYinLogin(
-                    login_type=self.login_type,
+                    login_type=config.LOGIN_TYPE,
                     login_phone="",  # you phone number
                     browser_context=self.browser_context,
                     context_page=self.context_page,
@@ -74,14 +61,14 @@ class DouYinCrawler(AbstractCrawler):
                 )
                 await login_obj.begin()
                 await self.dy_client.update_cookies(browser_context=self.browser_context)
-            crawler_type_var.set(self.crawler_type)
-            if self.crawler_type == "search":
+            crawler_type_var.set(config.CRAWLER_TYPE)
+            if config.CRAWLER_TYPE == "search":
                 # Search for notes and retrieve their comment information.
                 await self.search()
-            elif self.crawler_type == "detail":
+            elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_awemes()
-            elif self.crawler_type == "creator":
+            elif config.CRAWLER_TYPE == "creator":
                 # Get the information and comments of the specified creator
                 await self.get_creators_and_videos()
 
@@ -92,8 +79,8 @@ class DouYinCrawler(AbstractCrawler):
         dy_limit_count = 10  # douyin limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < dy_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
-        start_page = self.start_page  # start page number
-        for keyword in self.keyword.split(","):
+        start_page = config.START_PAGE  # start page number
+        for keyword in config.KEYWORDS.split(","):
             utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
             page = 0
@@ -259,7 +246,7 @@ class DouYinCrawler(AbstractCrawler):
         """Launch browser and create browser context"""
         if config.SAVE_LOGIN_STATE:
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
-                                         config.USER_DATA_DIR % self.platform)  # type: ignore
+                                         config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
