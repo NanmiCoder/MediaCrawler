@@ -3,7 +3,8 @@ PLATFORM = "xhs"
 KEYWORDS = "python,golang"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
-SORT_TYPE = "popularity_descending"  # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+# 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+SORT_TYPE = "popularity_descending"
 CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 
 # 是否开启 IP 代理
@@ -93,5 +94,11 @@ XHS_CREATOR_ID_LIST = [
 # 指定Dy创作者ID列表(sec_id)
 DY_CREATOR_ID_LIST = [
     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # ........................
+]
+
+# 指定bili创作者ID列表(sec_id)
+BILI_CREATOR_ID_LIST = [
+    "20813884",
     # ........................
 ]
