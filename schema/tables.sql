@@ -311,4 +311,7 @@ ADD COLUMN `parent_comment_id` VARCHAR(64) DEFAULT NULL COMMENT '父评论ID';
 ALTER TABLE `douyin_aweme_comment`
 ADD COLUMN `parent_comment_id` VARCHAR(64) DEFAULT NULL COMMENT '父评论ID';
 
+ALTER TABLE `bilibili_video_comment`
+ADD COLUMN `parent_comment_id` VARCHAR(64) DEFAULT NULL COMMENT '父评论ID';
+
 SET FOREIGN_KEY_CHECKS = 1;

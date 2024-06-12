@@ -3,7 +3,8 @@ PLATFORM = "xhs"
 KEYWORDS = "python,golang"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
-SORT_TYPE = "popularity_descending"  # 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+# 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+SORT_TYPE = "popularity_descending"
 CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 
 # 是否开启 IP 代理
@@ -45,9 +46,9 @@ ENABLE_GET_IMAGES = False
 # 是否开启爬评论模式, 默认不开启爬评论
 ENABLE_GET_COMMENTS = False
 
-# 是否开启爬二级评论模式, 默认不开启爬二级评论, 目前仅支持 xhs
+# 是否开启爬二级评论模式, 默认不开启爬二级评论, 目前仅支持 xhs, bilibili
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
-ENABLE_GET_SUB_COMMENTS = True
+ENABLE_GET_SUB_COMMENTS = False
 
 # 指定小红书需要爬虫的笔记ID列表
 XHS_SPECIFIED_ID_LIST = [
@@ -96,6 +97,12 @@ DY_CREATOR_ID_LIST = [
     # ........................
 ]
 
+# 指定bili创作者ID列表(sec_id)
+BILI_CREATOR_ID_LIST = [
+    "20813884",
+    # ........................
+]
+
 #词云相关
 #是否开启生成评论词云图
 ENABLE_GET_WORDCLOUD = False
@@ -111,3 +118,5 @@ STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 
 #中文字体文件路径
 FONT_PATH= "./docs/STZHONGS.TTF"
+
+

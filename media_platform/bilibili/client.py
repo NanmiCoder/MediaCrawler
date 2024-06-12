@@ -208,7 +208,6 @@ class BilibiliClient(AbstractApiClient):
             if not is_fetch_sub_comments:
                 result.extend(comment_list)
                 continue
-            # todo handle get sub comments
         return result
 
     async def get_video_all_level_two_comments(self,
@@ -230,15 +229,15 @@ class BilibiliClient(AbstractApiClient):
         :return:
         """
 
-        pn = 0
+        pn = 1
         while True:
             result = await self.get_video_level_two_comments(
-                video_id, level_one_comment_id, 0, ps, order_mode)
+                video_id, level_one_comment_id, pn, ps, order_mode)
             comment_list: List[Dict] = result.get("replies", [])
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(video_id, comment_list)
             await asyncio.sleep(crawl_interval)
-            if (int(result["page"]["count"]) <= (pn+1) * ps):
+            if (int(result["page"]["count"]) <= pn * ps):
                 break
 
             pn += 1
@@ -268,3 +267,21 @@ class BilibiliClient(AbstractApiClient):
         }
         result = await self.get(uri, post_data)
         return result
+
+    async def get_creator_videos(self, creator_id: str, pn: int, ps: int = 30, order_mode: SearchOrderType = SearchOrderType.LAST_PUBLISH) -> Dict:
+        """get all videos for a creator
+        :param creator_id: 创作者 ID
+        :param pn: 页数
+        :param ps: 一页视频数
+        :param order_mode: 排序方式
+
+        :return:
+        """
+        uri = "/x/space/wbi/arc/search"
+        post_data = {
+            "mid": creator_id,
+            "pn": pn,
+            "ps": ps,
+            "order": order_mode,
+        }
+        return await self.get(uri, post_data)
