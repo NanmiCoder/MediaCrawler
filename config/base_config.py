@@ -96,3 +96,9 @@ DY_CREATOR_ID_LIST = [
     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]
+
+# 指定bili创作者ID列表(sec_id)
+BILI_CREATOR_ID_LIST = [
+    "20813884",
+    # ........................
+]

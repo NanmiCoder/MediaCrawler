@@ -75,7 +75,10 @@ class BilibiliCrawler(AbstractCrawler):
                 await self.search()
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
-                await self.get_specified_videos()
+                await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
+            elif config.CRAWLER_TYPE == "creator":
+                for creator_id in config.BILI_CREATOR_ID_LIST:
+                    await self.get_creator_videos(int(creator_id))
             else:
                 pass
             utils.logger.info(
@@ -173,7 +176,25 @@ class BilibiliCrawler(AbstractCrawler):
                 utils.logger.error(
                     f"[BilibiliCrawler.get_comments] may be been blocked, err:{e}")
 
-    async def get_specified_videos(self):
+    async def get_creator_videos(self, creator_id: int):
+        """
+        get videos for a creator
+        :return:
+        """
+        ps = 30
+        pn = 1
+        video_bvids_list = []
+        while True:
+            result = await self.bili_client.get_creator_videos(creator_id, pn, ps)
+            for video in result["list"]["vlist"]:
+                video_bvids_list.append(video["bvid"])
+            if (int(result["page"]["count"]) <= pn * ps):
+                break
+            await asyncio.sleep(random.random())
+            pn += 1
+        await self.get_specified_videos(video_bvids_list)
+
+    async def get_specified_videos(self, bvids_list: List[str]):
         """
         get specified videos info
         :return:
@@ -181,7 +202,7 @@ class BilibiliCrawler(AbstractCrawler):
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_video_info_task(aid=0, bvid=video_id, semaphore=semaphore) for video_id in
-            config.BILI_SPECIFIED_ID_LIST
+            bvids_list
         ]
         video_details = await asyncio.gather(*task_list)
         video_aids_list = []
