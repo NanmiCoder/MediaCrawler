@@ -95,3 +95,19 @@ DY_CREATOR_ID_LIST = [
     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]
+
+#词云相关
+#是否开启生成评论词云图
+ENABLE_GET_WORDCLOUD = False
+# 自定义词语及其分组
+#添加规则：xx:yy 其中xx为自定义添加的词组，yy为将xx该词组分到的组名。
+CUSTOM_WORDS = {
+    '零几': '年份',  # 将“零几”识别为一个整体
+    '高频词': '专业术语'  # 示例自定义词
+}
+
+#停用(禁用)词文件路径
+STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
+
+#中文字体文件路径
+FONT_PATH= "./docs/STZHONGS.TTF"

@@ -12,9 +12,9 @@ from typing import Dict
 import aiofiles
 
 from base.base_crawler import AbstractStore
-from tools import utils
+from tools import utils,words
 from var import crawler_type_var
-
+import config
 
 def calculate_number_of_files(file_store_path: str) -> int:
     """计算数据保存文件的前部分排序数字，支持每次运行代码不写到同一个文件中
@@ -132,12 +132,14 @@ class WeiboDbStoreImplement(AbstractStore):
 
 
 class WeiboJsonStoreImplement(AbstractStore):
-    json_store_path: str = "data/weibo"
+    json_store_path: str = "data/weibo/json"
+    words_store_path: str = "data/weibo/words"
     lock = asyncio.Lock()
     file_count:int=calculate_number_of_files(json_store_path)
+    WordCloud = words.AsyncWordCloudGenerator()
 
 
-    def make_save_file_name(self, store_type: str) -> str:
+    def make_save_file_name(self, store_type: str) -> (str,str):
         """
         make save file name by store type
         Args:
@@ -147,7 +149,10 @@ class WeiboJsonStoreImplement(AbstractStore):
 
         """
 
-        return f"{self.json_store_path}/{self.file_count}_{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json"
+        return (
+            f"{self.json_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}.json",
+            f"{self.words_store_path}/{crawler_type_var.get()}_{store_type}_{utils.get_current_date()}"
+        )
 
     async def save_data_to_json(self, save_item: Dict, store_type: str):
         """
@@ -160,7 +165,8 @@ class WeiboJsonStoreImplement(AbstractStore):
 
         """
         pathlib.Path(self.json_store_path).mkdir(parents=True, exist_ok=True)
-        save_file_name = self.make_save_file_name(store_type=store_type)
+        pathlib.Path(self.words_store_path).mkdir(parents=True, exist_ok=True)
+        save_file_name,words_file_name_prefix = self.make_save_file_name(store_type=store_type)
         save_data = []
 
         async with self.lock:
@@ -171,6 +177,12 @@ class WeiboJsonStoreImplement(AbstractStore):
             save_data.append(save_item)
             async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
                 await file.write(json.dumps(save_data, ensure_ascii=False))
+
+            if config.ENABLE_GET_COMMENTS and config.ENABLE_GET_WORDCLOUD:
+                try:
+                    await self.WordCloud.generate_word_frequency_and_cloud(save_data, words_file_name_prefix)
+                except:
+                    pass
 
     async def store_content(self, content_item: Dict):
         """
