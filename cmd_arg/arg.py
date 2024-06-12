@@ -1,5 +1,6 @@
 import argparse
 import config
+from tools.utils import str2bool
 
 
 async def parse_cmd():
@@ -15,6 +16,14 @@ async def parse_cmd():
                         help='number of start page', default=config.START_PAGE)
     parser.add_argument('--keywords', type=str,
                         help='please input keywords', default=config.KEYWORDS)
+    parser.add_argument('--get_comment', type=str2bool,
+                        help='''whether to crawl level one comment, supported values case insensitive ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_COMMENTS)
+    parser.add_argument('--get_sub_comment', type=str2bool,
+                        help=''''whether to crawl level two comment, supported values case insensitive ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_SUB_COMMENTS)
+    parser.add_argument('--save_data_option', type=str,
+                        help='where to save the data (csv or db or json)', choices=['csv', 'db', 'json'], default=config.SAVE_DATA_OPTION)
+    parser.add_argument('--cookies', type=str,
+                        help='cookies used for cookie login type', default=config.COOKIES)
 
     args = parser.parse_args()
 
@@ -24,3 +33,7 @@ async def parse_cmd():
     config.CRAWLER_TYPE = args.type
     config.START_PAGE = args.start
     config.KEYWORDS = args.keywords
+    config.ENABLE_GET_COMMENTS = args.get_comment
+    config.ENABLE_GET_SUB_COMMENTS = args.get_sub_comment
+    config.SAVE_DATA_OPTION = args.save_data_option
+    config.COOKIES = args.cookies
