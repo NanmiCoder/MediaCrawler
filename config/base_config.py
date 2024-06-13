@@ -103,6 +103,13 @@ BILI_CREATOR_ID_LIST = [
     # ........................
 ]
 
+# 指定快手创作者ID列表
+KS_CREATOR_ID_LIST = [
+    "3x4sm73aye7jq7i",
+    # ........................
+]
+
+
 #词云相关
 #是否开启生成评论词云图
 ENABLE_GET_WORDCLOUD = False
@@ -118,5 +125,3 @@ STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 
 #中文字体文件路径
 FONT_PATH= "./docs/STZHONGS.TTF"
-
-

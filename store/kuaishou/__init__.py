@@ -76,3 +76,22 @@ async def update_ks_video_comment(video_id: str, comment_item: Dict):
     utils.logger.info(
         f"[store.kuaishou.update_ks_video_comment] Kuaishou video comment: {comment_id}, content: {save_comment_item.get('content')}")
     await KuaishouStoreFactory.create_store().store_comment(comment_item=save_comment_item)
+
+async def save_creator(user_id: str, creator: Dict):
+    ownerCount = creator.get('ownerCount', {})
+    profile = creator.get('profile', {})
+
+    local_db_item = {
+        'user_id': user_id,
+        'nickname': profile.get('user_name'),
+        'gender': '女' if profile.get('gender') == "F" else '男',
+        'avatar': profile.get('headurl'),
+        'desc': profile.get('user_text'),
+        'ip_location': "",
+        'follows': ownerCount.get("follow"),
+        'fans': ownerCount.get("fan"),
+        'interaction': ownerCount.get("photo_public"),
+        "last_modify_ts": utils.get_current_timestamp(),
+    }
+    utils.logger.info(f"[store.kuaishou.save_creator] creator:{local_db_item}")
+    await KuaishouStoreFactory.create_store().store_creator(local_db_item)

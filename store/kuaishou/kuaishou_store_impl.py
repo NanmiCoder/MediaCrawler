@@ -205,3 +205,14 @@ class KuaishouJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(comment_item, "comments")
+
+    async def store_creator(self, creator: Dict):
+        """
+        Kuaishou content JSON storage implementation
+        Args:
+            creator: creator dict
+
+        Returns:
+
+        """
+        await self.save_data_to_json(creator, "creator")
