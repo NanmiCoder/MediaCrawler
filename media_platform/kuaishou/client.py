@@ -247,9 +247,10 @@ class KuaiShouClient(AbstractApiClient):
                 comments_res = await self.get_video_sub_comments(
                     photo_id, root_comment_id, sub_comment_pcursor
                 )
-                sub_comment_pcursor = comments_res.get("pcursor", "no_more")
+                vision_sub_comment_list = comments_res.get("visionSubCommentList",{})
+                sub_comment_pcursor = vision_sub_comment_list.get("pcursor", "no_more")
 
-                comments = comments_res.get("subComments", [])
+                comments = vision_sub_comment_list.get("subComments", {})
                 if callback:
                     await callback(photo_id, comments)
                 await asyncio.sleep(crawl_interval)
