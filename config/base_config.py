@@ -95,3 +95,9 @@ DY_CREATOR_ID_LIST = [
     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]
+
+# 指定快手创作者ID列表
+KS_CREATOR_ID_LIST = [
+    "3x4sm73aye7jq7i",
+    # ........................
+]

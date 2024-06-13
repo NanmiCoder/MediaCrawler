@@ -1,0 +1,22 @@
+mutation visionSubCommentList($photoId: String, $rootCommentId: String, $pcursor: String) {
+  visionSubCommentList(photoId: $photoId, rootCommentId: $rootCommentId, pcursor: $pcursor) {
+    pcursor
+    subComments {
+      commentId
+      authorId
+      authorName
+      content
+      headurl
+      timestamp
+      likedCount
+      realLikedCount
+      liked
+      status
+      authorLiked
+      replyToUserName
+      replyTo
+      __typename
+    }
+    __typename
+  }
+}
