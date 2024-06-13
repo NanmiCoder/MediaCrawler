@@ -8,6 +8,7 @@ from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
 from base.base_crawler import AbstractLogin
+import config
 from tools import utils
 
 
@@ -57,7 +58,7 @@ class KuaishouLogin(AbstractLogin):
 
         # click login button
         login_button_ele = self.context_page.locator(
-            "xpath=//p[text()=' 登录 ']"
+            "xpath=//p[text()='登录']"
         )
         await login_button_ele.click()
 
