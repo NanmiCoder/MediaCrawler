@@ -2,6 +2,7 @@ import asyncio
 import copy
 import urllib.parse
 from typing import Any, Callable, Dict, List, Optional
+import json
 
 import execjs
 import httpx
@@ -119,14 +120,19 @@ class DOUYINClient(AbstractApiClient):
         params = {
             "keyword": urllib.parse.quote(keyword),
             "search_channel": search_channel.value,
-            "sort_type": sort_type.value,
-            "publish_time": publish_time.value,
             "search_source": "normal_search",
-            "query_correct_type": "1",
-            "is_filter_search": "0",
+            "query_correct_type": 1,
+            "is_filter_search": 0,
             "offset": offset,
             "count": 10  # must be set to 10
         }
+        if sort_type != SearchSortType.GENERAL or publish_time != PublishTimeType.UNLIMITED:
+           params["filter_selected"] = urllib.parse.quote(json.dumps({
+               "sort_type": str(sort_type.value),
+               "publish_time": str(publish_time.value)
+           }))
+           params["is_filter_search"] = 1
+           params["search_source"] = "tab_search"
         referer_url = "https://www.douyin.com/search/" + keyword
         referer_url += f"?publish_time={publish_time.value}&sort_type={sort_type.value}&type=general"
         headers = copy.copy(self.headers)
