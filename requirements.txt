@@ -11,3 +11,6 @@ aiofiles~=23.2.1
 fastapi==0.110.2
 uvicorn==0.29.0
 python-dotenv==1.0.1
+jieba==0.42.1
+wordcloud==1.9.3
+matplotlib==3.9.0
