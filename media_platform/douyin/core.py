@@ -91,8 +91,8 @@ class DouYinCrawler(AbstractCrawler):
                     continue
                 try:
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
-                                                                            offset=page * dy_limit_count,
-                                                                            publish_time=PublishTimeType.UNLIMITED
+                                                                            offset=page * dy_limit_count - dy_limit_count,
+                                                                            publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE)
                                                                             )
                 except DataFetchError:
                     utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
