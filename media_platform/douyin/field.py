@@ -12,9 +12,8 @@ class SearchChannelType(Enum):
 class SearchSortType(Enum):
     """search sort type"""
     GENERAL = 0  # 综合排序
-    LATEST = 1  # 最新发布
-    MOST_LIKE = 2  # 最多点赞
-
+    MOST_LIKE = 1  # 最多点赞
+    LATEST = 2  # 最新发布
 
 class PublishTimeType(Enum):
     """publish time type"""
