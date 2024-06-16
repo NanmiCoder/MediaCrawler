@@ -86,12 +86,19 @@
 ## 开发者服务
 - 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题
   <p>
-  <img alt="星球图片" src="static/images/xingqiu.jpg" style="width: auto;height: 400px" >
-  <img alt="星球图片" src="static/images/xingqiu_yh.png" style="width: auto;height: 400px" >
+  <img alt="xingqiu" src="https://nm.zizhi1.com/static/img/8e1312d1f52f2e0ff436ea7196b4e27b.15555424244122T1.webp" style="width: auto;height: 400px" >
+  <img alt="xingqiu_yhq" src="https://nm.zizhi1.com/static/img/c14da73f0dd9351e7169a36368d5037b.yhq.webp" style="width: auto;height: 400px" >
   </p>
-  前20个入驻星球的小伙伴，将获得新人券50元，还剩14张。
-  <br>
-- 视频课程：
+  
+  星球精选文章： 
+  - [【独创】使用Playwright获取某音a_bogus参数流程（包含加密参数分析）](https://articles.zsxq.com/id_u89al50jk9x0.html)
+  - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
+  - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
+  - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html)
+  
+  
+  
+- MediaCrawler视频课程：
   > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个视频课程，从设计出发一步步带你如何使用，门槛大大降低，同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
   > 课程售价非常非常的便宜，几杯咖啡的事儿.<br>
   > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
@@ -114,7 +121,7 @@
 > 7天有效期，自动更新, 如果人满了可以加作者wx拉进群: yzglan，备注来自github.
 
 <div style="max-width: 200px">  
-<p><img alt="10群二维码" src="static/images/10群二维码.JPG" style="width: 200px;height: 100%" ></p>
+<p><img alt="11群二维码" src="static/images/11群二维码.JPG" style="width: 200px;height: 100%" ></p>
 </div>
 
 
@@ -143,7 +150,9 @@
 ## 手机号登录说明
 ➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
 
-
+## 项目贡献者
+<!-- readme: contributors -start -->
+<!-- readme: contributors -end -->
 
 ## star 趋势图
 - 如果该项目对你有帮助，star一下 ❤️❤️❤️
