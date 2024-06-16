@@ -7,8 +7,8 @@ from playwright.async_api import BrowserContext, Page
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
-from base.base_crawler import AbstractLogin
 import config
+from base.base_crawler import AbstractLogin
 from tools import utils
 
 

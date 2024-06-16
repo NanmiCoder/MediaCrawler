@@ -1,10 +1,12 @@
-import aiofiles
 import asyncio
-import jieba
-from collections import Counter
-from wordcloud import WordCloud
 import json
+from collections import Counter
+
+import aiofiles
+import jieba
 import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+
 import config
 from tools import utils
 

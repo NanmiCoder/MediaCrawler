@@ -13,9 +13,9 @@ import aiofiles
 
 import config
 from base.base_crawler import AbstractStore
-from tools import utils
+from tools import utils, words
 from var import crawler_type_var
-from tools import words
+
 
 def calculate_number_of_files(file_store_path: str) -> int:
     """计算数据保存文件的前部分排序数字，支持每次运行代码不写到同一个文件中
