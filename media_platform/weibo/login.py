@@ -14,6 +14,7 @@ from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
 
 from base.base_crawler import AbstractLogin
 from tools import utils
+import config
 
 
 class WeiboLogin(AbstractLogin):
