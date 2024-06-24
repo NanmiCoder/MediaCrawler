@@ -108,7 +108,7 @@ class WeiboCrawler(AbstractCrawler):
                     utils.logger.info(f"[WeiboCrawler.search] Skip page: {page}")
                     page += 1
                     continue
-                
+                utils.logger.info(f"[WeiboCrawler.search] search weibo keyword: {keyword}, page: {page}")
                 search_res = await self.wb_client.get_note_by_keyword(
                     keyword=keyword,
                     page=page,

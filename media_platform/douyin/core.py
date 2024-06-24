@@ -90,6 +90,7 @@ class DouYinCrawler(AbstractCrawler):
                     page += 1
                     continue
                 try:
+                    utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page}")
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
                                                                             offset=page * dy_limit_count - dy_limit_count,
                                                                             publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE)

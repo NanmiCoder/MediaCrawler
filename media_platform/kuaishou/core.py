@@ -92,7 +92,7 @@ class KuaishouCrawler(AbstractCrawler):
                     utils.logger.info(f"[KuaishouCrawler.search] Skip page: {page}")
                     page += 1
                     continue
-                
+                utils.logger.info(f"[KuaishouCrawler.search] search kuaishou keyword: {keyword}, page: {page}")
                 video_id_list: List[str] = []
                 videos_res = await self.ks_client.search_info_by_keyword(
                     keyword=keyword,

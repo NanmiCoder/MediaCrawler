@@ -87,7 +87,6 @@
 - 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题
   <p>
   <img alt="xingqiu" src="https://nm.zizhi1.com/static/img/8e1312d1f52f2e0ff436ea7196b4e27b.15555424244122T1.webp" style="width: auto;height: 400px" >
-  <img alt="xingqiu_yhq" src="https://nm.zizhi1.com/static/img/c14da73f0dd9351e7169a36368d5037b.yhq.webp" style="width: auto;height: 400px" >
   </p>
   
   星球精选文章： 
@@ -95,6 +94,7 @@
   - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
   - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
   - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html)
+  - 每天 1 快钱订阅我的知识服务
   
   
   
