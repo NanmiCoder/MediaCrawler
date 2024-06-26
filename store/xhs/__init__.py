@@ -113,7 +113,7 @@ async def save_creator(user_id: str, creator: Dict):
         'gender': '女' if user_info.get('gender') == 1 else '男',
         'avatar': user_info.get('images'),
         'desc': user_info.get('desc'),
-        'ip_location': user_info.get('ip_location'),
+        'ip_location': user_info.get('ipLocation'),
         'follows': follows,
         'fans': fans,
         'interaction': interaction,
