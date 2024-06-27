@@ -150,6 +150,13 @@
 ## 手机号登录说明
 ➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
 
+<<<<<<< HEAD
+## 词云图相关操作说明
+
+➡️➡️➡️ [词云图相关说明](docs/关于词云图相关操作.md)
+
+
+=======
 ## 项目贡献者
 <!-- readme: contributors -start -->
 <table>
@@ -167,6 +174,13 @@
                     <img src="https://avatars.githubusercontent.com/u/117699758?v=4" width="100;" alt="leantli"/>
                     <br />
                     <sub><b>leantli</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Rosyrain">
+                    <img src="https://avatars.githubusercontent.com/u/116946548?v=4" width="100;" alt="Rosyrain"/>
+                    <br />
+                    <sub><b>Rosyrain</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -190,6 +204,8 @@
                     <sub><b>HIRO</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/PeanutSplash">
                     <img src="https://avatars.githubusercontent.com/u/98582625?v=4" width="100;" alt="PeanutSplash"/>
@@ -197,20 +213,11 @@
                     <sub><b>PeanutSplash</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/Ermeng98">
                     <img src="https://avatars.githubusercontent.com/u/55784769?v=4" width="100;" alt="Ermeng98"/>
                     <br />
                     <sub><b>Ermeng</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Rosyrain">
-                    <img src="https://avatars.githubusercontent.com/u/116946548?v=4" width="100;" alt="Rosyrain"/>
-                    <br />
-                    <sub><b>Rosyrain</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -356,6 +363,7 @@
 	<tbody>
 </table>
 <!-- readme: contributors -end -->
+>>>>>>> 86a88f72602fe3f692acc628427888487554b716
 
 ## star 趋势图
 - 如果该项目对你有帮助，star一下 ❤️❤️❤️
