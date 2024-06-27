@@ -102,6 +102,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     continue
 
                 try:
+                    utils.logger.info(f"[XiaoHongShuCrawler.search] search xhs keyword: {keyword}, page: {page}")
                     note_id_list: List[str] = []
                     notes_res = await self.xhs_client.get_note_by_keyword(
                         keyword=keyword,

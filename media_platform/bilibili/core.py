@@ -106,6 +106,7 @@ class BilibiliCrawler(AbstractCrawler):
                     page += 1
                     continue
 
+                utils.logger.info(f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, page: {page}")
                 video_id_list: List[str] = []
                 videos_res = await self.bili_client.search_video_by_keyword(
                     keyword=keyword,
@@ -126,7 +127,6 @@ class BilibiliCrawler(AbstractCrawler):
                     if video_item:
                         video_id_list.append(video_item.get("View").get("aid"))
                         await bilibili_store.update_bilibili_video(video_item)
-
                 page += 1
                 await self.batch_get_video_comments(video_id_list)
 

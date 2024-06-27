@@ -1,0 +1,16 @@
+query visionProfileUserList($pcursor: String, $ftype: Int) {
+  visionProfileUserList(pcursor: $pcursor, ftype: $ftype) {
+    result
+    fols {
+      user_name
+      headurl
+      user_text
+      isFollowing
+      user_id
+      __typename
+    }
+    hostName
+    pcursor
+    __typename
+  }
+}

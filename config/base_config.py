@@ -3,8 +3,10 @@ PLATFORM = "xhs"
 KEYWORDS = "python,golang"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
-# 具体值参见media_platform.xxx.field下的枚举值，展示只支持小红书
+# 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
 SORT_TYPE = "popularity_descending"
+# 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
+PUBLISH_TIME_TYPE = 0
 CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 
 # 是否开启 IP 代理
@@ -103,6 +105,13 @@ BILI_CREATOR_ID_LIST = [
     # ........................
 ]
 
+# 指定快手创作者ID列表
+KS_CREATOR_ID_LIST = [
+    "3x4sm73aye7jq7i",
+    # ........................
+]
+
+
 #词云相关
 #是否开启生成评论词云图
 ENABLE_GET_WORDCLOUD = False
@@ -118,5 +127,3 @@ STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 
 #中文字体文件路径
 FONT_PATH= "./docs/STZHONGS.TTF"
-
-

@@ -12,13 +12,12 @@ class SearchChannelType(Enum):
 class SearchSortType(Enum):
     """search sort type"""
     GENERAL = 0  # 综合排序
-    LATEST = 1  # 最新发布
-    MOST_LIKE = 2  # 最多点赞
-
+    MOST_LIKE = 1  # 最多点赞
+    LATEST = 2  # 最新发布
 
 class PublishTimeType(Enum):
     """publish time type"""
     UNLIMITED = 0  # 不限
     ONE_DAY = 1  # 一天内
-    ONE_WEEK = 2  # 一周内
-    SIX_MONTH = 3  # 半年内
+    ONE_WEEK = 7  # 一周内
+    SIX_MONTH = 180  # 半年内

@@ -65,11 +65,14 @@ class KuaishouCrawler(AbstractCrawler):
 
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
-                # Search for notes and retrieve their comment information.
+                # Search for videos and retrieve their comment information.
                 await self.search()
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_videos()
+            elif config.CRAWLER_TYPE == "creator":
+                # Get creator's information and their videos and comments
+                await self.get_creators_and_videos()
             else:
                 pass
 
@@ -89,7 +92,7 @@ class KuaishouCrawler(AbstractCrawler):
                     utils.logger.info(f"[KuaishouCrawler.search] Skip page: {page}")
                     page += 1
                     continue
-                
+                utils.logger.info(f"[KuaishouCrawler.search] search kuaishou keyword: {keyword}, page: {page}")
                 video_id_list: List[str] = []
                 videos_res = await self.ks_client.search_info_by_keyword(
                     keyword=keyword,
@@ -135,7 +138,7 @@ class KuaishouCrawler(AbstractCrawler):
                 utils.logger.error(f"[KuaishouCrawler.get_video_info_task] Get video detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"[KuaishouCrawler.get_video_info_task] have not fund note detail video_id:{video_id}, err: {ex}")
+                utils.logger.error(f"[KuaishouCrawler.get_video_info_task] have not fund video detail video_id:{video_id}, err: {ex}")
                 return None
 
     async def batch_get_video_comments(self, video_id_list: List[str]):
@@ -145,7 +148,7 @@ class KuaishouCrawler(AbstractCrawler):
         :return:
         """
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(f"[KuaishouCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            utils.logger.info(f"[KuaishouCrawler.batch_get_video_comments] Crawling comment mode is not enabled")
             return
 
         utils.logger.info(f"[KuaishouCrawler.batch_get_video_comments] video ids:{video_id_list}")
@@ -200,10 +203,10 @@ class KuaishouCrawler(AbstractCrawler):
         return playwright_proxy, httpx_proxy
 
     async def create_ks_client(self, httpx_proxy: Optional[str]) -> KuaiShouClient:
-        """Create xhs client"""
+        """Create ks client"""
         utils.logger.info("[KuaishouCrawler.create_ks_client] Begin create kuaishou API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
-        xhs_client_obj = KuaiShouClient(
+        ks_client_obj = KuaiShouClient(
             proxies=httpx_proxy,
             headers={
                 "User-Agent": self.user_agent,
@@ -215,7 +218,7 @@ class KuaishouCrawler(AbstractCrawler):
             playwright_page=self.context_page,
             cookie_dict=cookie_dict,
         )
-        return xhs_client_obj
+        return ks_client_obj
 
     async def launch_browser(
             self,
@@ -245,6 +248,39 @@ class KuaishouCrawler(AbstractCrawler):
                 user_agent=user_agent
             )
             return browser_context
+
+    async def get_creators_and_videos(self) -> None:
+        """Get creator's videos and retrieve their comment information."""
+        utils.logger.info("[KuaiShouCrawler.get_creators_and_videos] Begin get kuaishou creators")
+        for user_id in config.KS_CREATOR_ID_LIST:
+            # get creator detail info from web html content
+            createor_info: Dict = await self.ks_client.get_creator_info(user_id=user_id)
+            if createor_info:
+                await kuaishou_store.save_creator(user_id, creator=createor_info)
+
+            # Get all video information of the creator
+            all_video_list = await self.ks_client.get_all_videos_by_creator(
+                user_id = user_id,
+                crawl_interval = random.random(),
+                callback = self.fetch_creator_video_detail
+            )
+
+            video_ids = [video_item.get("photo", {}).get("id") for video_item in all_video_list]
+            await self.batch_get_video_comments(video_ids)
+
+    async def fetch_creator_video_detail(self, video_list: List[Dict]):
+        """
+        Concurrently obtain the specified post list and save the data
+        """
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list = [
+            self.get_video_info_task(post_item.get("photo", {}).get("id"), semaphore) for post_item in video_list
+        ]
+
+        video_details = await asyncio.gather(*task_list)
+        for video_detail in video_details:
+            if video_detail is not None:
+                await kuaishou_store.update_kuaishou_video(video_detail)
 
     async def close(self):
         """Close browser context"""
