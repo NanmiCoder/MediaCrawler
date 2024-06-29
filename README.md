@@ -126,6 +126,26 @@
 </div>
 
 
+## 运行报错常见问题Q&A
+> 遇到问题先自行搜索解决下，现在AI很火，用ChatGPT大多情况下能解决你的问题 [免费的ChatGPT](https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk)  
+
+➡️➡️➡️ [常见问题](docs/常见问题.md)
+
+dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手动过一下
+
+## 项目代码结构
+➡️➡️➡️ [项目代码结构说明](docs/项目代码结构.md)
+
+## 代理IP使用说明
+➡️➡️➡️ [代理IP使用说明](docs/代理使用.md)
+
+## 词云图相关操作说明
+➡️➡️➡️ [词云图相关说明](docs/关于词云图相关操作.md)
+
+## 手机号登录说明
+➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
+
+
 ## 打赏
 免费开源不易，如果项目帮到你了，可以给我打赏哦，您的支持就是我最大的动力！
 <div style="display: flex;justify-content: space-between;width: 100%">
@@ -137,23 +157,6 @@
 我新开的爬虫教程Github仓库 [CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial) ，感兴趣的朋友可以关注一下，持续更新，主打一个免费.
 
 
-## 运行报错常见问题Q&A
-> 遇到问题先自行搜索解决下，现在AI很火，用ChatGPT大多情况下能解决你的问题 [免费的ChatGPT](https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk)  
-
-➡️➡️➡️ [常见问题](docs/常见问题.md)
-
-抖音使用Playwright登录现在会出现滑块验证 + 短信验证，手动过一下
-
-
-## 项目代码结构
-➡️➡️➡️ [项目代码结构说明](docs/项目代码结构.md)
-
-## 手机号登录说明
-➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
-
-
-## 词云图相关操作说明
-➡️➡️➡️ [词云图相关说明](docs/关于词云图相关操作.md)
 
 ## 项目贡献者
 <!-- readme: contributors -start -->
