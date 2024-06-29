@@ -15,9 +15,6 @@
 
 
 ## 功能列表
-> 下面不支持的项目，相关的代码架构已经搭建好，只需要实现对应的方法即可，欢迎大家提交PR
-
-
 | 平台  | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
 |-----|-------|----------|-----|--------|-------|-------|-------|
 | 小红书 | ✅     | ✅        | ✅   | ✅      | ✅     | ✅     | ✅    |
@@ -35,7 +32,7 @@
    cd MediaCrawler
    
    # 创建虚拟环境
-   # 注意python 版本需要3.7 - 3.9 
+   # 注意python 版本需要3.7 - 3.9 高于该版本可能会出现一些依赖包兼容问题
    python -m venv venv
    
    # macos & linux 激活虚拟环境
@@ -49,7 +46,7 @@
 ### 安装依赖库
 
    ```shell
-   pip3 install -r requirements.txt
+   pip install -r requirements.txt
    ```
 
 ### 安装 playwright浏览器驱动
@@ -84,7 +81,7 @@
 
 
 ## 开发者服务
-- 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题
+- 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题 (每天 1 快钱订阅我的知识服务)
   <p>
   <img alt="xingqiu" src="https://nm.zizhi1.com/static/img/8e1312d1f52f2e0ff436ea7196b4e27b.15555424244122T1.webp" style="width: auto;height: 400px" >
   </p>
@@ -93,8 +90,7 @@
   - [【独创】使用Playwright获取某音a_bogus参数流程（包含加密参数分析）](https://articles.zsxq.com/id_u89al50jk9x0.html)
   - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
   - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
-  - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html)
-  - 每天 1 快钱订阅我的知识服务
+  - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
   
   
   
@@ -157,8 +153,8 @@ dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手�
 我新开的爬虫教程Github仓库 [CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial) ，感兴趣的朋友可以关注一下，持续更新，主打一个免费.
 
 
-
 ## 项目贡献者
+> 感谢你们的贡献，让项目变得更好！（贡献比较多的可以加我wx，免费拉你进我的知识星球，后期还有一些其他福利。）
 <!-- readme: contributors -start -->
 <table>
 	<tbody>
@@ -364,7 +360,6 @@ dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手�
 	<tbody>
 </table>
 <!-- readme: contributors -end -->
->>>>>>> 86a88f72602fe3f692acc628427888487554b716
 
 ## star 趋势图
 - 如果该项目对你有帮助，star一下 ❤️❤️❤️
