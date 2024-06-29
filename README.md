@@ -116,12 +116,13 @@
 成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
 
 
-
 ## MediaCrawler爬虫项目交流群：
-> 7天有效期，自动更新, 如果人满了可以加作者wx拉进群: yzglan，备注来自github.
+> 扫描下方我的个人微信，备注：github，拉你进MediaCrawler项目交流群(请一定备注：github，会有wx小助手自动拉群)
+> 
+> 如果图片展示不出来，可以直接添加我的微信号：yzglan
 
 <div style="max-width: 200px">  
-<p><img alt="11群二维码" src="static/images/11群二维码.JPG" style="width: 200px;height: 100%" ></p>
+<p><img alt="relakkes_wechat" src="static/images/relakkes_weichat.JPG" style="width: 200px;height: 100%" ></p>
 </div>
 
 
