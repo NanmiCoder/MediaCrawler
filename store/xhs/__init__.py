@@ -8,6 +8,7 @@ import config
 
 from . import xhs_store_impl
 from .xhs_store_impl import *
+from .xhs_store_image import *
 
 
 class XhsStoreFactory:
@@ -25,6 +26,26 @@ class XhsStoreFactory:
         return store_class()
 
 
+def get_video_url_arr(note_item: Dict) -> List:
+    if note_item.get('type') != 'video':
+        return []
+
+    videoArr = []
+    utils.logger.info(f"[store.xhs.get_video_url_arr] xhs note: {note_item}")
+    originVideoKey = note_item.get('video').get('consumer').get('origin_video_key')
+    if originVideoKey == '':
+        originVideoKey = note_item.get('video').get('consumer').get('originVideoKey')
+    # 降级有水印
+    if originVideoKey == '':
+        videos = note_item.get('video').get('media').get('stream').get('h264')
+        if type(videos).__name__ == 'list':
+            videoArr = [v.get('master_url') for v in videos]
+    else:
+        videoArr = [f"http://sns-video-bd.xhscdn.com/{originVideoKey}"]
+
+    return videoArr
+
+
 async def update_xhs_note(note_item: Dict):
     note_id = note_item.get("note_id")
     user_info = note_item.get("user", {})
@@ -32,11 +53,7 @@ async def update_xhs_note(note_item: Dict):
     image_list: List[Dict] = note_item.get("image_list", [])
     tag_list: List[Dict] = note_item.get("tag_list", [])
 
-    video_url = ''
-    if note_item.get('type') == 'video':
-        videos = note_item.get('video').get('media').get('stream').get('h264')
-        if type(videos).__name__ == 'list':
-            video_url = ','.join([v.get('master_url') for v in videos])
+    video_url = ','.join(get_video_url_arr(note_item))
 
     local_db_item = {
         "note_id": note_item.get("note_id"),
@@ -123,3 +140,8 @@ async def save_creator(user_id: str, creator: Dict):
     }
     utils.logger.info(f"[store.xhs.save_creator] creator:{local_db_item}")
     await XhsStoreFactory.create_store().store_creator(local_db_item)
+
+
+async def update_xhs_note_image(note_id, pic_content, extension_file_name):
+    await XiaoHongShuImage().store_image(
+        {"notice_id": note_id, "pic_content": pic_content, "extension_file_name": extension_file_name})
