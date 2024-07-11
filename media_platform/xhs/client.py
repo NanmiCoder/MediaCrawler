@@ -198,7 +198,12 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
 
         """
-        data = {"source_note_id": note_id}
+        data = {
+            "source_note_id": note_id,
+            "image_formats": ["jpg", "webp", "avif"],
+            "extra": {"need_body_topic": 1},
+            "xsec_source": "pc_feed",
+        }
         uri = "/api/sns/web/v1/feed"
         res = await self.post(uri, data)
         if res and res.get("items"):

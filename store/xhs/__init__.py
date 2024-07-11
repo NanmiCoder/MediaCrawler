@@ -32,6 +32,10 @@ async def update_xhs_note(note_item: Dict):
     image_list: List[Dict] = note_item.get("image_list", [])
     tag_list: List[Dict] = note_item.get("tag_list", [])
 
+    for img in image_list:
+        if img.get('url_default') != '':
+            img.update({'url': img.get('url_default')})
+
     video_url = ''
     if note_item.get('type') == 'video':
         videos = note_item.get('video').get('media').get('stream').get('h264')
