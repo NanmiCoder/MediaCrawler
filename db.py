@@ -41,7 +41,7 @@ async def init_mediacrawler_db():
     Returns:
 
     """
-    db_conn_params = parse_mysql_url(config.RELATION_DB_URL)
+    db_conn_params = parse_mysql_url(config.RELATION_DB_URL)  # mysql数据库连接方式
     pool = await aiomysql.create_pool(
         autocommit=True,
         **db_conn_params
@@ -51,6 +51,9 @@ async def init_mediacrawler_db():
     # 将连接池对象和封装的CRUD sql接口对象放到上下文变量中
     db_conn_pool_var.set(pool)
     media_crawler_db_var.set(async_db_obj)
+
+
+
 
 
 async def init_db():
@@ -70,7 +73,7 @@ async def close():
     Returns:
 
     """
-    utils.logger.info("[close] close mediacrawler db pool")
+    utils.logger.info("[close] 关闭mediacrawler数据库池")
     db_pool: aiomysql.Pool = db_conn_pool_var.get()
     if db_pool is not None:
         db_pool.close()
@@ -85,7 +88,7 @@ async def init_table_schema():
     utils.logger.info("[init_table_schema] begin init mysql table schema ...")
     await init_mediacrawler_db()
     async_db_obj: AsyncMysqlDB = media_crawler_db_var.get()
-    async with aiofiles.open("schema/tables.sql", mode="r") as f:
+    async with aiofiles.open("schema/tables.sql", mode="r", encoding='utf-8') as f:
         schema_sql = await f.read()
         await async_db_obj.execute(schema_sql)
         utils.logger.info("[init_table_schema] mediacrawler table schema init successful")

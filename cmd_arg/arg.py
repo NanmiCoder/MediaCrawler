@@ -29,6 +29,7 @@ async def parse_cmd():
     args = parser.parse_args()
 
     # override config
+    # 覆盖配置
     config.PLATFORM = args.platform
     config.LOGIN_TYPE = args.lt
     config.CRAWLER_TYPE = args.type

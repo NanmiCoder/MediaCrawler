@@ -30,63 +30,74 @@ class XiaoHongShuCrawler(AbstractCrawler):
         self.user_agent = utils.get_user_agent()
 
     async def start(self) -> None:
-        playwright_proxy_format, httpx_proxy_format = None, None
-        if config.ENABLE_IP_PROXY:
-            ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
-            ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
+        # while True:  # 添加一个无限循环 让程序一直运行 (====>>不启用<<====)
+            playwright_proxy_format, httpx_proxy_format = None, None
+            if config.ENABLE_IP_PROXY:
+                ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
+                ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
+                playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
 
-        async with async_playwright() as playwright:
-            # Launch a browser context.
-            chromium = playwright.chromium
-            self.browser_context = await self.launch_browser(
-                chromium,
-                None,
-                self.user_agent,
-                headless=config.HEADLESS
-            )
-            # stealth.min.js is a js script to prevent the website from detecting the crawler.
-            await self.browser_context.add_init_script(path="libs/stealth.min.js")
-            # add a cookie attribute webId to avoid the appearance of a sliding captcha on the webpage
-            await self.browser_context.add_cookies([{
-                'name': "webId",
-                'value': "xxx123",  # any value
-                'domain': ".xiaohongshu.com",
-                'path': "/"
-            }])
-            self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
-
-            # Create a client to interact with the xiaohongshu website.
-            self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
-            if not await self.xhs_client.pong():
-                login_obj = XiaoHongShuLogin(
-                    login_type=config.LOGIN_TYPE,
-                    login_phone="",  # input your phone number
-                    browser_context=self.browser_context,
-                    context_page=self.context_page,
-                    cookie_str=config.COOKIES
+            async with async_playwright() as playwright:
+                # Launch a browser context.
+                # 启动浏览器上下文。
+                chromium = playwright.chromium
+                self.browser_context = await self.launch_browser(
+                    chromium,
+                    None,
+                    self.user_agent,
+                    headless=config.HEADLESS
                 )
-                await login_obj.begin()
-                await self.xhs_client.update_cookies(browser_context=self.browser_context)
+                # stealth.min.js is a js script to prevent the website from detecting the crawler.
+                # Stealth.min.js是一个js脚本，用来防止网站检测到爬虫。
+                await self.browser_context.add_init_script(path="libs/stealth.min.js")
+                # add a cookie attribute webId to avoid the appearance of a sliding captcha on the webpage
+                # 添加一个cookie属性webId，以避免在网页上出现滑动验证码
+                await self.browser_context.add_cookies([{
+                    'name': "webId",
+                    'value': "xxx123",  # any value
+                    'domain': ".xiaohongshu.com",
+                    'path': "/"
+                }])
+                self.context_page = await self.browser_context.new_page()
+                await self.context_page.goto(self.index_url)
 
-            crawler_type_var.set(config.CRAWLER_TYPE)
-            if config.CRAWLER_TYPE == "search":
-                # Search for notes and retrieve their comment information.
-                await self.search()
-            elif config.CRAWLER_TYPE == "detail":
-                # Get the information and comments of the specified post
-                await self.get_specified_notes()
-            elif config.CRAWLER_TYPE == "creator":
-                # Get creator's information and their notes and comments
-                await self.get_creators_and_notes()
-            else:
-                pass
+                # Create a client to interact with the xiaohongshu website.
+                # 创建一个客户端与小红书网站进行交互。
+                self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
+                if not await self.xhs_client.pong():
+                    login_obj = XiaoHongShuLogin(
+                        login_type=config.LOGIN_TYPE,
+                        login_phone="",  # input your phone number
+                        browser_context=self.browser_context,
+                        context_page=self.context_page,
+                        cookie_str=config.COOKIES
+                    )
+                    await login_obj.begin()
+                    await self.xhs_client.update_cookies(browser_context=self.browser_context)
 
-            utils.logger.info("[XiaoHongShuCrawler.start] Xhs Crawler finished ...")
+                crawler_type_var.set(config.CRAWLER_TYPE)
+                if config.CRAWLER_TYPE == "search":
+                    # Search for notes and retrieve their comment information.
+                    # 搜索笔记并检索它们的评论信息。
+                    await self.search()
+                elif config.CRAWLER_TYPE == "detail":
+                    # Get the information and comments of the specified post
+                    # 获取指定帖子的信息和评论
+                    await self.get_specified_notes()
+                elif config.CRAWLER_TYPE == "creator":
+                    # Get creator's information and their notes and comments
+                    # 获取创作者的信息和他们的笔记和评论
+                    await self.get_creators_and_notes()
+                else:
+                    pass
+
+                utils.logger.info("[XiaoHongShuCrawler.start] 小红书爬取完成")
+
+                # await asyncio.sleep(60)  # 等待一段时间后重新开始 (====>>不启用<<====)
 
     async def search(self) -> None:
         """Search for notes and retrieve their comment information."""
+        # 搜索笔记并检索它们的评论信息。
         utils.logger.info("[XiaoHongShuCrawler.search] Begin search xiaohongshu keywords")
         xhs_limit_count = 20  # xhs limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
@@ -130,14 +141,17 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def get_creators_and_notes(self) -> None:
         """Get creator's notes and retrieve their comment information."""
+        # 获取创建者的注释并检索他们的评论信息。
         utils.logger.info("[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators")
         for user_id in config.XHS_CREATOR_ID_LIST:
             # get creator detail info from web html content
+            # 从web HTML内容获取创建者详细信息
             createor_info: Dict = await self.xhs_client.get_creator_info(user_id=user_id)
             if createor_info:
                 await xhs_store.save_creator(user_id, creator=createor_info)
 
             # Get all note information of the creator
+            # 获取创建者的所有注释信息
             all_notes_list = await self.xhs_client.get_all_notes_by_creator(
                 user_id=user_id,
                 crawl_interval=random.random(),
@@ -151,6 +165,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         """
         Concurrently obtain the specified post list and save the data
         """
+        # 并发获取指定的岗位列表并保存数据
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_note_detail(post_item.get("note_id"), semaphore) for post_item in note_list
@@ -163,6 +178,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def get_specified_notes(self):
         """Get the information and comments of the specified post"""
+        # 获取指定帖子的信息和评论
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_note_detail(note_id=note_id, semaphore=semaphore) for note_id in config.XHS_SPECIFIED_ID_LIST
@@ -175,6 +191,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def get_note_detail(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """Get note detail"""
+        # 获取笔记细节
         async with semaphore:
             try:
                 return await self.xhs_client.get_note_by_id(note_id)
@@ -188,6 +205,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def batch_get_note_comments(self, note_list: List[str]):
         """Batch get note comments"""
+        # 批量获取注释
         if not config.ENABLE_GET_COMMENTS:
             utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
             return
@@ -203,6 +221,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def get_comments(self, note_id: str, semaphore: asyncio.Semaphore):
         """Get note comments with keyword filtering and quantity limitation"""
+        # 通过关键字过滤和数量限制获取注释
         async with semaphore:
             utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
             await self.xhs_client.get_note_all_comments(
@@ -214,6 +233,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
         """format proxy info for playwright and httpx"""
+        # 为剧作家和HTTPX格式化代理信息
         playwright_proxy = {
             "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
             "username": ip_proxy_info.user,
@@ -226,6 +246,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XiaoHongShuClient:
         """Create xhs client"""
+        # 创建xhs客户端
         utils.logger.info("[XiaoHongShuCrawler.create_xhs_client] Begin create xiaohongshu API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         xhs_client_obj = XiaoHongShuClient(
@@ -250,10 +271,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
             headless: bool = True
     ) -> BrowserContext:
         """Launch browser and create browser context"""
+        # 启动浏览器并创建浏览器上下文
         utils.logger.info("[XiaoHongShuCrawler.launch_browser] Begin create browser context ...")
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
+            # 第14期
             # we will save login state to avoid login every time
+            # 我们会保存登录状态，避免每次登录
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
                                          config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
@@ -275,5 +299,6 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def close(self):
         """Close browser context"""
+        # 关闭浏览器上下文
         await self.browser_context.close()
         utils.logger.info("[XiaoHongShuCrawler.close] Browser context closed ...")

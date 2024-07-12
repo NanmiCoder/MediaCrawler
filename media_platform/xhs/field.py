@@ -34,27 +34,37 @@ class NoteType(Enum):
 
 class SearchSortType(Enum):
     """search sort type"""
+    # 搜索排序类型
+
     # default
+    # 默认
     GENERAL = "general"
     # most popular
+    # 最受欢迎
     MOST_POPULAR = "popularity_descending"
     # Latest
+    # 最新
     LATEST = "time_descending"
 
 
 class SearchNoteType(Enum):
-    """search note type
-    """
+    """search note type"""
+    # 搜索笔记类型
+
     # default
+    # 默认
     ALL = 0
     # only video
+    # 只有视频
     VIDEO = 1
     # only image
+    # 只有图片
     IMAGE = 2
 
 
 class Note(NamedTuple):
     """note tuple"""
+    # 注意元组
     note_id: str
     title: str
     desc: str

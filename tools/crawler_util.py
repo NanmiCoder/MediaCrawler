@@ -18,6 +18,7 @@ from . import utils
 
 async def find_login_qrcode(page: Page, selector: str) -> str:
     """find login qrcode image from target selector"""
+    # 从目标选择器中查找登录qrcode映像
     try:
         elements = await page.wait_for_selector(
             selector=selector,
@@ -41,12 +42,14 @@ async def find_login_qrcode(page: Page, selector: str) -> str:
 
 def show_qrcode(qr_code) -> None:  # type: ignore
     """parse base64 encode qrcode image and show it"""
+    # 解析base64编码qrcode图像并显示它
     if "," in qr_code:
         qr_code = qr_code.split(",")[1]
     qr_code = base64.b64decode(qr_code)
     image = Image.open(BytesIO(qr_code))
 
     # Add a square border around the QR code and display it within the border to improve scanning accuracy.
+    # 在二维码周围添加一个方形边框，并将其显示在边框内以提高扫描精度。
     width, height = image.size
     new_image = Image.new('RGB', (width + 20, height + 20), color=(255, 255, 255))
     new_image.paste(image, (10, 10))

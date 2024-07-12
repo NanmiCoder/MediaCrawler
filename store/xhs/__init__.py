@@ -5,6 +5,11 @@
 from typing import List
 
 import config
+import aiohttp
+import os
+import aiohttp
+import asyncio
+import logging
 
 from . import xhs_store_impl
 from .xhs_store_impl import *
@@ -14,7 +19,7 @@ class XhsStoreFactory:
     STORES = {
         "csv": XhsCsvStoreImplement,
         "db": XhsDbStoreImplement,
-        "json": XhsJsonStoreImplement
+        "json": XhsJsonStoreImplement,
     }
 
     @staticmethod
@@ -25,9 +30,61 @@ class XhsStoreFactory:
         return store_class()
 
 
+logging.basicConfig(level=logging.INFO)
+async def download_image(url, save_path, retries=3):
+    for attempt in range(retries):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        async with aiofiles.open(save_path, 'wb') as f:
+                            while True:
+                                chunk = await response.content.read(1024)
+                                if not chunk:
+                                    break
+                                await f.write(chunk)
+                        logging.info(f"图片下载成功: {save_path}")
+                        break  # 如果下载成功，跳出重试循环
+                    else:
+                        raise Exception(f"下载图片失败: {response.status}")
+        except (aiohttp.ClientError, aiohttp.client_exceptions.ClientPayloadError) as e:
+            if attempt == retries - 1:
+                logging.error(f"下载图片失败: {e}")
+                raise e  # 如果已经是最后一次重试，抛出异常
+            await asyncio.sleep(2 ** attempt)  # 指数退避策略
+            logging.warning(f"重试下载图片 ({attempt + 1}/{retries}): {url}")
+        except Exception as e:
+            logging.error(f"下载图片失败: {e}")
+            raise e
+
+async def download_video(url, save_path, retries=3):
+    for attempt in range(retries):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        # 确保目录存在
+                        directory = os.path.dirname(save_path)
+                        if not os.path.exists(directory):
+                            os.makedirs(directory)
+                        async with aiofiles.open(save_path, 'wb') as f:
+                            while True:
+                                chunk = await response.content.read(1024)
+                                if not chunk:
+                                    break
+                                await f.write(chunk)
+                    else:
+                        raise Exception(f"下载视频失败: {response.status}")
+            break  # 如果下载成功，跳出重试循环
+        except aiohttp.client_exceptions.ClientPayloadError as e:
+            if attempt == retries - 1:
+                raise e  # 如果已经是最后一次重试，抛出异常
+            await asyncio.sleep(2 ** attempt)  # 指数退避策略
+
 async def update_xhs_note(note_item: Dict):
     note_id = note_item.get("note_id")
     user_info = note_item.get("user", {})
+    user_id = user_info.get("user_id")
     interact_info = note_item.get("interact_info", {})
     image_list: List[Dict] = note_item.get("image_list", [])
     tag_list: List[Dict] = note_item.get("tag_list", [])
@@ -60,6 +117,27 @@ async def update_xhs_note(note_item: Dict):
         "note_url": f"https://www.xiaohongshu.com/explore/{note_id}"
     }
     utils.logger.info(f"[store.xhs.update_xhs_note] xhs note: {local_db_item}")
+
+    # 下载视频
+    if video_url:
+        video_urls = video_url.split(',')
+        for idx, url in enumerate(video_urls):
+            save_path = f"data/xhs/videos/{user_id}/{note_id}_{idx}.mp4"
+            await download_video(url, save_path)
+            utils.logger.info(f"视屏下载到的地址: {save_path}")
+
+    # 下载图片
+    if image_list:
+        note_images_dir = f"data/xhs/images/{user_id}/{note_id}"
+        if not os.path.exists(note_images_dir):
+            os.makedirs(note_images_dir)
+        for idx, img in enumerate(image_list):
+            img_url = img.get('url', '')
+            if img_url:
+                save_path = f"{note_images_dir}/{idx}.jpg"
+                await download_image(img_url, save_path)
+                utils.logger.info(f"图片下载到的地址: {save_path}")
+
     await XhsStoreFactory.create_store().store_content(local_db_item)
 
 

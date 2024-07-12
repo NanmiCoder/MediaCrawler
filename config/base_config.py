@@ -1,3 +1,8 @@
+import configparser
+import os
+
+
+
 # 基础配置
 PLATFORM = "xhs"
 KEYWORDS = "python,golang"
@@ -7,7 +12,7 @@ COOKIES = ""
 SORT_TYPE = "popularity_descending"
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
 PUBLISH_TIME_TYPE = 0
-CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
+CRAWLER_TYPE = "detail"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 
 # 是否开启 IP 代理
 ENABLE_IP_PROXY = False
@@ -25,10 +30,10 @@ IP_PROXY_PROVIDER_NAME = "kuaidaili"
 HEADLESS = False
 
 # 是否保存登录状态
-SAVE_LOGIN_STATE = True
+SAVE_LOGIN_STATE = False
 
 # 数据保存类型选项配置,支持三种类型：csv、db、json
-SAVE_DATA_OPTION = "json"  # csv or db or json
+SAVE_DATA_OPTION = "db"  # csv or db or json
 
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
@@ -40,74 +45,91 @@ START_PAGE = 1
 CRAWLER_MAX_NOTES_COUNT = 20
 
 # 并发爬虫数量控制
-MAX_CONCURRENCY_NUM = 4
+MAX_CONCURRENCY_NUM = 3
 
-# 是否开启爬图片模式, 默认不开启爬图片
-ENABLE_GET_IMAGES = False
+# 是否开启爬图片模式, 默认不开启爬图片(false)
+ENABLE_GET_IMAGES = True
 
-# 是否开启爬评论模式, 默认不开启爬评论
-ENABLE_GET_COMMENTS = False
+# 是否开启爬评论模式, 默认不开启爬评论(false)
+ENABLE_GET_COMMENTS = True
 
 # 是否开启爬二级评论模式, 默认不开启爬二级评论, 目前仅支持 xhs, bilibili
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
-ENABLE_GET_SUB_COMMENTS = False
+ENABLE_GET_SUB_COMMENTS = True
 
 # 指定小红书需要爬虫的笔记ID列表
 XHS_SPECIFIED_ID_LIST = [
-    "6422c2750000000027000d88",
-    "64ca1b73000000000b028dd2",
-    "630d5b85000000001203ab41",
+    "667cd2d0000000001e011049"
     # ........................
 ]
 
 # 指定抖音需要爬取的ID列表
 DY_SPECIFIED_ID_LIST = [
-    "7280854932641664319",
-    "7202432992642387233"
+    # "7280854932641664319",
+    # "7202432992642387233"
     # ........................
 ]
 
 # 指定快手平台需要爬取的ID列表
 KS_SPECIFIED_ID_LIST = [
-    "3xf8enb8dbj6uig",
-    "3x6zz972bchmvqe"
+    # "3xf8enb8dbj6uig",
+    # "3x6zz972bchmvqe"
 ]
 
 # 指定B站平台需要爬取的视频bvid列表
 BILI_SPECIFIED_ID_LIST = [
-    "BV1d54y1g7db",
-    "BV1Sz4y1U77N",
-    "BV14Q4y1n7jz",
+    # "BV1d54y1g7db",
+    # "BV1Sz4y1U77N",
+    # "BV14Q4y1n7jz",
     # ........................
 ]
 
 # 指定微博平台需要爬取的帖子列表
 WEIBO_SPECIFIED_ID_LIST = [
-    "4982041758140155",
+    # "4982041758140155",
     # ........................
 ]
 
+
+# 配置文件的相对路径
+config_path = os.path.expanduser('E:/suanfa/config.ini')
+
+# 确保配置文件存在，如果不存在则创建一个默认的
+if not os.path.exists(config_path):
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    with open(config_path, 'w') as f:
+        f.write('[XHS]\ncreator_id_list = 54e5576b2e1d93328bcffb56, 61764ba60000000002023be2')
+        print("没有发现配置文件，创建了一个默认的配置文件")
+
+# 读取配置文件
+config = configparser.ConfigParser()
+config.read(config_path)
+
+# 使用配置文件中的参数
+XHS_CREATOR_ID_LIST = config['XHS']['creator_id_list'].split(', ')
+
+print("小红书创作者ID列表:" + ','.join(XHS_CREATOR_ID_LIST))
+
 # 指定小红书创作者ID列表
-XHS_CREATOR_ID_LIST = [
-    "63e36c9a000000002703502b",
-    # ........................
-]
+# XHS_CREATOR_ID_LIST = [
+#     "659d75750000000022005af7"
+# ]
 
 # 指定Dy创作者ID列表(sec_id)
 DY_CREATOR_ID_LIST = [
-    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]
 
 # 指定bili创作者ID列表(sec_id)
 BILI_CREATOR_ID_LIST = [
-    "20813884",
+    # "20813884",
     # ........................
 ]
 
 # 指定快手创作者ID列表
 KS_CREATOR_ID_LIST = [
-    "3x4sm73aye7jq7i",
+    # "3x4sm73aye7jq7i",
     # ........................
 ]
 

@@ -35,6 +35,10 @@ class XiaoHongShuLogin(AbstractLogin):
             retry decorator will retry 20 times if the return value is False, and the retry interval is 1 second
             if max retry times reached, raise RetryError
         """
+        # 检查当前登录状态是否成功，返回True，否则返回False
+        # 如果返回值为False, retry
+        # decorator将重试20次，重试间隔为1秒
+        # 如果达到最大重试次数，则引发RetryError
 
         if "请通过验证" in await self.context_page.content():
             utils.logger.info("[XiaoHongShuLogin.check_login_state] 登录过程中出现验证码，请手动验证")
@@ -48,6 +52,7 @@ class XiaoHongShuLogin(AbstractLogin):
 
     async def begin(self):
         """Start login xiaohongshu"""
+        # 开始登录小红书
         utils.logger.info("[XiaoHongShuLogin.begin] Begin login xiaohongshu ...")
         if config.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
@@ -60,6 +65,7 @@ class XiaoHongShuLogin(AbstractLogin):
 
     async def login_by_mobile(self):
         """Login xiaohongshu by mobile"""
+        # 手机登录小红书
         utils.logger.info("[XiaoHongShuLogin.login_by_mobile] Begin login xiaohongshu by mobile ...")
         await asyncio.sleep(1)
         try:
@@ -128,10 +134,12 @@ class XiaoHongShuLogin(AbstractLogin):
 
     async def login_by_qrcode(self):
         """login xiaohongshu website and keep webdriver login state"""
+        # 登录小红书网站并保持webdriver登录状态
         utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] Begin login xiaohongshu by qrcode ...")
         # login_selector = "div.login-container > div.left > div.qrcode > img"
         qrcode_img_selector = "xpath=//img[@class='qrcode-img']"
         # find login qrcode
+        # 找到登录qrcode
         base64_qrcode_img = await utils.find_login_qrcode(
             self.context_page,
             selector=qrcode_img_selector
@@ -139,6 +147,7 @@ class XiaoHongShuLogin(AbstractLogin):
         if not base64_qrcode_img:
             utils.logger.info("[XiaoHongShuLogin.login_by_qrcode] login failed , have not found qrcode please check ....")
             # if this website does not automatically popup login dialog box, we will manual click login button
+            # 如果本网站没有自动弹出登录对话框，我们将手动点击登录按钮
             await asyncio.sleep(0.5)
             login_button_ele = self.context_page.locator("xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button")
             await login_button_ele.click()
@@ -150,6 +159,7 @@ class XiaoHongShuLogin(AbstractLogin):
                 sys.exit()
 
         # get not logged session
+        # 获取未登录会话
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
         no_logged_in_session = cookie_dict.get("web_session")
@@ -158,6 +168,11 @@ class XiaoHongShuLogin(AbstractLogin):
         # fix issue #12
         # we need to use partial function to call show_qrcode function and run in executor
         # then current asyncio event loop will not be blocked
+        # 显示登录qr码
+        # 修复问题12
+        # 我们需要使用partial函数来调用show_qrcode函数并在executor中运行
+        # 那么当前asyncio事件循环将不会被阻塞
+
         partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
         asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
 
@@ -174,6 +189,7 @@ class XiaoHongShuLogin(AbstractLogin):
 
     async def login_by_cookies(self):
         """login xiaohongshu website by cookies"""
+        # 通过cookies登录小红书网站
         utils.logger.info("[XiaoHongShuLogin.login_by_cookies] Begin login xiaohongshu by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
             if key != "web_session":  # only set web_session cookie attr

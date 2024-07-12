@@ -9,6 +9,7 @@ def sign(a1="", b1="", x_s="", x_t=""):
     """
     takes in a URI (uniform resource identifier), an optional data dictionary, and an optional ctime parameter. It returns a dictionary containing two keys: "x-s" and "x-t".
     """
+    # 接受一个URI(统一资源标识符)、一个可选的数据字典和一个可选的ctime参数。它返回一个包含两个键的字典:“x - s”和“x - t”。
     common = {
         "s0": 5,  # getPlatformCode
         "s1": "",
@@ -227,6 +228,7 @@ def encodeUtf8(e):
 
 def base36encode(number, alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
     """Converts an integer to a base36 string."""
+    # 将整数转换为base36字符串。
     if not isinstance(number, int):
         raise TypeError('number must be an integer')
 

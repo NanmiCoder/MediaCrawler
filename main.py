@@ -28,6 +28,7 @@ class CrawlerFactory:
             raise ValueError("Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
         return crawler_class()
 
+
 async def main():
     # parse cmd
     await cmd_arg.parse_cmd()
@@ -38,14 +39,14 @@ async def main():
 
     crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
     await crawler.start()
-    
+
     if config.SAVE_DATA_OPTION == "db":
         await db.close()
 
 
 if __name__ == '__main__':
     try:
-        # asyncio.run(main())
-        asyncio.get_event_loop().run_until_complete(main())
+        asyncio.run(main())
+        # asyncio.get_event_loop().run_until_complete(main())
     except KeyboardInterrupt:
         sys.exit()

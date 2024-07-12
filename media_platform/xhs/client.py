@@ -1,6 +1,8 @@
 import asyncio
 import json
 import re
+import logging
+import asyncio
 from typing import Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
@@ -66,6 +68,37 @@ class XiaoHongShuClient(AbstractApiClient):
         self.headers.update(headers)
         return self.headers
 
+    # async def request(self, method, url, **kwargs) -> Union[str, Any]:
+    #     """
+    #     封装httpx的公共请求方法，对请求响应做一些处理
+    #     Args:
+    #         method: 请求方法
+    #         url: 请求的URL
+    #         **kwargs: 其他请求参数，例如请求头、请求体等
+    #
+    #     Returns:
+    #
+    #     """
+    #     # return response.text
+    #     return_response = kwargs.pop('return_response', False)
+    #
+    #     async with httpx.AsyncClient(proxies=self.proxies) as client:
+    #         response = await client.request(
+    #             method, url, timeout=self.timeout,
+    #             **kwargs
+    #         )
+    #
+    #     if return_response:
+    #         return response.text
+    #
+    #     data: Dict = response.json()
+    #     if data["success"]:
+    #         return data.get("data", data.get("success", {}))
+    #     elif data["code"] == self.IP_ERROR_CODE:
+    #         raise IPBlockError(self.IP_ERROR_STR)
+    #     else:
+    #         raise DataFetchError(data.get("msg", None))
+
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
         """
         封装httpx的公共请求方法，对请求响应做一些处理
@@ -77,25 +110,45 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
 
         """
-        # return response.text
         return_response = kwargs.pop('return_response', False)
+        retries = 3
+        delay = 1
 
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
-            response = await client.request(
-                method, url, timeout=self.timeout,
-                **kwargs
-            )
+        for attempt in range(retries):
+            try:
+                # 使用httpx的AsyncClient进行异步请求，设置代理和超时时间
+                async with httpx.AsyncClient(proxies=self.proxies) as client:
+                    response = await client.request(
+                        method, url, timeout=self.timeout,
+                        **kwargs
+                    )
 
-        if return_response:
-            return response.text
 
-        data: Dict = response.json()
-        if data["success"]:
-            return data.get("data", data.get("success", {}))
-        elif data["code"] == self.IP_ERROR_CODE:
-            raise IPBlockError(self.IP_ERROR_STR)
-        else:
-            raise DataFetchError(data.get("msg", None))
+                # 如果需要返回响应文本，则直接返回
+                if return_response:
+                    return response.text
+                # 解析响应数据为JSON格式
+                data: Dict = response.json()
+                # 根据响应数据的成功状态进行处理
+                if data["success"]:
+                    return data.get("data", data.get("success", {}))
+                elif data["code"] == self.IP_ERROR_CODE:
+                    raise IPBlockError(self.IP_ERROR_STR)
+                else:
+                    raise DataFetchError(data.get("msg", None))
+            except (httpx.TimeoutException, httpx.NetworkError) as e:
+                # 记录请求失败日志，并进行指数退避重试
+                logging.error(f"Request failed: {e}. Retrying in {delay} seconds...")
+                if attempt < retries - 1:
+                    await asyncio.sleep(delay)
+                    delay *= 2  # Exponential backoff
+                else:
+                    raise
+            except Exception as e:
+                # 记录意外错误日志并抛出异常
+                logging.error(f"Unexpected error: {e}")
+                raise
+
 
     async def get(self, uri: str, params=None) -> Dict:
         """

@@ -1,5 +1,6 @@
 -- ----------------------------
 -- Table structure for bilibili_video
+-- bilibili_video的表结构
 -- ----------------------------
 DROP TABLE IF EXISTS `bilibili_video`;
 CREATE TABLE `bilibili_video` (
@@ -27,6 +28,7 @@ CREATE TABLE `bilibili_video` (
 
 -- ----------------------------
 -- Table structure for bilibili_video_comment
+-- bilibili_video_comment的表结构
 -- ----------------------------
 DROP TABLE IF EXISTS `bilibili_video_comment`;
 CREATE TABLE `bilibili_video_comment` (
@@ -48,6 +50,7 @@ CREATE TABLE `bilibili_video_comment` (
 
 -- ----------------------------
 -- Table structure for douyin_aweme
+-- douyin_aweme的表结构
 -- ----------------------------
 DROP TABLE IF EXISTS `douyin_aweme`;
 CREATE TABLE `douyin_aweme` (
@@ -79,6 +82,7 @@ CREATE TABLE `douyin_aweme` (
 
 -- ----------------------------
 -- Table structure for douyin_aweme_comment
+-- douyin_aweme_comment的表结构
 -- ----------------------------
 DROP TABLE IF EXISTS `douyin_aweme_comment`;
 CREATE TABLE `douyin_aweme_comment` (
