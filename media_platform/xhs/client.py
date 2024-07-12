@@ -129,7 +129,7 @@ class XiaoHongShuClient(AbstractApiClient):
         return await self.request(method="POST", url=f"{self._host}{uri}",
                                   data=json_str, headers=headers)
 
-    async def get_note_media(self, url: str) -> bytes | None:
+    async def get_note_media(self, url: str) -> Union[bytes, None]:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
             response = await client.request("GET", url, timeout=self.timeout)
             if not response.reason_phrase == "OK":
