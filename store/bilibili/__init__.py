@@ -8,7 +8,7 @@ from typing import List
 import config
 
 from .bilibili_store_impl import *
-
+from .bilibilli_store_video import *
 
 class BiliStoreFactory:
     STORES = {
@@ -80,3 +80,15 @@ async def update_bilibili_video_comment(video_id: str, comment_item: Dict):
     utils.logger.info(
         f"[store.bilibili.update_bilibili_video_comment] Bilibili video comment: {comment_id}, content: {save_comment_item.get('content')}")
     await BiliStoreFactory.create_store().store_comment(comment_item=save_comment_item)
+
+
+async def store_video(aid, video_content, extension_file_name):
+    """
+    video video storage implementation
+    Args:
+        aid:
+        video_content:
+        extension_file_name:
+    """
+    await BilibiliVideo().store_video(
+        {"aid": aid, "video_content": video_content, "extension_file_name": extension_file_name})

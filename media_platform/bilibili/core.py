@@ -7,7 +7,7 @@ import asyncio
 import os
 import random
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from playwright.async_api import (BrowserContext, BrowserType, Page,
                                   async_playwright)
@@ -127,6 +127,7 @@ class BilibiliCrawler(AbstractCrawler):
                     if video_item:
                         video_id_list.append(video_item.get("View").get("aid"))
                         await bilibili_store.update_bilibili_video(video_item)
+                        await self.get_bilibili_video(video_item, semaphore)
                 page += 1
                 await self.batch_get_video_comments(video_id_list)
 
@@ -213,6 +214,7 @@ class BilibiliCrawler(AbstractCrawler):
                 if video_aid:
                     video_aids_list.append(video_aid)
                 await bilibili_store.update_bilibili_video(video_detail)
+                await self.get_bilibili_video(video_detail, semaphore)
         await self.batch_get_video_comments(video_aids_list)
 
     async def get_video_info_task(self, aid: int, bvid: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
@@ -234,6 +236,27 @@ class BilibiliCrawler(AbstractCrawler):
             except KeyError as ex:
                 utils.logger.error(
                     f"[BilibiliCrawler.get_video_info_task] have not fund note detail video_id:{bvid}, err: {ex}")
+                return None
+
+    async def get_video_play_url_task(self, aid: int, cid: int, semaphore: asyncio.Semaphore) -> Union[Dict, None]:
+        """
+                Get video play url
+                :param aid:
+                :param cid:
+                :param semaphore:
+                :return:
+                """
+        async with semaphore:
+            try:
+                result = await self.bili_client.get_video_play_url(aid=aid, cid=cid)
+                return result
+            except DataFetchError as ex:
+                utils.logger.error(
+                    f"[BilibiliCrawler.get_video_play_url_task] Get video play url error: {ex}")
+                return None
+            except KeyError as ex:
+                utils.logger.error(
+                    f"[BilibiliCrawler.get_video_play_url_task] have not fund play url from :{aid}|{cid}, err: {ex}")
                 return None
 
     async def create_bilibili_client(self, httpx_proxy: Optional[str]) -> BilibiliClient:
@@ -300,3 +323,39 @@ class BilibiliCrawler(AbstractCrawler):
                 user_agent=user_agent
             )
             return browser_context
+
+    async def get_bilibili_video(self, video_item: Dict, semaphore: asyncio.Semaphore):
+        """
+        download bilibili video
+        :param video_item:
+        :param semaphore:
+        :return:
+        """
+        if not config.ENABLE_GET_IMAGES:
+            utils.logger.info(f"[BilibiliCrawler.get_bilibili_video] Crawling image mode is not enabled")
+            return
+        video_item_view: Dict = video_item.get("View")
+        aid = video_item_view.get("aid")
+        cid = video_item_view.get("cid")
+        result = await self.get_video_play_url_task(aid, cid, semaphore)
+        if result is None:
+            utils.logger.info("[BilibiliCrawler.get_bilibili_video] get video play url failed")
+            return
+        durl_list = result.get("durl")
+        max_size = -1
+        video_url = ""
+        for durl in durl_list:
+            size = durl.get("size")
+            if size > max_size:
+                max_size = size
+                video_url = durl.get("url")
+        if video_url == "":
+            utils.logger.info("[BilibiliCrawler.get_bilibili_video] get video url failed")
+            return
+
+        content = await self.bili_client.get_video_media(video_url)
+        if content is None:
+            return
+        extension_file_name = f"video.mp4"
+        await bilibili_store.store_video(aid, content, extension_file_name)
+
