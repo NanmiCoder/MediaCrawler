@@ -7,8 +7,8 @@ from typing import List
 import config
 
 from . import xhs_store_impl
-from .xhs_store_impl import *
 from .xhs_store_image import *
+from .xhs_store_impl import *
 
 
 class XhsStoreFactory:

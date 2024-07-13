@@ -26,7 +26,6 @@ class DouYinCrawler(AbstractCrawler):
     browser_context: BrowserContext
 
     def __init__(self) -> None:
-        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"  # fixed
         self.index_url = "https://www.douyin.com"
 
     async def start(self) -> None:
@@ -42,7 +41,7 @@ class DouYinCrawler(AbstractCrawler):
             self.browser_context = await self.launch_browser(
                 chromium,
                 None,
-                self.user_agent,
+                user_agent=None,
                 headless=config.HEADLESS
             )
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
@@ -225,7 +224,7 @@ class DouYinCrawler(AbstractCrawler):
         douyin_client = DOUYINClient(
             proxies=httpx_proxy,
             headers={
-                "User-Agent": self.user_agent,
+                "User-Agent": await self.context_page.evaluate("() => navigator.userAgent"),
                 "Cookie": cookie_str,
                 "Host": "www.douyin.com",
                 "Origin": "https://www.douyin.com/",

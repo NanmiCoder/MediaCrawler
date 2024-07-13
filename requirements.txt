@@ -2,7 +2,6 @@ httpx==0.24.0
 Pillow==9.5.0
 playwright==1.42.0
 tenacity==8.2.2
-PyExecJS==1.5.1
 opencv-python
 aiomysql==0.2.0
 redis~=4.6.0
@@ -14,3 +13,4 @@ python-dotenv==1.0.1
 jieba==0.42.1
 wordcloud==1.9.3
 matplotlib==3.9.0
+requests==2.32.3

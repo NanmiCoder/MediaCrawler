@@ -81,6 +81,13 @@
 
 
 ## 开发者服务
+- MediaCrawler视频课程：
+  > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
+  > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个视频课程，从设计出发一步步带你如何使用，门槛大大降低
+  > 
+  > 同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
+  
+
 - 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题 (每天 1 快钱订阅我的知识服务)
   <p>
   <img alt="xingqiu" src="https://nm.zizhi1.com/static/img/8e1312d1f52f2e0ff436ea7196b4e27b.15555424244122T1.webp" style="width: auto;height: 400px" >
@@ -93,21 +100,15 @@
   - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
   
   
-  
-- MediaCrawler视频课程：
-  > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个视频课程，从设计出发一步步带你如何使用，门槛大大降低，同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
-  > 课程售价非常非常的便宜，几杯咖啡的事儿.<br>
-  > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
-
-
 
 ## 感谢下列Sponsors对本仓库赞助
+- <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
+<br>
 - 感谢 [JetBrains](https://www.jetbrains.com/?from=gaowei-space/markdown-blog) 对本项目的支持！
 <a href="https://www.jetbrains.com/?from=NanmiCoder/MediaCrawler" target="_blank">
     <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="100" height="100">
 </a>
 <br>
-- <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册这个款免费的GPT助手，帮我获取GPT4额度作为支持。也是我每天在用的一款chrome AI助手插件</a>
 
 成为赞助者，展示你的产品在这里，联系作者：relakkes@gmail.com
 
