@@ -196,26 +196,26 @@ dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手�
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/helloteemo">
+                    <img src="https://avatars.githubusercontent.com/u/46838719?v=4" width="100;" alt="helloteemo"/>
+                    <br />
+                    <sub><b>helloteemo</b></sub>
+                </a>
+            </td>
+		</tr>
+		<tr>
+            <td align="center">
                 <a href="https://github.com/Ermeng98">
                     <img src="https://avatars.githubusercontent.com/u/55784769?v=4" width="100;" alt="Ermeng98"/>
                     <br />
                     <sub><b>Ermeng</b></sub>
                 </a>
             </td>
-		</tr>
-		<tr>
             <td align="center">
                 <a href="https://github.com/PeanutSplash">
                     <img src="https://avatars.githubusercontent.com/u/98582625?v=4" width="100;" alt="PeanutSplash"/>
                     <br />
                     <sub><b>PeanutSplash</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/helloteemo">
-                    <img src="https://avatars.githubusercontent.com/u/46838719?v=4" width="100;" alt="helloteemo"/>
-                    <br />
-                    <sub><b>helloteemo</b></sub>
                 </a>
             </td>
             <td align="center">
