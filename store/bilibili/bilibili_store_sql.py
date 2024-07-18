@@ -100,3 +100,50 @@ async def update_comment_by_comment_id(comment_id: str, comment_item: Dict) -> i
     async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
     effect_row: int = await async_db_conn.update_table("bilibili_video_comment", comment_item, "comment_id", comment_id)
     return effect_row
+
+
+async def query_creator_by_creator_id(creator_id: str) -> Dict:
+    """
+    查询up主信息
+    Args:
+        creator_id:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    sql: str = f"select * from bilibili_up_info where user_id = '{creator_id}'"
+    rows: List[Dict] = await async_db_conn.query(sql)
+    if len(rows) > 0:
+        return rows[0]
+    return dict()
+
+
+async def add_new_creator(creator_item: Dict) -> int:
+    """
+    新增up主信息
+    Args:
+        creator_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    last_row_id: int = await async_db_conn.item_to_table("bilibili_up_info", creator_item)
+    return last_row_id
+
+
+async def update_creator_by_creator_id(creator_id: str, creator_item: Dict) -> int:
+    """
+    更新up主信息
+    Args:
+        creator_id:
+        creator_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    effect_row: int = await async_db_conn.update_table("bilibili_up_info", creator_item, "user_id", creator_id)
+    return effect_row
+

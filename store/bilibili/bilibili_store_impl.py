@@ -85,6 +85,17 @@ class BiliCsvStoreImplement(AbstractStore):
         """
         await self.save_data_to_csv(save_item=comment_item, store_type="comments")
 
+    async def store_creator(self, creator: Dict):
+        """
+        Bilibili creator CSV storage implementation
+        Args:
+            creator: creator item dict
+
+        Returns:
+
+        """
+        await self.save_data_to_csv(save_item=creator, store_type="creators")
+
 
 class BiliDbStoreImplement(AbstractStore):
     async def store_content(self, content_item: Dict):
@@ -128,6 +139,27 @@ class BiliDbStoreImplement(AbstractStore):
             await add_new_comment(comment_item)
         else:
             await update_comment_by_comment_id(comment_id, comment_item=comment_item)
+
+    async def store_creator(self, creator: Dict):
+        """
+        Bilibili creator DB storage implementation
+        Args:
+            creator: creator item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_creator,
+                                         query_creator_by_creator_id,
+                                         update_creator_by_creator_id)
+        creator_id = creator.get("user_id")
+        creator_detail: Dict = await query_creator_by_creator_id(creator_id=creator_id)
+        if not creator_detail:
+            creator["add_ts"] = utils.get_current_timestamp()
+            await add_new_creator(creator)
+        else:
+            await update_creator_by_creator_id(creator_id,creator_item=creator)
 
 
 class BiliJsonStoreImplement(AbstractStore):
@@ -204,3 +236,14 @@ class BiliJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(comment_item, "comments")
+
+    async def store_creator(self, creator: Dict):
+        """
+        creator JSON storage implementatio
+        Args:
+            creator:
+
+        Returns:
+
+        """
+        await self.save_data_to_json(creator, "creators")
