@@ -110,6 +110,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         sort=SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != '' else SearchSortType.GENERAL,
                     )
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Search notes res:{notes_res}")
+                    if(not notes_res or not notes_res.get('has_more', False)):
+                        utils.logger.info("No more content!")
+                        break
                     semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                     task_list = [
                         self.get_note_detail(post_item.get("id"), semaphore)
