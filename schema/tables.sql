@@ -47,6 +47,25 @@ CREATE TABLE `bilibili_video_comment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='B 站视频评论';
 
 -- ----------------------------
+-- Table structure for bilibili_up_info
+-- ----------------------------
+DROP TABLE IF EXISTS `bilibili_up_info`;
+CREATE TABLE `bilibili_up_info` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `user_id` varchar(64) DEFAULT NULL COMMENT '用户ID',
+  `nickname` varchar(64) DEFAULT NULL COMMENT '用户昵称',
+  `avatar` varchar(255) DEFAULT NULL COMMENT '用户头像地址',
+  `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
+  `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
+  `total_fans` bigint DEFAULT NULL COMMENT '粉丝数',
+  `total_liked` bigint DEFAULT NULL COMMENT '总获赞数',
+  `user_rank` int DEFAULT NULL COMMENT '用户等级',
+  `is_official` int DEFAULT NULL COMMENT '是否官号',
+  PRIMARY KEY (`id`),
+  KEY `idx_bilibili_vi_user_123456` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='B 站UP主信息';
+
+-- ----------------------------
 -- Table structure for douyin_aweme
 -- ----------------------------
 DROP TABLE IF EXISTS `douyin_aweme`;

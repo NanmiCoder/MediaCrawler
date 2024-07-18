@@ -127,6 +127,7 @@ class BilibiliCrawler(AbstractCrawler):
                     if video_item:
                         video_id_list.append(video_item.get("View").get("aid"))
                         await bilibili_store.update_bilibili_video(video_item)
+                        await bilibili_store.update_up_info(video_item)
                         await self.get_bilibili_video(video_item, semaphore)
                 page += 1
                 await self.batch_get_video_comments(video_id_list)

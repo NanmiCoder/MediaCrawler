@@ -48,7 +48,7 @@ class AbstractStore(ABC):
 
     # TODO support all platform
     # only xhs is supported, so @abstractmethod is commented
-    # @abstractmethod
+    @abstractmethod
     async def store_creator(self, creator: Dict):
         pass
 

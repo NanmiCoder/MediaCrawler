@@ -53,6 +53,24 @@ async def update_bilibili_video(video_item: Dict):
     await BiliStoreFactory.create_store().store_content(content_item=save_content_item)
 
 
+async def update_up_info(video_item: Dict):  
+    video_item_card_list: Dict = video_item.get("Card")
+    video_item_card: Dict = video_item_card_list.get("card") 
+    saver_up_info = {
+        "user_id": str(video_item_card.get("mid")), 
+        "nickname": video_item_card.get("name"),  
+        "avatar": video_item_card.get("face"), 
+        "last_modify_ts": utils.get_current_timestamp(),  
+        "total_fans": video_item_card.get("fans"), 
+        "total_liked": video_item_card_list.get("like_num"), 
+        "user_rank": video_item_card.get("level_info").get("current_level"),  
+        "is_official": video_item_card.get("official_verify").get("type"), 
+    }
+    utils.logger.info(
+        f"[store.bilibili.update_up_info] bilibili user_id:{video_item_card.get('mid')}")
+    await BiliStoreFactory.create_store().store_creator(creator=saver_up_info)
+    
+
 async def batch_update_bilibili_video_comments(video_id: str, comments: List[Dict]):
     if not comments:
         return
