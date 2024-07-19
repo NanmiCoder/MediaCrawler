@@ -120,9 +120,14 @@ class WeiboCrawler(AbstractCrawler):
                     if note_item:
                         mblog: Dict = note_item.get("mblog")
                         if mblog:
+                            create_time = utils.rfc2822_to_timestamp(mblog.get("created_at"))
+                            start_time = utils.get_unix_time_from_date_str(config.START_TIME)
+                            end_time = utils.get_unix_time_from_date_str(config.END_TIME)
+                            if not utils.timestamp_between_start_and_end(create_time, start_time, end_time):
+                                utils.logger.info(
+                                    f"[WeiboCrawler.search] skip mblog: time condition {start_time}<={create_time}<={end_time} unmatched")
+                                continue
                             note_id_list.append(mblog.get("id"))
-                            await weibo_store.update_weibo_note(note_item)
-                            await self.get_note_images(mblog)
 
                 page += 1
                 await self.batch_get_notes_comments(note_id_list)

@@ -100,6 +100,32 @@ def rfc2822_to_timestamp(rfc2822_time):
     return timestamp
 
 
+def get_unix_time_from_date_str(date_str):
+    if date_str == "":
+        return ""
+    try:
+        # 将日期字符串YYYY-MM-DD转换为时间对象
+        date_obj = time.strptime(date_str, "%Y-%m-%d")
+        # 将时间对象转换为Unix时间戳
+        timestamp = int(time.mktime(date_obj))
+        return timestamp
+    except ValueError:
+        return ""
+
+
+def timestamp_between_start_and_end(timestamp, start, end):
+    # 比较timestamp是否处于给定时间范围内
+    if start == "" and end == "":
+        return True
+    elif start == "":
+        return timestamp <= end
+    elif end == "":
+        return timestamp >= start
+    if start <= timestamp <= end:
+        return True
+    return False
+
+
 if __name__ == '__main__':
     # 示例用法
     _rfc2822_time = "Sat Dec 23 17:12:54 +0800 2023"
