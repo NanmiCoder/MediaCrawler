@@ -129,6 +129,9 @@ class WeiboCrawler(AbstractCrawler):
                                 continue
                             note_id_list.append(mblog.get("id"))
 
+                            await weibo_store.update_weibo_note(note_item)
+                            await self.get_note_images(mblog)
+
                 page += 1
                 await self.batch_get_notes_comments(note_id_list)
 
