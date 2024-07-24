@@ -33,6 +33,9 @@ def calculate_number_of_files(file_store_path: str) -> int:
 
 
 class WeiboCsvStoreImplement(AbstractStore):
+    async def store_creator(self, creator: Dict):
+        pass
+
     csv_store_path: str = "data/weibo"
     file_count:int=calculate_number_of_files(csv_store_path)
 

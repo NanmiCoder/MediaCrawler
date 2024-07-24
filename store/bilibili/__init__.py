@@ -10,6 +10,7 @@ import config
 from .bilibili_store_impl import *
 from .bilibilli_store_video import *
 
+
 class BiliStoreFactory:
     STORES = {
         "csv": BiliCsvStoreImplement,

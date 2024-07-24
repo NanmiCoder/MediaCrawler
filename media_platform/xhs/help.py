@@ -10,19 +10,19 @@ def sign(a1="", b1="", x_s="", x_t=""):
     takes in a URI (uniform resource identifier), an optional data dictionary, and an optional ctime parameter. It returns a dictionary containing two keys: "x-s" and "x-t".
     """
     common = {
-        "s0": 5,  # getPlatformCode
+        "s0": 3,  # getPlatformCode
         "s1": "",
         "x0": "1",  # localStorage.getItem("b1b1")
-        "x1": "3.3.0",  # version
-        "x2": "Windows",
+        "x1": "3.7.8-2",  # version
+        "x2": "Mac OS",
         "x3": "xhs-pc-web",
-        "x4": "1.4.4",
+        "x4": "4.27.2",
         "x5": a1,  # cookie of a1
         "x6": x_t,
         "x7": x_s,
         "x8": b1,  # localStorage.getItem("b1")
         "x9": mrc(x_t + x_s + b1),
-        "x10": 1,  # getSigCount
+        "x10": 154,  # getSigCount
     }
     encode_str = encodeUtf8(json.dumps(common, separators=(',', ':')))
     x_s_common = b64Encode(encode_str)

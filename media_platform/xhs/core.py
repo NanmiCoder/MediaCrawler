@@ -27,7 +27,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     def __init__(self) -> None:
         self.index_url = "https://www.xiaohongshu.com"
-        self.user_agent = utils.get_user_agent()
+        # self.user_agent = utils.get_user_agent()
+        self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -110,18 +111,23 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         sort=SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != '' else SearchSortType.GENERAL,
                     )
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Search notes res:{notes_res}")
-                    if(not notes_res or not notes_res.get('has_more', False)):
+                    if not notes_res or not notes_res.get('has_more', False):
                         utils.logger.info("No more content!")
                         break
                     semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                     task_list = [
-                        self.get_note_detail(post_item.get("id"), semaphore)
+                        self.get_note_detail(
+                            note_id=post_item.get("id"),
+                            xsec_source=post_item.get("xsec_source"),
+                            xsec_token=post_item.get("xsec_token"),
+                            semaphore=semaphore
+                        )
                         for post_item in notes_res.get("items", {})
                         if post_item.get('model_type') not in ('rec_query', 'hot_query')
                     ]
                     note_details = await asyncio.gather(*task_list)
                     for note_detail in note_details:
-                        if note_detail is not None:
+                        if note_detail:
                             await xhs_store.update_xhs_note(note_detail)
                             await self.get_notice_media(note_detail)
                             note_id_list.append(note_detail.get("note_id"))
@@ -157,32 +163,42 @@ class XiaoHongShuCrawler(AbstractCrawler):
         """
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
-            self.get_note_detail(post_item.get("note_id"), semaphore) for post_item in note_list
+            self.get_note_detail(
+                note_id=post_item.get("id"),
+                xsec_source=post_item.get("xsec_source"),
+                xsec_token=post_item.get("xsec_token"),
+                semaphore=semaphore
+            )
+            for post_item in note_list
         ]
 
         note_details = await asyncio.gather(*task_list)
         for note_detail in note_details:
-            if note_detail is not None:
+            if note_detail:
                 await xhs_store.update_xhs_note(note_detail)
 
     async def get_specified_notes(self):
         """Get the information and comments of the specified post"""
-        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-        task_list = [
-            self.get_note_detail(note_id=note_id, semaphore=semaphore) for note_id in config.XHS_SPECIFIED_ID_LIST
-        ]
-        note_details = await asyncio.gather(*task_list)
-        for note_detail in note_details:
-            if note_detail is not None:
-                await xhs_store.update_xhs_note(note_detail)
-                await self.get_notice_media(note_detail)
-        await self.batch_get_note_comments(config.XHS_SPECIFIED_ID_LIST)
+        # todo 指定帖子爬取暂时失效，xhs更新了帖子详情的请求参数，需要携带xsec_token，目前发现该参数只能在搜索场景下获取到
+        raise Exception(
+            "指定帖子爬取暂时失效，xhs更新了帖子详情的请求参数，需要携带xsec_token，目前发现只能在搜索场景下获取到")
+        # semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        # task_list = [
+        #     self.get_note_detail(note_id=note_id, xsec_token="", semaphore=semaphore) for note_id in config.XHS_SPECIFIED_ID_LIST
+        # ]
+        # note_details = await asyncio.gather(*task_list)
+        # for note_detail in note_details:
+        #     if note_detail is not None:
+        #         await xhs_store.update_xhs_note(note_detail)
+        #         await self.get_notice_media(note_detail)
+        # await self.batch_get_note_comments(config.XHS_SPECIFIED_ID_LIST)
 
-    async def get_note_detail(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
+    async def get_note_detail(self, note_id: str, xsec_source: str, xsec_token: str, semaphore: asyncio.Semaphore) -> \
+            Optional[Dict]:
         """Get note detail"""
         async with semaphore:
             try:
-                return await self.xhs_client.get_note_by_id(note_id)
+                return await self.xhs_client.get_note_by_id(note_id, xsec_source, xsec_token)
             except DataFetchError as ex:
                 utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] Get note detail error: {ex}")
                 return None
