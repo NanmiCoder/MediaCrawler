@@ -164,7 +164,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_note_detail(
-                note_id=post_item.get("id"),
+                note_id=post_item.get("note_id"),
                 xsec_source=post_item.get("xsec_source"),
                 xsec_token=post_item.get("xsec_token"),
                 semaphore=semaphore
