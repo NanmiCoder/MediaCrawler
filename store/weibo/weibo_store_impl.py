@@ -27,7 +27,7 @@ def calculate_number_of_files(file_store_path: str) -> int:
     if not os.path.exists(file_store_path):
         return 1
     try:
-        return max([int(file_name.split("_")[0])for file_name in os.listdir(file_store_path)])+1
+        return max([int(file_name.split("_")[0]) for file_name in os.listdir(file_store_path)]) + 1
     except ValueError:
         return 1
 
@@ -37,7 +37,7 @@ class WeiboCsvStoreImplement(AbstractStore):
         pass
 
     csv_store_path: str = "data/weibo"
-    file_count:int=calculate_number_of_files(csv_store_path)
+    file_count: int = calculate_number_of_files(csv_store_path)
 
     def make_save_file_name(self, store_type: str) -> str:
         """
@@ -93,6 +93,7 @@ class WeiboCsvStoreImplement(AbstractStore):
 
 
 class WeiboDbStoreImplement(AbstractStore):
+
     async def store_content(self, content_item: Dict):
         """
         Weibo content DB storage implementation
@@ -134,16 +135,18 @@ class WeiboDbStoreImplement(AbstractStore):
         else:
             await update_comment_by_comment_id(comment_id, comment_item=comment_item)
 
+    async def store_creator(self, creator: Dict):
+        pass
+
 
 class WeiboJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/weibo/json"
     words_store_path: str = "data/weibo/words"
     lock = asyncio.Lock()
-    file_count:int=calculate_number_of_files(json_store_path)
+    file_count: int = calculate_number_of_files(json_store_path)
     WordCloud = words.AsyncWordCloudGenerator()
 
-
-    def make_save_file_name(self, store_type: str) -> (str,str):
+    def make_save_file_name(self, store_type: str) -> (str, str):
         """
         make save file name by store type
         Args:
@@ -170,7 +173,7 @@ class WeiboJsonStoreImplement(AbstractStore):
         """
         pathlib.Path(self.json_store_path).mkdir(parents=True, exist_ok=True)
         pathlib.Path(self.words_store_path).mkdir(parents=True, exist_ok=True)
-        save_file_name,words_file_name_prefix = self.make_save_file_name(store_type=store_type)
+        save_file_name, words_file_name_prefix = self.make_save_file_name(store_type=store_type)
         save_data = []
 
         async with self.lock:
@@ -209,3 +212,6 @@ class WeiboJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(comment_item, "comments")
+
+    async def store_creator(self, creator: Dict):
+        pass

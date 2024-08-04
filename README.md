@@ -21,7 +21,7 @@
 | 抖音  | ✅     | ✅        | ✅    | ✅       | ✅     | ✅     | ✅    |
 | 快手  | ✅     | ✅        | ✅   | ✅      | ✅     | ✅     | ✅    |
 | B 站 | ✅     | ✅        | ✅   | ✅      | ✅     | ✅     | ✅    |
-| 微博  | ✅     | ✅        | ❌   | ❌      | ✅     | ✅     | ✅    |
+| 微博  | ✅     | ✅        | ✅   | ❌      | ✅     | ✅     | ✅    |
 
 
 ## 使用方法
@@ -109,10 +109,12 @@
 
 
 ## MediaCrawler爬虫项目交流群：
-> 如果二维码过期，可以直接添加我的微信号：yzglan（备注来自：github），拉你进项目交流群
+> 扫描下方我的个人微信，备注：github，拉你进MediaCrawler项目交流群(请一定备注：github，会有wx小助手自动拉群)
+> 
+> 如果图片展示不出来，可以直接添加我的微信号：yzglan
 
 <div style="max-width: 200px">  
-<p><img alt="图片展示不出来可以加作者微信: yzglan" src="static/images/12群二维码.JPG" style="width: 200px;height: 100%" ></p>
+<p><img alt="relakkes_wechat" src="static/images/relakkes_weichat.JPG" style="width: 200px;height: 100%" ></p>
 </div>
 
 

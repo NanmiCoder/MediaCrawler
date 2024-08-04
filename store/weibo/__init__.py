@@ -6,8 +6,6 @@
 import re
 from typing import List
 
-import config
-
 from .weibo_store_image import *
 from .weibo_store_impl import *
 
@@ -81,6 +79,7 @@ async def update_weibo_note_comment(note_id: str, comment_item: Dict):
         "comment_like_count": str(comment_item.get("like_count", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
         "ip_location": comment_item.get("source", "").replace("来自", ""),
+        "parent_comment_id": comment_item.get("rootid", ""),
 
         # 用户信息
         "user_id": str(user_info.get("id")),

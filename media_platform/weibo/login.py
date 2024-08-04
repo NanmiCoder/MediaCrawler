@@ -30,6 +30,7 @@ class WeiboLogin(AbstractLogin):
         self.context_page = context_page
         self.login_phone = login_phone
         self.cookie_str = cookie_str
+        self.weibo_sso_login_url = "https://passport.weibo.com/sso/signin?entry=miniblog&source=miniblog"
 
     async def begin(self):
         """Start login weibo"""
@@ -54,45 +55,19 @@ class WeiboLogin(AbstractLogin):
         """
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
+        if cookie_dict.get("SSOLoginState"):
+            return True
         current_web_session = cookie_dict.get("WBPSESS")
         if current_web_session != no_logged_in_session:
             return True
         return False
 
-    async def popup_login_dialog(self):
-        """If the login dialog box does not pop up automatically, we will manually click the login button"""
-        dialog_selector = "xpath=//div[@class='woo-modal-main']"
-        try:
-            # check dialog box is auto popup and wait for 4 seconds
-            await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 4)
-        except Exception as e:
-            utils.logger.error(
-                f"[WeiboLogin.popup_login_dialog] login dialog box does not pop up automatically, error: {e}")
-            utils.logger.info(
-                "[WeiboLogin.popup_login_dialog] login dialog box does not pop up automatically, we will manually click the login button")
-
-            # 向下滚动1000像素
-            await self.context_page.mouse.wheel(0,500)
-            await asyncio.sleep(0.5)
-
-            try:
-                # click login button
-                login_button_ele = self.context_page.locator(
-                    "xpath=//a[text()='登录']",
-                )
-                await login_button_ele.click()
-                await asyncio.sleep(0.5)
-            except Exception as e:
-                utils.logger.info(f"[WeiboLogin.popup_login_dialog] manually click the login button faield maybe login dialog Appear：{e}")
-
     async def login_by_qrcode(self):
         """login weibo website and keep webdriver login state"""
         utils.logger.info("[WeiboLogin.login_by_qrcode] Begin login weibo by qrcode ...")
-
-        await self.popup_login_dialog()
-
+        await self.context_page.goto(self.weibo_sso_login_url)
         # find login qrcode
-        qrcode_img_selector = "//div[@class='woo-modal-main']//img"
+        qrcode_img_selector = "xpath=//img[@class='w-full h-full']"
         base64_qrcode_img = await utils.find_login_qrcode(
             self.context_page,
             selector=qrcode_img_selector
