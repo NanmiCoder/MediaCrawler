@@ -179,26 +179,31 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def get_specified_notes(self):
         """Get the information and comments of the specified post"""
-        # todo 指定帖子爬取暂时失效，xhs更新了帖子详情的请求参数，需要携带xsec_token，目前发现该参数只能在搜索场景下获取到
-        raise Exception(
-            "指定帖子爬取暂时失效，xhs更新了帖子详情的请求参数，需要携带xsec_token，目前发现只能在搜索场景下获取到")
-        # semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-        # task_list = [
-        #     self.get_note_detail(note_id=note_id, xsec_token="", semaphore=semaphore) for note_id in config.XHS_SPECIFIED_ID_LIST
-        # ]
-        # note_details = await asyncio.gather(*task_list)
-        # for note_detail in note_details:
-        #     if note_detail is not None:
-        #         await xhs_store.update_xhs_note(note_detail)
-        #         await self.get_notice_media(note_detail)
-        # await self.batch_get_note_comments(config.XHS_SPECIFIED_ID_LIST)
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        fixed_xsec_token = "ABtXiOIX98byLlu-ju5dDq3tIc6uikcJrd3t7OYyqUbE4"
+        task_list = [
+            self.get_note_detail(note_id=note_id, xsec_source="pc_search", xsec_token=fixed_xsec_token,
+                                 semaphore=semaphore) for note_id in config.XHS_SPECIFIED_ID_LIST
+        ]
+        note_details = await asyncio.gather(*task_list)
+        for note_detail in note_details:
+            if note_detail is not None:
+                await xhs_store.update_xhs_note(note_detail)
+                await self.get_notice_media(note_detail)
+        await self.batch_get_note_comments(config.XHS_SPECIFIED_ID_LIST)
 
     async def get_note_detail(self, note_id: str, xsec_source: str, xsec_token: str, semaphore: asyncio.Semaphore) -> \
             Optional[Dict]:
         """Get note detail"""
         async with semaphore:
             try:
-                return await self.xhs_client.get_note_by_id(note_id, xsec_source, xsec_token)
+                note_detail: Dict = await self.xhs_client.get_note_by_id(note_id, xsec_source, xsec_token)
+                if not note_detail:
+                    utils.logger.error(
+                        f"[XiaoHongShuCrawler.get_note_detail] Get note detail error, note_id: {note_id}")
+                    return None
+                note_detail.update({"xsec_token": xsec_token, "xsec_source": xsec_source})
+                return note_detail
             except DataFetchError as ex:
                 utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail] Get note detail error: {ex}")
                 return None
