@@ -88,6 +88,12 @@ WEIBO_SPECIFIED_ID_LIST = [
     # ........................
 ]
 
+# 指定贴吧需要爬取的帖子列表
+TIEBA_SPECIFIED_ID_LIST = [
+
+]
+
+
 # 指定小红书创作者ID列表
 XHS_CREATOR_ID_LIST = [
     "63e36c9a000000002703502b",
