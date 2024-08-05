@@ -9,9 +9,10 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 
 import config
 from base.base_crawler import AbstractCrawler
-from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
+from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool, ProxyIpPool
 from store import tieba as tieba_store
 from tools import utils
+from tools.crawler_util import format_proxy_info
 from var import crawler_type_var
 
 from .client import BaiduTieBaClient
@@ -29,53 +30,43 @@ class TieBaCrawler(AbstractCrawler):
         self.user_agent = utils.get_user_agent()
 
     async def start(self) -> None:
-        playwright_proxy_format, httpx_proxy_format = None, None
+        """
+        Start the crawler
+        Returns:
+
+        """
+        ip_proxy_pool, httpx_proxy_format = None, None
         if config.ENABLE_IP_PROXY:
+            utils.logger.info("[BaiduTieBaCrawler.start] Begin create ip proxy pool ...")
             ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
+            _, httpx_proxy_format = format_proxy_info(ip_proxy_info)
+            utils.logger.info(f"[BaiduTieBaCrawler.start] Init default ip proxy, value: {httpx_proxy_format}")
 
-        async with async_playwright() as playwright:
-            # Launch a browser context.
-            chromium = playwright.chromium
-            self.browser_context = await self.launch_browser(
-                chromium,
-                None,
-                self.user_agent,
-                headless=config.HEADLESS
-            )
-            # stealth.min.js is a js script to prevent the website from detecting the crawler.
-            await self.browser_context.add_init_script(path="libs/stealth.min.js")
-            self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+        # Create a client to interact with the baidutieba website.
+        self.tieba_client = BaiduTieBaClient(
+            ip_pool=ip_proxy_pool,
+            default_ip_proxy=httpx_proxy_format,
+        )
+        crawler_type_var.set(config.CRAWLER_TYPE)
+        if config.CRAWLER_TYPE == "search":
+            # Search for notes and retrieve their comment information.
+            await self.search()
+        elif config.CRAWLER_TYPE == "detail":
+            # Get the information and comments of the specified post
+            await self.get_specified_notes()
+        else:
+            pass
 
-            # Create a client to interact with the baidutieba website.
-            self.tieba_client = await self.create_tieba_client(httpx_proxy_format)
-            if not await self.tieba_client.pong():
-                login_obj = BaiduTieBaLogin(
-                    login_type=config.LOGIN_TYPE,
-                    login_phone="",  # input your phone number
-                    browser_context=self.browser_context,
-                    context_page=self.context_page,
-                    cookie_str=config.COOKIES
-                )
-                await login_obj.begin()
-                await self.tieba_client.update_cookies(browser_context=self.browser_context)
-
-            crawler_type_var.set(config.CRAWLER_TYPE)
-            if config.CRAWLER_TYPE == "search":
-                # Search for notes and retrieve their comment information.
-                await self.search()
-            elif config.CRAWLER_TYPE == "detail":
-                # Get the information and comments of the specified post
-                await self.get_specified_notes()
-            else:
-                pass
-
-            utils.logger.info("[BaiduTieBaCrawler.start] Xhs Crawler finished ...")
+        utils.logger.info("[BaiduTieBaCrawler.start] Tieba Crawler finished ...")
 
     async def search(self) -> None:
-        """Search for notes and retrieve their comment information."""
+        """
+        Search for notes and retrieve their comment information.
+        Returns:
+
+        """
+
         utils.logger.info("[BaiduTieBaCrawler.search] Begin search baidutieba keywords")
         tieba_limit_count = 10  # tieba limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < tieba_limit_count:
@@ -92,36 +83,26 @@ class TieBaCrawler(AbstractCrawler):
                 try:
                     utils.logger.info(f"[BaiduTieBaCrawler.search] search tieba keyword: {keyword}, page: {page}")
                     note_id_list: List[str] = []
-                    notes_res = await self.tieba_client.get_note_by_keyword(
+                    notes_list_res = await self.tieba_client.get_notes_by_keyword(
                         keyword=keyword,
                         page=page,
                         page_size=tieba_limit_count,
                         sort=SearchSortType.TIME_DESC,
                         note_type=SearchNoteType.FIXED_THREAD
                     )
-                    utils.logger.info(f"[BaiduTieBaCrawler.search] Search notes res:{notes_res}")
-                    if not notes_res or not notes_res.get('has_more', False):
-                        utils.logger.info("No more content!")
+                    utils.logger.info(f"[BaiduTieBaCrawler.search] Search notes res:{notes_list_res}")
+                    if not notes_list_res:
                         break
-                    semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                    task_list = [
-                        self.get_note_detail(
-                            note_id=post_item.get("id"),
-                            semaphore=semaphore
-                        )
-                        for post_item in notes_res.get("items", {})
-                        if post_item.get('model_type') not in ('rec_query', 'hot_query')
-                    ]
-                    note_details = await asyncio.gather(*task_list)
-                    for note_detail in note_details:
+
+                    for note_detail in notes_list_res:
                         if note_detail:
                             await tieba_store.update_tieba_note(note_detail)
                             note_id_list.append(note_detail.get("note_id"))
                     page += 1
-                    utils.logger.info(f"[BaiduTieBaCrawler.search] Note details: {note_details}")
+                    utils.logger.info(f"[BaiduTieBaCrawler.search] Note details: {notes_list_res}")
                     await self.batch_get_note_comments(note_id_list)
                 except Exception as ex:
-                    utils.logger.error(f"[BaiduTieBaCrawler.search] Get note detail error, err: {ex}")
+                    utils.logger.error(f"[BaiduTieBaCrawler.search] Search note list error, err: {ex}")
                     break
 
     async def fetch_creator_notes_detail(self, note_list: List[Dict]):
@@ -197,34 +178,20 @@ class TieBaCrawler(AbstractCrawler):
                 callback=tieba_store.batch_update_tieba_note_comments
             )
 
-    @staticmethod
-    def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
-        """format proxy info for playwright and httpx"""
-        playwright_proxy = {
-            "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
-            "username": ip_proxy_info.user,
-            "password": ip_proxy_info.password,
-        }
-        httpx_proxy = {
-            f"{ip_proxy_info.protocol}": f"http://{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
-        }
-        return playwright_proxy, httpx_proxy
+    async def create_tieba_client(self, ip_pool: ProxyIpPool) -> BaiduTieBaClient:
+        """
+        Create tieba client
+        Args:
+            ip_pool:
 
-    async def create_tieba_client(self, httpx_proxy: Optional[str]) -> BaiduTieBaClient:
+        Returns:
+
+        """
         """Create tieba client"""
         utils.logger.info("[BaiduTieBaCrawler.create_tieba_client] Begin create baidutieba API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         tieba_client_obj = BaiduTieBaClient(
-            proxies=httpx_proxy,
-            headers={
-                "User-Agent": self.user_agent,
-                "Cookie": cookie_str,
-                "Origin": "https://www.baidutieba.com",
-                "Referer": "https://www.baidutieba.com",
-                "Content-Type": "application/json;charset=UTF-8"
-            },
-            playwright_page=self.context_page,
-            cookie_dict=cookie_dict,
+            ip_pool=ip_pool,
         )
         return tieba_client_obj
 

@@ -22,31 +22,20 @@ class TieBaStoreFactory:
 
 
 async def update_tieba_note(note_item: Dict):
+    tieba_url = "https://tieba.baidu.com"
     note_id = note_item.get("note_id")
-    user_info = note_item.get("user", {})
-    interact_info = note_item.get("interact_info", {})
-    tag_list: List[Dict] = note_item.get("tag_list", [])
-
     local_db_item = {
         "note_id": note_id,
-        "type": note_item.get("type"),
         "title": note_item.get("title") or note_item.get("desc", "")[:255],
         "desc": note_item.get("desc", ""),
+        "note_url": tieba_url + note_item.get("note_url"),
         "time": note_item.get("time"),
-        "last_update_time": note_item.get("last_update_time", 0),
-        "user_id": user_info.get("user_id"),
-        "nickname": user_info.get("nickname"),
-        "avatar": user_info.get("avatar"),
-        "liked_count": interact_info.get("liked_count"),
-        "collected_count": interact_info.get("collected_count"),
-        "comment_count": interact_info.get("comment_count"),
-        "share_count": interact_info.get("share_count"),
+        "tieba_name": note_item.get("tieba_name"),
+        "tieba_link": tieba_url + note_item.get("tieba_link", ""),
+        "nickname": note_item.get("nickname"),
+        "nickname_link": tieba_url + note_item.get("nickname_link", ""),
         "ip_location": note_item.get("ip_location", ""),
-
-        "tag_list": ','.join([tag.get('name', '') for tag in tag_list if tag.get('type') == 'topic']),
         "last_modify_ts": utils.get_current_timestamp(),
-        # todo: add note_url
-        "note_url": ""
     }
     utils.logger.info(f"[store.tieba.update_tieba_note] tieba note: {local_db_item}")
     await TieBaStoreFactory.create_store().store_content(local_db_item)

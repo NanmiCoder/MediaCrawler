@@ -1,67 +1,77 @@
-import asyncio
 import json
-import re
+import random
 from typing import Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 import httpx
-from playwright.async_api import BrowserContext, Page
+from playwright.async_api import BrowserContext
+from tenacity import (RetryError, retry, stop_after_attempt,
+                      wait_fixed)
 
-import config
 from base.base_crawler import AbstractApiClient
+from proxy.proxy_ip_pool import ProxyIpPool
 from tools import utils
 
 from .field import SearchNoteType, SearchSortType
+from .help import TieBaExtractor
 
 
 class BaiduTieBaClient(AbstractApiClient):
     def __init__(
             self,
             timeout=10,
-            proxies=None,
-            *,
-            headers: Dict[str, str],
-            playwright_page: Page,
-            cookie_dict: Dict[str, str],
+            ip_pool=None,
+            default_ip_proxy=None,
     ):
-        self.proxies = proxies
+        self.ip_pool: Optional[ProxyIpPool] = ip_pool
         self.timeout = timeout
-        self.headers = headers
-        self.playwright_page = playwright_page
-        self.cookie_dict = cookie_dict
+        self.headers = utils.get_user_agent()
         self._host = "https://tieba.baidu.com"
+        self._page_extractor = TieBaExtractor()
+        self.default_ip_proxy = default_ip_proxy
 
-    async def request(self, method, url, **kwargs) -> Union[str, Any]:
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+    async def request(self, method, url, return_ori_content=False, proxies=None, **kwargs) -> Union[str, Any]:
         """
         封装httpx的公共请求方法，对请求响应做一些处理
         Args:
             method: 请求方法
             url: 请求的URL
+            return_ori_content: 是否返回原始内容
+            proxies: 代理IP
             **kwargs: 其他请求参数，例如请求头、请求体等
 
         Returns:
 
         """
-        # return response.text
-        return_response = kwargs.pop('return_response', False)
-
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        actual_proxies = proxies if proxies else self.default_ip_proxy
+        async with httpx.AsyncClient(proxies=actual_proxies) as client:
             response = await client.request(
                 method, url, timeout=self.timeout,
                 **kwargs
             )
 
-        if return_response:
+        if response.status_code != 200:
+            utils.logger.error(f"Request failed, method: {method}, url: {url}, status code: {response.status_code}")
+            utils.logger.error(f"Request failed, response: {response.text}")
+            raise Exception(f"Request failed, method: {method}, url: {url}, status code: {response.status_code}")
+
+        if response.text == "" or response.text == "blocked":
+            utils.logger.error(f"request params incrr, response.text: {response.text}")
+            raise Exception("account blocked")
+
+        if return_ori_content:
             return response.text
 
         return response.json()
 
-    async def get(self, uri: str, params=None) -> Dict:
+    async def get(self, uri: str, params=None, return_ori_content=False, **kwargs) -> Any:
         """
         GET请求，对请求头签名
         Args:
             uri: 请求路由
             params: 请求参数
+            return_ori_content: 是否返回原始内容
 
         Returns:
 
@@ -70,9 +80,25 @@ class BaiduTieBaClient(AbstractApiClient):
         if isinstance(params, dict):
             final_uri = (f"{uri}?"
                          f"{urlencode(params)}")
-        return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=self.headers)
+        try:
+            res = await self.request(method="GET", url=f"{self._host}{final_uri}",
+                                     return_ori_content=return_ori_content,
+                                     **kwargs)
+            return res
+        except RetryError as e:
+            if self.ip_pool:
+                proxie_model = await self.ip_pool.get_proxy()
+                _, proxies = utils.format_proxy_info(proxie_model)
+                res = await self.request(method="GET", url=f"{self._host}{final_uri}",
+                                         return_ori_content=return_ori_content,
+                                         proxies=proxies,
+                                         **kwargs)
+                self.default_ip_proxy = proxies
+                return res
 
-    async def post(self, uri: str, data: dict) -> Dict:
+            utils.logger.error(f"[BaiduTieBaClient.get] 达到了最大重试次数，请尝试更换新的IP代理: {e}")
+
+    async def post(self, uri: str, data: dict, **kwargs) -> Dict:
         """
         POST请求，对请求头签名
         Args:
@@ -84,7 +110,7 @@ class BaiduTieBaClient(AbstractApiClient):
         """
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return await self.request(method="POST", url=f"{self._host}{uri}",
-                                  data=json_str, headers=self.headers)
+                                  data=json_str, **kwargs)
 
     async def pong(self) -> bool:
         """
@@ -96,6 +122,7 @@ class BaiduTieBaClient(AbstractApiClient):
         try:
             uri = "/mo/q/sync"
             res: Dict = await self.get(uri)
+            utils.logger.info(f"[BaiduTieBaClient.pong] res: {res}")
             if res and res.get("no") == 0:
                 ping_flag = True
             else:
@@ -115,31 +142,42 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
-        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
-        self.headers["Cookie"] = cookie_str
-        self.cookie_dict = cookie_dict
+        pass
 
-    async def get_note_by_keyword(
+    async def get_notes_by_keyword(
             self, keyword: str,
             page: int = 1,
             page_size: int = 10,
             sort: SearchSortType = SearchSortType.TIME_DESC,
-            note_type: SearchNoteType = SearchNoteType.FIXED_THREAD
-    ) -> Dict:
+            note_type: SearchNoteType = SearchNoteType.FIXED_THREAD,
+            random_sleep: bool = True
+    ) -> List[Dict]:
         """
         根据关键词搜索贴吧帖子
         Args:
             keyword: 关键词
             page: 分页第几页
-            page_size: 每页肠病毒
+            page_size: 每页大小
             sort: 结果排序方式
             note_type: 帖子类型（主题贴｜主题+回复混合模式）
+            random_sleep: 是否随机休眠
 
         Returns:
 
         """
-        # todo impl it
-        return {}
+        uri = "/f/search/res"
+        params = {
+            "isnew": 1,
+            "qw": keyword,
+            "rn": page_size,
+            "pn": page,
+            "sm": sort.value,
+            "only_thread": note_type.value
+        }
+        page_content = await self.get(uri, params=params, return_ori_content=True)
+        if random_sleep:
+            random.randint(1, 5)
+        return self._page_extractor.extract_search_note_list(page_content)
 
     async def get_note_by_id(self, note_id: str) -> Dict:
         """
