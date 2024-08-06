@@ -1,3 +1,4 @@
+import asyncio
 import json
 import random
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -188,6 +189,9 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
+        uri = f"/p/{note_id}"
+        page_content = await self.get(uri, return_ori_content=True)
+        return self._page_extractor.extract_note_detail(page_content)
         # todo impl it
         return {}
 
@@ -203,5 +207,45 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
-        # todo impl it
-        return []
+        uri = f"/p/{note_id}"
+        result = []
+        comments_has_more = True
+        comments_cursor = 1
+        while comments_has_more:
+            comments_res = await self.get(uri, params={"pn": comments_cursor})
+            comments_has_more = comments_res.get("has_more", False)
+            comments_cursor = comments_res.get("cursor", "")
+            if "comments" not in comments_res:
+                utils.logger.info(
+                    f"[XiaoHongShuClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
+                break
+            comments = comments_res["comments"]
+            if callback:
+                await callback(note_id, comments)
+            await asyncio.sleep(crawl_interval)
+            result.extend(comments)
+            sub_comments = await self.get_comments_all_sub_comments(comments, crawl_interval, callback)
+            result.extend(sub_comments)
+        return result
+
+    async def get_comments_all_sub_comments(self, comments: List[Dict], crawl_interval: float = 1.0,
+                                           callback: Optional[Callable] = None) -> List[Dict]:
+        """
+        获取指定评论下的所有子评论
+        Args:
+            comments: 评论列表
+            crawl_interval: 爬取一次笔记的延迟单位（秒）
+            callback: 一次笔记爬取结束后
+
+        Returns:
+
+        """
+        result = []
+        for comment in comments:
+            sub_comments = comment.get("comments")
+            if sub_comments:
+                if callback:
+                    await callback(comment.get("id"), sub_comments)
+                await asyncio.sleep(crawl_interval)
+                result.extend(sub_comments)
+        return result
