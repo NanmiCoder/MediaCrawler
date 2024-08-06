@@ -349,29 +349,26 @@ ALTER TABLE `bilibili_video_comment`
 ALTER TABLE `weibo_note_comment`
     ADD COLUMN `parent_comment_id` VARCHAR(64) DEFAULT NULL COMMENT '父评论ID';
 
-SET
-FOREIGN_KEY_CHECKS = 1;
-
 
 DROP TABLE IF EXISTS `tieba_note`;
-CREATE TABLE `tieba_note`
+CREATE TABLE tieba_note
 (
-    `id`             int         NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-    `note_id`        varchar(64) NOT NULL COMMENT '帖子ID',
-    `title`          varchar(255) DEFAULT NULL COMMENT '笔记标题',
-    `desc`           longtext COMMENT '笔记描述',
-    `time`           varchar     NOT NULL COMMENT '笔记发布时间',
-    `note_url`       varchar(255) DEFAULT NULL COMMENT '笔记详情页的URL',
-    `nickname`       varchar(64)  DEFAULT NULL COMMENT '用户昵称',
-    `nickname_link`  varchar(255) DEFAULT NULL COMMENT '用户主页地址',
-    `tieba_name`     varchar(255) DEFAULT NULL COMMENT '贴吧名称',
-    `tieba_link`     varchar(255) DEFAULT NULL COMMENT '贴吧链接地址',
-    `avatar`         varchar(255) DEFAULT NULL COMMENT '用户头像地址',
-    `ip_location`    varchar(255) DEFAULT NULL COMMENT '评论时的IP地址',
-    `add_ts`         bigint      NOT NULL COMMENT '记录添加时间戳',
-    `last_modify_ts` bigint      NOT NULL COMMENT '记录最后修改时间戳',
-    `comment_count`  varchar(16)  DEFAULT NULL COMMENT '笔记评论数',
-    PRIMARY KEY (`id`),
-    KEY              `idx_tieba_note_id` (`note_id`),
-    KEY              `idx_tieba_note_time` (`time`)
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    note_id           VARCHAR(644) NOT NULL COMMENT '帖子ID',
+    title             VARCHAR(255) NOT NULL COMMENT '帖子标题',
+    `desc`            TEXT COMMENT '帖子描述',
+    note_url          VARCHAR(255) NOT NULL COMMENT '帖子链接',
+    publish_time      VARCHAR(255) NOT NULL COMMENT '发布时间',
+    user_link         VARCHAR(255) NOT NULL COMMENT '用户主页链接',
+    user_nickname     VARCHAR(255) NOT NULL COMMENT '用户昵称',
+    user_avatar       VARCHAR(255) NOT NULL COMMENT '用户头像地址',
+    tieba_name        VARCHAR(255) NOT NULL COMMENT '贴吧名称',
+    tieba_link        VARCHAR(255) NOT NULL COMMENT '贴吧链接',
+    total_replay_num  INT          DEFAULT 0 COMMENT '帖子回复总数',
+    total_replay_page INT          DEFAULT 0 COMMENT '帖子回复总页数',
+    ip_location       VARCHAR(255) DEFAULT '' COMMENT 'IP地理位置',
+    add_ts            BIGINT       NOT NULL COMMENT '添加时间戳',
+    last_modify_ts    BIGINT       NOT NULL COMMENT '最后修改时间戳',
+    KEY               `idx_tieba_note_note_id` (`note_id`),
+    KEY               `idx_tieba_note_publish_time` (`publish_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='贴吧帖子表';

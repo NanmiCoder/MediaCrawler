@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-
-from typing import List, Dict
+import re
+from typing import List, Dict, Tuple
 
 from parsel import Selector
+
+from model.m_baidu_tieba import TiebaNote
+from constant import baidu_tieba as const
 
 
 class TieBaExtractor:
@@ -10,9 +13,9 @@ class TieBaExtractor:
         pass
 
     @staticmethod
-    def extract_search_note_list(page_content: str) -> List[Dict]:
+    def extract_search_note_list(page_content: str) -> List[TiebaNote]:
         """
-        提取贴吧帖子列表
+        提取贴吧帖子列表，这里提取的关键词搜索结果页的数据，还缺少帖子的回复数和回复页等数据
         Args:
             page_content: 页面内容的HTML字符串
 
@@ -21,33 +24,24 @@ class TieBaExtractor:
         """
         xpath_selector = "//div[@class='s_post']"
         post_list = Selector(text=page_content).xpath(xpath_selector)
-        result = []
+        result: List[TiebaNote] = []
         for post in post_list:
-            post_id = post.xpath(".//span[@class='p_title']/a/@data-tid").get(default='').strip()
-            title = post.xpath(".//span[@class='p_title']/a/text()").get(default='').strip()
-            link = post.xpath(".//span[@class='p_title']/a/@href").get(default='')
-            description = post.xpath(".//div[@class='p_content']/text()").get(default='').strip()
-            forum = post.xpath(".//a[@class='p_forum']/font/text()").get(default='').strip()
-            forum_link = post.xpath(".//a[@class='p_forum']/@href").get(default='')
-            author = post.xpath(".//a[starts-with(@href, '/home/main')]/font/text()").get(default='').strip()
-            author_link = post.xpath(".//a[starts-with(@href, '/home/main')]/@href").get(default='')
-            date = post.xpath(".//font[@class='p_green p_date']/text()").get(default='').strip()
-            result.append({
-                "note_id": post_id,
-                "title": title,
-                "desc": description,
-                "note_url": link,
-                "time": date,
-                "tieba_name": forum,
-                "tieba_link": forum_link,
-                "nickname": author,
-                "nickname_link": author_link,
-            })
-
+            tieba_note = TiebaNote(
+                note_id=post.xpath(".//span[@class='p_title']/a/@data-tid").get(default='').strip(),
+                title=post.xpath(".//span[@class='p_title']/a/text()").get(default='').strip(),
+                desc=post.xpath(".//div[@class='p_content']/text()").get(default='').strip(),
+                note_url=const.TIEBA_URL + post.xpath(".//span[@class='p_title']/a/@href").get(default=''),
+                user_nickname=post.xpath(".//a[starts-with(@href, '/home/main')]/font/text()").get(default='').strip(),
+                user_link=const.TIEBA_URL + post.xpath(".//a[starts-with(@href, '/home/main')]/@href").get(default=''),
+                tieba_name=post.xpath(".//a[@class='p_forum']/font/text()").get(default='').strip(),
+                tieba_link=const.TIEBA_URL + post.xpath(".//a[@class='p_forum']/@href").get(default=''),
+                publish_time=post.xpath(".//font[@class='p_green p_date']/text()").get(default='').strip(),
+            )
+            result.append(tieba_note)
         return result
 
-    @staticmethod
-    def extract_note_detail(page_content: str) -> Dict:
+
+    def extract_note_detail(self, page_content: str) -> TiebaNote:
         """
         提取贴吧帖子详情
         Args:
@@ -57,13 +51,33 @@ class TieBaExtractor:
 
         """
         content_selector = Selector(text=page_content)
-        # 查看楼主的链接： only_view_author_link: / p / 9117905169?see_lz = 1
-        only_view_author_link = content_selector.xpath("//*[@id='lzonly_cntn']/@href").get(default='').strip() #
+        first_floor_selector = content_selector.xpath("//div[@class='p_postlist'][1]")
+        only_view_author_link = content_selector.xpath("//*[@id='lzonly_cntn']/@href").get(default='').strip()
         note_id = only_view_author_link.split("?")[0].split("/")[-1]
-        title = content_selector.xpath("//*[@id='j_core_title_wrap']/h3").get(default='').strip()
-        desc = content_selector.xpath("//meta[@name='description']").get(default='').strip()
-        note_url = f"/p/{note_id}"
-        pass
+        # 帖子回复数、回复页数
+        thread_num_infos = content_selector.xpath(
+            "//div[@id='thread_theme_5']//li[@class='l_reply_num']//span[@class='red']"
+        )
+        # IP地理位置、发表时间
+        other_info_content = content_selector.xpath(".//div[@class='post-tail-wrap']").get(default="").strip()
+        ip_location, publish_time = self.extract_ip_and_pub_time(other_info_content)
+        note = TiebaNote(
+            note_id=note_id,
+            title=content_selector.xpath("//title/text()").get(default='').strip(),
+            desc=content_selector.xpath("//meta[@name='description']/@content").get(default='').strip(),
+            note_url=const.TIEBA_URL + f"/p/{note_id}",
+            user_link=const.TIEBA_URL + first_floor_selector.xpath(".//a[@class='p_author_face ']/@href").get(default='').strip(),
+            user_nickname=first_floor_selector.xpath(".//a[@class='p_author_name j_user_card']/text()").get(default='').strip(),
+            user_avatar=first_floor_selector.xpath(".//a[@class='p_author_face ']/img/@src").get(default='').strip(),
+            tieba_name=content_selector.xpath("//a[@class='card_title_fname']/text()").get(default='').strip(),
+            tieba_link=const.TIEBA_URL + content_selector.xpath("//a[@class='card_title_fname']/@href").get(default=''),
+            ip_location=ip_location,
+            publish_time=publish_time,
+            total_replay_num=thread_num_infos[0].xpath("./text()").get(default='').strip(),
+            total_replay_page=thread_num_infos[1].xpath("./text()").get(default='').strip(),
+        )
+        note.title = note.title.replace(f"【{note.tieba_name}】_百度贴吧", "")
+        return note
 
     @staticmethod
     def extract_tieba_note_comments(page_content: str) -> List[Dict]:
@@ -93,12 +107,40 @@ class TieBaExtractor:
                 "time": date,
             })
 
+    @staticmethod
+    def extract_ip_and_pub_time(html_content: str) -> Tuple[str, str]:
+        """
+        提取IP位置和发布时间
+        Args:
+            html_content:
 
+        Returns:
 
-if __name__ == '__main__':
+        """
+        pattern_ip = re.compile(r'IP属地:(\S+)</span>')
+        pattern_pub_time = re.compile(r'<span class="tail-info">(\d{4}-\d{2}-\d{2} \d{2}:\d{2})</span>')
+        ip_match = pattern_ip.search(html_content)
+        time_match = pattern_pub_time.search(html_content)
+        ip = ip_match.group(1) if ip_match else ""
+        pub_time = time_match.group(1) if time_match else ""
+        return ip, pub_time
+
+def test_extract_search_note_list():
     with open("test_data/search_keyword_notes.html", "r", encoding="utf-8") as f:
         content = f.read()
         extractor = TieBaExtractor()
-        _result = extractor.extract_search_note_list(content)
-        print(_result)
-        print(f"Total: {len(_result)}")
+        result = extractor.extract_search_note_list(content)
+        print(result)
+
+
+def test_extract_note_detail():
+    with open("test_data/note_detail.html", "r", encoding="utf-8") as f:
+        content = f.read()
+        extractor = TieBaExtractor()
+        result = extractor.extract_note_detail(content)
+        print(result.model_dump())
+
+
+if __name__ == '__main__':
+    test_extract_search_note_list()
+    test_extract_note_detail()

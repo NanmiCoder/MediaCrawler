@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
+from model.m_baidu_tieba import TiebaNote
 from . import tieba_store_impl
 from .tieba_store_impl import *
 
@@ -21,24 +22,20 @@ class TieBaStoreFactory:
         return store_class()
 
 
-async def update_tieba_note(note_item: Dict):
-    tieba_url = "https://tieba.baidu.com"
-    note_id = note_item.get("note_id")
-    local_db_item = {
-        "note_id": note_id,
-        "title": note_item.get("title") or note_item.get("desc", "")[:255],
-        "desc": note_item.get("desc", ""),
-        "note_url": tieba_url + note_item.get("note_url"),
-        "time": note_item.get("time"),
-        "tieba_name": note_item.get("tieba_name"),
-        "tieba_link": tieba_url + note_item.get("tieba_link", ""),
-        "nickname": note_item.get("nickname"),
-        "nickname_link": tieba_url + note_item.get("nickname_link", ""),
-        "ip_location": note_item.get("ip_location", ""),
-        "last_modify_ts": utils.get_current_timestamp(),
-    }
-    utils.logger.info(f"[store.tieba.update_tieba_note] tieba note: {local_db_item}")
-    await TieBaStoreFactory.create_store().store_content(local_db_item)
+async def update_tieba_note(note_item: TiebaNote):
+    """
+    Add or Update tieba note
+    Args:
+        note_item:
+
+    Returns:
+
+    """
+    save_note_item = note_item.model_dump()
+    save_note_item.update({"last_modify_ts": utils.get_current_timestamp()})
+    utils.logger.info(f"[store.tieba.update_tieba_note] tieba note: {save_note_item}")
+
+    await TieBaStoreFactory.create_store().store_content(save_note_item)
 
 
 async def batch_update_tieba_note_comments(note_id: str, comments: List[Dict]):

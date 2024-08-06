@@ -10,6 +10,7 @@ from tenacity import (RetryError, retry, stop_after_attempt,
                       wait_fixed)
 
 from base.base_crawler import AbstractApiClient
+from model.m_baidu_tieba import TiebaNote
 from proxy.proxy_ip_pool import ProxyIpPool
 from tools import utils
 
@@ -98,6 +99,7 @@ class BaiduTieBaClient(AbstractApiClient):
                 return res
 
             utils.logger.error(f"[BaiduTieBaClient.get] 达到了最大重试次数，请尝试更换新的IP代理: {e}")
+            raise e
 
     async def post(self, uri: str, data: dict, **kwargs) -> Dict:
         """
@@ -152,7 +154,7 @@ class BaiduTieBaClient(AbstractApiClient):
             sort: SearchSortType = SearchSortType.TIME_DESC,
             note_type: SearchNoteType = SearchNoteType.FIXED_THREAD,
             random_sleep: bool = True
-    ) -> List[Dict]:
+    ) -> List[TiebaNote]:
         """
         根据关键词搜索贴吧帖子
         Args:
@@ -180,7 +182,7 @@ class BaiduTieBaClient(AbstractApiClient):
             random.randint(1, 5)
         return self._page_extractor.extract_search_note_list(page_content)
 
-    async def get_note_by_id(self, note_id: str) -> Dict:
+    async def get_note_by_id(self, note_id: str) -> TiebaNote:
         """
         根据帖子ID获取帖子详情
         Args:
@@ -192,8 +194,6 @@ class BaiduTieBaClient(AbstractApiClient):
         uri = f"/p/{note_id}"
         page_content = await self.get(uri, return_ori_content=True)
         return self._page_extractor.extract_note_detail(page_content)
-        # todo impl it
-        return {}
 
     async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0,
                                     callback: Optional[Callable] = None) -> List[Dict]:
@@ -229,7 +229,7 @@ class BaiduTieBaClient(AbstractApiClient):
         return result
 
     async def get_comments_all_sub_comments(self, comments: List[Dict], crawl_interval: float = 1.0,
-                                           callback: Optional[Callable] = None) -> List[Dict]:
+                                            callback: Optional[Callable] = None) -> List[Dict]:
         """
         获取指定评论下的所有子评论
         Args:
