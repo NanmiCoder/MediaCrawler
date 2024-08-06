@@ -8,6 +8,7 @@ from parsel import Selector
 
 from model.m_baidu_tieba import TiebaNote, TiebaComment
 from constant import baidu_tieba as const
+from tools import utils
 
 
 class TieBaExtractor:
@@ -105,7 +106,7 @@ class TieBaExtractor:
             tieba_comment = TiebaComment(
                 comment_id=str(comment_field_value.get("content").get("post_id")),
                 sub_comment_count=comment_field_value.get("content").get("comment_num"),
-                content=comment_field_value.get("content").get("content"),
+                content=utils.extract_text_from_html(comment_field_value.get("content").get("content")),
                 note_url=const.TIEBA_URL + f"/p/{note_id}",
                 user_link=const.TIEBA_URL + comment_selector.xpath(".//a[@class='p_author_face ']/@href").get(default='').strip(),
                 user_nickname=comment_selector.xpath(".//a[@class='p_author_name j_user_card']/text()").get(
@@ -117,7 +118,6 @@ class TieBaExtractor:
                 publish_time=publish_time,
                 note_id=note_id,
             )
-            print(tieba_comment.model_dump())
             result.append(tieba_comment)
         return result
 

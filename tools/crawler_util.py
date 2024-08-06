@@ -147,3 +147,11 @@ def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optio
         f"{ip_proxy_info.protocol}": f"http://{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
     }
     return playwright_proxy, httpx_proxy
+
+def extract_text_from_html(html: str) -> str:
+    """Extract text from HTML, removing all tags."""
+    # Remove script and style elements
+    clean_html = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', html, flags=re.DOTALL)
+    # Remove all other tags
+    clean_text = re.sub(r'<[^>]+>', '', clean_html).strip()
+    return clean_text
