@@ -100,7 +100,7 @@ class TieBaExtractor:
             comment_field_value: Dict = self.extract_data_field_value(comment_selector)
             if not comment_field_value:
                 continue
-
+            tieba_name = comment_selector.xpath("//a[@class='card_title_fname']/text()").get(default='').strip()
             other_info_content = comment_selector.xpath(".//div[@class='post-tail-wrap']").get(default="").strip()
             ip_location, publish_time = self.extract_ip_and_pub_time(other_info_content)
             tieba_comment = TiebaComment(
@@ -108,18 +108,60 @@ class TieBaExtractor:
                 sub_comment_count=comment_field_value.get("content").get("comment_num"),
                 content=utils.extract_text_from_html(comment_field_value.get("content").get("content")),
                 note_url=const.TIEBA_URL + f"/p/{note_id}",
-                user_link=const.TIEBA_URL + comment_selector.xpath(".//a[@class='p_author_face ']/@href").get(default='').strip(),
+                user_link=const.TIEBA_URL + comment_selector.xpath(".//a[@class='p_author_face ']/@href").get(
+                    default='').strip(),
                 user_nickname=comment_selector.xpath(".//a[@class='p_author_name j_user_card']/text()").get(
                     default='').strip(),
                 user_avatar=comment_selector.xpath(".//a[@class='p_author_face ']/img/@src").get(
                     default='').strip(),
-                tieba_name=comment_selector.xpath("//a[@class='card_title_fname']/text()").get(default='').strip(),
+                tieba_id=str(comment_field_value.get("content").get("forum_id", "")),
+                tieba_name=tieba_name,
+                tieba_link=f"https://tieba.baidu.com/f?kw={tieba_name}",
                 ip_location=ip_location,
                 publish_time=publish_time,
                 note_id=note_id,
             )
             result.append(tieba_comment)
         return result
+
+
+    def extract_tieba_note_sub_comments(self,page_content: str, parent_comment: TiebaComment) -> List[TiebaComment]:
+        """
+        提取贴吧帖子二级评论
+        Args:
+            page_content:
+            parent_comment:
+
+        Returns:
+
+        """
+        selector = Selector(page_content)
+        comments = []
+        comment_ele_list = selector.xpath("//li[@class='lzl_single_post j_lzl_s_p first_no_border']")
+        comment_ele_list.extend(selector.xpath("//li[@class='lzl_single_post j_lzl_s_p ']"))
+        for comment_ele in comment_ele_list:
+            comment_value = self.extract_data_field_value(comment_ele)
+            if not comment_value:
+                continue
+            comment_user_a_selector = comment_ele.xpath("./a[@class='j_user_card lzl_p_p']")[0]
+            content = utils.extract_text_from_html(comment_ele.xpath(".//span[@class='lzl_content_main']").get(default=""))
+            comment = TiebaComment(
+                comment_id=str(comment_value.get("spid")),
+                content=content,
+                user_link=comment_user_a_selector.xpath("./@href").get(default=""),
+                user_nickname=comment_value.get("showname"),
+                user_avatar=comment_user_a_selector.xpath("./img/@src").get(default=""),
+                publish_time=comment_ele.xpath(".//span[@class='lzl_time']/text()").get(default="").strip(),
+                parent_comment_id=parent_comment.comment_id,
+                note_id=parent_comment.note_id,
+                note_url=parent_comment.note_url,
+                tieba_id=parent_comment.tieba_id,
+                tieba_name=parent_comment.tieba_name,
+                tieba_link=parent_comment.tieba_link
+            )
+            comments.append(comment)
+
+        return comments
 
     @staticmethod
     def extract_ip_and_pub_time(html_content: str) -> Tuple[str, str]:
@@ -162,8 +204,6 @@ class TieBaExtractor:
         return data_field_dict_value
 
 
-
-
 def test_extract_search_note_list():
     with open("test_data/search_keyword_notes.html", "r", encoding="utf-8") as f:
         content = f.read()
@@ -179,6 +219,7 @@ def test_extract_note_detail():
         result = extractor.extract_note_detail(content)
         print(result.model_dump())
 
+
 def test_extract_tieba_note_parment_comments():
     with open("test_data/note_comments.html", "r", encoding="utf-8") as f:
         content = f.read()
@@ -186,7 +227,28 @@ def test_extract_tieba_note_parment_comments():
         result = extractor.extract_tieba_note_parment_comments(content, "123456")
         print(result)
 
+def test_extract_tieba_note_sub_comments():
+    with open("test_data/note_sub_comments.html", "r", encoding="utf-8") as f:
+        content = f.read()
+        extractor = TieBaExtractor()
+        fake_parment_comment = TiebaComment(
+            comment_id="123456",
+            content="content",
+            user_link="user_link",
+            user_nickname="user_nickname",
+            user_avatar="user_avatar",
+            publish_time="publish_time",
+            parent_comment_id="parent_comment_id",
+            note_id="note_id",
+            note_url="note_url",
+            tieba_id="tieba_id",
+            tieba_name="tieba_name",
+        )
+        result = extractor.extract_tieba_note_sub_comments(content,fake_parment_comment)
+        print(result)
+
 if __name__ == '__main__':
     # test_extract_search_note_list()
     # test_extract_note_detail()
-    test_extract_tieba_note_parment_comments()
+    # test_extract_tieba_note_parment_comments()
+    test_extract_tieba_note_sub_comments()

@@ -28,7 +28,7 @@ class TiebaComment(BaseModel):
     """
 
     comment_id: str = Field(..., description="评论ID")
-    parment_comment_id: str = Field(default="", description="父评论ID")
+    parent_comment_id: str = Field(default="", description="父评论ID")
     content: str = Field(..., description="评论内容")
     user_link: str = Field(default="", description="用户主页链接")
     user_nickname: str = Field(default="", description="用户昵称")
@@ -38,5 +38,7 @@ class TiebaComment(BaseModel):
     sub_comment_count: int = Field(default=0, description="子评论数")
     note_id: str = Field(..., description="帖子ID")
     note_url: str = Field(..., description="帖子链接")
+    tieba_id: str = Field(..., description="所属的贴吧ID")
     tieba_name: str = Field(..., description="所属的贴吧名称")
+    tieba_link: str = Field(..., description="贴吧链接")
 
