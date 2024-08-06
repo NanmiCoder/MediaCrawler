@@ -372,3 +372,26 @@ CREATE TABLE tieba_note
     KEY               `idx_tieba_note_note_id` (`note_id`),
     KEY               `idx_tieba_note_publish_time` (`publish_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='贴吧帖子表';
+
+DROP TABLE IF EXISTS `tieba_comment`;
+CREATE TABLE tieba_comment
+(
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    comment_id         VARCHAR(255) NOT NULL COMMENT '评论ID',
+    parment_comment_id VARCHAR(255) DEFAULT '' COMMENT '父评论ID',
+    content            TEXT         NOT NULL COMMENT '评论内容',
+    user_link          VARCHAR(255) DEFAULT '' COMMENT '用户主页链接',
+    user_nickname      VARCHAR(255) DEFAULT '' COMMENT '用户昵称',
+    user_avatar        VARCHAR(255) DEFAULT '' COMMENT '用户头像地址',
+    publish_time       VARCHAR(255) DEFAULT '' COMMENT '发布时间',
+    ip_location        VARCHAR(255) DEFAULT '' COMMENT 'IP地理位置',
+    sub_comment_count  INT          DEFAULT 0 COMMENT '子评论数',
+    note_id            VARCHAR(255) NOT NULL COMMENT '帖子ID',
+    note_url           VARCHAR(255) NOT NULL COMMENT '帖子链接',
+    tieba_name         VARCHAR(255) NOT NULL COMMENT '所属的贴吧名称',
+    add_ts             BIGINT       NOT NULL COMMENT '添加时间戳',
+    last_modify_ts     BIGINT       NOT NULL COMMENT '最后修改时间戳',
+    KEY                `idx_tieba_comment_comment_id` (`note_id`),
+    KEY                `idx_tieba_comment_note_id` (`note_id`),
+    KEY                `idx_tieba_comment_publish_time` (`publish_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='贴吧评论表';

@@ -114,10 +114,12 @@ class TieBaCrawler(AbstractCrawler):
             self.get_note_detail_async_task(note_id=note_id, semaphore=semaphore) for note_id in note_id_list
         ]
         note_details = await asyncio.gather(*task_list)
+        note_details_model: List[TiebaNote] = []
         for note_detail in note_details:
             if note_detail is not None:
+                note_details_model.append(note_detail)
                 await tieba_store.update_tieba_note(note_detail)
-        await self.batch_get_note_comments(config.TIEBA_SPECIFIED_ID_LIST)
+        await self.batch_get_note_comments(note_details_model)
 
     async def get_note_detail_async_task(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[TiebaNote]:
         """
@@ -146,42 +148,39 @@ class TieBaCrawler(AbstractCrawler):
                     f"[BaiduTieBaCrawler.get_note_detail] have not fund note detail note_id:{note_id}, err: {ex}")
                 return None
 
-    async def batch_get_note_comments(self, note_id_list: List[str]):
+    async def batch_get_note_comments(self, note_detail_list: List[TiebaNote]):
         """
         Batch get note comments
         Args:
-            note_id_list:
+            note_detail_list:
 
         Returns:
 
         """
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(f"[BaiduTieBaCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
             return
 
-        utils.logger.info(
-            f"[BaiduTieBaCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_id_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
-        for note_id in note_id_list:
-            task = asyncio.create_task(self.get_comments_async_task(note_id, semaphore), name=note_id)
+        for note_detail in note_detail_list:
+            task = asyncio.create_task(self.get_comments_async_task(note_detail, semaphore), name=note_detail.note_id)
             task_list.append(task)
         await asyncio.gather(*task_list)
 
-    async def get_comments_async_task(self, note_id: str, semaphore: asyncio.Semaphore):
+    async def get_comments_async_task(self, note_detail: TiebaNote, semaphore: asyncio.Semaphore):
         """
         Get comments async task
         Args:
-            note_id:
+            note_detail:
             semaphore:
 
         Returns:
 
         """
         async with semaphore:
-            utils.logger.info(f"[BaiduTieBaCrawler.get_comments] Begin get note id comments {note_id}")
+            utils.logger.info(f"[BaiduTieBaCrawler.get_comments] Begin get note id comments {note_detail.note_id}")
             await self.tieba_client.get_note_all_comments(
-                note_id=note_id,
+                note_detail=note_detail,
                 crawl_interval=random.random(),
                 callback=tieba_store.batch_update_tieba_note_comments
             )

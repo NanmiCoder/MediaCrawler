@@ -9,8 +9,9 @@ from playwright.async_api import BrowserContext
 from tenacity import (RetryError, retry, stop_after_attempt,
                       wait_fixed)
 
+import config
 from base.base_crawler import AbstractApiClient
-from model.m_baidu_tieba import TiebaNote
+from model.m_baidu_tieba import TiebaNote, TiebaComment
 from proxy.proxy_ip_pool import ProxyIpPool
 from tools import utils
 
@@ -195,41 +196,38 @@ class BaiduTieBaClient(AbstractApiClient):
         page_content = await self.get(uri, return_ori_content=True)
         return self._page_extractor.extract_note_detail(page_content)
 
-    async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0,
-                                    callback: Optional[Callable] = None) -> List[Dict]:
+    async def get_note_all_comments(self, note_detail: TiebaNote, crawl_interval: float = 1.0,
+                                    callback: Optional[Callable] = None) -> List[TiebaComment]:
         """
         获取指定帖子下的所有一级评论，该方法会一直查找一个帖子下的所有评论信息
         Args:
-            note_id: 帖子ID
+            note_detail: 帖子详情对象
             crawl_interval: 爬取一次笔记的延迟单位（秒）
             callback: 一次笔记爬取结束后
 
         Returns:
 
         """
-        uri = f"/p/{note_id}"
-        result = []
-        comments_has_more = True
-        comments_cursor = 1
-        while comments_has_more:
-            comments_res = await self.get(uri, params={"pn": comments_cursor})
-            comments_has_more = comments_res.get("has_more", False)
-            comments_cursor = comments_res.get("cursor", "")
-            if "comments" not in comments_res:
-                utils.logger.info(
-                    f"[XiaoHongShuClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
+        uri = f"/p/{note_detail.note_id}"
+        result: List[TiebaComment] = []
+        current_page = 1
+        while note_detail.total_replay_page >= current_page:
+            params = {
+                "pn": current_page
+            }
+            page_content = await self.get(uri, params=params, return_ori_content=True)
+            comments = self._page_extractor.extract_tieba_note_parment_comments(page_content, note_id=note_detail.note_id)
+            if not comments:
                 break
-            comments = comments_res["comments"]
             if callback:
-                await callback(note_id, comments)
-            await asyncio.sleep(crawl_interval)
+                await callback(note_detail.note_id, comments)
             result.extend(comments)
-            sub_comments = await self.get_comments_all_sub_comments(comments, crawl_interval, callback)
-            result.extend(sub_comments)
+            await asyncio.sleep(crawl_interval)
+            current_page += 1
         return result
 
     async def get_comments_all_sub_comments(self, comments: List[Dict], crawl_interval: float = 1.0,
-                                            callback: Optional[Callable] = None) -> List[Dict]:
+                                            callback: Optional[Callable] = None) -> List[TiebaComment]:
         """
         获取指定评论下的所有子评论
         Args:
@@ -240,12 +238,7 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
-        result = []
-        for comment in comments:
-            sub_comments = comment.get("comments")
-            if sub_comments:
-                if callback:
-                    await callback(comment.get("id"), sub_comments)
-                await asyncio.sleep(crawl_interval)
-                result.extend(sub_comments)
-        return result
+        if not config.ENABLE_GET_SUB_COMMENTS:
+            return []
+
+        # todo 未完成子评论的爬取
