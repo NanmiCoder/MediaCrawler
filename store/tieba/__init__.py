@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
-from model.m_baidu_tieba import TiebaNote, TiebaComment
+from model.m_baidu_tieba import TiebaComment, TiebaNote
+
 from . import tieba_store_impl
 from .tieba_store_impl import *
 

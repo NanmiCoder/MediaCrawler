@@ -53,6 +53,7 @@ class TieBaCrawler(AbstractCrawler):
         if config.CRAWLER_TYPE == "search":
             # Search for notes and retrieve their comment information.
             await self.search()
+            await self.get_specified_tieba_notes()
         elif config.CRAWLER_TYPE == "detail":
             # Get the information and comments of the specified post
             await self.get_specified_notes()
@@ -92,13 +93,41 @@ class TieBaCrawler(AbstractCrawler):
                     if not notes_list:
                         utils.logger.info(f"[BaiduTieBaCrawler.search] Search note list is empty")
                         break
-                    utils.logger.info(f"[BaiduTieBaCrawler.search] Note List: {notes_list}")
+                    utils.logger.info(f"[BaiduTieBaCrawler.search] Note list len: {len(notes_list)}")
                     await self.get_specified_notes(note_id_list=[note_detail.note_id for note_detail in notes_list])
                     page += 1
                 except Exception as ex:
                     utils.logger.error(
                         f"[BaiduTieBaCrawler.search] Search keywords error, current page: {page}, current keyword: {keyword}, err: {ex}")
                     break
+
+    async def get_specified_tieba_notes(self):
+        """
+        Get the information and comments of the specified post by tieba name
+        Returns:
+
+        """
+        tieba_limit_count = 50
+        if config.CRAWLER_MAX_NOTES_COUNT < tieba_limit_count:
+            config.CRAWLER_MAX_NOTES_COUNT = tieba_limit_count
+        for tieba_name in config.TIEBA_NAME_LIST:
+            utils.logger.info(
+                f"[BaiduTieBaCrawler.get_specified_tieba_notes] Begin get tieba name: {tieba_name}")
+            page_number = 0
+            while page_number <= config.CRAWLER_MAX_NOTES_COUNT:
+                note_list: List[TiebaNote] = await self.tieba_client.get_notes_by_tieba_name(
+                    tieba_name=tieba_name,
+                    page_num=page_number
+                )
+                if not note_list:
+                    utils.logger.info(
+                        f"[BaiduTieBaCrawler.get_specified_tieba_notes] Get note list is empty")
+                    break
+
+                utils.logger.info(
+                    f"[BaiduTieBaCrawler.get_specified_tieba_notes] tieba name: {tieba_name} note list len: {len(note_list)}")
+                await self.get_specified_notes([note.note_id for note in note_list])
+                page_number += tieba_limit_count
 
     async def get_specified_notes(self, note_id_list: List[str] = config.TIEBA_SPECIFIED_ID_LIST):
         """

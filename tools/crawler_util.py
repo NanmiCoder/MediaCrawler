@@ -14,6 +14,7 @@ from PIL import Image, ImageDraw
 from playwright.async_api import Cookie, Page
 
 from proxy import IpInfoModel
+
 from . import utils
 
 

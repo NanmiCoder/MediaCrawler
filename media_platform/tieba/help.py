@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-import re
-import json
 import html
-from typing import List, Dict, Tuple
+import json
+import re
+from typing import Dict, List, Tuple
 
 from parsel import Selector
 
-from model.m_baidu_tieba import TiebaNote, TiebaComment
 from constant import baidu_tieba as const
+from model.m_baidu_tieba import TiebaComment, TiebaNote
 from tools import utils
 
 
@@ -39,6 +39,42 @@ class TieBaExtractor:
                 tieba_name=post.xpath(".//a[@class='p_forum']/font/text()").get(default='').strip(),
                 tieba_link=const.TIEBA_URL + post.xpath(".//a[@class='p_forum']/@href").get(default=''),
                 publish_time=post.xpath(".//font[@class='p_green p_date']/text()").get(default='').strip(),
+            )
+            result.append(tieba_note)
+        return result
+
+    def extract_tieba_note_list(self, page_content: str) -> List[TiebaNote]:
+        """
+        提取贴吧帖子列表
+        Args:
+            page_content:
+
+        Returns:
+
+        """
+        page_content = page_content.replace('<!--', "")
+        content_selector = Selector(text=page_content)
+        xpath_selector = "//ul[@id='thread_list']/li"
+        post_list = content_selector.xpath(xpath_selector)
+        result: List[TiebaNote] = []
+        for post_selector in post_list:
+            post_field_value: Dict = self.extract_data_field_value(post_selector)
+            if not post_field_value:
+                continue
+            note_id = str(post_field_value.get("id"))
+            tieba_note = TiebaNote(
+                note_id=note_id,
+                title=post_selector.xpath(".//a[@class='j_th_tit ']/text()").get(default='').strip(),
+                desc=post_selector.xpath(".//div[@class='threadlist_abs threadlist_abs_onlyline ']/text()").get(
+                    default='').strip(),
+                note_url=const.TIEBA_URL + f"/p/{note_id}",
+                user_link=const.TIEBA_URL + post_selector.xpath(
+                    ".//a[@class='frs-author-name j_user_card ']/@href").get(default='').strip(),
+                user_nickname=post_field_value.get("authoer_nickname") or post_field_value.get("author_name"),
+                tieba_name=content_selector.xpath("//a[@class='card_title_fname']/text()").get(default='').strip(),
+                tieba_link=const.TIEBA_URL + content_selector.xpath("//a[@class='card_title_fname']/@href").get(
+                    default=''),
+                total_replay_num=post_field_value.get("reply_num", 0)
             )
             result.append(tieba_note)
         return result
@@ -124,8 +160,7 @@ class TieBaExtractor:
             result.append(tieba_comment)
         return result
 
-
-    def extract_tieba_note_sub_comments(self,page_content: str, parent_comment: TiebaComment) -> List[TiebaComment]:
+    def extract_tieba_note_sub_comments(self, page_content: str, parent_comment: TiebaComment) -> List[TiebaComment]:
         """
         提取贴吧帖子二级评论
         Args:
@@ -144,7 +179,8 @@ class TieBaExtractor:
             if not comment_value:
                 continue
             comment_user_a_selector = comment_ele.xpath("./a[@class='j_user_card lzl_p_p']")[0]
-            content = utils.extract_text_from_html(comment_ele.xpath(".//span[@class='lzl_content_main']").get(default=""))
+            content = utils.extract_text_from_html(
+                comment_ele.xpath(".//span[@class='lzl_content_main']").get(default=""))
             comment = TiebaComment(
                 comment_id=str(comment_value.get("spid")),
                 content=content,
@@ -227,6 +263,7 @@ def test_extract_tieba_note_parment_comments():
         result = extractor.extract_tieba_note_parment_comments(content, "123456")
         print(result)
 
+
 def test_extract_tieba_note_sub_comments():
     with open("test_data/note_sub_comments.html", "r", encoding="utf-8") as f:
         content = f.read()
@@ -244,11 +281,21 @@ def test_extract_tieba_note_sub_comments():
             tieba_id="tieba_id",
             tieba_name="tieba_name",
         )
-        result = extractor.extract_tieba_note_sub_comments(content,fake_parment_comment)
+        result = extractor.extract_tieba_note_sub_comments(content, fake_parment_comment)
         print(result)
+
+
+def test_extract_tieba_note_list():
+    with open("test_data/tieba_note_list.html", "r", encoding="utf-8") as f:
+        content = f.read()
+        extractor = TieBaExtractor()
+        result = extractor.extract_tieba_note_list(content)
+        print(result)
+    pass
+
 
 if __name__ == '__main__':
     # test_extract_search_note_list()
     # test_extract_note_detail()
     # test_extract_tieba_note_parment_comments()
-    test_extract_tieba_note_sub_comments()
+    test_extract_tieba_note_list()

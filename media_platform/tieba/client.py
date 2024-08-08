@@ -1,17 +1,15 @@
 import asyncio
 import json
-import random
 from typing import Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext
-from tenacity import (RetryError, retry, stop_after_attempt,
-                      wait_fixed)
+from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
 
 import config
 from base.base_crawler import AbstractApiClient
-from model.m_baidu_tieba import TiebaNote, TiebaComment
+from model.m_baidu_tieba import TiebaComment, TiebaNote
 from proxy.proxy_ip_pool import ProxyIpPool
 from tools import utils
 
@@ -103,7 +101,7 @@ class BaiduTieBaClient(AbstractApiClient):
                 return res
 
             utils.logger.error(f"[BaiduTieBaClient.get] 达到了最大重试次数，IP已经被Block，请尝试更换新的IP代理: {e}")
-            raise e
+            raise Exception(f"[BaiduTieBaClient.get] 达到了最大重试次数，IP已经被Block，请尝试更换新的IP代理: {e}")
 
     async def post(self, uri: str, data: dict, **kwargs) -> Dict:
         """
@@ -248,28 +246,44 @@ class BaiduTieBaClient(AbstractApiClient):
         #     raise Exception(f"[BaiduTieBaClient.pong] Cookies is empty, please login first...")
 
         all_sub_comments: List[TiebaComment] = []
-        for comment in comments:
-            if comment.sub_comment_count == 0:
+        for parment_comment in comments:
+            if parment_comment.sub_comment_count == 0:
                 continue
 
             current_page = 1
-            max_sub_page_num = comment.sub_comment_count // 10 + 1
+            max_sub_page_num = parment_comment.sub_comment_count // 10 + 1
             while max_sub_page_num >= current_page:
                 params = {
-                    "tid": comment.note_id,  # 帖子ID
-                    "pid": comment.comment_id,  # 父级评论ID
-                    "fid": comment.tieba_id,  # 贴吧ID
+                    "tid": parment_comment.note_id,  # 帖子ID
+                    "pid": parment_comment.comment_id,  # 父级评论ID
+                    "fid": parment_comment.tieba_id,  # 贴吧ID
                     "pn": current_page  # 页码
                 }
                 page_content = await self.get(uri, params=params, return_ori_content=True)
                 sub_comments = self._page_extractor.extract_tieba_note_sub_comments(page_content,
-                                                                                    parent_comment=comment)
+                                                                                    parent_comment=parment_comment)
 
                 if not sub_comments:
                     break
                 if callback:
-                    await callback(comment.note_id, sub_comments)
+                    await callback(parment_comment.note_id, sub_comments)
                 all_sub_comments.extend(sub_comments)
                 await asyncio.sleep(crawl_interval)
                 current_page += 1
         return all_sub_comments
+
+
+
+    async def get_notes_by_tieba_name(self, tieba_name: str, page_num: int) -> List[TiebaNote]:
+        """
+        根据贴吧名称获取帖子列表
+        Args:
+            tieba_name: 贴吧名称
+            page_num: 分页数量
+
+        Returns:
+
+        """
+        uri = f"/f?kw={tieba_name}&pn={page_num}"
+        page_content = await self.get(uri, return_ori_content=True)
+        return self._page_extractor.extract_tieba_note_list(page_content)
