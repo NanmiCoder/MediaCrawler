@@ -32,8 +32,9 @@ class AsyncWordCloudGenerator:
 
         # Save word frequency to file
         freq_file = f"{save_words_prefix}_word_freq.json"
+        sorted_words = dict(word_freq.most_common())
         async with aiofiles.open(freq_file, 'w', encoding='utf-8') as file:
-            await file.write(json.dumps(word_freq, ensure_ascii=False, indent=4))
+            await file.write(json.dumps(sorted_words, ensure_ascii=False, indent=4))
 
         # Try to acquire the plot lock without waiting
         if plot_lock.locked():
@@ -44,8 +45,7 @@ class AsyncWordCloudGenerator:
 
     async def generate_word_cloud(self, word_freq, save_words_prefix):
         await plot_lock.acquire()
-        top_20_word_freq = {word: freq for word, freq in
-                            sorted(word_freq.items(), key=lambda item: item[1], reverse=True)[:20]}
+        top_20_word_freq = dict(word_freq.most_common(20))
         wordcloud = WordCloud(
             font_path=config.FONT_PATH,
             width=800,
