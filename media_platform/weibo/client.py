@@ -13,6 +13,7 @@ from urllib.parse import urlencode
 import httpx
 from playwright.async_api import BrowserContext, Page
 
+import config
 from tools import utils
 
 from .exception import DataFetchError
@@ -70,7 +71,7 @@ class WeiboClient:
         utils.logger.info("[WeiboClient.pong] Begin pong weibo...")
         ping_flag = False
         try:
-            uri  = "/api/config"
+            uri = "/api/config"
             resp_data: Dict = await self.request(method="GET", url=f"{self._host}{uri}", headers=self.headers)
             if resp_data.get("login"):
                 ping_flag = True
@@ -129,13 +130,12 @@ class WeiboClient:
 
         return await self.get(uri, params, headers=headers)
 
-    async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
+    async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0,
                                     callback: Optional[Callable] = None, ):
         """
         get note all comments include sub comments
         :param note_id:
         :param crawl_interval:
-        :param is_fetch_sub_comments:
         :param callback:
         :return:
         """
@@ -151,11 +151,36 @@ class WeiboClient:
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(note_id, comment_list)
             await asyncio.sleep(crawl_interval)
-            if not is_fetch_sub_comments:
-                result.extend(comment_list)
-                continue
-            # todo handle get sub comments
+            result.extend(comment_list)
+            sub_comment_result = await self.get_comments_all_sub_comments(note_id, comment_list, callback)
+            result.extend(sub_comment_result)
         return result
+
+    @staticmethod
+    async def get_comments_all_sub_comments(note_id: str, comment_list: List[Dict],
+                                            callback: Optional[Callable] = None) -> List[Dict]:
+        """
+        获取评论的所有子评论
+        Args:
+            note_id:
+            comment_list:
+            callback:
+
+        Returns:
+
+        """
+        if not config.ENABLE_GET_SUB_COMMENTS:
+            utils.logger.info(
+                f"[WeiboClient.get_comments_all_sub_comments] Crawling sub_comment mode is not enabled")
+            return []
+
+        res_sub_comments = []
+        for comment in comment_list:
+            sub_comments = comment.get("comments")
+            if sub_comments and isinstance(sub_comments, list):
+                await callback(note_id, sub_comments)
+                res_sub_comments.extend(sub_comments)
+        return res_sub_comments
 
     async def get_note_info_by_id(self, note_id: str) -> Dict:
         """
@@ -184,12 +209,12 @@ class WeiboClient:
                 return dict()
 
     async def get_note_image(self, image_url: str) -> bytes:
-        image_url = image_url[8:] # 去掉 https://
+        image_url = image_url[8:]  # 去掉 https://
         sub_url = image_url.split("/")
         image_url = ""
         for i in range(len(sub_url)):
             if i == 1:
-                image_url += "large/" #都获取高清大图
+                image_url += "large/"  # 都获取高清大图
             elif i == len(sub_url) - 1:
                 image_url += sub_url[i]
             else:

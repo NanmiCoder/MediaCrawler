@@ -153,6 +153,36 @@ class BilibiliClient(AbstractApiClient):
             params.update({"bvid": bvid})
         return await self.get(uri, params, enable_params_sign=False)
 
+    async def get_video_play_url(self, aid: int, cid: int) -> Dict:
+        """
+        Bilibli web video play url api
+        :param aid: 稿件avid
+        :param cid: cid
+        :return:
+        """
+        if not aid or not cid or aid <= 0 or cid <= 0:
+            raise ValueError("aid 和 cid 必须存在")
+        uri = "/x/player/wbi/playurl"
+        params = {
+            "avid": aid,
+            "cid": cid,
+            "qn": 80,
+            "fourk": 1,
+            "fnval": 1,
+            "platform": "pc",
+        }
+
+        return await self.get(uri, params, enable_params_sign=True)
+
+    async def get_video_media(self, url: str) -> Union[bytes, None]:
+        async with httpx.AsyncClient(proxies=self.proxies) as client:
+            response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
+            if not response.reason_phrase == "OK":
+                utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, res:{response.text}")
+                return None
+            else:
+                return response.content
+
     async def get_video_comments(self,
                                  video_id: str,
                                  order_mode: CommentOrderType = CommentOrderType.DEFAULT,

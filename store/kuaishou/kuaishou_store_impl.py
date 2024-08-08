@@ -33,6 +33,9 @@ def calculate_number_of_files(file_store_path: str) -> int:
 
 
 class KuaishouCsvStoreImplement(AbstractStore):
+    async def store_creator(self, creator: Dict):
+        pass
+
     csv_store_path: str = "data/kuaishou"
     file_count:int=calculate_number_of_files(csv_store_path)
 
@@ -89,6 +92,9 @@ class KuaishouCsvStoreImplement(AbstractStore):
 
 
 class KuaishouDbStoreImplement(AbstractStore):
+    async def store_creator(self, creator: Dict):
+        pass
+
     async def store_content(self, content_item: Dict):
         """
         Kuaishou content DB storage implementation

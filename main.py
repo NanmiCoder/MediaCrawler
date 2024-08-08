@@ -8,6 +8,7 @@ from base.base_crawler import AbstractCrawler
 from media_platform.bilibili import BilibiliCrawler
 from media_platform.douyin import DouYinCrawler
 from media_platform.kuaishou import KuaishouCrawler
+from media_platform.tieba import TieBaCrawler
 from media_platform.weibo import WeiboCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 
@@ -18,7 +19,8 @@ class CrawlerFactory:
         "dy": DouYinCrawler,
         "ks": KuaishouCrawler,
         "bili": BilibiliCrawler,
-        "wb": WeiboCrawler
+        "wb": WeiboCrawler,
+        "tieba": TieBaCrawler
     }
 
     @staticmethod
@@ -27,6 +29,7 @@ class CrawlerFactory:
         if not crawler_class:
             raise ValueError("Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
         return crawler_class()
+
 
 async def main():
     # parse cmd
@@ -38,7 +41,7 @@ async def main():
 
     crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
     await crawler.start()
-    
+
     if config.SAVE_DATA_OPTION == "db":
         await db.close()
 
