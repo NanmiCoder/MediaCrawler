@@ -28,7 +28,7 @@ HEADLESS = False
 SAVE_LOGIN_STATE = True
 
 # 数据保存类型选项配置,支持三种类型：csv、db、json
-SAVE_DATA_OPTION = "json"  # csv or db or json
+SAVE_DATA_OPTION = "csv"  # csv or db or json
 
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
@@ -37,7 +37,7 @@ USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 START_PAGE = 1
 
 # 爬取视频/帖子的数量控制
-CRAWLER_MAX_NOTES_COUNT = 20
+CRAWLER_MAX_NOTES_COUNT = 100
 
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
@@ -57,7 +57,7 @@ XHS_SPECIFIED_ID_LIST = [
     "6422c2750000000027000d88",
     "64ca1b73000000000b028dd2",
     "630d5b85000000001203ab41",
-    "668fe13000000000030241fa", # 图文混合
+    "668fe13000000000030241fa",  # 图文混合
     # ........................
 ]
 
@@ -88,6 +88,16 @@ WEIBO_SPECIFIED_ID_LIST = [
     # ........................
 ]
 
+# 指定贴吧需要爬取的帖子列表
+TIEBA_SPECIFIED_ID_LIST = [
+
+]
+
+# 指定贴吧名称列表，爬取该贴吧下的帖子
+TIEBA_NAME_LIST = [
+    # "盗墓笔记"
+]
+
 # 指定小红书创作者ID列表
 XHS_CREATOR_ID_LIST = [
     "63e36c9a000000002703502b",
@@ -112,19 +122,18 @@ KS_CREATOR_ID_LIST = [
     # ........................
 ]
 
-
-#词云相关
-#是否开启生成评论词云图
+# 词云相关
+# 是否开启生成评论词云图
 ENABLE_GET_WORDCLOUD = False
 # 自定义词语及其分组
-#添加规则：xx:yy 其中xx为自定义添加的词组，yy为将xx该词组分到的组名。
+# 添加规则：xx:yy 其中xx为自定义添加的词组，yy为将xx该词组分到的组名。
 CUSTOM_WORDS = {
     '零几': '年份',  # 将“零几”识别为一个整体
     '高频词': '专业术语'  # 示例自定义词
 }
 
-#停用(禁用)词文件路径
+# 停用(禁用)词文件路径
 STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 
-#中文字体文件路径
-FONT_PATH= "./docs/STZHONGS.TTF"
+# 中文字体文件路径
+FONT_PATH = "./docs/STZHONGS.TTF"
