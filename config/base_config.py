@@ -1,6 +1,8 @@
 # 基础配置
 PLATFORM = "xhs"
 KEYWORDS = "编程副业,编程兼职"
+START_TIME = ""  # 帖子的发布时间范围（开始时间，格式2021-09-12，空表示不设限制），暂时只支持微博
+END_TIME = ""    # 结束时间
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
