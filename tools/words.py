@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from collections import Counter
 
 import aiofiles
@@ -14,6 +15,7 @@ plot_lock = asyncio.Lock()
 
 class AsyncWordCloudGenerator:
     def __init__(self):
+        logging.getLogger('jieba').setLevel(logging.WARNING)
         self.stop_words_file = config.STOP_WORDS_FILE
         self.lock = asyncio.Lock()
         self.stop_words = self.load_stop_words()
