@@ -101,10 +101,12 @@
   - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
   
 ## 感谢下列Sponsors对本仓库赞助
-- <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">通过注册安装这个款免费的Sider ChatGPT插件帮我获得一定奖励💰，这个插件我用了大半年，作为谷歌上最火的一款插件，体验非常不错。</a>
-> 安装并注册该浏览器插件之后保留一天即可，我就可以获得3元的推广奖励，谢谢大家，支持我继续开源项目。
+- <a href="https://www.kuaidaili.com/?ref=ldwkjqipvz6c">【快代理】企业级代理IP服务，极速稳定，安全可靠。爬虫工程师的绝佳选择。</a>
+  <a href="https://www.kuaidaili.com/?ref=ldwkjqipvz6c" target="_blank"><img src="https://www.kuaidaili.com/img/cps/470_300.png" alt="【快代理】企业级代理IP服务，极速稳定，安全可靠。爬虫工程师的绝佳选择。"></a><br>
 
-成为赞助者，展示你的产品在这里，联系作者wx：yzglan
+- <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">全网最火的ChatGPT插件Sider，我也免费薅羊毛用了快一年了，体验拉满。</a>
+
+成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan
 
 ## 打赏
 
