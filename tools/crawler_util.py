@@ -13,8 +13,6 @@ import httpx
 from PIL import Image, ImageDraw
 from playwright.async_api import Cookie, Page
 
-from proxy import IpInfoModel
-
 from . import utils
 
 
@@ -137,7 +135,7 @@ def match_interact_info_count(count_str: str) -> int:
         return 0
 
 
-def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
+def format_proxy_info(ip_proxy_info) -> Tuple[Optional[Dict], Optional[Dict]]:
     """format proxy info for playwright and httpx"""
     playwright_proxy = {
         "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
