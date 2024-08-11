@@ -81,6 +81,8 @@
 - 支持保存到json中（data/目录下）
 
 
+加入MediaCrawler爬虫项目交流群。[点击跳转加入](#join_wechat_group)
+
 ## 开发者服务
 - MediaCrawler视频课程：
   > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
@@ -99,7 +101,9 @@
   - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
   - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
   - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
-  
+
+
+
 ## 感谢下列Sponsors对本仓库赞助
 - <a href="https://www.kuaidaili.com/?ref=ldwkjqipvz6c">【快代理】企业级代理IP服务，极速稳定，安全可靠。爬虫工程师的绝佳选择。</a>
   <a href="https://www.kuaidaili.com/?ref=ldwkjqipvz6c" target="_blank"><img src="https://www.kuaidaili.com/img/cps/470_300.png" alt="【快代理】企业级代理IP服务，极速稳定，安全可靠。爬虫工程师的绝佳选择。"></a><br>
@@ -118,43 +122,19 @@
   <img alt="打赏-支付宝" src="static/images/zfb_pay.png" style="width: 200px" />
 </p>
 
-## 捐赠信息
-
-PS：如果打赏时请备注捐赠者，如有遗漏请联系我添加（有时候消息多可能会漏掉，十分抱歉）
-
-| 捐赠者         | 捐赠金额  | 捐赠日期       |
-|-------------|-------|------------|
-| *皓          | 50 元  | 2024-03-18 |
-| *刚          | 50 元  | 2024-03-18 |
-| *乐          | 20 元  | 2024-03-17 |
-| *木          | 20 元  | 2024-03-17 |
-| *诚          | 20 元  | 2024-03-17 |
-| Strem Gamer | 20 元  | 2024-03-16 |
-| *鑫          | 20 元  | 2024-03-14 |
-| Yuzu        | 20 元  | 2024-03-07 |
-| **宁         | 100 元 | 2024-03-03 |
-| **媛         | 20 元  | 2024-03-03 |
-| Scarlett    | 20 元  | 2024-02-16 |
-| Asun        | 20 元  | 2024-01-30 |
-| 何*          | 100 元 | 2024-01-21 |
-| allen       | 20 元  | 2024-01-10 |
-| llllll      | 20 元  | 2024-01-07 |
-| 邝*元         | 20 元  | 2023-12-29 |
-| 50chen      | 50 元  | 2023-12-22 |
-| xiongot     | 20 元  | 2023-12-17 |
-| atom.hu     | 20 元  | 2023-12-16 |
-| 一呆          | 20 元  | 2023-12-01 |
-| 坠落          | 50 元  | 2023-11-08 |
-
+查看打赏列表 [点击跳转](#donate)
 
 
 ## MediaCrawler爬虫项目交流群：
+<div id="join_wechat_group"> 
+
 > 扫描下方我的个人微信，备注：github，拉你进MediaCrawler项目交流群(请一定备注：github，会有wx小助手自动拉群)
 > 
 > 如果图片展示不出来，可以直接添加我的微信号：yzglan
 
 <div style="max-width: 200px">  
 <p><img alt="relakkes_wechat" src="static/images/relakkes_weichat.JPG" style="width: 200px;height: 100%" ></p>
+</div>
 </div>
 
 
@@ -441,7 +421,36 @@ dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手�
 - 短信转发 [参考仓库](https://github.com/pppscn/SmsForwarder)
 - 内网穿透工具 [ngrok](https://ngrok.com/docs/)
 
+## 捐赠信息
+<div id="donate">
 
+PS：如果打赏时请备注捐赠者，如有遗漏请联系我添加（有时候消息多可能会漏掉，十分抱歉）
+
+| 捐赠者         | 捐赠金额  | 捐赠日期       |
+|-------------|-------|------------|
+| *皓          | 50 元  | 2024-03-18 |
+| *刚          | 50 元  | 2024-03-18 |
+| *乐          | 20 元  | 2024-03-17 |
+| *木          | 20 元  | 2024-03-17 |
+| *诚          | 20 元  | 2024-03-17 |
+| Strem Gamer | 20 元  | 2024-03-16 |
+| *鑫          | 20 元  | 2024-03-14 |
+| Yuzu        | 20 元  | 2024-03-07 |
+| **宁         | 100 元 | 2024-03-03 |
+| **媛         | 20 元  | 2024-03-03 |
+| Scarlett    | 20 元  | 2024-02-16 |
+| Asun        | 20 元  | 2024-01-30 |
+| 何*          | 100 元 | 2024-01-21 |
+| allen       | 20 元  | 2024-01-10 |
+| llllll      | 20 元  | 2024-01-07 |
+| 邝*元         | 20 元  | 2023-12-29 |
+| 50chen      | 50 元  | 2023-12-22 |
+| xiongot     | 20 元  | 2023-12-17 |
+| atom.hu     | 20 元  | 2023-12-16 |
+| 一呆          | 20 元  | 2023-12-01 |
+| 坠落          | 50 元  | 2023-11-08 |
+
+</div>
 
 ## 免责声明
 <div id="disclaimer"> 
@@ -464,8 +473,6 @@ dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手�
 ### 6. 最终解释权
 关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。
 </div>
-
-
 
 
 ### 感谢JetBrains提供的免费开源许可证支持
