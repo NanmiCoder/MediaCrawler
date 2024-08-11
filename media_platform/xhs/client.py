@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 import config
 from base.base_crawler import AbstractApiClient
@@ -66,6 +67,7 @@ class XiaoHongShuClient(AbstractApiClient):
         self.headers.update(headers)
         return self.headers
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
         """
         封装httpx的公共请求方法，对请求响应做一些处理
@@ -88,7 +90,6 @@ class XiaoHongShuClient(AbstractApiClient):
 
         if return_response:
             return response.text
-
         data: Dict = response.json()
         if data["success"]:
             return data.get("data", data.get("success", {}))
@@ -114,7 +115,7 @@ class XiaoHongShuClient(AbstractApiClient):
         headers = await self._pre_headers(final_uri)
         return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=headers)
 
-    async def post(self, uri: str, data: dict) -> Dict:
+    async def post(self, uri: str, data: dict, **kwargs) -> Dict:
         """
         POST请求，对请求头签名
         Args:
@@ -127,7 +128,7 @@ class XiaoHongShuClient(AbstractApiClient):
         headers = await self._pre_headers(uri, data)
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
         return await self.request(method="POST", url=f"{self._host}{uri}",
-                                  data=json_str, headers=headers)
+                                  data=json_str, headers=headers, **kwargs)
 
     async def get_note_media(self, url: str) -> Union[bytes, None]:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
@@ -425,3 +426,60 @@ class XiaoHongShuClient(AbstractApiClient):
             await asyncio.sleep(crawl_interval)
             result.extend(notes)
         return result
+
+    async def get_note_short_url(self, note_id: str) -> Dict:
+        """
+        获取笔记的短链接
+        Args:
+            note_id: 笔记ID
+
+        Returns:
+
+        """
+        uri = f"/api/sns/web/short_url"
+        data = {
+            "original_url": f"{self._domain}/discovery/item/{note_id}"
+        }
+        return await self.post(uri, data=data, return_response=True)
+
+    async def get_note_by_id_from_html(self, note_id: str):
+        """
+        通过解析网页版的笔记详情页HTML，获取笔记详情
+        copy from https://github.com/ReaJason/xhs/blob/eb1c5a0213f6fbb592f0a2897ee552847c69ea2d/xhs/core.py#L217-L259
+        thanks for ReaJason
+        Args:
+            note_id:
+
+        Returns:
+
+        """
+        def camel_to_underscore(key):
+            return re.sub(r"(?<!^)(?=[A-Z])", "_", key).lower()
+
+        def transform_json_keys(json_data):
+            data_dict = json.loads(json_data)
+            dict_new = {}
+            for key, value in data_dict.items():
+                new_key = camel_to_underscore(key)
+                if not value:
+                    dict_new[new_key] = value
+                elif isinstance(value, dict):
+                    dict_new[new_key] = transform_json_keys(json.dumps(value))
+                elif isinstance(value, list):
+                    dict_new[new_key] = [
+                        transform_json_keys(json.dumps(item))
+                        if (item and isinstance(item, dict))
+                        else item
+                        for item in value
+                    ]
+                else:
+                    dict_new[new_key] = value
+            return dict_new
+
+        url = "https://www.xiaohongshu.com/explore/" + note_id
+        html = await self.request(method="GET", url=url, return_response=True, headers=self.headers)
+        state = re.findall(r"window.__INITIAL_STATE__=({.*})</script>", html)[0].replace("undefined", '""')
+        if state != "{}":
+            note_dict = transform_json_keys(state)
+            return note_dict["note"]["note_detail_map"][note_id]["note"]
+        raise DataFetchError(html)
