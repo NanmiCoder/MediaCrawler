@@ -39,7 +39,7 @@
    cd MediaCrawler
    
    # 创建虚拟环境
-   # 注意python 版本需要3.7 - 3.9 高于该版本可能会出现一些依赖包兼容问题
+   # 我的python版本是：3.9.6，requirements.txt中的库是基于这个版本的，如果是其他python版本，可能requirements.txt中的库不兼容，自行解决一下。
    python -m venv venv
    
    # macos & linux 激活虚拟环境
