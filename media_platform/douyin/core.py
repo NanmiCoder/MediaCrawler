@@ -83,6 +83,7 @@ class DouYinCrawler(AbstractCrawler):
             utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
             page = 0
+            dy_search_id = ""
             while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
@@ -92,7 +93,8 @@ class DouYinCrawler(AbstractCrawler):
                     utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page}")
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
                                                                             offset=page * dy_limit_count - dy_limit_count,
-                                                                            publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE)
+                                                                            publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE),
+                                                                            search_id=dy_search_id
                                                                             )
                 except DataFetchError:
                     utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
@@ -103,7 +105,7 @@ class DouYinCrawler(AbstractCrawler):
                     utils.logger.error(
                         f"[DouYinCrawler.search] search douyin keyword: {keyword} failed，账号也许被风控了。")
                     break
-
+                dy_search_id = posts_res.get("extra", {}).get("logid", "")
                 for post_item in posts_res.get("data"):
                     try:
                         aweme_info: Dict = post_item.get("aweme_info") or \

@@ -126,7 +126,8 @@ class DOUYINClient(AbstractApiClient):
             offset: int = 0,
             search_channel: SearchChannelType = SearchChannelType.GENERAL,
             sort_type: SearchSortType = SearchSortType.GENERAL,
-            publish_time: PublishTimeType = PublishTimeType.UNLIMITED
+            publish_time: PublishTimeType = PublishTimeType.UNLIMITED,
+            search_id: str = ""
     ):
         """
         DouYin Web Search API
@@ -135,6 +136,7 @@ class DOUYINClient(AbstractApiClient):
         :param search_channel:
         :param sort_type:
         :param publish_time: ·
+        :param search_id: ·
         :return:
         """
         query_params = {
@@ -149,6 +151,7 @@ class DOUYINClient(AbstractApiClient):
             'count': '15',
             'need_filter_settings': '1',
             'list_type': 'multi',
+            'search_id': search_id,
         }
         if sort_type.value != SearchSortType.GENERAL.value or publish_time.value != PublishTimeType.UNLIMITED.value:
             query_params["filter_selected"] = json.dumps({
