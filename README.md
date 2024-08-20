@@ -134,12 +134,10 @@
 ## MediaCrawler爬虫项目交流群：
 <div id="join_wechat_group"> 
 
-> 扫描下方我的个人微信，备注：github，拉你进MediaCrawler项目交流群(请一定备注：github，会有wx小助手自动拉群)
-> 
-> 如果图片展示不出来，可以直接添加我的微信号：yzglan
+> 如果图片展示不出来或者群链接过期，可以直接添加我的微信号：yzglan
 
 <div style="max-width: 200px">  
-<p><img alt="relakkes_wechat" src="static/images/relakkes_weichat.JPG" style="width: 200px;height: 100%" ></p>
+<p><img alt="直接添加我的微信号：yzglan" src="static/images/13群二维码.JPG" style="width: 200px;height: 100%" ></p>
 </div>
 </div>
 
