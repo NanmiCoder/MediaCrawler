@@ -6,6 +6,7 @@
 from typing import List
 
 import config
+from var import source_keyword_var
 
 from .bilibili_store_impl import *
 from .bilibilli_store_video import *
@@ -48,6 +49,7 @@ async def update_bilibili_video(video_item: Dict):
         "last_modify_ts": utils.get_current_timestamp(),
         "video_url": f"https://www.bilibili.com/video/av{video_id}",
         "video_cover_url": video_item_view.get("pic", ""),
+        "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(
         f"[store.bilibili.update_bilibili_video] bilibili video id:{video_id}, title:{save_content_item.get('title')}")

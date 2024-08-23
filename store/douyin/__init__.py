@@ -5,6 +5,7 @@
 from typing import List
 
 import config
+from var import source_keyword_var
 
 from .douyin_store_impl import *
 
@@ -48,7 +49,8 @@ async def update_douyin_aweme(aweme_item: Dict):
         "share_count": str(interact_info.get("share_count")),
         "ip_location": aweme_item.get("ip_label", ""),
         "last_modify_ts": utils.get_current_timestamp(),
-        "aweme_url": f"https://www.douyin.com/video/{aweme_id}"
+        "aweme_url": f"https://www.douyin.com/video/{aweme_id}",
+        "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(
         f"[store.douyin.update_douyin_aweme] douyin aweme id:{aweme_id}, title:{save_content_item.get('title')}")

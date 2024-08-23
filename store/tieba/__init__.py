@@ -2,6 +2,7 @@
 from typing import List
 
 from model.m_baidu_tieba import TiebaComment, TiebaNote
+from var import source_keyword_var
 
 from . import tieba_store_impl
 from .tieba_store_impl import *
@@ -32,6 +33,7 @@ async def update_tieba_note(note_item: TiebaNote):
     Returns:
 
     """
+    note_item.source_keyword = source_keyword_var.get()
     save_note_item = note_item.model_dump()
     save_note_item.update({"last_modify_ts": utils.get_current_timestamp()})
     utils.logger.info(f"[store.tieba.update_tieba_note] tieba note: {save_note_item}")

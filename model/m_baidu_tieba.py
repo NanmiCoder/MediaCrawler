@@ -21,6 +21,7 @@ class TiebaNote(BaseModel):
     total_replay_num: int = Field(default=0, description="回复总数")
     total_replay_page: int = Field(default=0, description="回复总页数")
     ip_location: Optional[str] = Field(default="", description="IP地理位置")
+    source_keyword: str = Field(default="", description="来源关键词")
 
 
 class TiebaComment(BaseModel):

@@ -5,6 +5,7 @@
 from typing import List
 
 import config
+from var import source_keyword_var
 
 from .kuaishou_store_impl import *
 
@@ -46,6 +47,7 @@ async def update_kuaishou_video(video_item: Dict):
         "video_url": f"https://www.kuaishou.com/short-video/{video_id}",
         "video_cover_url": photo_info.get("coverUrl", ""),
         "video_play_url": photo_info.get("photoUrl", ""),
+        "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(
         f"[store.kuaishou.update_kuaishou_video] Kuaishou video id:{video_id}, title:{save_content_item.get('title')}")
