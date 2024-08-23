@@ -442,9 +442,10 @@ class XiaoHongShuClient(AbstractApiClient):
         }
         return await self.post(uri, data=data, return_response=True)
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
     async def get_note_by_id_from_html(self, note_id: str):
         """
-        通过解析网页版的笔记详情页HTML，获取笔记详情
+        通过解析网页版的笔记详情页HTML，获取笔记详情, 该接口可能会出现失败的情况，这里尝试重试3次
         copy from https://github.com/ReaJason/xhs/blob/eb1c5a0213f6fbb592f0a2897ee552847c69ea2d/xhs/core.py#L217-L259
         thanks for ReaJason
         Args:

@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 
 from playwright.async_api import (BrowserContext, BrowserType, Page,
                                   async_playwright)
+from tenacity import RetryError
 
 import config
 from base.base_crawler import AbstractCrawler
@@ -197,6 +198,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     utils.logger.error(
                         f"[XiaoHongShuCrawler.get_note_detail_from_html] have not fund note detail note_id:{note_id}, err: {ex}")
                     return {}
+                except RetryError as ex:
+                    utils.logger.error(
+                        f"[XiaoHongShuCrawler.get_note_detail_from_html] Retry error, note_id:{note_id}, err: {ex}")
 
         get_note_detail_task_list = [
             get_note_detail_from_html_task(note_id=note_id, semaphore=asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)) for

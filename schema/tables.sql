@@ -425,3 +425,7 @@ CREATE TABLE `weibo_creator`
     `tag_list`       longtext COMMENT '标签列表',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='微博博主';
+
+
+ALTER TABLE `xhs_note_comment`
+    ADD COLUMN `like_count` VARCHAR(64) DEFAULT NULL COMMENT '评论点赞数量';
