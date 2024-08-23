@@ -7,6 +7,7 @@ import re
 from typing import List
 
 from var import source_keyword_var
+
 from .weibo_store_image import *
 from .weibo_store_impl import *
 
@@ -27,7 +28,33 @@ class WeibostoreFactory:
         return store_class()
 
 
+async def batch_update_weibo_notes(note_list: List[Dict]):
+    """
+    Batch update weibo notes
+    Args:
+        note_list:
+
+    Returns:
+
+    """
+    if not note_list:
+        return
+    for note_item in note_list:
+        await update_weibo_note(note_item)
+
+
 async def update_weibo_note(note_item: Dict):
+    """
+    Update weibo note
+    Args:
+        note_item:
+
+    Returns:
+
+    """
+    if not note_item:
+        return
+
     mblog: Dict = note_item.get("mblog")
     user_info: Dict = mblog.get("user")
     note_id = mblog.get("id")
@@ -61,6 +88,15 @@ async def update_weibo_note(note_item: Dict):
 
 
 async def batch_update_weibo_note_comments(note_id: str, comments: List[Dict]):
+    """
+    Batch update weibo note comments
+    Args:
+        note_id:
+        comments:
+
+    Returns:
+
+    """
     if not comments:
         return
     for comment_item in comments:
@@ -68,6 +104,17 @@ async def batch_update_weibo_note_comments(note_id: str, comments: List[Dict]):
 
 
 async def update_weibo_note_comment(note_id: str, comment_item: Dict):
+    """
+    Update weibo note comment
+    Args:
+        note_id: weibo note id
+        comment_item: weibo comment item
+
+    Returns:
+
+    """
+    if not comment_item or not note_id:
+        return
     comment_id = str(comment_item.get("id"))
     user_info: Dict = comment_item.get("user")
     content_text = comment_item.get("text")
@@ -95,5 +142,43 @@ async def update_weibo_note_comment(note_id: str, comment_item: Dict):
         f"[store.weibo.update_weibo_note_comment] Weibo note comment: {comment_id}, content: {save_comment_item.get('content', '')[:24]} ...")
     await WeibostoreFactory.create_store().store_comment(comment_item=save_comment_item)
 
+
 async def update_weibo_note_image(picid: str, pic_content, extension_file_name):
-    await WeiboStoreImage().store_image({"pic_id": picid, "pic_content": pic_content, "extension_file_name": extension_file_name})
+    """
+    Save weibo note image to local
+    Args:
+        picid:
+        pic_content:
+        extension_file_name:
+
+    Returns:
+
+    """
+    await WeiboStoreImage().store_image(
+        {"pic_id": picid, "pic_content": pic_content, "extension_file_name": extension_file_name})
+
+
+async def save_creator(user_id: str, user_info: Dict):
+    """
+    Save creator information to local
+    Args:
+        user_id:
+        user_info:
+
+    Returns:
+
+    """
+    local_db_item = {
+        'user_id': user_id,
+        'nickname': user_info.get('screen_name'),
+        'gender': '女' if user_info.get('gender') == "f" else '男',
+        'avatar': user_info.get('avatar_hd'),
+        'desc': user_info.get('description'),
+        'ip_location': user_info.get("source", "").replace("来自", ""),
+        'follows': user_info.get('follow_count', ''),
+        'fans': user_info.get('followers_count', ''),
+        'tag_list': '',
+        "last_modify_ts": utils.get_current_timestamp(),
+    }
+    utils.logger.info(f"[store.weibo.save_creator] creator:{local_db_item}")
+    await WeibostoreFactory.create_store().store_creator(local_db_item)

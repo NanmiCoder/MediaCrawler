@@ -185,9 +185,6 @@ class XiaoHongShuCrawler(AbstractCrawler):
             async with semaphore:
                 try:
                     _note_detail: Dict = await self.xhs_client.get_note_by_id_from_html(note_id)
-                    print("------------------------")
-                    print(_note_detail)
-                    print("------------------------")
                     if not _note_detail:
                         utils.logger.error(
                             f"[XiaoHongShuCrawler.get_note_detail_from_html] Get note detail error, note_id: {note_id}")

@@ -85,6 +85,12 @@ WEIBO_SPECIFIED_ID_LIST = [
     # ........................
 ]
 
+# 指定weibo创作者ID列表
+WEIBO_CREATOR_ID_LIST = [
+    "5533390220",
+    # ........................
+]
+
 # 指定贴吧需要爬取的帖子列表
 TIEBA_SPECIFIED_ID_LIST = [
 

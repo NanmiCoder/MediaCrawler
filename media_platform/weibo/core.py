@@ -84,6 +84,9 @@ class WeiboCrawler(AbstractCrawler):
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_notes()
+            elif config.CRAWLER_TYPE == "creator":
+                # Get creator's information and their notes and comments
+                await self.get_creators_and_notes()
             else:
                 pass
             utils.logger.info("[WeiboCrawler.start] Weibo Crawler finished ...")
@@ -220,6 +223,41 @@ class WeiboCrawler(AbstractCrawler):
             if content != None:
                 extension_file_name = url.split(".")[-1]
                 await weibo_store.update_weibo_note_image(pic["pid"], content, extension_file_name)
+
+
+    async def get_creators_and_notes(self) -> None:
+        """
+        Get creator's information and their notes and comments
+        Returns:
+
+        """
+        utils.logger.info("[WeiboCrawler.get_creators_and_notes] Begin get weibo creators")
+        for user_id in config.WEIBO_CREATOR_ID_LIST:
+            createor_info_res: Dict = await self.wb_client.get_creator_info_by_id(creator_id=user_id)
+            if createor_info_res:
+                createor_info: Dict = createor_info_res.get("userInfo", {})
+                utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] creator info: {createor_info}")
+                if not createor_info:
+                    raise DataFetchError("Get creator info error")
+                await weibo_store.save_creator(user_id, user_info=createor_info)
+
+                # Get all note information of the creator
+                all_notes_list = await self.wb_client.get_all_notes_by_creator_id(
+                    creator_id=user_id,
+                    container_id=createor_info_res.get("lfid_container_id"),
+                    crawl_interval=0,
+                    callback=weibo_store.batch_update_weibo_notes
+                )
+
+                note_ids = [note_item.get("mlog", {}).get("id") for note_item in all_notes_list if
+                            note_item.get("mlog", {}).get("id")]
+                await self.batch_get_notes_comments(note_ids)
+
+            else:
+                utils.logger.error(
+                    f"[WeiboCrawler.get_creators_and_notes] get creator info error, creator_id:{user_id}")
+
+
 
     async def create_weibo_client(self, httpx_proxy: Optional[str]) -> WeiboClient:
         """Create xhs client"""
