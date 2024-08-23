@@ -13,11 +13,11 @@
 原理：利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
 通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低
 
-[MediaCrawlerPro](https://github.com/MediaCrawlerPro)版本经过2个周的通宵，已经迭代出来了，相较于现在有一些优势：
+[MediaCrawlerPro](https://github.com/MediaCrawlerPro)版本已经迭代出来了，相较于现在的优势：
 - 多账号+IP代理支持（重点！）
 - 去除Playwright依赖，使用更加简单
 - 支持linux部署（Docker docker-compose）
-- 代码重构优化，更加易读易维护
+- 代码重构优化，更加易读易维护（解耦请求签名逻辑）
 
 
 ## 功能列表
@@ -91,7 +91,7 @@
 
 ## 开发者服务
 - MediaCrawler视频课程：
-  > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
+  > 视频课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
   > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个视频课程，从设计出发一步步带你如何使用，门槛大大降低
   > 
   > 同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
@@ -102,7 +102,9 @@
   <img alt="xingqiu" src="https://nm.zizhi1.com/static/img/8e1312d1f52f2e0ff436ea7196b4e27b.15555424244122T1.webp" style="width: auto;height: 400px" >
   </p>
   
-  星球精选文章： 
+  星球精选文章：
+  - [逆向案例1 - 某16x8平台商品列表接口逆向参数分析](https://articles.zsxq.com/id_x1qmtg8pzld9.html)
+  - [逆向案例2 - Product Hunt月度最佳产品榜单接口加密参数分析](https://articles.zsxq.com/id_au4eich3x2sg.html)
   - [【独创】使用Playwright获取某音a_bogus参数流程（包含加密参数分析）](https://articles.zsxq.com/id_u89al50jk9x0.html)
   - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
   - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
@@ -166,256 +168,10 @@ dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手�
 我新开的爬虫教程Github仓库 [CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial) ，感兴趣的朋友可以关注一下，持续更新，主打一个免费.
 
 
-## 项目贡献者
-> 感谢你们的贡献，让项目变得更好！（贡献比较多的可以加我wx，免费拉你进我的知识星球，后期还有一些其他福利。）
-<!-- readme: contributors -start -->
-<table>
-	<tbody>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/NanmiCoder">
-                    <img src="https://avatars.githubusercontent.com/u/47178017?v=4" width="100;" alt="NanmiCoder"/>
-                    <br />
-                    <sub><b>程序员阿江-Relakkes</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/leantli">
-                    <img src="https://avatars.githubusercontent.com/u/117699758?v=4" width="100;" alt="leantli"/>
-                    <br />
-                    <sub><b>leantli</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Rosyrain">
-                    <img src="https://avatars.githubusercontent.com/u/116946548?v=4" width="100;" alt="Rosyrain"/>
-                    <br />
-                    <sub><b>Rosyrain</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/BaoZhuhan">
-                    <img src="https://avatars.githubusercontent.com/u/140676370?v=4" width="100;" alt="BaoZhuhan"/>
-                    <br />
-                    <sub><b>Bao Zhuhan</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/nelzomal">
-                    <img src="https://avatars.githubusercontent.com/u/8512926?v=4" width="100;" alt="nelzomal"/>
-                    <br />
-                    <sub><b>zhounan</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/helloteemo">
-                    <img src="https://avatars.githubusercontent.com/u/46838719?v=4" width="100;" alt="helloteemo"/>
-                    <br />
-                    <sub><b>helloteemo</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/Ermeng98">
-                    <img src="https://avatars.githubusercontent.com/u/55784769?v=4" width="100;" alt="Ermeng98"/>
-                    <br />
-                    <sub><b>Ermeng</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/PeanutSplash">
-                    <img src="https://avatars.githubusercontent.com/u/98582625?v=4" width="100;" alt="PeanutSplash"/>
-                    <br />
-                    <sub><b>PeanutSplash</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Hiro-Lin">
-                    <img src="https://avatars.githubusercontent.com/u/40111864?v=4" width="100;" alt="Hiro-Lin"/>
-                    <br />
-                    <sub><b>HIRO</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/henryhyn">
-                    <img src="https://avatars.githubusercontent.com/u/5162443?v=4" width="100;" alt="henryhyn"/>
-                    <br />
-                    <sub><b>Henry He</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Akiqqqqqqq">
-                    <img src="https://avatars.githubusercontent.com/u/51102894?v=4" width="100;" alt="Akiqqqqqqq"/>
-                    <br />
-                    <sub><b>leonardoqiuyu</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/jayeeliu">
-                    <img src="https://avatars.githubusercontent.com/u/77389?v=4" width="100;" alt="jayeeliu"/>
-                    <br />
-                    <sub><b>jayeeliu</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/fruitswordman">
-                    <img src="https://avatars.githubusercontent.com/u/103844614?v=4" width="100;" alt="fruitswordman"/>
-                    <br />
-                    <sub><b>Wenbo Lu</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/ZhouXsh">
-                    <img src="https://avatars.githubusercontent.com/u/131248181?v=4" width="100;" alt="ZhouXsh"/>
-                    <br />
-                    <sub><b>ZhouXsh</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/ZuWard">
-                    <img src="https://avatars.githubusercontent.com/u/38209256?v=4" width="100;" alt="ZuWard"/>
-                    <br />
-                    <sub><b>ZuWard</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Zzendrix">
-                    <img src="https://avatars.githubusercontent.com/u/154900254?v=4" width="100;" alt="Zzendrix"/>
-                    <br />
-                    <sub><b>Zendrix</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/chunpat">
-                    <img src="https://avatars.githubusercontent.com/u/19848304?v=4" width="100;" alt="chunpat"/>
-                    <br />
-                    <sub><b>zhangzhenpeng</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/tanpenggood">
-                    <img src="https://avatars.githubusercontent.com/u/37927946?v=4" width="100;" alt="tanpenggood"/>
-                    <br />
-                    <sub><b>Sam Tan</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/xbsheng">
-                    <img src="https://avatars.githubusercontent.com/u/56357338?v=4" width="100;" alt="xbsheng"/>
-                    <br />
-                    <sub><b>xbsheng</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/yangrq1018">
-                    <img src="https://avatars.githubusercontent.com/u/25074163?v=4" width="100;" alt="yangrq1018"/>
-                    <br />
-                    <sub><b>Martin</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/zhihuiio">
-                    <img src="https://avatars.githubusercontent.com/u/165655688?v=4" width="100;" alt="zhihuiio"/>
-                    <br />
-                    <sub><b>zhihuiio</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/renaissancezyc">
-                    <img src="https://avatars.githubusercontent.com/u/118403818?v=4" width="100;" alt="renaissancezyc"/>
-                    <br />
-                    <sub><b>Ren</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Tianci-King">
-                    <img src="https://avatars.githubusercontent.com/u/109196852?v=4" width="100;" alt="Tianci-King"/>
-                    <br />
-                    <sub><b>Wang Tianci</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Styunlen">
-                    <img src="https://avatars.githubusercontent.com/u/30810222?v=4" width="100;" alt="Styunlen"/>
-                    <br />
-                    <sub><b>Styunlen</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/Schofi">
-                    <img src="https://avatars.githubusercontent.com/u/33537727?v=4" width="100;" alt="Schofi"/>
-                    <br />
-                    <sub><b>Schofi</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Klu5ure">
-                    <img src="https://avatars.githubusercontent.com/u/166240879?v=4" width="100;" alt="Klu5ure"/>
-                    <br />
-                    <sub><b>Klu5ure</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/keeper-jie">
-                    <img src="https://avatars.githubusercontent.com/u/33612777?v=4" width="100;" alt="keeper-jie"/>
-                    <br />
-                    <sub><b>Kermit</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/kexinoh">
-                    <img src="https://avatars.githubusercontent.com/u/91727108?v=4" width="100;" alt="kexinoh"/>
-                    <br />
-                    <sub><b>KEXNA</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/aa65535">
-                    <img src="https://avatars.githubusercontent.com/u/5417786?v=4" width="100;" alt="aa65535"/>
-                    <br />
-                    <sub><b>Jian Chang</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Jasonyang2014">
-                    <img src="https://avatars.githubusercontent.com/u/8269290?v=4" width="100;" alt="Jasonyang2014"/>
-                    <br />
-                    <sub><b>AuYeung</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/522109452">
-                    <img src="https://avatars.githubusercontent.com/u/16929874?v=4" width="100;" alt="522109452"/>
-                    <br />
-                    <sub><b>tianqing</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/3DRX">
-                    <img src="https://avatars.githubusercontent.com/u/67278980?v=4" width="100;" alt="3DRX"/>
-                    <br />
-                    <sub><b>Jingyang Kang</b></sub>
-                </a>
-            </td>
-		</tr>
-	<tbody>
-</table>
-<!-- readme: contributors -end -->
-
 ## star 趋势图
 - 如果该项目对你有帮助，star一下 ❤️❤️❤️
 
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
-
 
 
 
