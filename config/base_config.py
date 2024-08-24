@@ -101,6 +101,11 @@ TIEBA_NAME_LIST = [
     # "盗墓笔记"
 ]
 
+TIEBA_CREATOR_URL_LIST = [
+    "https://tieba.baidu.com/home/main/?id=tb.1.6a328702.02qx9GEBmrwqYDRyOgGKXQ&fr=frs",
+    # ........................
+]
+
 # 指定小红书创作者ID列表
 XHS_CREATOR_ID_LIST = [
     "63e36c9a000000002703502b",

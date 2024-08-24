@@ -3,12 +3,16 @@ import html
 import json
 import re
 from typing import Dict, List, Tuple
+from urllib.parse import unquote, parse_qs
 
 from parsel import Selector
 
 from constant import baidu_tieba as const
-from model.m_baidu_tieba import TiebaComment, TiebaNote
+from model.m_baidu_tieba import TiebaComment, TiebaNote, TiebaCreator
 from tools import utils
+
+GENDER_MALE = "sex_male"
+GENDER_FMALE = "sex_fmale"
 
 
 class TieBaExtractor:
@@ -199,8 +203,37 @@ class TieBaExtractor:
 
         return comments
 
-    @staticmethod
-    def extract_ip_and_pub_time(html_content: str) -> Tuple[str, str]:
+    def extract_creator_info(self, html_content: str) -> TiebaCreator:
+        """
+        提取贴吧创作者信息
+        Args:
+            html_content:
+
+        Returns:
+
+        """
+        selector = Selector(text=html_content)
+        user_link_selector = selector.xpath("//p[@class='space']/a")
+        user_link: str = user_link_selector.xpath("./@href").get(default='')
+        user_link_params: Dict = parse_qs(unquote(user_link))
+        user_name = user_link_params.get("un")[0] if user_link_params.get("un") else ""
+        user_id = user_link_params.get("id")[0] if user_link_params.get("id") else ""
+        userinfo_userdata_selector = selector.xpath("//div[@class='userinfo_userdata']")
+        creator = TiebaCreator(
+            user_id=user_id,
+            user_name=user_name,
+            nickname=selector.xpath(".//a[@class='userinfo_username']/text()").get(default='').strip(),
+            avatar=selector.xpath(".//div[@class='userinfo_left_head']//img/@src").get(default='').strip(),
+            gender=self.extract_gender(userinfo_userdata_selector.get(default='')),
+            ip_location=self.extract_ip(userinfo_userdata_selector.get(default='')),
+            follows=0,
+            fans=0,
+            follow_tieba_list="",
+            registration_duration="",
+        )
+        return creator
+
+    def extract_ip_and_pub_time(self, html_content: str) -> Tuple[str, str]:
         """
         提取IP位置和发布时间
         Args:
@@ -209,13 +242,37 @@ class TieBaExtractor:
         Returns:
 
         """
-        pattern_ip = re.compile(r'IP属地:(\S+)</span>')
         pattern_pub_time = re.compile(r'<span class="tail-info">(\d{4}-\d{2}-\d{2} \d{2}:\d{2})</span>')
-        ip_match = pattern_ip.search(html_content)
         time_match = pattern_pub_time.search(html_content)
-        ip = ip_match.group(1) if ip_match else ""
         pub_time = time_match.group(1) if time_match else ""
-        return ip, pub_time
+        return self.extract_ip(html_content), pub_time
+
+    @staticmethod
+    def extract_ip(html_content: str) -> str:
+        """
+        提取IP
+        Args:
+            html_content:
+
+        Returns:
+
+        """
+        pattern_ip = re.compile(r'IP属地:(\S+)</span>')
+        ip_match = pattern_ip.search(html_content)
+        ip = ip_match.group(1) if ip_match else ""
+        return ip
+
+    @staticmethod
+    def extract_gender(html_content: str) -> str:
+        """
+        提取性别
+        Args:
+            html_content:
+
+        Returns:
+
+        """
+        pass
 
     @staticmethod
     def extract_data_field_value(selector: Selector) -> Dict:

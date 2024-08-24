@@ -57,6 +57,9 @@ class TieBaCrawler(AbstractCrawler):
         elif config.CRAWLER_TYPE == "detail":
             # Get the information and comments of the specified post
             await self.get_specified_notes()
+        elif config.CRAWLER_TYPE == "creator":
+            # Get creator's information and their notes and comments
+            await self.get_creators_and_notes()
         else:
             pass
 
@@ -214,6 +217,38 @@ class TieBaCrawler(AbstractCrawler):
                 crawl_interval=random.random(),
                 callback=tieba_store.batch_update_tieba_note_comments
             )
+
+    async def get_creators_and_notes(self) -> None:
+        """
+        Get creator's information and their notes and comments
+        Returns:
+
+        """
+        utils.logger.info("[WeiboCrawler.get_creators_and_notes] Begin get weibo creators")
+        for creator_url in config.TIEBA_CREATOR_URL_LIST:
+            createor_info: Dict = await self.tieba_client.get_creator_info_by_url(creator_url=creator_url)
+            if createor_info:
+                utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] creator info: {createor_info}")
+                if not createor_info:
+                    raise Exception("Get creator info error")
+                user_id = createor_info.get("user_id")
+                await tieba_store.save_creator(user_id, user_info=createor_info)
+
+                # Get all note information of the creator
+                all_notes_list = await self.tieba_client.get_all_notes_by_creator_user_name(
+                    user_name=createor_info.get("user_name"),
+                    crawl_interval=0,
+                    callback=tieba_store.batch_update_tieba_notes
+                )
+
+                await self.batch_get_note_comments(all_notes_list)
+
+            else:
+                utils.logger.error(
+                    f"[WeiboCrawler.get_creators_and_notes] get creator info error, creator_url:{creator_url}")
+
+
+
 
     async def launch_browser(
             self,
