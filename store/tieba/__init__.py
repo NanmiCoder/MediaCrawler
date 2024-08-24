@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
-from model.m_baidu_tieba import TiebaComment, TiebaNote
+from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
 from var import source_keyword_var
 
 from . import tieba_store_impl
@@ -23,6 +23,7 @@ class TieBaStoreFactory:
                 "[TieBaStoreFactory.create_store] Invalid save option only supported csv or db or json ...")
         return store_class()
 
+
 async def batch_update_tieba_notes(note_list: List[TiebaNote]):
     """
     Batch update tieba notes
@@ -36,6 +37,7 @@ async def batch_update_tieba_notes(note_list: List[TiebaNote]):
         return
     for note_item in note_list:
         await update_tieba_note(note_item)
+
 
 async def update_tieba_note(note_item: TiebaNote):
     """
@@ -54,7 +56,7 @@ async def update_tieba_note(note_item: TiebaNote):
     await TieBaStoreFactory.create_store().store_content(save_note_item)
 
 
-async def batch_update_tieba_note_comments(note_id:str, comments: List[TiebaComment]):
+async def batch_update_tieba_note_comments(note_id: str, comments: List[TiebaComment]):
     """
     Batch update tieba note comments
     Args:
@@ -86,27 +88,16 @@ async def update_tieba_note_comment(note_id: str, comment_item: TiebaComment):
     await TieBaStoreFactory.create_store().store_comment(save_comment_item)
 
 
-async def save_creator(user_id: str, user_info: Dict):
+async def save_creator(user_info: TiebaCreator):
     """
     Save creator information to local
     Args:
-        user_id:
         user_info:
 
     Returns:
 
     """
-    local_db_item = {
-        'user_id': user_id,
-        'nickname': user_info.get('nickname'),
-        'gender': '女' if user_info.get('gender') == "f" else '男',
-        'avatar': user_info.get('avatar'),
-        'ip_location': user_info.get("ip_location", ""),
-        'follows': user_info.get('follow_count', ''),
-        'fans': user_info.get('followers_count', ''),
-        'follow_tieba_list': user_info.get("tieba_list", ''),
-        'last_modify_ts': utils.get_current_timestamp(),
-        'registration_duration': user_info.get("registration_duration", ""),
-    }
+    local_db_item = user_info.model_dump()
+    local_db_item["last_modify_ts"] = utils.get_current_timestamp()
     utils.logger.info(f"[store.tieba.save_creator] creator:{local_db_item}")
     await TieBaStoreFactory.create_store().store_creator(local_db_item)

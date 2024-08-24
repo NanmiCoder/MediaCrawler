@@ -9,7 +9,7 @@ from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
 
 import config
 from base.base_crawler import AbstractApiClient
-from model.m_baidu_tieba import TiebaComment, TiebaNote, TiebaCreator
+from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
 from proxy.proxy_ip_pool import ProxyIpPool
 from tools import utils
 
@@ -317,14 +317,17 @@ class BaiduTieBaClient(AbstractApiClient):
         }
         return await self.get(uri, params=params)
 
-    async def get_all_notes_by_creator_user_name(self, user_name: str,crawl_interval: float = 1.0,
-                                          callback: Optional[Callable] = None) -> List[TiebaNote]:
+    async def get_all_notes_by_creator_user_name(self,
+                                                 user_name: str, crawl_interval: float = 1.0,
+                                                 callback: Optional[Callable] = None,
+                                                 max_note_count: int = 0) -> List[TiebaNote]:
         """
         根据创作者用户名获取创作者所有帖子
         Args:
-            user_name:
-            crawl_interval:
-            callback:
+            user_name: 创作者用户名
+            crawl_interval: 爬取一次笔记的延迟单位（秒）
+            callback: 一次笔记爬取结束后的回调函数，是一个awaitable类型的函数
+            max_note_count: 帖子最大获取数量，如果为0则获取所有
 
         Returns:
 
@@ -332,16 +335,17 @@ class BaiduTieBaClient(AbstractApiClient):
         result = []
         notes_has_more = 1
         page_number = 1
-        while notes_has_more == 1:
+        page_per_count = 20
+        total_get_count = 0
+        while notes_has_more == 1 and (max_note_count == 0 or total_get_count < max_note_count):
             notes_res = await self.get_notes_by_creator(user_name, page_number)
             if not notes_res or notes_res.get("no") != 0:
                 utils.logger.error(
                     f"[WeiboClient.get_notes_by_creator] got user_name:{user_name} notes failed, notes_res: {notes_res}")
                 break
-
-            notes_has_more = notes_res.get("has_more")
-            page_number += 1
-            notes = notes_res["thread_list"]
+            notes_data = notes_res.get("data")
+            notes_has_more = notes_data.get("has_more")
+            notes = notes_data["thread_list"]
             utils.logger.info(
                 f"[WeiboClient.get_all_notes_by_creator] got user_name:{user_name} notes len : {len(notes)}")
 
@@ -351,5 +355,6 @@ class BaiduTieBaClient(AbstractApiClient):
                 await callback(notes)
             await asyncio.sleep(crawl_interval)
             result.extend(notes)
+            page_number += 1
+            total_get_count += page_per_count
         return result
-

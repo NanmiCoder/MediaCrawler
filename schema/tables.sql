@@ -400,12 +400,18 @@ CREATE TABLE tieba_comment
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='贴吧评论表';
 
 -- 增加搜索来源关键字字段
-alter table bilibili_video add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
-alter table douyin_aweme add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
-alter table kuaishou_video add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
-alter table weibo_note add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
-alter table xhs_note add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
-alter table tieba_note add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
+alter table bilibili_video
+    add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
+alter table douyin_aweme
+    add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
+alter table kuaishou_video
+    add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
+alter table weibo_note
+    add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
+alter table xhs_note
+    add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
+alter table tieba_note
+    add column `source_keyword` varchar(255) default '' comment '搜索来源关键字';
 
 
 DROP TABLE IF EXISTS `weibo_creator`;
@@ -419,7 +425,7 @@ CREATE TABLE `weibo_creator`
     `add_ts`         bigint      NOT NULL COMMENT '记录添加时间戳',
     `last_modify_ts` bigint      NOT NULL COMMENT '记录最后修改时间戳',
     `desc`           longtext COMMENT '用户描述',
-    `gender`         varchar(1)   DEFAULT NULL COMMENT '性别',
+    `gender`         varchar(2)   DEFAULT NULL COMMENT '性别',
     `follows`        varchar(16)  DEFAULT NULL COMMENT '关注数',
     `fans`           varchar(16)  DEFAULT NULL COMMENT '粉丝数',
     `tag_list`       longtext COMMENT '标签列表',
@@ -429,3 +435,22 @@ CREATE TABLE `weibo_creator`
 
 ALTER TABLE `xhs_note_comment`
     ADD COLUMN `like_count` VARCHAR(64) DEFAULT NULL COMMENT '评论点赞数量';
+
+
+DROP TABLE IF EXISTS `tieba_creator`;
+CREATE TABLE `tieba_creator`
+(
+    `id`                    int         NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `user_id`               varchar(64) NOT NULL COMMENT '用户ID',
+    `user_name`             varchar(64) NOT NULL COMMENT '用户名',
+    `nickname`              varchar(64)  DEFAULT NULL COMMENT '用户昵称',
+    `avatar`                varchar(255) DEFAULT NULL COMMENT '用户头像地址',
+    `ip_location`           varchar(255) DEFAULT NULL COMMENT '评论时的IP地址',
+    `add_ts`                bigint      NOT NULL COMMENT '记录添加时间戳',
+    `last_modify_ts`        bigint      NOT NULL COMMENT '记录最后修改时间戳',
+    `gender`                varchar(2)   DEFAULT NULL COMMENT '性别',
+    `follows`               varchar(16)  DEFAULT NULL COMMENT '关注数',
+    `fans`                  varchar(16)  DEFAULT NULL COMMENT '粉丝数',
+    `registration_duration` varchar(16)  DEFAULT NULL COMMENT '吧龄',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='贴吧创作者';

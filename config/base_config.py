@@ -102,7 +102,7 @@ TIEBA_NAME_LIST = [
 ]
 
 TIEBA_CREATOR_URL_LIST = [
-    "https://tieba.baidu.com/home/main/?id=tb.1.6a328702.02qx9GEBmrwqYDRyOgGKXQ&fr=frs",
+    "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
     # ........................
 ]
 

@@ -3,16 +3,16 @@ import html
 import json
 import re
 from typing import Dict, List, Tuple
-from urllib.parse import unquote, parse_qs
+from urllib.parse import parse_qs, unquote
 
 from parsel import Selector
 
 from constant import baidu_tieba as const
-from model.m_baidu_tieba import TiebaComment, TiebaNote, TiebaCreator
+from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
 from tools import utils
 
 GENDER_MALE = "sex_male"
-GENDER_FMALE = "sex_fmale"
+GENDER_FEMALE = "sex_female"
 
 
 class TieBaExtractor:
@@ -33,17 +33,19 @@ class TieBaExtractor:
         post_list = Selector(text=page_content).xpath(xpath_selector)
         result: List[TiebaNote] = []
         for post in post_list:
-            tieba_note = TiebaNote(
-                note_id=post.xpath(".//span[@class='p_title']/a/@data-tid").get(default='').strip(),
-                title=post.xpath(".//span[@class='p_title']/a/text()").get(default='').strip(),
-                desc=post.xpath(".//div[@class='p_content']/text()").get(default='').strip(),
-                note_url=const.TIEBA_URL + post.xpath(".//span[@class='p_title']/a/@href").get(default=''),
-                user_nickname=post.xpath(".//a[starts-with(@href, '/home/main')]/font/text()").get(default='').strip(),
-                user_link=const.TIEBA_URL + post.xpath(".//a[starts-with(@href, '/home/main')]/@href").get(default=''),
-                tieba_name=post.xpath(".//a[@class='p_forum']/font/text()").get(default='').strip(),
-                tieba_link=const.TIEBA_URL + post.xpath(".//a[@class='p_forum']/@href").get(default=''),
-                publish_time=post.xpath(".//font[@class='p_green p_date']/text()").get(default='').strip(),
-            )
+            tieba_note = TiebaNote(note_id=post.xpath(".//span[@class='p_title']/a/@data-tid").get(default='').strip(),
+                                   title=post.xpath(".//span[@class='p_title']/a/text()").get(default='').strip(),
+                                   desc=post.xpath(".//div[@class='p_content']/text()").get(default='').strip(),
+                                   note_url=const.TIEBA_URL + post.xpath(".//span[@class='p_title']/a/@href").get(
+                                       default=''),
+                                   user_nickname=post.xpath(".//a[starts-with(@href, '/home/main')]/font/text()").get(
+                                       default='').strip(), user_link=const.TIEBA_URL + post.xpath(
+                    ".//a[starts-with(@href, '/home/main')]/@href").get(default=''),
+                                   tieba_name=post.xpath(".//a[@class='p_forum']/font/text()").get(default='').strip(),
+                                   tieba_link=const.TIEBA_URL + post.xpath(".//a[@class='p_forum']/@href").get(
+                                       default=''),
+                                   publish_time=post.xpath(".//font[@class='p_green p_date']/text()").get(
+                                       default='').strip(), )
             result.append(tieba_note)
         return result
 
@@ -66,20 +68,19 @@ class TieBaExtractor:
             if not post_field_value:
                 continue
             note_id = str(post_field_value.get("id"))
-            tieba_note = TiebaNote(
-                note_id=note_id,
-                title=post_selector.xpath(".//a[@class='j_th_tit ']/text()").get(default='').strip(),
-                desc=post_selector.xpath(".//div[@class='threadlist_abs threadlist_abs_onlyline ']/text()").get(
-                    default='').strip(),
-                note_url=const.TIEBA_URL + f"/p/{note_id}",
-                user_link=const.TIEBA_URL + post_selector.xpath(
-                    ".//a[@class='frs-author-name j_user_card ']/@href").get(default='').strip(),
-                user_nickname=post_field_value.get("authoer_nickname") or post_field_value.get("author_name"),
-                tieba_name=content_selector.xpath("//a[@class='card_title_fname']/text()").get(default='').strip(),
-                tieba_link=const.TIEBA_URL + content_selector.xpath("//a[@class='card_title_fname']/@href").get(
-                    default=''),
-                total_replay_num=post_field_value.get("reply_num", 0)
-            )
+            tieba_note = TiebaNote(note_id=note_id,
+                                   title=post_selector.xpath(".//a[@class='j_th_tit ']/text()").get(default='').strip(),
+                                   desc=post_selector.xpath(
+                                       ".//div[@class='threadlist_abs threadlist_abs_onlyline ']/text()").get(
+                                       default='').strip(), note_url=const.TIEBA_URL + f"/p/{note_id}",
+                                   user_link=const.TIEBA_URL + post_selector.xpath(
+                                       ".//a[@class='frs-author-name j_user_card ']/@href").get(default='').strip(),
+                                   user_nickname=post_field_value.get("authoer_nickname") or post_field_value.get(
+                                       "author_name"),
+                                   tieba_name=content_selector.xpath("//a[@class='card_title_fname']/text()").get(
+                                       default='').strip(), tieba_link=const.TIEBA_URL + content_selector.xpath(
+                    "//a[@class='card_title_fname']/@href").get(default=''),
+                                   total_replay_num=post_field_value.get("reply_num", 0))
             result.append(tieba_note)
         return result
 
@@ -98,28 +99,25 @@ class TieBaExtractor:
         note_id = only_view_author_link.split("?")[0].split("/")[-1]
         # 帖子回复数、回复页数
         thread_num_infos = content_selector.xpath(
-            "//div[@id='thread_theme_5']//li[@class='l_reply_num']//span[@class='red']"
-        )
+            "//div[@id='thread_theme_5']//li[@class='l_reply_num']//span[@class='red']")
         # IP地理位置、发表时间
         other_info_content = content_selector.xpath(".//div[@class='post-tail-wrap']").get(default="").strip()
         ip_location, publish_time = self.extract_ip_and_pub_time(other_info_content)
-        note = TiebaNote(
-            note_id=note_id,
-            title=content_selector.xpath("//title/text()").get(default='').strip(),
-            desc=content_selector.xpath("//meta[@name='description']/@content").get(default='').strip(),
-            note_url=const.TIEBA_URL + f"/p/{note_id}",
-            user_link=const.TIEBA_URL + first_floor_selector.xpath(".//a[@class='p_author_face ']/@href").get(
-                default='').strip(),
-            user_nickname=first_floor_selector.xpath(".//a[@class='p_author_name j_user_card']/text()").get(
-                default='').strip(),
-            user_avatar=first_floor_selector.xpath(".//a[@class='p_author_face ']/img/@src").get(default='').strip(),
-            tieba_name=content_selector.xpath("//a[@class='card_title_fname']/text()").get(default='').strip(),
-            tieba_link=const.TIEBA_URL + content_selector.xpath("//a[@class='card_title_fname']/@href").get(default=''),
-            ip_location=ip_location,
-            publish_time=publish_time,
-            total_replay_num=thread_num_infos[0].xpath("./text()").get(default='').strip(),
-            total_replay_page=thread_num_infos[1].xpath("./text()").get(default='').strip(),
-        )
+        note = TiebaNote(note_id=note_id, title=content_selector.xpath("//title/text()").get(default='').strip(),
+                         desc=content_selector.xpath("//meta[@name='description']/@content").get(default='').strip(),
+                         note_url=const.TIEBA_URL + f"/p/{note_id}",
+                         user_link=const.TIEBA_URL + first_floor_selector.xpath(
+                             ".//a[@class='p_author_face ']/@href").get(default='').strip(),
+                         user_nickname=first_floor_selector.xpath(
+                             ".//a[@class='p_author_name j_user_card']/text()").get(default='').strip(),
+                         user_avatar=first_floor_selector.xpath(".//a[@class='p_author_face ']/img/@src").get(
+                             default='').strip(),
+                         tieba_name=content_selector.xpath("//a[@class='card_title_fname']/text()").get(
+                             default='').strip(), tieba_link=const.TIEBA_URL + content_selector.xpath(
+                "//a[@class='card_title_fname']/@href").get(default=''), ip_location=ip_location,
+                         publish_time=publish_time,
+                         total_replay_num=thread_num_infos[0].xpath("./text()").get(default='').strip(),
+                         total_replay_page=thread_num_infos[1].xpath("./text()").get(default='').strip(), )
         note.title = note.title.replace(f"【{note.tieba_name}】_百度贴吧", "")
         return note
 
@@ -143,24 +141,20 @@ class TieBaExtractor:
             tieba_name = comment_selector.xpath("//a[@class='card_title_fname']/text()").get(default='').strip()
             other_info_content = comment_selector.xpath(".//div[@class='post-tail-wrap']").get(default="").strip()
             ip_location, publish_time = self.extract_ip_and_pub_time(other_info_content)
-            tieba_comment = TiebaComment(
-                comment_id=str(comment_field_value.get("content").get("post_id")),
-                sub_comment_count=comment_field_value.get("content").get("comment_num"),
-                content=utils.extract_text_from_html(comment_field_value.get("content").get("content")),
-                note_url=const.TIEBA_URL + f"/p/{note_id}",
-                user_link=const.TIEBA_URL + comment_selector.xpath(".//a[@class='p_author_face ']/@href").get(
-                    default='').strip(),
-                user_nickname=comment_selector.xpath(".//a[@class='p_author_name j_user_card']/text()").get(
-                    default='').strip(),
-                user_avatar=comment_selector.xpath(".//a[@class='p_author_face ']/img/@src").get(
-                    default='').strip(),
-                tieba_id=str(comment_field_value.get("content").get("forum_id", "")),
-                tieba_name=tieba_name,
-                tieba_link=f"https://tieba.baidu.com/f?kw={tieba_name}",
-                ip_location=ip_location,
-                publish_time=publish_time,
-                note_id=note_id,
-            )
+            tieba_comment = TiebaComment(comment_id=str(comment_field_value.get("content").get("post_id")),
+                                         sub_comment_count=comment_field_value.get("content").get("comment_num"),
+                                         content=utils.extract_text_from_html(
+                                             comment_field_value.get("content").get("content")),
+                                         note_url=const.TIEBA_URL + f"/p/{note_id}",
+                                         user_link=const.TIEBA_URL + comment_selector.xpath(
+                                             ".//a[@class='p_author_face ']/@href").get(default='').strip(),
+                                         user_nickname=comment_selector.xpath(
+                                             ".//a[@class='p_author_name j_user_card']/text()").get(default='').strip(),
+                                         user_avatar=comment_selector.xpath(
+                                             ".//a[@class='p_author_face ']/img/@src").get(default='').strip(),
+                                         tieba_id=str(comment_field_value.get("content").get("forum_id", "")),
+                                         tieba_name=tieba_name, tieba_link=f"https://tieba.baidu.com/f?kw={tieba_name}",
+                                         ip_location=ip_location, publish_time=publish_time, note_id=note_id, )
             result.append(tieba_comment)
         return result
 
@@ -186,19 +180,15 @@ class TieBaExtractor:
             content = utils.extract_text_from_html(
                 comment_ele.xpath(".//span[@class='lzl_content_main']").get(default=""))
             comment = TiebaComment(
-                comment_id=str(comment_value.get("spid")),
-                content=content,
+                comment_id=str(comment_value.get("spid")), content=content,
                 user_link=comment_user_a_selector.xpath("./@href").get(default=""),
                 user_nickname=comment_value.get("showname"),
                 user_avatar=comment_user_a_selector.xpath("./img/@src").get(default=""),
                 publish_time=comment_ele.xpath(".//span[@class='lzl_time']/text()").get(default="").strip(),
                 parent_comment_id=parent_comment.comment_id,
-                note_id=parent_comment.note_id,
-                note_url=parent_comment.note_url,
-                tieba_id=parent_comment.tieba_id,
-                tieba_name=parent_comment.tieba_name,
-                tieba_link=parent_comment.tieba_link
-            )
+                note_id=parent_comment.note_id, note_url=parent_comment.note_url,
+                tieba_id=parent_comment.tieba_id, tieba_name=parent_comment.tieba_name,
+                tieba_link=parent_comment.tieba_link)
             comments.append(comment)
 
         return comments
@@ -215,23 +205,26 @@ class TieBaExtractor:
         selector = Selector(text=html_content)
         user_link_selector = selector.xpath("//p[@class='space']/a")
         user_link: str = user_link_selector.xpath("./@href").get(default='')
-        user_link_params: Dict = parse_qs(unquote(user_link))
+        user_link_params: Dict = parse_qs(unquote(user_link.split("?")[-1]))
         user_name = user_link_params.get("un")[0] if user_link_params.get("un") else ""
         user_id = user_link_params.get("id")[0] if user_link_params.get("id") else ""
         userinfo_userdata_selector = selector.xpath("//div[@class='userinfo_userdata']")
-        creator = TiebaCreator(
-            user_id=user_id,
-            user_name=user_name,
-            nickname=selector.xpath(".//a[@class='userinfo_username']/text()").get(default='').strip(),
-            avatar=selector.xpath(".//div[@class='userinfo_left_head']//img/@src").get(default='').strip(),
-            gender=self.extract_gender(userinfo_userdata_selector.get(default='')),
-            ip_location=self.extract_ip(userinfo_userdata_selector.get(default='')),
-            follows=0,
-            fans=0,
-            follow_tieba_list="",
-            registration_duration="",
-        )
-        return creator
+        follow_fans_selector = selector.xpath("//span[@class='concern_num']")
+        follows, fans = 0, 0
+        if len(follow_fans_selector) == 2:
+            follows, fans = self.extract_follow_and_fans(follow_fans_selector)
+        user_content = userinfo_userdata_selector.get(default='')
+        return TiebaCreator(user_id=user_id, user_name=user_name,
+                            nickname=selector.xpath(".//span[@class='userinfo_username ']/text()").get(
+                                default='').strip(),
+                            avatar=selector.xpath(".//div[@class='userinfo_left_head']//img/@src").get(
+                                default='').strip(),
+                            gender=self.extract_gender(user_content),
+                            ip_location=self.extract_ip(user_content),
+                            follows=follows,
+                            fans=fans,
+                            registration_duration=self.extract_registration_duration(user_content)
+                            )
 
     def extract_ip_and_pub_time(self, html_content: str) -> Tuple[str, str]:
         """
@@ -272,7 +265,39 @@ class TieBaExtractor:
         Returns:
 
         """
-        pass
+        if GENDER_MALE in html_content:
+            return '男'
+        elif GENDER_FEMALE in html_content:
+            return '女'
+        return '未知'
+
+    @staticmethod
+    def extract_follow_and_fans(selectors: List[Selector]) -> Tuple[str, str]:
+        """
+        提取关注数和粉丝数
+        Args:
+            selectors:
+
+        Returns:
+
+        """
+        pattern = re.compile(r'<span class="concern_num">\(<a[^>]*>(\d+)</a>\)</span>')
+        follow_match = pattern.findall(selectors[0].get())
+        fans_match = pattern.findall(selectors[1].get())
+        follows = follow_match[0] if follow_match else 0
+        fans = fans_match[0] if fans_match else 0
+        return follows, fans
+
+    @staticmethod
+    def extract_registration_duration(html_content: str) -> str:
+        """
+        "<span>吧龄:1.9年</span>"
+        Returns: 1.9年
+
+        """
+        pattern = re.compile(r'<span>吧龄:(\S+)</span>')
+        match = pattern.search(html_content)
+        return match.group(1) if match else ""
 
     @staticmethod
     def extract_data_field_value(selector: Selector) -> Dict:
@@ -325,19 +350,11 @@ def test_extract_tieba_note_sub_comments():
     with open("test_data/note_sub_comments.html", "r", encoding="utf-8") as f:
         content = f.read()
         extractor = TieBaExtractor()
-        fake_parment_comment = TiebaComment(
-            comment_id="123456",
-            content="content",
-            user_link="user_link",
-            user_nickname="user_nickname",
-            user_avatar="user_avatar",
-            publish_time="publish_time",
-            parent_comment_id="parent_comment_id",
-            note_id="note_id",
-            note_url="note_url",
-            tieba_id="tieba_id",
-            tieba_name="tieba_name",
-        )
+        fake_parment_comment = TiebaComment(comment_id="123456", content="content", user_link="user_link",
+                                            user_nickname="user_nickname", user_avatar="user_avatar",
+                                            publish_time="publish_time", parent_comment_id="parent_comment_id",
+                                            note_id="note_id", note_url="note_url", tieba_id="tieba_id",
+                                            tieba_name="tieba_name", )
         result = extractor.extract_tieba_note_sub_comments(content, fake_parment_comment)
         print(result)
 
@@ -351,8 +368,17 @@ def test_extract_tieba_note_list():
     pass
 
 
+def test_extract_creator_info():
+    with open("test_data/creator_info.html", "r", encoding="utf-8") as f:
+        content = f.read()
+        extractor = TieBaExtractor()
+        result = extractor.extract_creator_info(content)
+        print(result.model_dump_json())
+
+
 if __name__ == '__main__':
     # test_extract_search_note_list()
     # test_extract_note_detail()
     # test_extract_tieba_note_parment_comments()
-    test_extract_tieba_note_list()
+    # test_extract_tieba_note_list()
+    test_extract_creator_info()

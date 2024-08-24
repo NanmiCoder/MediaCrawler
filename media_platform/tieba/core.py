@@ -9,7 +9,7 @@ from playwright.async_api import (BrowserContext, BrowserType, Page,
 
 import config
 from base.base_crawler import AbstractCrawler
-from model.m_baidu_tieba import TiebaNote
+from model.m_baidu_tieba import TiebaCreator, TiebaNote
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import tieba as tieba_store
 from tools import utils
@@ -226,19 +226,20 @@ class TieBaCrawler(AbstractCrawler):
         """
         utils.logger.info("[WeiboCrawler.get_creators_and_notes] Begin get weibo creators")
         for creator_url in config.TIEBA_CREATOR_URL_LIST:
-            createor_info: Dict = await self.tieba_client.get_creator_info_by_url(creator_url=creator_url)
-            if createor_info:
-                utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] creator info: {createor_info}")
-                if not createor_info:
+            creator_info: TiebaCreator = await self.tieba_client.get_creator_info_by_url(creator_url=creator_url)
+            if creator_info:
+                utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] creator info: {creator_info}")
+                if not creator_info:
                     raise Exception("Get creator info error")
-                user_id = createor_info.get("user_id")
-                await tieba_store.save_creator(user_id, user_info=createor_info)
+
+                await tieba_store.save_creator(user_info=creator_info)
 
                 # Get all note information of the creator
                 all_notes_list = await self.tieba_client.get_all_notes_by_creator_user_name(
-                    user_name=createor_info.get("user_name"),
+                    user_name=creator_info.user_name,
                     crawl_interval=0,
-                    callback=tieba_store.batch_update_tieba_notes
+                    callback=tieba_store.batch_update_tieba_notes,
+                    max_note_count=config.CRAWLER_MAX_NOTES_COUNT
                 )
 
                 await self.batch_get_note_comments(all_notes_list)
@@ -246,9 +247,6 @@ class TieBaCrawler(AbstractCrawler):
             else:
                 utils.logger.error(
                     f"[WeiboCrawler.get_creators_and_notes] get creator info error, creator_url:{creator_url}")
-
-
-
 
     async def launch_browser(
             self,

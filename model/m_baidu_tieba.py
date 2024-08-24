@@ -45,7 +45,6 @@ class TiebaComment(BaseModel):
     tieba_link: str = Field(..., description="贴吧链接")
 
 
-
 class TiebaCreator(BaseModel):
     """
     百度贴吧创作者
@@ -58,6 +57,4 @@ class TiebaCreator(BaseModel):
     ip_location: Optional[str] = Field(default="", description="IP地理位置")
     follows: int = Field(default=0, description="关注数")
     fans: int = Field(default=0, description="粉丝数")
-    follow_tieba_list: str = Field(default="", description="关注的贴吧列表")
     registration_duration: str = Field(default="", description="注册时长")
-
