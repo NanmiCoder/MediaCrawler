@@ -30,62 +30,78 @@ class XiaoHongShuCrawler(AbstractCrawler):
         self.index_url = "https://www.xiaohongshu.com"
         # self.user_agent = utils.get_user_agent()
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-
-    async def start(self) -> None:
-        playwright_proxy_format, httpx_proxy_format = None, None
-        if config.ENABLE_IP_PROXY:
-            ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
-            ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
-
-        async with async_playwright() as playwright:
-            # Launch a browser context.
-            chromium = playwright.chromium
-            self.browser_context = await self.launch_browser(
-                chromium,
+        
+    async def initialize_playwright(self):
+        self.playwright = await async_playwright().start()
+        self.chromium = self.playwright.chromium
+        self.browser_context = await self.launch_browser(
+                self.chromium,
                 None,
                 self.user_agent,
                 headless=config.HEADLESS
             )
-            # stealth.min.js is a js script to prevent the website from detecting the crawler.
-            await self.browser_context.add_init_script(path="libs/stealth.min.js")
-            # add a cookie attribute webId to avoid the appearance of a sliding captcha on the webpage
-            await self.browser_context.add_cookies([{
-                'name': "webId",
-                'value': "xxx123",  # any value
-                'domain': ".xiaohongshu.com",
-                'path': "/"
-            }])
-            self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+        
+        # stealth.min.js is a js script to prevent the website from detecting the crawler.
+        await self.browser_context.add_init_script(path="libs/stealth.min.js")
+        # add a cookie attribute webId to avoid the appearance of a sliding captcha on the webpage
+        await self.browser_context.add_cookies([{
+            'name': "webId",
+            'value': "xxx123",  # any value
+            'domain': ".xiaohongshu.com",
+            'path': "/"
+        }])
+        self.context_page = await self.browser_context.new_page()
+        await self.context_page.goto(self.index_url)
+    
+    async def cleanup_playwright(self):
+        await self.close()
+        await self.playwright.stop()
+        
+    async def init_proxy(self):
+        self.playwright_proxy_format, self.httpx_proxy_format = None, None
+        if config.ENABLE_IP_PROXY:
+            ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
+            ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
+            self.playwright_proxy_format, self.httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
 
-            # Create a client to interact with the xiaohongshu website.
-            self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
-            if not await self.xhs_client.pong():
-                login_obj = XiaoHongShuLogin(
-                    login_type=config.LOGIN_TYPE,
-                    login_phone="",  # input your phone number
-                    browser_context=self.browser_context,
-                    context_page=self.context_page,
-                    cookie_str=config.COOKIES
-                )
-                await login_obj.begin()
-                await self.xhs_client.update_cookies(browser_context=self.browser_context)
+    async def init_and_check_client(self):
+        # Create a client to interact with the xiaohongshu website.
+        self.xhs_client = await self.create_xhs_client(self.httpx_proxy_format)
+        if not await self.xhs_client.pong():
+            login_obj = XiaoHongShuLogin(
+                login_type=config.LOGIN_TYPE,
+                login_phone="",  # input your phone number
+                browser_context=self.browser_context,
+                context_page=self.context_page,
+                cookie_str=config.COOKIES
+            )
+            await login_obj.begin()
+            await self.xhs_client.update_cookies(browser_context=self.browser_context)
+            
+    async def start(self) -> None:
+        await self.init_proxy()
+        
+        # async with async_playwright() as playwright:
+        # Launch a browser context.
+        await self.initialize_playwright()
+        
+        await self.init_and_check_client()
 
-            crawler_type_var.set(config.CRAWLER_TYPE)
-            if config.CRAWLER_TYPE == "search":
-                # Search for notes and retrieve their comment information.
-                await self.search()
-            elif config.CRAWLER_TYPE == "detail":
-                # Get the information and comments of the specified post
-                await self.get_specified_notes()
-            elif config.CRAWLER_TYPE == "creator":
-                # Get creator's information and their notes and comments
-                await self.get_creators_and_notes()
-            else:
-                pass
+        crawler_type_var.set(config.CRAWLER_TYPE)
+        if config.CRAWLER_TYPE == "search":
+            # Search for notes and retrieve their comment information.
+            await self.search()
+        elif config.CRAWLER_TYPE == "detail":
+            # Get the information and comments of the specified post
+            await self.get_specified_notes()
+        elif config.CRAWLER_TYPE == "creator":
+            # Get creator's information and their notes and comments
+            await self.get_creators_and_notes()
+        else:
+            pass
 
-            utils.logger.info("[XiaoHongShuCrawler.start] Xhs Crawler finished ...")
+        await self.cleanup_playwright()
+        utils.logger.info("[XiaoHongShuCrawler.start] Xhs Crawler finished ...")
 
     async def search(self) -> None:
         """Search for notes and retrieve their comment information."""
@@ -94,6 +110,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         if config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = xhs_limit_count
         start_page = config.START_PAGE
+        final_res = []
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
@@ -130,16 +147,19 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     note_details = await asyncio.gather(*task_list)
                     for note_detail in note_details:
                         if note_detail:
-                            await xhs_store.update_xhs_note(note_detail)
-                            await self.get_notice_media(note_detail)
+                            # await xhs_store.update_xhs_note(note_detail)
+                            final_res.append(note_detail)
+                            # await self.get_notice_media(note_detail)
                             note_id_list.append(note_detail.get("note_id"))
                     page += 1
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
-                    await self.batch_get_note_comments(note_id_list)
+                    # await self.batch_get_note_comments(note_id_list)
                 except DataFetchError:
                     utils.logger.error("[XiaoHongShuCrawler.search] Get note detail error")
                     break
 
+        return final_res
+        
     async def get_creators_and_notes(self) -> None:
         """Get creator's notes and retrieve their comment information."""
         utils.logger.info("[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators")
