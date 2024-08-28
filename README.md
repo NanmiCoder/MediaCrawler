@@ -114,7 +114,7 @@
 
 ## 感谢下列Sponsors对本仓库赞助
 > 很想领取 豆包AI编程助手 这个分享奖励礼物，尤其是那个4090显卡，太想要了，大家可以的话，可以帮我注册一下豆包AI编程助手并完成一次AI对话就可以了，谢谢大家了！
-- <a href="ttps://www.marscode.cn/events/2024-invitation?utm_source=event_invite_code&invite_code=MyvKvEyzmsQsXSJPdZWiVqD2Mtf28gNF&event_id=2024_invitation">【豆包AI编程助手】邀请他人为你助力，获取更多火星值⚡️ 赢取4090显卡、11g金条等礼品 </a>
+- <a href="https://www.marscode.cn/events/2024-invitation?utm_source=event_invite_code&invite_code=MyvKvEyzmsQsXSJPdZWiVqD2Mtf28gNF&event_id=2024_invitation">【豆包AI编程助手】邀请他人为你助力，获取更多火星值⚡️ 赢取4090显卡、11g金条等礼品 </a>
 
 - <a href="https://www.kuaidaili.com/?ref=ldwkjqipvz6c">【快代理】企业级代理IP服务，极速稳定，安全可靠。爬虫工程师的绝佳选择。</a><br>
 
