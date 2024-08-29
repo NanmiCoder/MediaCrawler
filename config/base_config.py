@@ -1,6 +1,6 @@
 # 基础配置
 PLATFORM = "xhs"
-KEYWORDS = "副业"
+KEYWORDS = "婚纱照旅拍"
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
@@ -54,7 +54,7 @@ ENABLE_GET_SUB_COMMENTS = False
 
 # 指定小红书需要爬虫的笔记ID列表
 XHS_SPECIFIED_ID_LIST = [
-    "5b4ef1524eacab43736a4a9b",    
+    "66d0086e000000001d0385b8",    
     # ........................
 ]
 
@@ -108,7 +108,7 @@ TIEBA_CREATOR_URL_LIST = [
 
 # 指定小红书创作者ID列表
 XHS_CREATOR_ID_LIST = [
-    "5b4ef1524eacab43736a4a9b",
+    "66b075a4000000001d033c62",
     # ........................
 ]
 
