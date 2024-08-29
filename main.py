@@ -27,7 +27,7 @@ class CrawlerFactory:
     def create_crawler(platform: str) -> AbstractCrawler:
         crawler_class = CrawlerFactory.CRAWLERS.get(platform)
         if not crawler_class:
-            raise ValueError("Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
+            raise ValueError("Invalid Media Platform Currently only supported: xhs,dy,ks,bili,wb,tieba")
         return crawler_class()
 
 
