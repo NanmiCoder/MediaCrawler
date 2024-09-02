@@ -45,6 +45,7 @@ async def main():
     if config.SAVE_DATA_OPTION == "db":
         await db.close()
 
+    
 
 if __name__ == '__main__':
     try:

@@ -262,7 +262,11 @@ class BilibiliCrawler(AbstractCrawler):
                 return None
 
     async def create_bilibili_client(self, httpx_proxy: Optional[str]) -> BilibiliClient:
-        """Create xhs client"""
+        """
+        create bilibili client
+        :param httpx_proxy: httpx proxy
+        :return: bilibili client
+        """
         utils.logger.info(
             "[BilibiliCrawler.create_bilibili_client] Begin create bilibili API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
@@ -282,7 +286,11 @@ class BilibiliCrawler(AbstractCrawler):
 
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
-        """format proxy info for playwright and httpx"""
+        """
+        format proxy info for playwright and httpx
+        :param ip_proxy_info: ip proxy info
+        :return: playwright proxy, httpx proxy
+        """
         playwright_proxy = {
             "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
             "username": ip_proxy_info.user,
@@ -300,7 +308,14 @@ class BilibiliCrawler(AbstractCrawler):
             user_agent: Optional[str],
             headless: bool = True
     ) -> BrowserContext:
-        """Launch browser and create browser context"""
+        """ 
+        launch browser and create browser context
+        :param chromium: chromium browser
+        :param playwright_proxy: playwright proxy
+        :param user_agent: user agent
+        :param headless: headless mode
+        :return: browser context
+        """
         utils.logger.info(
             "[BilibiliCrawler.launch_browser] Begin create browser context ...")
         if config.SAVE_LOGIN_STATE:
