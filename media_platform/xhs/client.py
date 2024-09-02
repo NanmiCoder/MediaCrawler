@@ -217,8 +217,8 @@ class XiaoHongShuClient(AbstractApiClient):
             "source_note_id": note_id,
             "image_formats": ["jpg", "webp", "avif"],
             "extra": {"need_body_topic": 1},
-            "xsec_source": xsec_source,
-            "xsec_token": xsec_token
+            # "xsec_source": xsec_source,
+            # "xsec_token": xsec_token
         }
         uri = "/api/sns/web/v1/feed"
         res = await self.post(uri, data)
