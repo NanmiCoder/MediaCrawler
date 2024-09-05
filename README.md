@@ -119,6 +119,17 @@
 
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan
 
+## MediaCrawler爬虫项目交流群：
+<div id="join_wechat_group"> 
+
+> 备注github，会有拉群小助手自动拉你进群。  如果图片展示不出来或过期，可以直接添加我的微信号：yzglan，并备注github，会有拉群小助手自动拉你进
+
+<div style="max-width: 200px">  
+<p><img alt="直接添加我的微信号：yzglan" src="static/images/relakkes_weichat.JPG" style="width: 200px;height: 100%" ></p>
+</div>
+</div>
+
+
 ## 打赏
 
 如果觉得项目不错的话可以打赏哦。您的支持就是我最大的动力！
@@ -130,17 +141,6 @@
 </p>
 
 查看打赏列表 [点击跳转](#donate)
-
-
-## MediaCrawler爬虫项目交流群：
-<div id="join_wechat_group"> 
-
-> 如果图片展示不出来或者群链接过期，可以直接添加我的微信号：yzglan
-
-<div style="max-width: 200px">  
-<p><img alt="直接添加我的微信号：yzglan" src="static/images/13群二维码.JPG" style="width: 200px;height: 100%" ></p>
-</div>
-</div>
 
 
 ## 运行报错常见问题Q&A
