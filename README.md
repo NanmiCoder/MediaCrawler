@@ -13,11 +13,12 @@
 原理：利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
 通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低
 
-[MediaCrawlerPro](https://github.com/MediaCrawlerPro)版本已经迭代出来了，相较于现在的优势：
+[MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经迭代出来了，相较于开源版本的优势：
 - 多账号+IP代理支持（重点！）
 - 去除Playwright依赖，使用更加简单
 - 支持linux部署（Docker docker-compose）
 - 代码重构优化，更加易读易维护（解耦请求签名逻辑）
+- 完美的架构设计，更加易扩展，源码学习的价值更大
 
 
 ## 功能列表
@@ -87,8 +88,6 @@
 - 支持保存到json中（data/目录下）
 
 
-加入MediaCrawler爬虫项目交流群。[点击跳转加入](#join_wechat_group)
-
 ## 开发者服务
 - MediaCrawler视频课程：
   > 视频课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
@@ -97,22 +96,22 @@
   > 同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
   
 
-- 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题 (每天 1 快钱订阅我的知识服务)
+- 知识星球：MediaCrawler相关问题最佳实践、爬虫逆向分享、爬虫项目实战、多年编程经验分享、爬虫编程技术问题提问。
   <p>
-  <img alt="xingqiu" src="https://nm.zizhi1.com/static/img/8e1312d1f52f2e0ff436ea7196b4e27b.15555424244122T1.webp" style="width: auto;height: 400px" >
+  <img alt="xingqiu" src="static/images/星球qrcode.JPG" style="width: auto;height: 400px" >
   </p>
   
-  星球精选文章：
-  - [逆向案例1 - 某16x8平台商品列表接口逆向参数分析](https://articles.zsxq.com/id_x1qmtg8pzld9.html)
-  - [逆向案例2 - Product Hunt月度最佳产品榜单接口加密参数分析](https://articles.zsxq.com/id_au4eich3x2sg.html)
-  - [逆向案例3 - 某zhi乎x-zse-96参数分析过程](https://articles.zsxq.com/id_dui2vil0ag1l.html)
+  星球精选文章(部分)：
+  - [逆向案例 - 某16x8平台商品列表接口逆向参数分析](https://articles.zsxq.com/id_x1qmtg8pzld9.html)
+  - [逆向案例 - Product Hunt月度最佳产品榜单接口加密参数分析](https://articles.zsxq.com/id_au4eich3x2sg.html)
+  - [逆向案例 - 某zhi乎x-zse-96参数分析过程](https://articles.zsxq.com/id_dui2vil0ag1l.html)
+  - [逆向案例 - 某x识星球X-Signature加密参数分析过程](https://articles.zsxq.com/id_pp4madwcwcg8.html)
   - [【独创】使用Playwright获取某音a_bogus参数流程（包含加密参数分析）](https://articles.zsxq.com/id_u89al50jk9x0.html)
   - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
   - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
   - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
 
-
-
+  
 ## 感谢下列Sponsors对本仓库赞助
 > 帮我注册下面的AI插件，保留一天，我可以得到3rmb的赞助，感谢您的支持
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
@@ -187,7 +186,7 @@ PS：如果打赏时请备注捐赠者，如有遗漏请联系我添加（有时
 
 | 捐赠者         | 捐赠金额  | 捐赠日期       |
 |-------------|-------|------------|
-| Tornado     | 66 元  | 2024-08-20 |
+| Tornado     | 66 元  | 2024-09-04 |
 | srhedbj     | 50 元  | 2024-08-20 |
 | *嘉          | 20 元  | 2024-08-15 |
 | *良          | 50 元  | 2024-08-13 |
