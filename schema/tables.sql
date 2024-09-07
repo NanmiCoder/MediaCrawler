@@ -454,3 +454,71 @@ CREATE TABLE `tieba_creator`
     `registration_duration` varchar(16)  DEFAULT NULL COMMENT '吧龄',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='贴吧创作者';
+
+
+CREATE TABLE `zhihu_content` (
+    `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `content_id` varchar(64) NOT NULL COMMENT '内容ID',
+    `content_type` varchar(16) NOT NULL COMMENT '内容类型(article | answer | zvideo)',
+    `content_text` longtext COMMENT '内容文本, 如果是视频类型这里为空',
+    `content_url` varchar(255) NOT NULL COMMENT '内容落地链接',
+    `question_id` varchar(64) DEFAULT NULL COMMENT '问题ID, type为answer时有值',
+    `title` varchar(255) NOT NULL COMMENT '内容标题',
+    `desc` longtext COMMENT '内容描述',
+    `created_time` varchar(32) NOT NULL COMMENT '创建时间',
+    `updated_time` varchar(32) NOT NULL COMMENT '更新时间',
+    `voteup_count` int NOT NULL DEFAULT '0' COMMENT '赞同人数',
+    `comment_count` int NOT NULL DEFAULT '0' COMMENT '评论数量',
+    `source_keyword` varchar(64) DEFAULT NULL COMMENT '来源关键词',
+    `user_id` varchar(64) NOT NULL COMMENT '用户ID',
+    `user_link` varchar(255) NOT NULL COMMENT '用户主页链接',
+    `user_nickname` varchar(64) NOT NULL COMMENT '用户昵称',
+    `user_avatar` varchar(255) NOT NULL COMMENT '用户头像地址',
+    `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
+    `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
+    PRIMARY KEY (`id`),
+    KEY `idx_zhihu_content_content_id` (`content_id`),
+    KEY `idx_zhihu_content_created_time` (`created_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='知乎内容（回答、文章、视频）';
+
+
+CREATE TABLE `zhihu_comment` (
+    `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `comment_id` varchar(64) NOT NULL COMMENT '评论ID',
+    `parent_comment_id` varchar(64) DEFAULT NULL COMMENT '父评论ID',
+    `content` text NOT NULL COMMENT '评论内容',
+    `publish_time` varchar(32) NOT NULL COMMENT '发布时间',
+    `ip_location` varchar(64) DEFAULT NULL COMMENT 'IP地理位置',
+    `sub_comment_count` int NOT NULL DEFAULT '0' COMMENT '子评论数',
+    `like_count` int NOT NULL DEFAULT '0' COMMENT '点赞数',
+    `dislike_count` int NOT NULL DEFAULT '0' COMMENT '踩数',
+    `content_id` varchar(64) NOT NULL COMMENT '内容ID',
+    `content_type` varchar(16) NOT NULL COMMENT '内容类型(article | answer | zvideo)',
+    `user_id` varchar(64) NOT NULL COMMENT '用户ID',
+    `user_link` varchar(255) NOT NULL COMMENT '用户主页链接',
+    `user_nickname` varchar(64) NOT NULL COMMENT '用户昵称',
+    `user_avatar` varchar(255) NOT NULL COMMENT '用户头像地址',
+    `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
+    `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
+    PRIMARY KEY (`id`),
+    KEY `idx_zhihu_comment_comment_id` (`comment_id`),
+    KEY `idx_zhihu_comment_content_id` (`content_id`),
+    KEY `idx_zhihu_comment_publish_time` (`publish_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='知乎评论';
+
+
+CREATE TABLE `zhihu_creator` (
+    `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `user_id` varchar(64) NOT NULL COMMENT '用户ID',
+    `user_link` varchar(255) NOT NULL COMMENT '用户主页链接',
+    `user_nickname` varchar(64) NOT NULL COMMENT '用户昵称',
+    `user_avatar` varchar(255) NOT NULL COMMENT '用户头像地址',
+    `gender` varchar(16) DEFAULT NULL COMMENT '用户性别',
+    `ip_location` varchar(64) DEFAULT NULL COMMENT 'IP地理位置',
+    `follows` int NOT NULL DEFAULT '0' COMMENT '关注数',
+    `fans` int NOT NULL DEFAULT '0' COMMENT '粉丝数',
+    `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
+    `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_zhihu_creator_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='知乎创作者';
