@@ -73,6 +73,12 @@ class ZhihuCrawler(AbstractCrawler):
                 await login_obj.begin()
                 await self.zhihu_client.update_cookies(browser_context=self.browser_context)
 
+            # 知乎的搜索接口需要打开搜索页面之后cookies才能访问API，单独的首页不行
+            utils.logger.info("[ZhihuCrawler.start] Zhihu跳转到搜索页面获取搜索页面的Cookies，改过程需要5秒左右")
+            await self.context_page.goto(f"{self.index_url}/search?q=python&search_source=Guess&utm_content=search_hot&type=content")
+            await asyncio.sleep(5)
+            await self.zhihu_client.update_cookies(browser_context=self.browser_context)
+
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
                 # Search for notes and retrieve their comment information.
