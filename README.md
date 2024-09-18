@@ -21,6 +21,9 @@
 - 完美的架构设计，更加易扩展，源码学习的价值更大
 
 
+MediaCrawler仓库白金赞助商:
+<a href="https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default">【MangoProxy】全球IP代理白金推荐，支持210+国家 [MangoProxy](https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default) </a>
+
 ## 功能列表
 | 平台  | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
 |-----|-------|---------|-----|--------|-------|-------|-------|
@@ -114,7 +117,7 @@
 
   
 ## 感谢下列Sponsors对本仓库赞助
-> 帮我注册下面的AI插件，保留一天，我可以得到3rmb的赞助，感谢您的支持
+- <a href="https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default">【MangoProxy】全球IP代理白金推荐，支持210+国家 [MangoProxy](https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default) </a>
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
 
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan
