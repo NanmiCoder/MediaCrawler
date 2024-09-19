@@ -19,7 +19,7 @@
 
 扫描下方我的个人微信，备注：pro版本（如果图片展示不出来，可以直接添加我的微信号：yzglan）
 
-![relakkes_weichat.JPG](static/images/relakkes_weichat.JPG)
+![relakkes_weichat.JPG](static/images/relakkes_weichat.jpg)
 
 
 ##  Pro版本诞生的背景

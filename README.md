@@ -47,7 +47,7 @@ MediaCrawler仓库白金赞助商:
   
 - 知识星球：MediaCrawler相关问题最佳实践、爬虫逆向分享、爬虫项目实战、多年编程经验分享、爬虫编程技术问题提问。
   <p>
-  <img alt="xingqiu" src="docs/static/images/星球qrcode.JPG" style="width: auto;height: 400px" >
+  <img alt="xingqiu" src="docs/static/images/星球qrcode.jpg" style="width: auto;height: 400px" >
   </p>
   
   星球精选文章(部分)：
