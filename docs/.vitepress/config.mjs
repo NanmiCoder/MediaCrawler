@@ -5,9 +5,13 @@ export default defineConfig({
     title: "MediaCrawler自媒体爬虫",
     description: "小红书爬虫，抖音爬虫， 快手爬虫， B站爬虫， 微博爬虫，百度贴吧爬虫，知乎爬虫...。  ",
     lastUpdated: true,
+    base: '/MediaCrawler/',
     themeConfig: {
         editLink: {
             pattern: 'https://github.com/NanmiCoder/MediaCrawler/tree/main/docs/:path'
+        },
+        search: {
+            provider: 'local'
         },
         // https://vitepress.dev/reference/default-theme-config
         nav: [
