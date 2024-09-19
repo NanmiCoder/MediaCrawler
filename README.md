@@ -83,15 +83,14 @@ MediaCrawler仓库白金赞助商:
   <img alt="打赏-支付宝" src="docs/static/images/zfb_pay.png" style="width: 200px" />
 </p>
 
-查看打赏列表 [点击跳转](#donate)
+查看打赏列表 [MediaCrawler捐赠名单](https://nanmicoder.github.io/MediaCrawler/捐赠名单.html)
 
 
 ## 爬虫入门课程
 我新开的爬虫教程Github仓库 [CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial) ，感兴趣的朋友可以关注一下，持续更新，主打一个免费.
 
-
 ## star 趋势图
-- 如果该项目对你有帮助，star一下 ❤️❤️❤️
+- 如果该项目对你有帮助，帮忙 star一下 ❤️❤️❤️，让更多的人看到MediaCrawler这个项目
 
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
 
@@ -102,41 +101,6 @@ MediaCrawler仓库白金赞助商:
 - 短信转发 [参考仓库](https://github.com/pppscn/SmsForwarder)
 - 内网穿透工具 [ngrok](https://ngrok.com/docs/)
 
-## 捐赠信息
-<div id="donate">
-
-PS：如果打赏时请备注捐赠者，如有遗漏请联系我添加（有时候消息多可能会漏掉，十分抱歉）
-
-| 捐赠者         | 捐赠金额  | 捐赠日期       |
-|-------------|-------|------------|
-| Urtb*       | 100 元 | 2024-09-07 |
-| Tornado     | 66 元  | 2024-09-04 |
-| srhedbj     | 50 元  | 2024-08-20 |
-| *嘉          | 20 元  | 2024-08-15 |
-| *良          | 50 元  | 2024-08-13 |
-| *皓          | 50 元  | 2024-03-18 |
-| *刚          | 50 元  | 2024-03-18 |
-| *乐          | 20 元  | 2024-03-17 |
-| *木          | 20 元  | 2024-03-17 |
-| *诚          | 20 元  | 2024-03-17 |
-| Strem Gamer | 20 元  | 2024-03-16 |
-| *鑫          | 20 元  | 2024-03-14 |
-| Yuzu        | 20 元  | 2024-03-07 |
-| **宁         | 100 元 | 2024-03-03 |
-| **媛         | 20 元  | 2024-03-03 |
-| Scarlett    | 20 元  | 2024-02-16 |
-| Asun        | 20 元  | 2024-01-30 |
-| 何*          | 100 元 | 2024-01-21 |
-| allen       | 20 元  | 2024-01-10 |
-| llllll      | 20 元  | 2024-01-07 |
-| 邝*元         | 20 元  | 2023-12-29 |
-| 50chen      | 50 元  | 2023-12-22 |
-| xiongot     | 20 元  | 2023-12-17 |
-| atom.hu     | 20 元  | 2023-12-16 |
-| 一呆          | 20 元  | 2023-12-01 |
-| 坠落          | 50 元  | 2023-11-08 |
-
-</div>
 
 ## 免责声明
 <div id="disclaimer"> 

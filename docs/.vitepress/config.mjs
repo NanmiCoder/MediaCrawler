@@ -51,12 +51,18 @@ export default defineConfig({
             },
             {
                 text: 'MediaCrawler项目交流群',
-                link: '/作者介绍',
+                link: '/微信交流群',
             },
             {
                 text: '爬虫入门教程分享',
                 items: [
                     {text: "我写的爬虫入门教程", link: 'https://github.com/NanmiCoder/CrawlerTutorial'}
+                ]
+            },
+            {
+                text: 'MediaCrawler捐赠名单',
+                items: [
+                    {text: "捐赠名单", link: '/捐赠名单'}
                 ]
             },
 
