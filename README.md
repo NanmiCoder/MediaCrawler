@@ -35,6 +35,8 @@ MediaCrawler仓库白金赞助商:
 | 贴吧  | ✅     | ✅       | ✅   | ✅      | ✅     | ✅     | ✅    |
 | 知乎  | ✅     |   ❌      | ✅   | ❌      | ✅     | ✅     | ✅    |
 
+## MediaCrawler使用教程文档
+[MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
 
 ## 开发者服务
 - MediaCrawler源码剖析课程： 
@@ -61,9 +63,6 @@ MediaCrawler仓库白金赞助商:
   - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
   - [Python协程在并发场景下的幂等性问题](https://articles.zsxq.com/id_wocdwsfmfcmp.html)
   - [错误使用 Python 可变类型带来的隐藏 Bug](https://articles.zsxq.com/id_f7vn89l1d303.html)
-
-## MediaCrawler使用教程文档
-[MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
 
 
 ## 感谢下列Sponsors对本仓库赞助
