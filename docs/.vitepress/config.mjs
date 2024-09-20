@@ -6,6 +6,20 @@ export default defineConfig({
     description: "小红书爬虫，抖音爬虫， 快手爬虫， B站爬虫， 微博爬虫，百度贴吧爬虫，知乎爬虫...。  ",
     lastUpdated: true,
     base: '/MediaCrawler/',
+    head: [
+        [
+            'script',
+            {async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-5TK7GF3KK1'}
+        ],
+        [
+            'script',
+            {},
+            `window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5TK7GF3KK1');`
+        ]
+    ],
     themeConfig: {
         editLink: {
             pattern: 'https://github.com/NanmiCoder/MediaCrawler/tree/main/docs/:path'
