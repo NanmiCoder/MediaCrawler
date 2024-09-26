@@ -13,7 +13,7 @@ const fetchAds = async () => {
       id: 1,
       imageUrl: 'https://mangoproxy.com/assetsfile/images/logomango.webp',
       landingUrl: 'https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default',
-      text: '全局IP代理白金推荐，支持210+国家'
+      text: '全球IP代理白金推荐，支持210+国家'
     }
   ]
 }
