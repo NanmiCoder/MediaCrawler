@@ -6,8 +6,10 @@
 
 import random
 
+import execjs
 from playwright.async_api import Page
 
+douyin_sign_obj = execjs.compile(open('libs/douyin.js', encoding='utf-8').read())
 
 def get_web_id():
     """
@@ -30,16 +32,35 @@ def get_web_id():
     return web_id.replace('-', '')[:19]
 
 
-async def get_a_bogus(params: str, post_data: dict, user_agent: str, page: Page = None):
+
+async def get_a_bogus(url: str, params: str, post_data: dict, user_agent: str, page: Page = None):
     """
-    获取 a_bogus 参数
+    获取 a_bogus 参数, 目前不支持post请求类型的签名
     """
-    return await get_a_bogus_from_playright(params, post_data, user_agent, page)
+    return get_a_bogus_from_js(url, params, user_agent)
+
+def get_a_bogus_from_js(url: str, params: str, user_agent: str):
+    """
+    通过js获取 a_bogus 参数
+    Args:
+        url:
+        params:
+        user_agent:
+
+    Returns:
+
+    """
+    sign_js_name = "sign_datail"
+    if "/reply" in url:
+        sign_js_name = "sign_reply"
+    return douyin_sign_obj.call(sign_js_name, params, user_agent)
+
 
 
 async def get_a_bogus_from_playright(params: str, post_data: dict, user_agent: str, page: Page):
     """
     通过playright获取 a_bogus 参数
+    playwright版本已失效
     Returns:
 
     """

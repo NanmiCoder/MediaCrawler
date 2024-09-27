@@ -34,7 +34,7 @@ class DOUYINClient(AbstractApiClient):
         self.cookie_dict = cookie_dict
 
     async def __process_req_params(
-            self, params: Optional[Dict] = None, headers: Optional[Dict] = None,
+            self, uri: str, params: Optional[Dict] = None, headers: Optional[Dict] = None,
             request_method="GET"
     ):
 
@@ -73,11 +73,11 @@ class DOUYINClient(AbstractApiClient):
         params.update(common_params)
         query_string = urllib.parse.urlencode(params)
 
-        # 20240610 a-bogus更新（Playwright版本）
+        # 20240927 a-bogus更新（JS版本）
         post_data = {}
         if request_method == "POST":
             post_data = params
-        a_bogus = await get_a_bogus(query_string, post_data, headers["User-Agent"], self.playwright_page)
+        a_bogus = await get_a_bogus(uri, query_string, post_data, headers["User-Agent"], self.playwright_page)
         params["a_bogus"] = a_bogus
 
     async def request(self, method, url, **kwargs):
@@ -98,12 +98,12 @@ class DOUYINClient(AbstractApiClient):
         """
         GET请求
         """
-        await self.__process_req_params(params, headers)
+        await self.__process_req_params(uri, params, headers)
         headers = headers or self.headers
         return await self.request(method="GET", url=f"{self._host}{uri}", params=params, headers=headers)
 
     async def post(self, uri: str, data: dict, headers: Optional[Dict] = None):
-        await self.__process_req_params(data, headers)
+        await self.__process_req_params(uri, data, headers)
         headers = headers or self.headers
         return await self.request(method="POST", url=f"{self._host}{uri}", data=data, headers=headers)
 
