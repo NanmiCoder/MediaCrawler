@@ -35,15 +35,15 @@ MediaCrawler仓库白金赞助商:
 | 贴吧  | ✅     | ✅       | ✅   | ✅      | ✅     | ✅     | ✅    |
 | 知乎  | ✅     |   ❌      | ✅   | ❌      | ✅     | ✅     | ✅    |
 
-## MediaCrawler使用教程文档
-[MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
-
 ## 开发者服务
-- MediaCrawler源码剖析课程： 
+> 开源不易，希望大家可以Star一下MediaCrawler仓库、支持下我的课程、星球，十分感谢！！！ <br>
+
+- MediaCrawler源码剖析课程：
+  如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个我录制的视频课程，从设计出发一步步带你如何使用，门槛大大降低
   - **抖音课程链接**（仅支持安卓）：https://v.douyin.com/iYeQFyAf/ 
   - **B站课程链接**：https://www.bilibili.com/cheese/play/ss16569 
    
-  (备注：视频课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh   (如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个视频课程，从设计出发一步步带你如何使用，门槛大大降低))
+  (备注：课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
   <br>
   <br>
   
@@ -63,6 +63,12 @@ MediaCrawler仓库白金赞助商:
   - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
   - [Python协程在并发场景下的幂等性问题](https://articles.zsxq.com/id_wocdwsfmfcmp.html)
   - [错误使用 Python 可变类型带来的隐藏 Bug](https://articles.zsxq.com/id_f7vn89l1d303.html)
+
+## 使用教程文档
+ 
+> MediaCrawler文档使用vitepress构建，包含使用方法、常见问题、加入项目交流群等。
+> 
+[MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
 
 
 ## 感谢下列Sponsors对本仓库赞助
