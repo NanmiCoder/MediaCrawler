@@ -11,9 +11,9 @@ const fetchAds = async () => {
   return [
     {
       id: 1,
-      imageUrl: 'https://mangoproxy.com/assetsfile/images/logomango.webp',
-      landingUrl: 'https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default',
-      text: '全球IP代理白金推荐，支持210+国家'
+      imageUrl: 'https://dashboard.ipcola.com/assets/logo-blue-44f7d385.png',
+      landingUrl: 'https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl',
+      text: '⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家'
     }
   ]
 }

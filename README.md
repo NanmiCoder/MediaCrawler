@@ -22,7 +22,8 @@
 
 
 MediaCrawler仓库白金赞助商:
-<a href="https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default">【MangoProxy】全球IP代理白金推荐，支持210+国家 [MangoProxy](https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default) </a>
+<a href="https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl">⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家</a>
+> 【IPCola全球独家海外IP代理】使用此处阿江专属推荐码注册：atxtupzfjhpbdbl ，获得10%金额补贴。
 
 ## 功能列表
 | 平台  | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
@@ -72,10 +73,11 @@ MediaCrawler仓库白金赞助商:
 
 
 ## 感谢下列Sponsors对本仓库赞助
-- <a href="https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default">【MangoProxy】全球IP代理白金推荐，支持210+国家 [MangoProxy](https://mangoproxy.com/?utm_source=mediacrawler&utm_medium=repository&utm_campaign=default) </a>
+> 【IPCola全球独家海外IP代理】使用此处阿江专属推荐码注册：atxtupzfjhpbdbl ，获得10%金额补贴。
+- <a href="https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl">⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家</a>
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
 
-成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan
+成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan 或 email：relakkes@gmail.com
 
 
 ## 打赏
