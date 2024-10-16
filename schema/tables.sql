@@ -474,12 +474,14 @@ CREATE TABLE `zhihu_content` (
     `user_link` varchar(255) NOT NULL COMMENT '用户主页链接',
     `user_nickname` varchar(64) NOT NULL COMMENT '用户昵称',
     `user_avatar` varchar(255) NOT NULL COMMENT '用户头像地址',
+    `user_url_token` varchar(255) NOT NULL COMMENT '用户url_token',
     `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
     `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
     PRIMARY KEY (`id`),
     KEY `idx_zhihu_content_content_id` (`content_id`),
     KEY `idx_zhihu_content_created_time` (`created_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='知乎内容（回答、文章、视频）';
+
 
 
 CREATE TABLE `zhihu_comment` (
@@ -513,10 +515,17 @@ CREATE TABLE `zhihu_creator` (
     `user_link` varchar(255) NOT NULL COMMENT '用户主页链接',
     `user_nickname` varchar(64) NOT NULL COMMENT '用户昵称',
     `user_avatar` varchar(255) NOT NULL COMMENT '用户头像地址',
+    `url_token` varchar(64) NOT NULL COMMENT '用户URL Token',
     `gender` varchar(16) DEFAULT NULL COMMENT '用户性别',
     `ip_location` varchar(64) DEFAULT NULL COMMENT 'IP地理位置',
-    `follows` int NOT NULL DEFAULT '0' COMMENT '关注数',
-    `fans` int NOT NULL DEFAULT '0' COMMENT '粉丝数',
+    `follows` int NOT NULL DEFAULT 0 COMMENT '关注数',
+    `fans` int NOT NULL DEFAULT 0 COMMENT '粉丝数',
+    `anwser_count` int NOT NULL DEFAULT 0 COMMENT '回答数',
+    `video_count` int NOT NULL DEFAULT 0 COMMENT '视频数',
+    `question_count` int NOT NULL DEFAULT 0 COMMENT '问题数',
+    `article_count` int NOT NULL DEFAULT 0 COMMENT '文章数',
+    `column_count` int NOT NULL DEFAULT 0 COMMENT '专栏数',
+    `get_voteup_count` int NOT NULL DEFAULT 0 COMMENT '获得的赞同数',
     `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
     `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
     PRIMARY KEY (`id`),

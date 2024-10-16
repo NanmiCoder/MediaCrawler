@@ -15,8 +15,8 @@ class ZhihuContent(BaseModel):
     question_id: str = Field(default="", description="问题ID, type为answer时有值")
     title: str = Field(default="", description="内容标题")
     desc: str = Field(default="", description="内容描述")
-    created_time: int = Field(default="", description="创建时间")
-    updated_time: int = Field(default="", description="更新时间")
+    created_time: int = Field(default=0, description="创建时间")
+    updated_time: int = Field(default=0, description="更新时间")
     voteup_count: int = Field(default=0, description="赞同人数")
     comment_count: int = Field(default=0, description="评论数量")
     source_keyword: str = Field(default="", description="来源关键词")
@@ -25,6 +25,7 @@ class ZhihuContent(BaseModel):
     user_link: str = Field(default="", description="用户主页链接")
     user_nickname: str = Field(default="", description="用户昵称")
     user_avatar: str = Field(default="", description="用户头像地址")
+    user_url_token: str = Field(default="", description="用户url_token")
 
 
 class ZhihuComment(BaseModel):
@@ -57,7 +58,15 @@ class ZhihuCreator(BaseModel):
     user_link: str = Field(default="", description="用户主页链接")
     user_nickname: str = Field(default="", description="用户昵称")
     user_avatar: str = Field(default="", description="用户头像地址")
+    url_token: str = Field(default="", description="用户url_token")
     gender: str = Field(default="", description="用户性别")
     ip_location: Optional[str] = Field(default="", description="IP地理位置")
     follows: int = Field(default=0, description="关注数")
     fans: int = Field(default=0, description="粉丝数")
+    anwser_count: int = Field(default=0, description="回答数")
+    video_count: int = Field(default=0, description="视频数")
+    question_count: int = Field(default=0, description="提问数")
+    article_count: int = Field(default=0, description="文章数")
+    column_count: int = Field(default=0, description="专栏数")
+    get_voteup_count: int = Field(default=0, description="获得的赞同数")
+

@@ -3,7 +3,7 @@ from typing import List
 
 import config
 from base.base_crawler import AbstractStore
-from model.m_zhihu import ZhihuComment, ZhihuContent
+from model.m_zhihu import ZhihuComment, ZhihuContent, ZhihuCreator
 from store.zhihu.zhihu_store_impl import (ZhihuCsvStoreImplement,
                                           ZhihuDbStoreImplement,
                                           ZhihuJsonStoreImplement)
@@ -24,6 +24,21 @@ class ZhihuStoreFactory:
         if not store_class:
             raise ValueError("[ZhihuStoreFactory.create_store] Invalid save option only supported csv or db or json ...")
         return store_class()
+
+async def batch_update_zhihu_contents(contents: List[ZhihuContent]):
+    """
+    批量更新知乎内容
+    Args:
+        contents:
+
+    Returns:
+
+    """
+    if not contents:
+        return
+
+    for content_item in contents:
+        await update_zhihu_content(content_item)
 
 async def update_zhihu_content(content_item: ZhihuContent):
     """
@@ -71,3 +86,19 @@ async def update_zhihu_content_comment(comment_item: ZhihuComment):
     local_db_item.update({"last_modify_ts": utils.get_current_timestamp()})
     utils.logger.info(f"[store.zhihu.update_zhihu_note_comment] zhihu content comment:{local_db_item}")
     await ZhihuStoreFactory.create_store().store_comment(local_db_item)
+
+
+async def save_creator(creator: ZhihuCreator):
+    """
+    保存知乎创作者信息
+    Args:
+        creator:
+
+    Returns:
+
+    """
+    if not creator:
+        return
+    local_db_item = creator.model_dump()
+    local_db_item.update({"last_modify_ts": utils.get_current_timestamp()})
+    await ZhihuStoreFactory.create_store().store_creator(local_db_item)

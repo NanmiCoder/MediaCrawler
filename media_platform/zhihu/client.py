@@ -5,18 +5,19 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 import httpx
+from httpx import Response
 from playwright.async_api import BrowserContext, Page
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 import config
 from base.base_crawler import AbstractApiClient
 from constant import zhihu as zhihu_constant
-from model.m_zhihu import ZhihuComment, ZhihuContent
+from model.m_zhihu import ZhihuComment, ZhihuContent, ZhihuCreator
 from tools import utils
 
 from .exception import DataFetchError, ForbiddenError
 from .field import SearchSort, SearchTime, SearchType
-from .help import ZhiHuJsonExtractor, sign
+from .help import ZhihuExtractor, sign
 
 
 class ZhiHuClient(AbstractApiClient):
@@ -33,7 +34,7 @@ class ZhiHuClient(AbstractApiClient):
         self.timeout = timeout
         self.default_headers = headers
         self.cookie_dict = cookie_dict
-        self._extractor = ZhiHuJsonExtractor()
+        self._extractor = ZhihuExtractor()
 
     async def _pre_headers(self, url: str) -> Dict:
         """
@@ -95,7 +96,7 @@ class ZhiHuClient(AbstractApiClient):
             raise DataFetchError(response.text)
 
 
-    async def get(self, uri: str, params=None) -> Dict:
+    async def get(self, uri: str, params=None, **kwargs) -> Union[Response, Dict, str]:
         """
         GET请求，对请求头签名
         Args:
@@ -109,7 +110,7 @@ class ZhiHuClient(AbstractApiClient):
         if isinstance(params, dict):
             final_uri += '?' + urlencode(params)
         headers = await self._pre_headers(final_uri)
-        return await self.request(method="GET", url=zhihu_constant.ZHIHU_URL + final_uri, headers=headers)
+        return await self.request(method="GET", url=zhihu_constant.ZHIHU_URL + final_uri, headers=headers, **kwargs)
 
     async def pong(self) -> bool:
         """
@@ -194,7 +195,7 @@ class ZhiHuClient(AbstractApiClient):
         }
         search_res = await self.get(uri, params)
         utils.logger.info(f"[ZhiHuClient.get_note_by_keyword] Search result: {search_res}")
-        return self._extractor.extract_contents(search_res)
+        return self._extractor.extract_contents_from_search(search_res)
 
     async def get_root_comments(self, content_id: str, content_type: str, offset: str = "", limit: int = 10,
                                 order_by: str = "sort") -> Dict:
@@ -317,3 +318,170 @@ class ZhiHuClient(AbstractApiClient):
                 all_sub_comments.extend(sub_comments)
                 await asyncio.sleep(crawl_interval)
         return all_sub_comments
+
+    async def get_creator_info(self, url_token: str) -> Optional[ZhihuCreator]:
+        """
+        获取创作者信息
+        Args:
+            url_token:
+
+        Returns:
+
+        """
+        uri = f"/people/{url_token}"
+        html_content: str = await self.get(uri, return_response=True)
+        return self._extractor.extract_creator(url_token, html_content)
+
+    async def get_creator_answers(self, url_token: str, offset: int = 0, limit: int = 20) -> Dict:
+        """
+        获取创作者的回答
+        Args:
+            url_token:
+            offset:
+            limit:
+
+        Returns:
+
+
+        """
+        uri = f"/api/v4/members/{url_token}/answers"
+        params = {
+            "include":"data[*].is_normal,admin_closed_comment,reward_info,is_collapsed,annotation_action,annotation_detail,collapse_reason,collapsed_by,suggest_edit,comment_count,can_comment,content,editable_content,attachment,voteup_count,reshipment_settings,comment_permission,created_time,updated_time,review_info,excerpt,paid_info,reaction_instruction,is_labeled,label_info,relationship.is_authorized,voting,is_author,is_thanked,is_nothelp;data[*].vessay_info;data[*].author.badge[?(type=best_answerer)].topics;data[*].author.vip_info;data[*].question.has_publishing_draft,relationship",
+            "offset": offset,
+            "limit": limit,
+            "order_by": "created"
+        }
+        return await self.get(uri, params)
+
+    async def get_creator_articles(self, url_token: str, offset: int = 0, limit: int = 20) -> Dict:
+        """
+        获取创作者的文章
+        Args:
+            url_token:
+            offset:
+            limit:
+
+        Returns:
+
+        """
+        uri = f"/api/v4/members/{url_token}/articles"
+        params = {
+            "include":"data[*].comment_count,suggest_edit,is_normal,thumbnail_extra_info,thumbnail,can_comment,comment_permission,admin_closed_comment,content,voteup_count,created,updated,upvoted_followees,voting,review_info,reaction_instruction,is_labeled,label_info;data[*].vessay_info;data[*].author.badge[?(type=best_answerer)].topics;data[*].author.vip_info;",
+            "offset": offset,
+            "limit": limit,
+            "order_by": "created"
+        }
+        return await self.get(uri, params)
+
+    async def get_creator_videos(self, url_token: str, offset: int = 0, limit: int = 20) -> Dict:
+        """
+        获取创作者的视频
+        Args:
+            url_token:
+            offset:
+            limit:
+
+        Returns:
+
+        """
+        uri = f"/api/v4/members/{url_token}/zvideos"
+        params = {
+            "include":"similar_zvideo,creation_relationship,reaction_instruction",
+            "offset": offset,
+            "limit": limit,
+            "similar_aggregation": "true"
+        }
+        return await self.get(uri, params)
+
+    async def get_all_anwser_by_creator(self, creator: ZhihuCreator, crawl_interval: float = 1.0,
+                                        callback: Optional[Callable] = None) -> List[ZhihuContent]:
+        """
+        获取创作者的所有回答
+        Args:
+            creator: 创作者信息
+            crawl_interval: 爬取一次笔记的延迟单位（秒）
+            callback: 一次笔记爬取结束后
+
+        Returns:
+
+        """
+        all_contents: List[ZhihuContent] = []
+        is_end: bool = False
+        offset: int = 0
+        limit: int = 20
+        while not is_end:
+            res = await self.get_creator_answers(creator.url_token, offset, limit)
+            if not res:
+                break
+            utils.logger.info(f"[ZhiHuClient.get_all_anwser_by_creator] Get creator {creator.url_token} answers: {res}")
+            paging_info = res.get("paging", {})
+            is_end = paging_info.get("is_end")
+            contents = self._extractor.extract_content_list_from_creator(res.get("data"))
+            if callback:
+                await callback(contents)
+            all_contents.extend(contents)
+            offset += limit
+            await asyncio.sleep(crawl_interval)
+        return all_contents
+
+
+    async def get_all_articles_by_creator(self, creator: ZhihuCreator, crawl_interval: float = 1.0,
+                                          callback: Optional[Callable] = None) -> List[ZhihuContent]:
+        """
+        获取创作者的所有文章
+        Args:
+            creator:
+            crawl_interval:
+            callback:
+
+        Returns:
+
+        """
+        all_contents: List[ZhihuContent] = []
+        is_end: bool = False
+        offset: int = 0
+        limit: int = 20
+        while not is_end:
+            res = await self.get_creator_articles(creator.url_token, offset, limit)
+            if not res:
+                break
+            paging_info = res.get("paging", {})
+            is_end = paging_info.get("is_end")
+            contents = self._extractor.extract_content_list_from_creator(res.get("data"))
+            if callback:
+                await callback(contents)
+            all_contents.extend(contents)
+            offset += limit
+            await asyncio.sleep(crawl_interval)
+        return all_contents
+
+
+    async def get_all_videos_by_creator(self, creator: ZhihuCreator, crawl_interval: float = 1.0,
+                                        callback: Optional[Callable] = None) -> List[ZhihuContent]:
+        """
+        获取创作者的所有视频
+        Args:
+            creator:
+            crawl_interval:
+            callback:
+
+        Returns:
+
+        """
+        all_contents: List[ZhihuContent] = []
+        is_end: bool = False
+        offset: int = 0
+        limit: int = 20
+        while not is_end:
+            res = await self.get_creator_videos(creator.url_token, offset, limit)
+            if not res:
+                break
+            paging_info = res.get("paging", {})
+            is_end = paging_info.get("is_end")
+            contents = self._extractor.extract_content_list_from_creator(res.get("data"))
+            if callback:
+                await callback(contents)
+            all_contents.extend(contents)
+            offset += limit
+            await asyncio.sleep(crawl_interval)
+        return all_contents
