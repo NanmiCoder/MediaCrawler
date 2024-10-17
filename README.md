@@ -5,6 +5,7 @@
 >本仓库的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及的爬虫技术仅用于学习和研究，不得用于对其他平台进行大规模爬虫或其他非法行为。对于因使用本仓库内容而引起的任何法律责任，本仓库不承担任何责任。使用本仓库的内容即表示您同意本免责声明的所有条款和条件。
 
 > 点击查看更为详细的免责声明。[点击跳转](#disclaimer)
+
 # 仓库描述
 
 **小红书爬虫**，**抖音爬虫**， **快手爬虫**， **B站爬虫**， **微博爬虫**，**百度贴吧爬虫**，**知乎爬虫**...。  
@@ -16,7 +17,7 @@
 MediaCrawler仓库白金赞助商:
 <a href="https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl">⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家</a>
 
-## 功能列表
+# 功能列表
 | 平台  | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
 |-----|-------|---------|-----|--------|-------|-------|-------|
 | 小红书 | ✅     | ✅       | ✅   | ✅      | ✅     | ✅     | ✅    |
@@ -27,6 +28,18 @@ MediaCrawler仓库白金赞助商:
 | 贴吧  | ✅     | ✅       | ✅   | ✅      | ✅     | ✅     | ✅    |
 | 知乎  | ✅     |   ❌      | ✅   | ✅      | ✅     | ✅     | ✅    |
 
+
+# 插播一下：MediaCrawlerPro重磅发布啦！！！
+[MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经重构出来了，相较于开源版本的优势：
+- 多账号+IP代理支持（重点！）
+- 去除Playwright依赖，使用更加简单
+- 支持linux部署（Docker docker-compose）
+- 代码重构优化，更加易读易维护（解耦JS签名逻辑）
+- 代码质量更高，对于构建更大型的爬虫项目更加友好
+- 完美的架构设计，更加易扩展，源码学习的价值更大
+
+# 安装部署方法
+> 开源不易，希望大家可以Star一下MediaCrawler仓库！！！！十分感谢！！！ <br>
 
 ## 创建并激活 python 虚拟环境
 > 如果是爬取抖音和知乎，需要提前安装nodejs环境，版本大于等于：`16`即可 <br>
@@ -82,24 +95,15 @@ MediaCrawler仓库白金赞助商:
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
 
-## MediaCrawlerPro
-[MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经重构出来了，相较于开源版本的优势：
-- 多账号+IP代理支持（重点！）
-- 去除Playwright依赖，使用更加简单
-- 支持linux部署（Docker docker-compose）
-- 代码重构优化，更加易读易维护（解耦JS签名逻辑）
-- 代码质量更高，对于构建更大型的爬虫项目更加友好
-- 完美的架构设计，更加易扩展，源码学习的价值更大
 
 
-## 其他常见问题可以查看在线文档
+# 其他常见问题可以查看在线文档
 > 
 > 在线文档包含使用方法、常见问题、加入项目交流群等。
 > [MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
 > 
 
-## 开发者服务
-> 开源不易，希望大家可以Star一下MediaCrawler仓库！！！！十分感谢！！！ <br>
+# 开发者服务
 > 如果你对知识付费认可，可以看下下面我提供的付费服务，如果你是学生，请一定提前告知，会有优惠💰<br>
 
 - MediaCrawler源码剖析课程：
@@ -129,7 +133,7 @@ MediaCrawler仓库白金赞助商:
   - [错误使用 Python 可变类型带来的隐藏 Bug](https://articles.zsxq.com/id_f7vn89l1d303.html)
 
 
-## 感谢下列Sponsors对本仓库赞助
+# 感谢下列Sponsors对本仓库赞助
 > 【IPCola全球独家海外IP代理】使用此处阿江专属推荐码注册：atxtupzfjhpbdbl ，获得10%金额补贴。
 - <a href="https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl">⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家</a>
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
@@ -137,20 +141,20 @@ MediaCrawler仓库白金赞助商:
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan 或 email：relakkes@gmail.com
 
 
-## MediaCrawler项目微信交流群
+# MediaCrawler项目微信交流群
 
 👏👏👏 汇聚爬虫技术爱好者，共同学习，共同进步。
 
 ❗️❗️❗️群内禁止广告，禁止发各类违规和MediaCrawler不相关的问题
 
-### 加群方式
+## 加群方式
 > 备注：github，会有拉群小助手自动拉你进群。
 > 
 > 如果图片展示不出来或过期，可以直接添加我的微信号：yzglan，并备注github，会有拉群小助手自动拉你进群
 
-![relakkes_wechat](docs/static/images/relakkes_weichat.jpg)
+![relakkes_wechat](docs/static/images/14群二维码.jpeg)
 
-## 打赏
+# 打赏
 
 如果觉得项目不错的话可以打赏哦。您的支持就是我最大的动力！
 
@@ -163,46 +167,46 @@ MediaCrawler仓库白金赞助商:
 查看打赏列表 [MediaCrawler捐赠名单](https://nanmicoder.github.io/MediaCrawler/捐赠名单.html)
 
 
-## 爬虫入门课程
+# 爬虫入门课程
 我新开的爬虫教程Github仓库 [CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial) ，感兴趣的朋友可以关注一下，持续更新，主打一个免费.
 
-## star 趋势图
+# star 趋势图
 - 如果该项目对你有帮助，帮忙 star一下 ❤️❤️❤️，让更多的人看到MediaCrawler这个项目
 
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
 
 
-## 参考
+# 参考
 
 - xhs客户端 [ReaJason的xhs仓库](https://github.com/ReaJason/xhs)
 - 短信转发 [参考仓库](https://github.com/pppscn/SmsForwarder)
 - 内网穿透工具 [ngrok](https://ngrok.com/docs/)
 
 
-## 免责声明
+# 免责声明
 <div id="disclaimer"> 
 
-### 1. 项目目的与性质
+## 1. 项目目的与性质
 本项目（以下简称“本项目”）是作为一个技术研究与学习工具而创建的，旨在探索和学习网络数据采集技术。本项目专注于自媒体平台的数据爬取技术研究，旨在提供给学习者和研究者作为技术交流之用。
 
-### 2. 法律合规性声明
+## 2. 法律合规性声明
 本项目开发者（以下简称“开发者”）郑重提醒用户在下载、安装和使用本项目时，严格遵守中华人民共和国相关法律法规，包括但不限于《中华人民共和国网络安全法》、《中华人民共和国反间谍法》等所有适用的国家法律和政策。用户应自行承担一切因使用本项目而可能引起的法律责任。
 
-### 3. 使用目的限制
+## 3. 使用目的限制
 本项目严禁用于任何非法目的或非学习、非研究的商业行为。本项目不得用于任何形式的非法侵入他人计算机系统，不得用于任何侵犯他人知识产权或其他合法权益的行为。用户应保证其使用本项目的目的纯属个人学习和技术研究，不得用于任何形式的非法活动。
 
-### 4. 免责声明
+## 4. 免责声明
 开发者已尽最大努力确保本项目的正当性及安全性，但不对用户使用本项目可能引起的任何形式的直接或间接损失承担责任。包括但不限于由于使用本项目而导致的任何数据丢失、设备损坏、法律诉讼等。
 
-### 5. 知识产权声明
+## 5. 知识产权声明
 本项目的知识产权归开发者所有。本项目受到著作权法和国际著作权条约以及其他知识产权法律和条约的保护。用户在遵守本声明及相关法律法规的前提下，可以下载和使用本项目。
 
-### 6. 最终解释权
+## 6. 最终解释权
 关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。
 </div>
 
 
-### 感谢JetBrains提供的免费开源许可证支持
+## 感谢JetBrains提供的免费开源许可证支持
 <a href="https://www.jetbrains.com/?from=MediaCrawler">
     <img src="https://www.jetbrains.com/company/brand/img/jetbrains_logo.png" width="100" alt="JetBrains" />
 </a>
