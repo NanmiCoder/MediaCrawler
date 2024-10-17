@@ -116,13 +116,17 @@ class BilibiliClient(AbstractApiClient):
         self.cookie_dict = cookie_dict
 
     async def search_video_by_keyword(self, keyword: str, page: int = 1, page_size: int = 20,
-                                      order: SearchOrderType = SearchOrderType.DEFAULT):
+                                      order: SearchOrderType = SearchOrderType.DEFAULT,
+                                      pubtime_begin_s: int = 0, pubtime_end_s: int = 0) -> Dict:
+
         """
         KuaiShou web search api
         :param keyword: 搜索关键词
         :param page: 分页参数具体第几页
         :param page_size: 每一页参数的数量
         :param order: 搜索结果排序，默认位综合排序
+        :param pubtime_begin_s: 发布时间开始时间戳
+        :param pubtime_end_s: 发布时间结束时间戳
         :return:
         """
         uri = "/x/web-interface/wbi/search/type"
@@ -131,7 +135,9 @@ class BilibiliClient(AbstractApiClient):
             "keyword": keyword,
             "page": page,
             "page_size": page_size,
-            "order": order.value
+            "order": order.value,
+            "pubtime_begin": pubtime_begin_s,
+            "pubtime_end": pubtime_end_s
         }
         return await self.get(uri, post_data)
 

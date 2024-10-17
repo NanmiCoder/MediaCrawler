@@ -114,6 +114,8 @@ class BilibiliCrawler(AbstractCrawler):
                     page=page,
                     page_size=bili_limit_count,
                     order=SearchOrderType.DEFAULT,
+                    pubtime_begin_s=0, # 作品发布日期起始时间戳
+                    pubtime_end_s=0 # 作品发布日期结束日期时间戳
                 )
                 video_list: List[Dict] = videos_res.get("result")
 
