@@ -99,6 +99,13 @@ class XiaoHongShuClient(AbstractApiClient):
                 **kwargs
             )
 
+        if response.status_code == 471 or response.status_code == 461:
+            # someday someone maybe will bypass captcha
+            verify_type = response.headers['Verifytype']
+            verify_uuid = response.headers['Verifyuuid']
+            raise Exception(
+                f"出现验证码，请求失败，Verifytype: {verify_type}，Verifyuuid: {verify_uuid}, Response: {response}")
+
         if return_response:
             return response.text
         data: Dict = response.json()
@@ -228,8 +235,8 @@ class XiaoHongShuClient(AbstractApiClient):
             "source_note_id": note_id,
             "image_formats": ["jpg", "webp", "avif"],
             "extra": {"need_body_topic": 1},
-            # "xsec_source": xsec_source,
-            # "xsec_token": xsec_token
+            "xsec_source": xsec_source,
+            "xsec_token": xsec_token
         }
         uri = "/api/sns/web/v1/feed"
         res = await self.post(uri, data)
@@ -454,13 +461,15 @@ class XiaoHongShuClient(AbstractApiClient):
         return await self.post(uri, data=data, return_response=True)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-    async def get_note_by_id_from_html(self, note_id: str):
+    async def get_note_by_id_from_html(self, note_id: str, xsec_source: str, xsec_token: str) -> Dict:
         """
         通过解析网页版的笔记详情页HTML，获取笔记详情, 该接口可能会出现失败的情况，这里尝试重试3次
         copy from https://github.com/ReaJason/xhs/blob/eb1c5a0213f6fbb592f0a2897ee552847c69ea2d/xhs/core.py#L217-L259
         thanks for ReaJason
         Args:
             note_id:
+            xsec_source:
+            xsec_token:
 
         Returns:
 
@@ -488,7 +497,7 @@ class XiaoHongShuClient(AbstractApiClient):
                     dict_new[new_key] = value
             return dict_new
 
-        url = "https://www.xiaohongshu.com/explore/" + note_id
+        url = "https://www.xiaohongshu.com/explore/" + note_id + f"?xsec_token={xsec_token}&xsec_source={xsec_source}"
         html = await self.request(method="GET", url=url, return_response=True, headers=self.headers)
         state = re.findall(r"window.__INITIAL_STATE__=({.*})</script>", html)[0].replace("undefined", '""')
         if state != "{}":

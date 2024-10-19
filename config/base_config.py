@@ -57,17 +57,25 @@ MAX_CONCURRENCY_NUM = 1
 ENABLE_GET_IMAGES = False
 
 # 是否开启爬评论模式, 默认开启爬评论
-ENABLE_GET_COMMENTS = False
+ENABLE_GET_COMMENTS = True
 
 # 是否开启爬二级评论模式, 默认不开启爬二级评论
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
 ENABLE_GET_SUB_COMMENTS = False
 
-# 指定小红书需要爬虫的笔记ID列表
-XHS_SPECIFIED_ID_LIST = [
-    "6422c2750000000027000d88",
+# 已废弃⚠️⚠️⚠️指定小红书需要爬虫的笔记ID列表
+# 已废弃⚠️⚠️⚠️ 指定笔记ID笔记列表会因为缺少xsec_token和xsec_source参数导致爬取失败
+# XHS_SPECIFIED_ID_LIST = [
+#     "66fad51c000000001b0224b8",
+#     # ........................
+# ]
+
+# 指定小红书需要爬虫的笔记URL列表, 目前要携带xsec_token和xsec_source参数
+XHS_SPECIFIED_NOTE_URL_LIST = [
+    "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
     # ........................
 ]
+
 
 # 指定抖音需要爬取的ID列表
 DY_SPECIFIED_ID_LIST = [

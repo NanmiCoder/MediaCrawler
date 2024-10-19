@@ -15,6 +15,9 @@ import random
 import time
 import urllib.parse
 
+from model.m_xiaohongshu import NoteUrlInfo
+from tools.crawler_util import extract_url_params_to_dict
+
 
 def sign(a1="", b1="", x_s="", x_t=""):
     """
@@ -286,6 +289,21 @@ def get_img_urls_by_trace_id(trace_id: str, format_type: str = "png"):
 def get_trace_id(img_url: str):
     # 浏览器端上传的图片多了 /spectrum/ 这个路径
     return f"spectrum/{img_url.split('/')[-1]}" if img_url.find("spectrum") != -1 else img_url.split("/")[-1]
+
+
+def parse_note_info_from_note_url(url: str) -> NoteUrlInfo:
+    """
+    从小红书笔记url中解析出笔记信息
+    Args:
+        url: "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
+    Returns:
+
+    """
+    note_id = url.split("/")[-1].split("?")[0]
+    params = extract_url_params_to_dict(url)
+    xsec_token = params.get("xsec_token", "")
+    xsec_source = params.get("xsec_source", "")
+    return NoteUrlInfo(note_id=note_id, xsec_token=xsec_token, xsec_source=xsec_source)
 
 
 if __name__ == '__main__':

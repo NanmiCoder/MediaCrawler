@@ -18,6 +18,8 @@ import base64
 import json
 import random
 import re
+import urllib
+import urllib.parse
 from io import BytesIO
 from typing import Dict, List, Optional, Tuple
 
@@ -192,3 +194,12 @@ def extract_text_from_html(html: str) -> str:
     # Remove all other tags
     clean_text = re.sub(r'<[^>]+>', '', clean_html).strip()
     return clean_text
+
+def extract_url_params_to_dict(url: str) -> Dict:
+    """Extract URL parameters to dict"""
+    url_params_dict = dict()
+    if not url:
+        return url_params_dict
+    parsed_url = urllib.parse.urlparse(url)
+    url_params_dict = dict(urllib.parse.parse_qsl(parsed_url.query))
+    return url_params_dict
