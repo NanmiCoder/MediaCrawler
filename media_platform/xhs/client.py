@@ -288,7 +288,8 @@ class XiaoHongShuClient(AbstractApiClient):
         return await self.get(uri, params)
 
     async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0,
-                                    callback: Optional[Callable] = None) -> List[Dict]:
+                                    callback: Optional[Callable] = None,
+                                    max_count: int = 10) -> List[Dict]:
         """
         获取指定笔记下的所有一级评论，该方法会一直查找一个帖子下的所有评论信息
         Args:
@@ -302,7 +303,7 @@ class XiaoHongShuClient(AbstractApiClient):
         result = []
         comments_has_more = True
         comments_cursor = ""
-        while comments_has_more:
+        while comments_has_more and len(result) < max_count:
             comments_res = await self.get_note_comments(note_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", False)
             comments_cursor = comments_res.get("cursor", "")
@@ -311,6 +312,8 @@ class XiaoHongShuClient(AbstractApiClient):
                     f"[XiaoHongShuClient.get_note_all_comments] No 'comments' key found in response: {comments_res}")
                 break
             comments = comments_res["comments"]
+            if len(result) + len(comments) > max_count:
+                comments = comments[:max_count - len(result)]
             if callback:
                 await callback(note_id, comments)
             await asyncio.sleep(crawl_interval)
