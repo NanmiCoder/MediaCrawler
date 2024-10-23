@@ -186,7 +186,8 @@ class KuaishouCrawler(AbstractCrawler):
                 await self.ks_client.get_video_all_comments(
                     photo_id=video_id,
                     crawl_interval=random.random(),
-                    callback=kuaishou_store.batch_update_ks_video_comments
+                    callback=kuaishou_store.batch_update_ks_video_comments,
+                    max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
                 )
             except DataFetchError as ex:
                 utils.logger.error(f"[KuaishouCrawler.get_comments] get video_id: {video_id} comment error: {ex}")

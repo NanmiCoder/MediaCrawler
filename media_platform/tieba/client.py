@@ -204,21 +204,23 @@ class BaiduTieBaClient(AbstractApiClient):
         return self._page_extractor.extract_note_detail(page_content)
 
     async def get_note_all_comments(self, note_detail: TiebaNote, crawl_interval: float = 1.0,
-                                    callback: Optional[Callable] = None) -> List[TiebaComment]:
+                                    callback: Optional[Callable] = None,
+                                    max_count: int = 10,
+                                    ) -> List[TiebaComment]:
         """
         获取指定帖子下的所有一级评论，该方法会一直查找一个帖子下的所有评论信息
         Args:
             note_detail: 帖子详情对象
             crawl_interval: 爬取一次笔记的延迟单位（秒）
             callback: 一次笔记爬取结束后
-
+            max_count: 一次帖子爬取的最大评论数量
         Returns:
 
         """
         uri = f"/p/{note_detail.note_id}"
         result: List[TiebaComment] = []
         current_page = 1
-        while note_detail.total_replay_page >= current_page:
+        while note_detail.total_replay_page >= current_page and len(result) < max_count:
             params = {
                 "pn": current_page
             }
@@ -227,6 +229,8 @@ class BaiduTieBaClient(AbstractApiClient):
                                                                                 note_id=note_detail.note_id)
             if not comments:
                 break
+            if len(result) + len(comments) > max_count:
+                comments = comments[:max_count - len(result)]
             if callback:
                 await callback(note_detail.note_id, comments)
             result.extend(comments)

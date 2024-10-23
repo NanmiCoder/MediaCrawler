@@ -222,20 +222,23 @@ class BilibiliClient(AbstractApiClient):
         return await self.get(uri, post_data)
 
     async def get_video_all_comments(self, video_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
-                                     callback: Optional[Callable] = None, ):
+                                     callback: Optional[Callable] = None,
+                                     max_count: int = 10,):
         """
         get video all comments include sub comments
         :param video_id:
         :param crawl_interval:
         :param is_fetch_sub_comments:
         :param callback:
+        max_count: 一次笔记爬取的最大评论数量
+
         :return:
         """
 
         result = []
         is_end = False
         next_page = 0
-        while not is_end:
+        while not is_end and len(result) < max_count:
             comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, next_page)
             cursor_info: Dict = comments_res.get("cursor")
             comment_list: List[Dict] = comments_res.get("replies", [])
@@ -249,6 +252,8 @@ class BilibiliClient(AbstractApiClient):
                             await self.get_video_all_level_two_comments(
                                 video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval,  callback)
                         }
+            if len(result) + len(comment_list) > max_count:
+                comment_list = comment_list[:max_count - len(result)]
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(video_id, comment_list)
             await asyncio.sleep(crawl_interval)
