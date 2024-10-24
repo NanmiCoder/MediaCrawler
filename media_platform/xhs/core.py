@@ -31,7 +31,7 @@ from var import crawler_type_var, source_keyword_var
 from .client import XiaoHongShuClient
 from .exception import DataFetchError
 from .field import SearchSortType
-from .help import parse_note_info_from_note_url
+from .help import parse_note_info_from_note_url, get_search_id
 from .login import XiaoHongShuLogin
 
 
@@ -112,6 +112,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
             page = 1
+            search_id = get_search_id()
             while (page - start_page + 1) * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Skip page {page}")
@@ -123,6 +124,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     note_id_list: List[str] = []
                     notes_res = await self.xhs_client.get_note_by_keyword(
                         keyword=keyword,
+                        search_id=search_id,
                         page=page,
                         sort=SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != '' else SearchSortType.GENERAL,
                     )
