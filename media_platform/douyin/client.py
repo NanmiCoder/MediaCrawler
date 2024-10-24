@@ -230,6 +230,7 @@ class DOUYINClient(AbstractApiClient):
             crawl_interval: float = 1.0,
             is_fetch_sub_comments=False,
             callback: Optional[Callable] = None,
+            max_count: int = 10,
     ):
         """
         获取帖子的所有评论，包括子评论
@@ -237,18 +238,21 @@ class DOUYINClient(AbstractApiClient):
         :param crawl_interval: 抓取间隔
         :param is_fetch_sub_comments: 是否抓取子评论
         :param callback: 回调函数，用于处理抓取到的评论
+        :param max_count: 一次帖子爬取的最大评论数量
         :return: 评论列表
         """
         result = []
         comments_has_more = 1
         comments_cursor = 0
-        while comments_has_more:
+        while comments_has_more and len(result) < max_count:
             comments_res = await self.get_aweme_comments(aweme_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", 0)
             comments_cursor = comments_res.get("cursor", 0)
             comments = comments_res.get("comments", [])
             if not comments:
                 continue
+            if len(result) + len(comments) > max_count:
+                comments = comments[:max_count - len(result)]
             result.extend(comments)
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(aweme_id, comments)

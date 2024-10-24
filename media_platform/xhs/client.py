@@ -297,7 +297,7 @@ class XiaoHongShuClient(AbstractApiClient):
             note_id: 笔记ID
             crawl_interval: 爬取一次笔记的延迟单位（秒）
             callback: 一次笔记爬取结束后
-
+            max_count: 一次笔记爬取的最大评论数量
         Returns:
 
         """

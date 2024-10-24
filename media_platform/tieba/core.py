@@ -226,7 +226,8 @@ class TieBaCrawler(AbstractCrawler):
             await self.tieba_client.get_note_all_comments(
                 note_detail=note_detail,
                 crawl_interval=random.random(),
-                callback=tieba_store.batch_update_tieba_note_comments
+                callback=tieba_store.batch_update_tieba_note_comments,
+                max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
             )
 
     async def get_creators_and_notes(self) -> None:

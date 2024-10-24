@@ -206,7 +206,8 @@ class WeiboCrawler(AbstractCrawler):
                 await self.wb_client.get_note_all_comments(
                     note_id=note_id,
                     crawl_interval=random.randint(1,3), # 微博对API的限流比较严重，所以延时提高一些
-                    callback=weibo_store.batch_update_weibo_note_comments
+                    callback=weibo_store.batch_update_weibo_note_comments,
+                    max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
                 )
             except DataFetchError as ex:
                 utils.logger.error(f"[WeiboCrawler.get_note_comments] get note_id: {note_id} comment error: {ex}")

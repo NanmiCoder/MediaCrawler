@@ -189,27 +189,29 @@ class KuaiShouClient(AbstractApiClient):
         photo_id: str,
         crawl_interval: float = 1.0,
         callback: Optional[Callable] = None,
+        max_count: int = 10,
     ):
         """
         get video all comments include sub comments
         :param photo_id:
         :param crawl_interval:
         :param callback:
+        :param max_count:
         :return:
         """
 
         result = []
         pcursor = ""
 
-        while pcursor != "no_more":
+        while pcursor != "no_more" and len(result) < max_count:
             comments_res = await self.get_video_comments(photo_id, pcursor)
             vision_commen_list = comments_res.get("visionCommentList", {})
             pcursor = vision_commen_list.get("pcursor", "")
             comments = vision_commen_list.get("rootComments", [])
-
+            if len(result) + len(comments) > max_count:
+                comments = comments[:max_count - len(result)]
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(photo_id, comments)
-
             result.extend(comments)
             await asyncio.sleep(crawl_interval)
             sub_comments = await self.get_comments_all_sub_comments(

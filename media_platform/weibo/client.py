@@ -149,23 +149,28 @@ class WeiboClient:
         return await self.get(uri, params, headers=headers)
 
     async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0,
-                                    callback: Optional[Callable] = None, ):
+                                    callback: Optional[Callable] = None,
+                                    max_count: int = 10,
+                                    ):
         """
         get note all comments include sub comments
         :param note_id:
         :param crawl_interval:
         :param callback:
+        :param max_count:
         :return:
         """
 
         result = []
         is_end = False
         max_id = -1
-        while not is_end:
+        while not is_end and len(result) < max_count:
             comments_res = await self.get_note_comments(note_id, max_id)
             max_id: int = comments_res.get("max_id")
             comment_list: List[Dict] = comments_res.get("data", [])
             is_end = max_id == 0
+            if len(result) + len(comment_list) > max_count:
+                comment_list = comment_list[:max_count - len(result)]
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(note_id, comment_list)
             await asyncio.sleep(crawl_interval)
