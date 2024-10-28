@@ -36,7 +36,7 @@ def sign(url: str, cookies: str) -> Dict:
     """
     global ZHIHU_SGIN_JS
     if not ZHIHU_SGIN_JS:
-        with open("libs/zhihu.js", "r") as f:
+        with open("libs/zhihu.js", mode="r", encoding="utf-8-sig") as f:
             ZHIHU_SGIN_JS = execjs.compile(f.read())
 
     return ZHIHU_SGIN_JS.call("get_sign", url, cookies)

@@ -20,7 +20,7 @@ import random
 import execjs
 from playwright.async_api import Page
 
-douyin_sign_obj = execjs.compile(open('libs/douyin.js', encoding='utf-8').read())
+douyin_sign_obj = execjs.compile(open('libs/douyin.js', encoding='utf-8-sig').read())
 
 def get_web_id():
     """
