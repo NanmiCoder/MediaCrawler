@@ -1,11 +1,9 @@
 # 数据收集模块
+* 目前能收集小红书、抖音、快手、B站、微博等平台的视频、图片、评论、点赞、转发等信息。
 
-**小红书爬虫**，**抖音爬虫**， **快手爬虫**， **B站爬虫**， **微博爬虫**...。  
-目前能抓取小红书、抖音、快手、B站、微博的视频、图片、评论、点赞、转发等信息。
-
-原理：利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
+## 原理
+利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
 通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低
-
 
 ## 功能列表
 | 平台  | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
@@ -18,7 +16,6 @@
 
 
 ## 使用方法
-
 ### 创建并激活 python 虚拟环境
    ```shell   
    # 进入项目根目录
@@ -48,7 +45,7 @@
    playwright install
    ```
 
-### 运行爬虫程序
+### 运行程序
 
    ```shell
    ### 项目默认是没有开启评论爬取模式，如需评论请在config/base_config.py中的 ENABLE_GET_COMMENTS 变量修改
@@ -62,7 +59,7 @@
   
    # 打开对应APP扫二维码登录
      
-   # 其他平台爬虫使用示例，执行下面的命令查看
+   # 其他平台数据收集使用示例，执行下面的命令查看
    python main.py --help    
    ```
 
@@ -71,23 +68,6 @@
     - 执行 `python db.py` 初始化数据库数据库表结构（只在首次执行）
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
-
-## 开发者服务
-- 知识星球：沉淀高质量常见问题、最佳实践文档、多年编程+爬虫经验分享，提供付费知识星球服务，主动提问，作者会定期回答问题 (每天 1 快钱订阅我的知识服务)
-  <p>
-  <img alt="xingqiu" src="https://nm.zizhi1.com/static/img/8e1312d1f52f2e0ff436ea7196b4e27b.15555424244122T1.webp" style="width: auto;height: 400px" >
-  </p>
-  
-  星球精选文章： 
-  - [【独创】使用Playwright获取某音a_bogus参数流程（包含加密参数分析）](https://articles.zsxq.com/id_u89al50jk9x0.html)
-  - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
-  - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
-  - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
-
-- MediaCrawler视频课程：
-  > 如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个视频课程，从设计出发一步步带你如何使用，门槛大大降低，同时也是对我开源的支持，如果你能支持我的课程，我将会非常开心～<br>
-  > 课程售价非常非常的便宜，几杯咖啡的事儿.<br>
-  > 课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
 
 ## 运行报错常见问题Q&A
 > 遇到问题先自行搜索解决下，现在AI很火，用ChatGPT大多情况下能解决你的问题 [免费的ChatGPT](https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk)  
@@ -108,17 +88,14 @@ dy和xhs使用Playwright登录现在会出现滑块验证 + 短信验证，手�
 ## 手机号登录说明
 ➡️➡️➡️ [手机号登录说明](docs/手机号登录说明.md)
 
-## 爬虫入门课程
-我新开的爬虫教程Github仓库 [CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial) ，感兴趣的朋友可以关注一下，持续更新，主打一个免费.
-
 ## 参考
 - xhs客户端 [ReaJason的xhs仓库](https://github.com/ReaJason/xhs)
 - 短信转发 [参考仓库](https://github.com/pppscn/SmsForwarder)
 - 内网穿透工具 [ngrok](https://ngrok.com/docs/)
 
 ## 免责声明
-* 大家请以学习为目的使用本仓库，爬虫违法违规的案件：https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China  <br>
-* 本仓库的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及的爬虫技术仅用于学习和研究，不得用于对其他平台进行大规模爬虫或其他非法行为。对于因使用本仓库内容而引起的任何法律责任，本仓库不承担任何责任。使用本仓库的内容即表示您同意本免责声明的所有条款和条件。
+* 大家请以学习为目的使用本仓库，违法违规的案件：https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China  <br>
+* 本仓库的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及技术仅用于学习和研究。
 * 点击查看更为详细的免责声明。[点击跳转](#disclaimer)
 
 ## 免责声明
