@@ -17,11 +17,12 @@ from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_result
 
 import config
 from base.base_crawler import AbstractApiClient
 from tools import utils
+from html import unescape
 
 from .exception import DataFetchError, IPBlockError
 from .field import SearchNoteType, SearchSortType
@@ -503,8 +504,46 @@ class XiaoHongShuClient(AbstractApiClient):
 
         url = "https://www.xiaohongshu.com/explore/" + note_id + f"?xsec_token={xsec_token}&xsec_source={xsec_source}"
         html = await self.request(method="GET", url=url, return_response=True, headers=self.headers)
-        state = re.findall(r"window.__INITIAL_STATE__=({.*})</script>", html)[0].replace("undefined", '""')
-        if state != "{}":
-            note_dict = transform_json_keys(state)
-            return note_dict["note"]["note_detail_map"][note_id]["note"]
-        raise DataFetchError(html)
+        
+        def get_note_dict(html):
+            state = re.findall(r"window.__INITIAL_STATE__=({.*})</script>", html)[
+                0
+            ].replace("undefined", '""')
+
+            if state != "{}":
+                note_dict = transform_json_keys(state)
+                return note_dict["note"]["note_detail_map"][note_id]["note"]
+            return {}
+
+        try:
+            return get_note_dict(html)
+        except:
+            href = re.findall(r'href="(.*?)"', html)[0]
+            href = unescape(href)
+
+            utils.logger.info(
+                f"[XiaoHongShuClient.get_note_by_id_from_html] 出现验证码: {href}, 请手动验证"
+            )
+            await self.playwright_page.goto(href)
+            # 等待用户完成操作页面重定向
+            if await self.check_redirect():
+                utils.logger.info(
+                    f"[XiaoHongShuClient.get_note_by_id_from_html] 用户完成验证, 重定向到笔记详情页"
+                )
+                
+                html = await self.playwright_page.content()
+                return get_note_dict(html)
+            else:
+                raise DataFetchError(html)
+
+    @retry(
+        stop=stop_after_attempt(100),
+        wait=wait_fixed(5),
+        retry=retry_if_result(lambda value: value is False),
+    )
+    async def check_redirect(self):
+        url = self.playwright_page.url
+        if url.startswith("https://www.xiaohongshu.com/explore"):
+            return True
+        return False
+
