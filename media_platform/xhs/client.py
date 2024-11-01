@@ -22,6 +22,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_result
 import config
 from base.base_crawler import AbstractApiClient
 from tools import utils
+from html import unescape
 
 from .exception import DataFetchError, IPBlockError
 from .field import SearchNoteType, SearchSortType
@@ -518,12 +519,18 @@ class XiaoHongShuClient(AbstractApiClient):
             return get_note_dict(html)
         except:
             href = re.findall(r'href="(.*?)"', html)[0]
+            href = unescape(href)
+
             utils.logger.info(
                 f"[XiaoHongShuClient.get_note_by_id_from_html] 出现验证码: {href}, 请手动验证"
             )
             await self.playwright_page.goto(href)
             # 等待用户完成操作页面重定向
             if await self.check_redirect():
+                utils.logger.info(
+                    f"[XiaoHongShuClient.get_note_by_id_from_html] 用户完成验证, 重定向到笔记详情页"
+                )
+                
                 html = await self.playwright_page.content()
                 return get_note_dict(html)
             else:
@@ -535,7 +542,7 @@ class XiaoHongShuClient(AbstractApiClient):
         retry=retry_if_result(lambda value: value is False),
     )
     async def check_redirect(self):
-        url = await self.playwright_page.url()
+        url = self.playwright_page.url
         if url.startswith("https://www.xiaohongshu.com/explore"):
             return True
         return False
