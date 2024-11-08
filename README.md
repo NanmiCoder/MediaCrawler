@@ -14,9 +14,6 @@
 原理：利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
 通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低
 
-MediaCrawler仓库白金赞助商:
-<a href="https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl">⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家</a>
-
 # 功能列表
 | 平台  | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
 |-----|-------|---------|-----|--------|-------|-------|-------|
@@ -29,8 +26,11 @@ MediaCrawler仓库白金赞助商:
 | 知乎  | ✅     |   ❌      | ✅   | ✅      | ✅     | ✅     | ✅    |
 
 
-# 插播一下：MediaCrawlerPro重磅发布啦！！！
+
+### 插播一下：MediaCrawlerPro重磅发布啦！！！
 > 主打学习成熟项目的架构设计，不仅仅是爬虫，Pro中的其他代码设计思路也是值得学习，欢迎大家关注！！！
+> 
+> 订阅Pro源代码访问权限，可以加我微信：yzglan，备注：Pro（有一定的门槛💰）
 
 [MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经重构出来了，相较于开源版本的优势：
 - 多账号+IP代理支持（重点！）
@@ -135,9 +135,7 @@ MediaCrawler仓库白金赞助商:
   - [错误使用 Python 可变类型带来的隐藏 Bug](https://articles.zsxq.com/id_f7vn89l1d303.html)
 
 
-# 感谢下列Sponsors对本仓库赞助
-> 【IPCola全球独家海外IP代理】使用此处阿江专属推荐码注册：atxtupzfjhpbdbl ，获得10%金额补贴。
-- <a href="https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl">⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家</a>
+# 感谢下列Sponsors对本仓库赞助支持
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
 
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan 或 email：relakkes@gmail.com

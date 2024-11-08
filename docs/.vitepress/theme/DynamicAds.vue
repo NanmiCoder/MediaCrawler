@@ -11,9 +11,9 @@ const fetchAds = async () => {
   return [
     {
       id: 1,
-      imageUrl: 'https://dashboard.ipcola.com/assets/logo-blue-44f7d385.png',
-      landingUrl: 'https://dashboard.ipcola.com/register?referral_code=atxtupzfjhpbdbl',
-      text: '⚡️【IPCola全球独家海外IP代理】⚡️新鲜的原生住宅代理，超高性价比，超多稀缺国家'
+      imageUrl: 'https://nm.zizhi1.com/static/img/40097e36a617f58db1dd132b5841cb1e.ad_pla1.webp',
+      landingUrl: 'https://nanmicoder.github.io/MediaCrawler/%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html',
+      text: '⚡️【广告位招租】⚡️投放广告请联系微信:yzglan'
     }
   ]
 }
