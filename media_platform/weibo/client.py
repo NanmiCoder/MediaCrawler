@@ -353,10 +353,7 @@ class WeiboClient:
                 utils.logger.error(
                     f"[WeiboClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data.")
                 break
-
-            notes_has_more = notes_res.get("cardlistInfo", {}).get("total", 0) > crawler_total_count
             since_id = notes_res.get("cardlistInfo", {}).get("since_id", "0")
-            crawler_total_count += 10
             if "cards" not in notes_res:
                 utils.logger.info(
                     f"[WeiboClient.get_all_notes_by_creator] No 'notes' key found in response: {notes_res}")
@@ -370,5 +367,7 @@ class WeiboClient:
                 await callback(notes)
             await asyncio.sleep(crawl_interval)
             result.extend(notes)
+            crawler_total_count += 10
+            notes_has_more = notes_res.get("cardlistInfo", {}).get("total", 0) > crawler_total_count
         return result
 
