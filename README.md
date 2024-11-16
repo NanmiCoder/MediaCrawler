@@ -1,3 +1,12 @@
+# 🔥 自媒体平台爬虫🕷️MediaCrawler🔥 
+<a href="https://trendshift.io/repositories/8291" target="_blank"><img src="https://trendshift.io/api/badge/repositories/8291" alt="NanmiCoder%2FMediaCrawler | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
+[![GitHub Stars](https://img.shields.io/github/stars/NanmiCoder/MediaCrawler?style=social)](https://github.com/NanmiCoder/MediaCrawler/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/NanmiCoder/MediaCrawler?style=social)](https://github.com/NanmiCoder/MediaCrawler/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/pulls)
+[![License](https://img.shields.io/github/license/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/blob/main/LICENSE)
+
 > **免责声明：**
 > 
 > 大家请以学习为目的使用本仓库⚠️⚠️⚠️⚠️，[爬虫违法违规的案件](https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China)  <br>
@@ -25,20 +34,6 @@
 | 贴吧  | ✅     | ✅       | ✅   | ✅      | ✅     | ✅     | ✅    |
 | 知乎  | ✅     |   ❌      | ✅   | ✅      | ✅     | ✅     | ✅    |
 
-
-
-### 插播一下：MediaCrawlerPro重磅发布啦！！！
-> 主打学习成熟项目的架构设计，不仅仅是爬虫，Pro中的其他代码设计思路也是值得学习，欢迎大家关注！！！
-> 
-> 订阅Pro源代码访问权限，可以加我微信：yzglan，备注：Pro（有一定的门槛💰）
-
-[MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经重构出来了，相较于开源版本的优势：
-- 多账号+IP代理支持（重点！）
-- 去除Playwright依赖，使用更加简单
-- 支持linux部署（Docker docker-compose）
-- 代码重构优化，更加易读易维护（解耦JS签名逻辑）
-- 代码质量更高，对于构建更大型的爬虫项目更加友好
-- 完美的架构设计，更加易扩展，源码学习的价值更大
 
 # 安装部署方法
 > 开源不易，希望大家可以Star一下MediaCrawler仓库！！！！十分感谢！！！ <br>
@@ -97,6 +92,18 @@
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
 
+### MediaCrawlerPro重磅发布啦！！！
+> 主打学习成熟项目的架构设计，不仅仅是爬虫，Pro中的其他代码设计思路也是值得学习，欢迎大家关注！！！
+> 
+> 订阅Pro源代码访问权限，可以加我微信：yzglan，备注：Pro（有一定的门槛💰）
+
+[MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经重构出来了，相较于开源版本的优势：
+- 多账号+IP代理支持（重点！）
+- 去除Playwright依赖，使用更加简单
+- 支持linux部署（Docker docker-compose）
+- 代码重构优化，更加易读易维护（解耦JS签名逻辑）
+- 代码质量更高，对于构建更大型的爬虫项目更加友好
+- 完美的架构设计，更加易扩展，源码学习的价值更大
 
 
 # 其他常见问题可以查看在线文档
