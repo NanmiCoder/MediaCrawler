@@ -142,11 +142,22 @@
   - [错误使用 Python 可变类型带来的隐藏 Bug](https://articles.zsxq.com/id_f7vn89l1d303.html)
 
 
+  
 # 感谢下列Sponsors对本仓库赞助支持
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
-
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan 或 email：relakkes@gmail.com
 
+### 给好朋友新书站台推荐
+
+好朋友 [自动化测试框架设计 - Python](ttps://item.jd.com/10124939676219.html) 的新书📚出版啦，强力推荐！！！[京东购书5折链接](https://item.jd.com/10124939676219.html)
+<p>
+  <a href="https://item.jd.com/10124939676219.html"><img alt="打赏-微信" src="docs/static/images/auto_test.png" style="width: 200px;margin-right: 140px;" /></a>
+</p>
+
+
+框架的设计，http接口封装、数据库操作设计、UI自动化（selenium、playwright、appium）这些跟爬虫其实也大差不差，值得学习
+
+关于[虫师](https://github.com/defnngj) ：Github千星开源仓库seldom作者、博客园知名大V，已出版的多类书籍
 
 # MediaCrawler项目微信交流群
 
