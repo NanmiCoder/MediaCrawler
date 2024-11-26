@@ -1,24 +1,26 @@
-# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
-# 1. 不得用于任何商业用途。  
-# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
-# 3. 不得进行大规模爬取或对平台造成运营干扰。  
-# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
+# 1. 不得用于任何商业用途。
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
+# 3. 不得进行大规模爬取或对平台造成运营干扰。
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
 # 5. 不得用于任何非法或不当的用途。
-#   
-# 详细许可条款请参阅项目根目录下的LICENSE文件。  
-# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+#
+# 详细许可条款请参阅项目根目录下的LICENSE文件。
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 
 # 基础配置
 PLATFORM = "xhs"
-KEYWORDS = "编程副业,编程兼职" # 关键词搜索配置，以英文逗号分隔
+KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
 SORT_TYPE = "popularity_descending"
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
 PUBLISH_TIME_TYPE = 0
-CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
+CRAWLER_TYPE = (
+    "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
+)
 
 # 是否开启 IP 代理
 ENABLE_IP_PROXY = False
@@ -63,7 +65,6 @@ ENABLE_GET_COMMENTS = True
 CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
 
 
-
 # 是否开启爬二级评论模式, 默认不开启爬二级评论
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
 ENABLE_GET_SUB_COMMENTS = False
@@ -85,15 +86,12 @@ XHS_SPECIFIED_NOTE_URL_LIST = [
 # 指定抖音需要爬取的ID列表
 DY_SPECIFIED_ID_LIST = [
     "7280854932641664319",
-    "7202432992642387233"
+    "7202432992642387233",
     # ........................
 ]
 
 # 指定快手平台需要爬取的ID列表
-KS_SPECIFIED_ID_LIST = [
-    "3xf8enb8dbj6uig",
-    "3x6zz972bchmvqe"
-]
+KS_SPECIFIED_ID_LIST = ["3xf8enb8dbj6uig", "3x6zz972bchmvqe"]
 
 # 指定B站平台需要爬取的视频bvid列表
 BILI_SPECIFIED_ID_LIST = [
@@ -116,9 +114,7 @@ WEIBO_CREATOR_ID_LIST = [
 ]
 
 # 指定贴吧需要爬取的帖子列表
-TIEBA_SPECIFIED_ID_LIST = [
-
-]
+TIEBA_SPECIFIED_ID_LIST = []
 
 # 指定贴吧名称列表，爬取该贴吧下的帖子
 TIEBA_NAME_LIST = [
@@ -167,8 +163,8 @@ ENABLE_GET_WORDCLOUD = False
 # 自定义词语及其分组
 # 添加规则：xx:yy 其中xx为自定义添加的词组，yy为将xx该词组分到的组名。
 CUSTOM_WORDS = {
-    '零几': '年份',  # 将“零几”识别为一个整体
-    '高频词': '专业术语'  # 示例自定义词
+    "零几": "年份",  # 将“零几”识别为一个整体
+    "高频词": "专业术语",  # 示例自定义词
 }
 
 # 停用(禁用)词文件路径
