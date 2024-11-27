@@ -273,26 +273,25 @@ class XiaoHongShuCrawler(AbstractCrawler):
         note_detail_from_html, note_detail_from_api = None, None
         async with semaphore:
             try:
-                # 尝试直接获取网页版笔记详情，不携带cookie
-                note_detail_from_html: Dict = (
+                # 尝试直接获取网页版笔记详情，携带cookie
+                note_detail_from_html: Optional[Dict] = (
                     await self.xhs_client.get_note_by_id_from_html(
-                        note_id, xsec_source, xsec_token, enable_cookie=False
+                        note_id, xsec_source, xsec_token, enable_cookie=True
                     )
                 )
                 if not note_detail_from_html:
-                    # 如果网页版笔记详情获取失败，则尝试使用cookie获取
+                    # 如果网页版笔记详情获取失败，则尝试不使用cookie获取
                     note_detail_from_html = (
                         await self.xhs_client.get_note_by_id_from_html(
-                            note_id, xsec_source, xsec_token, enable_cookie=True
+                            note_id, xsec_source, xsec_token, enable_cookie=False
                         )
                     )
                     utils.logger.error(
                         f"[XiaoHongShuCrawler.get_note_detail_async_task] Get note detail error, note_id: {note_id}"
                     )
-                    return None
                 if not note_detail_from_html:
                     # 如果网页版笔记详情获取失败，则尝试API获取
-                    note_detail_from_api: Dict = await self.xhs_client.get_note_by_id(
+                    note_detail_from_api: Optional[Dict] = await self.xhs_client.get_note_by_id(
                         note_id, xsec_source, xsec_token
                     )
                 note_detail = note_detail_from_html or note_detail_from_api
