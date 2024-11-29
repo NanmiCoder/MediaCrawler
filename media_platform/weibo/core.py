@@ -261,8 +261,8 @@ class WeiboCrawler(AbstractCrawler):
                     callback=weibo_store.batch_update_weibo_notes
                 )
 
-                note_ids = [note_item.get("mlog", {}).get("id") for note_item in all_notes_list if
-                            note_item.get("mlog", {}).get("id")]
+                note_ids = [note_item.get("mblog", {}).get("id") for note_item in all_notes_list if
+                            note_item.get("mblog", {}).get("id")]
                 await self.batch_get_notes_comments(note_ids)
 
             else:
