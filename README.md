@@ -111,68 +111,17 @@
 > [MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
 > 
 
-# 开发者服务
-> 如果你对知识付费认可，可以看下下面我提供的付费服务，如果你是学生，请一定提前告知，会有优惠💰<br>
+# 知识付费服务
+[作者的知识付费栏目介绍](https://nanmicoder.github.io/MediaCrawler/%E7%9F%A5%E8%AF%86%E4%BB%98%E8%B4%B9%E4%BB%8B%E7%BB%8D.html)
 
-- MediaCrawler源码剖析课程：
-  如果你想很快入门这个项目，或者想了具体实现原理，我推荐你看看这个我录制的视频课程，从设计出发一步步带你如何使用，门槛大大降低
-  - **抖音课程链接**（仅支持安卓）：https://v.douyin.com/iYeQFyAf/ 
-  - **B站课程链接**：https://www.bilibili.com/cheese/play/ss16569 
-   
-  (备注：课程介绍飞书文档链接：https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh
-  <br>
-  <br>
-  
-- 阿江的爬虫专栏知识星球：MediaCrawler相关问题最佳实践、爬虫逆向分享、爬虫项目实战、多年编程经验分享、爬虫编程技术问题提问。
-  <p>
-  <img alt="xingqiu" src="docs/static/images/星球qrcode.jpg" style="width: auto;height: 400px" >
-  </p>
-  
-  星球精选文章(部分)：
-  - [逆向案例 - 某16x8平台商品列表接口逆向参数分析](https://articles.zsxq.com/id_x1qmtg8pzld9.html)
-  - [逆向案例 - Product Hunt月度最佳产品榜单接口加密参数分析](https://articles.zsxq.com/id_au4eich3x2sg.html)
-  - [逆向案例 - 某zhi乎x-zse-96参数分析过程](https://articles.zsxq.com/id_dui2vil0ag1l.html)
-  - [逆向案例 - 某x识星球X-Signature加密参数分析过程](https://articles.zsxq.com/id_pp4madwcwcg8.html)
-  - [【独创】使用Playwright获取某音a_bogus参数流程（包含加密参数分析）](https://articles.zsxq.com/id_u89al50jk9x0.html)
-  - [【独创】使用Playwright低成本获取某书X-s参数流程分析（当年的回忆录）](https://articles.zsxq.com/id_u4lcrvqakuc7.html)
-  - [ MediaCrawler-基于抽象类设计重构项目缓存](https://articles.zsxq.com/id_4ju73oxewt9j.html)
-  - [ 手把手带你撸一个自己的IP代理池](https://articles.zsxq.com/id_38fza371ladm.html) 
-  - [Python协程在并发场景下的幂等性问题](https://articles.zsxq.com/id_wocdwsfmfcmp.html)
-  - [错误使用 Python 可变类型带来的隐藏 Bug](https://articles.zsxq.com/id_f7vn89l1d303.html)
+# 项目微信交流群
 
-
+[加入微信交流群](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
   
 # 感谢下列Sponsors对本仓库赞助支持
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
+
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan 或 email：relakkes@gmail.com
-
-### 给好朋友新书站台推荐
-
-好朋友 [自动化测试框架设计 - Python](ttps://item.jd.com/10124939676219.html) 的新书📚出版啦，强力推荐！！！[京东购书5折链接](https://item.jd.com/10124939676219.html)
-<p>
-  <a href="https://item.jd.com/10124939676219.html"><img alt="打赏-微信" src="docs/static/images/auto_test.png" style="width: 200px;margin-right: 140px;" /></a>
-</p>
-
-
-框架的设计，http接口封装、数据库操作设计、UI自动化（selenium、playwright、appium）这些跟爬虫其实也大差不差，值得学习
-
-关于[虫师](https://github.com/defnngj) ：Github千星开源仓库seldom作者、博客园知名大V，已出版的多类书籍
-
-# MediaCrawler项目微信交流群
-
-[加入微信交流群](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
-
-# 打赏
-
-如果觉得项目不错的话可以打赏哦。您的支持就是我最大的动力！
-
-打赏时您可以备注名称，我会将您添加至打赏列表中。
-<p>
-  <img alt="打赏-微信" src="docs/static/images/wechat_pay.jpeg" style="width: 200px;margin-right: 140px;" />
-  <img alt="打赏-支付宝" src="docs/static/images/zfb_pay.png" style="width: 200px" />
-</p>
-
-查看打赏列表 [MediaCrawler捐赠名单](https://nanmicoder.github.io/MediaCrawler/捐赠名单.html)
 
 
 # 爬虫入门课程
