@@ -265,11 +265,14 @@ class XiaoHongShuClient(AbstractApiClient):
         )
         return dict()
 
-    async def get_note_comments(self, note_id: str, cursor: str = "") -> Dict:
+    async def get_note_comments(
+        self, note_id: str, xsec_token: str, cursor: str = ""
+    ) -> Dict:
         """
         获取一级评论的API
         Args:
             note_id: 笔记ID
+            xsec_token: 验证token
             cursor: 分页游标
 
         Returns:
@@ -281,17 +284,24 @@ class XiaoHongShuClient(AbstractApiClient):
             "cursor": cursor,
             "top_comment_id": "",
             "image_formats": "jpg,webp,avif",
+            "xsec_token": xsec_token,
         }
         return await self.get(uri, params)
 
     async def get_note_sub_comments(
-        self, note_id: str, root_comment_id: str, num: int = 10, cursor: str = ""
+        self,
+        note_id: str,
+        root_comment_id: str,
+        xsec_token: str,
+        num: int = 10,
+        cursor: str = "",
     ):
         """
         获取指定父评论下的子评论的API
         Args:
             note_id: 子评论的帖子ID
             root_comment_id: 根评论ID
+            xsec_token: 验证token
             num: 分页数量
             cursor: 分页游标
 
@@ -304,12 +314,16 @@ class XiaoHongShuClient(AbstractApiClient):
             "root_comment_id": root_comment_id,
             "num": num,
             "cursor": cursor,
+            "image_formats": "jpg,webp,avif",
+            "top_comment_id": "",
+            "xsec_token": xsec_token,
         }
         return await self.get(uri, params)
 
     async def get_note_all_comments(
         self,
         note_id: str,
+        xsec_token: str,
         crawl_interval: float = 1.0,
         callback: Optional[Callable] = None,
         max_count: int = 10,
@@ -318,6 +332,7 @@ class XiaoHongShuClient(AbstractApiClient):
         获取指定笔记下的所有一级评论，该方法会一直查找一个帖子下的所有评论信息
         Args:
             note_id: 笔记ID
+            xsec_token: 验证token
             crawl_interval: 爬取一次笔记的延迟单位（秒）
             callback: 一次笔记爬取结束后
             max_count: 一次笔记爬取的最大评论数量
@@ -328,7 +343,9 @@ class XiaoHongShuClient(AbstractApiClient):
         comments_has_more = True
         comments_cursor = ""
         while comments_has_more and len(result) < max_count:
-            comments_res = await self.get_note_comments(note_id, comments_cursor)
+            comments_res = await self.get_note_comments(
+                note_id=note_id, xsec_token=xsec_token, cursor=comments_cursor
+            )
             comments_has_more = comments_res.get("has_more", False)
             comments_cursor = comments_res.get("cursor", "")
             if "comments" not in comments_res:
@@ -344,7 +361,10 @@ class XiaoHongShuClient(AbstractApiClient):
             await asyncio.sleep(crawl_interval)
             result.extend(comments)
             sub_comments = await self.get_comments_all_sub_comments(
-                comments, crawl_interval, callback
+                comments=comments,
+                xsec_token=xsec_token,
+                crawl_interval=crawl_interval,
+                callback=callback,
             )
             result.extend(sub_comments)
         return result
@@ -352,6 +372,7 @@ class XiaoHongShuClient(AbstractApiClient):
     async def get_comments_all_sub_comments(
         self,
         comments: List[Dict],
+        xsec_token: str,
         crawl_interval: float = 1.0,
         callback: Optional[Callable] = None,
     ) -> List[Dict]:
@@ -359,6 +380,7 @@ class XiaoHongShuClient(AbstractApiClient):
         获取指定一级评论下的所有二级评论, 该方法会一直查找一级评论下的所有二级评论信息
         Args:
             comments: 评论列表
+            xsec_token: 验证token
             crawl_interval: 爬取一次评论的延迟单位（秒）
             callback: 一次评论爬取结束后
 
@@ -387,7 +409,11 @@ class XiaoHongShuClient(AbstractApiClient):
 
             while sub_comment_has_more:
                 comments_res = await self.get_note_sub_comments(
-                    note_id, root_comment_id, 10, sub_comment_cursor
+                    note_id=note_id,
+                    root_comment_id=root_comment_id,
+                    xsec_token=xsec_token,
+                    num=10,
+                    cursor=sub_comment_cursor,
                 )
                 sub_comment_has_more = comments_res.get("has_more", False)
                 sub_comment_cursor = comments_res.get("cursor", "")
