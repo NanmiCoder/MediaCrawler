@@ -12,6 +12,7 @@
 import asyncio
 import os
 import random
+import time
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
@@ -42,7 +43,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
     def __init__(self) -> None:
         self.index_url = "https://www.xiaohongshu.com"
         # self.user_agent = utils.get_user_agent()
-        self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        self.user_agent = config.UA if config.UA else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -195,10 +196,15 @@ class XiaoHongShuCrawler(AbstractCrawler):
             if createor_info:
                 await xhs_store.save_creator(user_id, creator=createor_info)
 
+            # When proxy is not enabled, increase the crawling interval
+            if config.ENABLE_IP_PROXY:
+                crawl_interval = random.random()
+            else:
+                crawl_interval = random.uniform(1, config.CRAWLER_MAX_SLEEP_SEC)
             # Get all note information of the creator
             all_notes_list = await self.xhs_client.get_all_notes_by_creator(
                 user_id=user_id,
-                crawl_interval=random.random(),
+                crawl_interval=crawl_interval,
                 callback=self.fetch_creator_notes_detail,
             )
 
@@ -280,6 +286,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
         """
         note_detail_from_html, note_detail_from_api = None, None
         async with semaphore:
+            # When proxy is not enabled, increase the crawling interval
+            if config.ENABLE_IP_PROXY:
+                crawl_interval = random.random()
+            else:
+                crawl_interval = random.uniform(1, config.CRAWLER_MAX_SLEEP_SEC)
             try:
                 # 尝试直接获取网页版笔记详情，携带cookie
                 note_detail_from_html: Optional[Dict] = (
@@ -287,6 +298,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         note_id, xsec_source, xsec_token, enable_cookie=True
                     )
                 )
+                time.sleep(crawl_interval)
                 if not note_detail_from_html:
                     # 如果网页版笔记详情获取失败，则尝试不使用cookie获取
                     note_detail_from_html = (
@@ -354,10 +366,15 @@ class XiaoHongShuCrawler(AbstractCrawler):
             utils.logger.info(
                 f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}"
             )
+            # When proxy is not enabled, increase the crawling interval
+            if config.ENABLE_IP_PROXY:
+                crawl_interval = random.random()
+            else:
+                crawl_interval = random.uniform(1, config.CRAWLER_MAX_SLEEP_SEC)
             await self.xhs_client.get_note_all_comments(
                 note_id=note_id,
                 xsec_token=xsec_token,
-                crawl_interval=random.random(),
+                crawl_interval=crawl_interval,
                 callback=xhs_store.batch_update_xhs_note_comments,
                 max_count=CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
             )
