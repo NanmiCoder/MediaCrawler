@@ -1,15 +1,26 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 import asyncio
 import functools
 import sys
 from typing import Optional
 
-import redis
 from playwright.async_api import BrowserContext, Page
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
 import config
 from base.base_crawler import AbstractLogin
+from cache.cache_factory import CacheFactory
 from tools import utils
 
 
@@ -22,13 +33,13 @@ class XiaoHongShuLogin(AbstractLogin):
                  login_phone: Optional[str] = "",
                  cookie_str: str = ""
                  ):
-        self.login_type = login_type
+        config.LOGIN_TYPE = login_type
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
         self.cookie_str = cookie_str
 
-    @retry(stop=stop_after_attempt(120), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
+    @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
         """
             Check if the current login status is successful and return True otherwise return False
@@ -49,11 +60,11 @@ class XiaoHongShuLogin(AbstractLogin):
     async def begin(self):
         """Start login xiaohongshu"""
         utils.logger.info("[XiaoHongShuLogin.begin] Begin login xiaohongshu ...")
-        if self.login_type == "qrcode":
+        if config.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
-        elif self.login_type == "phone":
+        elif config.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
-        elif self.login_type == "cookie":
+        elif config.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
             raise ValueError("[XiaoHongShuLogin.begin]I nvalid Login Type Currently only supported qrcode or phone or cookies ...")
@@ -89,14 +100,14 @@ class XiaoHongShuLogin(AbstractLogin):
         await send_btn_ele.click()  # 点击发送验证码
         sms_code_input_ele = await login_container_ele.query_selector("label.auth-code > input")
         submit_btn_ele = await login_container_ele.query_selector("div.input-container > button")
-        redis_obj = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
+        cache_client = CacheFactory.create_cache(config.CACHE_TYPE_MEMORY)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         no_logged_in_session = ""
         while max_get_sms_code_time > 0:
             utils.logger.info(f"[XiaoHongShuLogin.login_by_mobile] get sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"xhs_{self.login_phone}"
-            sms_code_value = redis_obj.get(sms_code_key)
+            sms_code_value = cache_client.get(sms_code_key)
             if not sms_code_value:
                 max_get_sms_code_time -= 1
                 continue

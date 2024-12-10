@@ -1,11 +1,25 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 12:53
 # @Desc    : 爬虫相关的工具函数
 
 import base64
+import json
 import random
 import re
+import urllib
+import urllib.parse
 from io import BytesIO
 from typing import Dict, List, Optional, Tuple
 
@@ -37,6 +51,28 @@ async def find_login_qrcode(page: Page, selector: str) -> str:
     except Exception as e:
         print(e)
         return ""
+
+
+async def find_qrcode_img_from_canvas(page: Page, canvas_selector: str) -> str:
+    """
+    find qrcode image from canvas element
+    Args:
+        page:
+        canvas_selector:
+
+    Returns:
+
+    """
+
+    # 等待Canvas元素加载完成
+    canvas = await page.wait_for_selector(canvas_selector)
+
+    # 截取Canvas元素的截图
+    screenshot = await canvas.screenshot()
+
+    # 将截图转换为base64格式
+    base64_image = base64.b64encode(screenshot).decode('utf-8')
+    return base64_image
 
 
 def show_qrcode(qr_code) -> None:  # type: ignore
@@ -133,3 +169,37 @@ def match_interact_info_count(count_str: str) -> int:
         return int(number)
     else:
         return 0
+
+
+def format_proxy_info(ip_proxy_info) -> Tuple[Optional[Dict], Optional[Dict]]:
+    """format proxy info for playwright and httpx"""
+    playwright_proxy = {
+        "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
+        "username": ip_proxy_info.user,
+        "password": ip_proxy_info.password,
+    }
+    httpx_proxy = {
+        f"{ip_proxy_info.protocol}": f"http://{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
+    }
+    return playwright_proxy, httpx_proxy
+
+
+def extract_text_from_html(html: str) -> str:
+    """Extract text from HTML, removing all tags."""
+    if not html:
+        return ""
+
+    # Remove script and style elements
+    clean_html = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', html, flags=re.DOTALL)
+    # Remove all other tags
+    clean_text = re.sub(r'<[^>]+>', '', clean_html).strip()
+    return clean_text
+
+def extract_url_params_to_dict(url: str) -> Dict:
+    """Extract URL parameters to dict"""
+    url_params_dict = dict()
+    if not url:
+        return url_params_dict
+    parsed_url = urllib.parse.urlparse(url)
+    url_params_dict = dict(urllib.parse.parse_qsl(parsed_url.query))
+    return url_params_dict

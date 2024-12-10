@@ -1,8 +1,22 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 import ctypes
 import json
 import random
 import time
 import urllib.parse
+
+from model.m_xiaohongshu import NoteUrlInfo
+from tools.crawler_util import extract_url_params_to_dict
 
 
 def sign(a1="", b1="", x_s="", x_t=""):
@@ -10,19 +24,19 @@ def sign(a1="", b1="", x_s="", x_t=""):
     takes in a URI (uniform resource identifier), an optional data dictionary, and an optional ctime parameter. It returns a dictionary containing two keys: "x-s" and "x-t".
     """
     common = {
-        "s0": 5,  # getPlatformCode
+        "s0": 3,  # getPlatformCode
         "s1": "",
         "x0": "1",  # localStorage.getItem("b1b1")
-        "x1": "3.3.0",  # version
-        "x2": "Windows",
+        "x1": "3.7.8-2",  # version
+        "x2": "Mac OS",
         "x3": "xhs-pc-web",
-        "x4": "1.4.4",
+        "x4": "4.27.2",
         "x5": a1,  # cookie of a1
         "x6": x_t,
         "x7": x_s,
         "x8": b1,  # localStorage.getItem("b1")
         "x9": mrc(x_t + x_s + b1),
-        "x10": 1,  # getSigCount
+        "x10": 154,  # getSigCount
     }
     encode_str = encodeUtf8(json.dumps(common, separators=(',', ':')))
     x_s_common = b64Encode(encode_str)
@@ -275,6 +289,21 @@ def get_img_urls_by_trace_id(trace_id: str, format_type: str = "png"):
 def get_trace_id(img_url: str):
     # 浏览器端上传的图片多了 /spectrum/ 这个路径
     return f"spectrum/{img_url.split('/')[-1]}" if img_url.find("spectrum") != -1 else img_url.split("/")[-1]
+
+
+def parse_note_info_from_note_url(url: str) -> NoteUrlInfo:
+    """
+    从小红书笔记url中解析出笔记信息
+    Args:
+        url: "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
+    Returns:
+
+    """
+    note_id = url.split("/")[-1].split("?")[0]
+    params = extract_url_params_to_dict(url)
+    xsec_token = params.get("xsec_token", "")
+    xsec_source = params.get("xsec_source", "")
+    return NoteUrlInfo(note_id=note_id, xsec_token=xsec_token, xsec_source=xsec_source)
 
 
 if __name__ == '__main__':

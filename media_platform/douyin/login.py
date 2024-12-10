@@ -1,9 +1,19 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 import asyncio
 import functools
 import sys
 from typing import Optional
 
-import redis
 from playwright.async_api import BrowserContext, Page
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
@@ -11,6 +21,7 @@ from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
 
 import config
 from base.base_crawler import AbstractLogin
+from cache.cache_factory import CacheFactory
 from tools import utils
 
 
@@ -23,7 +34,7 @@ class DouYinLogin(AbstractLogin):
                  login_phone: Optional[str] = "",
                  cookie_str: Optional[str] = ""
                  ):
-        self.login_type = login_type
+        config.LOGIN_TYPE = login_type
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
@@ -40,11 +51,11 @@ class DouYinLogin(AbstractLogin):
         await self.popup_login_dialog()
 
         # select login type
-        if self.login_type == "qrcode":
+        if config.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
-        elif self.login_type == "phone":
+        elif config.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
-        elif self.login_type == "cookie":
+        elif config.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
             raise ValueError("[DouYinLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
@@ -68,13 +79,24 @@ class DouYinLogin(AbstractLogin):
         utils.logger.info(f"[DouYinLogin.begin] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
-    @retry(stop=stop_after_attempt(20), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
+    @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self):
         """Check if the current login status is successful and return True otherwise return False"""
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
+
+        for page in self.browser_context.pages:
+            try:
+                local_storage = await page.evaluate("() => window.localStorage")
+                if local_storage.get("HasUserLogin", "") == "1":
+                    return True
+            except Exception as e:
+                # utils.logger.warn(f"[DouYinLogin] check_login_state waring: {e}")
+                await asyncio.sleep(0.1)
+
         if cookie_dict.get("LOGIN_STATUS") == "1":
             return True
+
         return False
 
     async def popup_login_dialog(self):
@@ -118,13 +140,13 @@ class DouYinLogin(AbstractLogin):
 
         # 检查是否有滑动验证码
         await self.check_page_display_slider(move_step=10, slider_level="easy")
-        redis_obj = redis.Redis(host=config.REDIS_DB_HOST, password=config.REDIS_DB_PWD)
+        cache_client = CacheFactory.create_cache(config.CACHE_TYPE_MEMORY)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         while max_get_sms_code_time > 0:
             utils.logger.info(f"[DouYinLogin.login_by_mobile] get douyin sms code from redis remaining time {max_get_sms_code_time}s ...")
             await asyncio.sleep(1)
             sms_code_key = f"dy_{self.login_phone}"
-            sms_code_value = redis_obj.get(sms_code_key)
+            sms_code_value = cache_client.get(sms_code_key)
             if not sms_code_value:
                 max_get_sms_code_time -= 1
                 continue

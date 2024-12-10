@@ -1,14 +1,25 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/4/5 09:32
-# @Desc    : 极速HTTP代理提供类实现,官网地址：https://www.jisuhttp.com?pl=zG3Jna
+# @Desc    : 已废弃！！！！！倒闭了！！！极速HTTP 代理IP实现. 请使用快代理实现（proxy/providers/kuaidl_proxy.py）
 import os
 from typing import Dict, List
 from urllib.parse import urlencode
 
 import httpx
 
-from proxy import IpGetError, ProxyProvider, RedisDbIpCache
+from proxy import IpCache, IpGetError, ProxyProvider
 from proxy.types import IpInfoModel
 from tools import utils
 
@@ -31,7 +42,7 @@ class JiSuHttpProxy(ProxyProvider):
             "pw": "1",  # 是否使用账密验证， 1：是，0：否，否表示白名单验证；默认为0
             "se": "1",  # 返回JSON格式时是否显示IP过期时间， 1：显示，0：不显示；默认为0
         }
-        self.ip_cache = RedisDbIpCache()
+        self.ip_cache = IpCache()
 
     async def get_proxies(self, num: int) -> List[IpInfoModel]:
         """

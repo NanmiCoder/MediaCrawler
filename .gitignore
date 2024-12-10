@@ -165,8 +165,10 @@ cython_debug/
 /temp_image/
 /browser_data/
 /data/
-/cache
 
 */.DS_Store
 
 .history/
+.vscode
+/node_modules
+docs/.vitepress/cache
