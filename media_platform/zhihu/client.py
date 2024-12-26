@@ -121,7 +121,12 @@ class ZhiHuClient(AbstractApiClient):
         if isinstance(params, dict):
             final_uri += '?' + urlencode(params)
         headers = await self._pre_headers(final_uri)
-        return await self.request(method="GET", url=zhihu_constant.ZHIHU_URL + final_uri, headers=headers, **kwargs)
+        base_url = (
+            zhihu_constant.ZHIHU_URL
+            if "/p/" not in uri
+            else zhihu_constant.ZHIHU_ZHUANLAN_URL
+        )
+        return await self.request(method="GET", url=base_url + final_uri, headers=headers, **kwargs)
 
     async def pong(self) -> bool:
         """
@@ -209,7 +214,7 @@ class ZhiHuClient(AbstractApiClient):
         return self._extractor.extract_contents_from_search(search_res)
 
     async def get_root_comments(self, content_id: str, content_type: str, offset: str = "", limit: int = 10,
-                                order_by: str = "sort") -> Dict:
+                                order_by: str = "score") -> Dict:
         """
         获取内容的一级评论
         Args:
@@ -222,13 +227,16 @@ class ZhiHuClient(AbstractApiClient):
         Returns:
 
         """
-        uri = f"/api/v4/{content_type}s/{content_id}/root_comments"
-        params = {
-            "order": order_by,
-            "offset": offset,
-            "limit": limit
-        }
+        uri = f"/api/v4/comment_v5/{content_type}s/{content_id}/root_comment"
+        params = {"order": order_by, "offset": offset, "limit": limit}
         return await self.get(uri, params)
+        # uri = f"/api/v4/{content_type}s/{content_id}/root_comments"
+        # params = {
+        #     "order": order_by,
+        #     "offset": offset,
+        #     "limit": limit
+        # }
+        # return await self.get(uri, params)
 
     async def get_child_comments(self, root_comment_id: str, offset: str = "", limit: int = 10,
                                  order_by: str = "sort") -> Dict:
@@ -496,3 +504,46 @@ class ZhiHuClient(AbstractApiClient):
             offset += limit
             await asyncio.sleep(crawl_interval)
         return all_contents
+
+
+    async def get_answer_info(
+        self, question_id: str, answer_id: str
+    ) -> Optional[ZhihuContent]:
+        """
+        获取回答信息
+        Args:
+            question_id:
+            answer_id:
+
+        Returns:
+
+        """
+        uri = f"/question/{question_id}/answer/{answer_id}"
+        response_html = await self.get(uri, return_response=True)
+        return self._extractor.extract_answer_content_from_html(response_html)
+
+    async def get_article_info(self, article_id: str) -> Optional[ZhihuContent]:
+        """
+        获取文章信息
+        Args:
+            article_id:
+
+        Returns:
+
+        """
+        uri = f"/p/{article_id}"
+        response_html = await self.get(uri, return_response=True)
+        return self._extractor.extract_article_content_from_html(response_html)
+
+    async def get_video_info(self, video_id: str) -> Optional[ZhihuContent]:
+        """
+        获取视频信息
+        Args:
+            video_id:
+
+        Returns:
+
+        """
+        uri = f"/zvideo/{video_id}"
+        response_html = await self.get(uri, return_response=True)
+        return self._extractor.extract_zvideo_content_from_html(response_html)

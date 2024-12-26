@@ -159,15 +159,13 @@ class ZhihuExtractor:
         res = ZhihuContent()
 
         if "video" in zvideo and isinstance(zvideo.get("video"), dict): # 说明是从创作者主页的视频列表接口来的
-            res.content_id = zvideo.get("video").get("video_id")
             res.content_url = f"{zhihu_constant.ZHIHU_URL}/zvideo/{res.content_id}"
             res.created_time = zvideo.get("published_at")
             res.updated_time = zvideo.get("updated_at")
         else:
-            res.content_id = zvideo.get("zvideo_id")
             res.content_url = zvideo.get("video_url")
             res.created_time = zvideo.get("created_at")
-
+        res.content_id = zvideo.get("id")
         res.content_type = zvideo.get("type")
         res.title = extract_text_from_html(zvideo.get("title"))
         res.desc = extract_text_from_html(zvideo.get("description"))
@@ -369,3 +367,94 @@ class ZhihuExtractor:
             return []
 
         return self._extract_content_list(anwser_list)
+
+
+
+
+    def extract_answer_content_from_html(self, html_content: str) -> Optional[ZhihuContent]:
+        """
+        extract zhihu answer content from html
+        Args:
+            html_content:
+
+        Returns:
+
+        """
+        js_init_data: str = Selector(text=html_content).xpath("//script[@id='js-initialData']/text()").get(default="")
+        if not js_init_data:
+            return None
+        json_data: Dict = json.loads(js_init_data)
+        answer_info: Dict = json_data.get("initialState", {}).get("entities", {}).get("answers", {})
+        if not answer_info:
+            return None
+
+        return self._extract_answer_content(answer_info.get(list(answer_info.keys())[0]))
+
+    def extract_article_content_from_html(self, html_content: str) -> Optional[ZhihuContent]:
+        """
+        extract zhihu article content from html
+        Args:
+            html_content:
+
+        Returns:
+
+        """
+        js_init_data: str = Selector(text=html_content).xpath("//script[@id='js-initialData']/text()").get(default="")
+        if not js_init_data:
+            return None
+        json_data: Dict = json.loads(js_init_data)
+        article_info: Dict = json_data.get("initialState", {}).get("entities", {}).get("articles", {})
+        if not article_info:
+            return None
+
+        return self._extract_article_content(article_info.get(list(article_info.keys())[0]))
+
+    def extract_zvideo_content_from_html(self, html_content: str) -> Optional[ZhihuContent]:
+        """
+        extract zhihu zvideo content from html
+        Args:
+            html_content:
+
+        Returns:
+
+        """
+        js_init_data: str = Selector(text=html_content).xpath("//script[@id='js-initialData']/text()").get(default="")
+        if not js_init_data:
+            return None
+        json_data: Dict = json.loads(js_init_data)
+        zvideo_info: Dict = json_data.get("initialState", {}).get("entities", {}).get("zvideos", {})
+        users: Dict = json_data.get("initialState", {}).get("entities", {}).get("users", {})
+        if not zvideo_info:
+            return None
+
+        # handler user info and video info
+        video_detail_info: Dict = zvideo_info.get(list(zvideo_info.keys())[0])
+        if not video_detail_info:
+            return None
+        if isinstance(video_detail_info.get("author"), str):
+            author_name: str = video_detail_info.get("author")
+            video_detail_info["author"] = users.get(author_name)
+
+        return self._extract_zvideo_content(video_detail_info)
+
+
+def judge_zhihu_url(note_detail_url: str) -> str:
+    """
+    judge zhihu url type
+    Args:
+        note_detail_url:
+            eg1: https://www.zhihu.com/question/123456789/answer/123456789 # answer
+            eg2: https://www.zhihu.com/p/123456789 # article
+            eg3: https://www.zhihu.com/zvideo/123456789 # zvideo
+
+    Returns:
+
+    """
+    if "/answer/" in note_detail_url:
+        return zhihu_constant.ANSWER_NAME
+    elif "/p/" in note_detail_url:
+        return zhihu_constant.ARTICLE_NAME
+    elif "/zvideo/" in note_detail_url:
+        return zhihu_constant.VIDEO_NAME
+    else:
+        return ""

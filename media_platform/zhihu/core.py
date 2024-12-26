@@ -14,12 +14,13 @@ import asyncio
 import os
 import random
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, cast
 
 from playwright.async_api import (BrowserContext, BrowserType, Page,
                                   async_playwright)
 
 import config
+from constant import zhihu as constant
 from base.base_crawler import AbstractCrawler
 from model.m_zhihu import ZhihuContent, ZhihuCreator
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
@@ -29,7 +30,7 @@ from var import crawler_type_var, source_keyword_var
 
 from .client import ZhiHuClient
 from .exception import DataFetchError
-from .help import ZhihuExtractor
+from .help import ZhihuExtractor, judge_zhihu_url
 from .login import ZhiHuLogin
 
 
@@ -96,7 +97,7 @@ class ZhihuCrawler(AbstractCrawler):
                 await self.search()
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
-                raise NotImplementedError
+                await self.get_specified_notes()
             elif config.CRAWLER_TYPE == "creator":
                 # Get creator's information and their notes and comments
                 await self.get_creators_and_notes()
@@ -226,6 +227,76 @@ class ZhihuCrawler(AbstractCrawler):
             # Get all comments of the creator's contents
             await self.batch_get_content_comments(all_content_list)
 
+    async def get_note_detail(
+        self, full_note_url: str, semaphore: asyncio.Semaphore
+    ) -> Optional[ZhihuContent]:
+        """
+        Get note detail
+        Args:
+            full_note_url: str
+            semaphore:
+
+        Returns:
+
+        """
+        async with semaphore:
+            utils.logger.info(
+                f"[ZhihuCrawler.get_specified_notes] Begin get specified note {full_note_url}"
+            )
+            # judge note type
+            note_type: str = judge_zhihu_url(full_note_url)
+            if note_type == constant.ANSWER_NAME:
+                question_id = full_note_url.split("/")[-3]
+                answer_id = full_note_url.split("/")[-1]
+                utils.logger.info(
+                    f"[ZhihuCrawler.get_specified_notes] Get answer info, question_id: {question_id}, answer_id: {answer_id}"
+                )
+                return await self.zhihu_client.get_answer_info(question_id, answer_id)
+
+            elif note_type == constant.ARTICLE_NAME:
+                article_id = full_note_url.split("/")[-1]
+                utils.logger.info(
+                    f"[ZhihuCrawler.get_specified_notes] Get article info, article_id: {article_id}"
+                )
+                return await self.zhihu_client.get_article_info(article_id)
+
+            elif note_type == constant.VIDEO_NAME:
+                video_id = full_note_url.split("/")[-1]
+                utils.logger.info(
+                    f"[ZhihuCrawler.get_specified_notes] Get video info, video_id: {video_id}"
+                )
+                return await self.zhihu_client.get_video_info(video_id)
+
+    async def get_specified_notes(self):
+        """
+        Get the information and comments of the specified post
+        Returns:
+
+        """
+        get_note_detail_task_list = []
+        for full_note_url in config.ZHIHU_SPECIFIED_ID_LIST:
+            # remove query params
+            full_note_url = full_note_url.split("?")[0]
+            crawler_task = self.get_note_detail(
+                full_note_url=full_note_url,
+                semaphore=asyncio.Semaphore(config.MAX_CONCURRENCY_NUM),
+            )
+            get_note_detail_task_list.append(crawler_task)
+
+        need_get_comment_notes: List[ZhihuContent] = []
+        note_details = await asyncio.gather(*get_note_detail_task_list)
+        for index, note_detail in enumerate(note_details):
+            if not note_detail:
+                utils.logger.info(
+                    f"[ZhihuCrawler.get_specified_notes] Note {config.ZHIHU_SPECIFIED_ID_LIST[index]} not found"
+                )
+                continue
+
+            note_detail = cast(ZhihuContent, note_detail)  # only for type check
+            need_get_comment_notes.append(note_detail)
+            await zhihu_store.update_zhihu_content(note_detail)
+
+        await self.batch_get_content_comments(need_get_comment_notes)
 
     @staticmethod
     def format_proxy_info(ip_proxy_info: IpInfoModel) -> Tuple[Optional[Dict], Optional[Dict]]:
