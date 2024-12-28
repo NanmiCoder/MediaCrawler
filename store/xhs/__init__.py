@@ -185,10 +185,18 @@ async def save_creator(user_id: str, creator: Dict):
         elif i.get('type') == 'interaction':
             interaction = i.get('count')
 
+    def get_gender(gender):
+        if gender == 1:
+            return '女'
+        elif gender == 0:
+            return '男'
+        else:
+            return None
+
     local_db_item = {
         'user_id': user_id,  # 用户id
         'nickname': user_info.get('nickname'),  # 昵称
-        'gender': '女' if user_info.get('gender') == 1 else '男', # 性别
+        'gender':  get_gender(user_info.get('gender')), # 性别
         'avatar': user_info.get('images'), # 头像
         'desc': user_info.get('desc'), # 个人描述
         'ip_location': user_info.get('ipLocation'), # ip地址
