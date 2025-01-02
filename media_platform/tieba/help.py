@@ -237,6 +237,29 @@ class TieBaExtractor:
                             registration_duration=self.extract_registration_duration(user_content)
                             )
 
+    @staticmethod
+    def extract_tieba_thread_id_list_from_creator_page(
+        html_content: str
+    ) -> List[str]:
+        """
+        提取贴吧创作者主页的帖子列表
+        Args:
+            html_content:
+
+        Returns:
+
+        """
+        selector = Selector(text=html_content)
+        thread_id_list = []
+        xpath_selector = (
+            "//ul[@class='new_list clearfix']//div[@class='thread_name']/a[1]/@href"
+        )
+        thread_url_list = selector.xpath(xpath_selector).getall()
+        for thread_url in thread_url_list:
+            thread_id = thread_url.split("?")[0].split("/")[-1]
+            thread_id_list.append(thread_id)
+        return thread_id_list
+
     def extract_ip_and_pub_time(self, html_content: str) -> Tuple[str, str]:
         """
         提取IP位置和发布时间
