@@ -63,10 +63,13 @@ class WeiboClient:
 
         data: Dict = response.json()
         ok_code = data.get("ok")
-        if ok_code not in [0, 1]:
+        if ok_code == 0:  # response error
             utils.logger.error(f"[WeiboClient.request] request {method}:{url} err, res:{data}")
-            raise DataFetchError(data.get("msg", "unkonw error"))
-        else:
+            raise DataFetchError(data.get("msg", "response error"))
+        elif ok_code != 1:  # unknown error
+            utils.logger.error(f"[WeiboClient.request] request {method}:{url} err, res:{data}")
+            raise DataFetchError(data.get("msg", "unknown error"))
+        else:  # response right
             return data.get("data", {})
 
     async def get(self, uri: str, params=None, headers=None, **kwargs) -> Union[Response, Dict]:
@@ -127,31 +130,34 @@ class WeiboClient:
         }
         return await self.get(uri, params)
 
-    async def get_note_comments(self, mid_id: str, max_id: int) -> Dict:
+    async def get_note_comments(self, mid_id: str, max_id: int, max_id_type: int = 0) -> Dict:
         """get notes comments
         :param mid_id: 微博ID
         :param max_id: 分页参数ID
+        :param max_id_type: 分页参数ID类型
         :return:
         """
         uri = "/comments/hotflow"
         params = {
             "id": mid_id,
             "mid": mid_id,
-            "max_id_type": 0,
+            "max_id_type": max_id_type,
         }
         if max_id > 0:
             params.update({"max_id": max_id})
-
         referer_url = f"https://m.weibo.cn/detail/{mid_id}"
         headers = copy.copy(self.headers)
         headers["Referer"] = referer_url
 
         return await self.get(uri, params, headers=headers)
 
-    async def get_note_all_comments(self, note_id: str, crawl_interval: float = 1.0,
-                                    callback: Optional[Callable] = None,
-                                    max_count: int = 10,
-                                    ):
+    async def get_note_all_comments(
+        self,
+        note_id: str,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        max_count: int = 10,
+    ):
         """
         get note all comments include sub comments
         :param note_id:
@@ -160,13 +166,14 @@ class WeiboClient:
         :param max_count:
         :return:
         """
-
         result = []
         is_end = False
         max_id = -1
+        max_id_type = 0
         while not is_end and len(result) < max_count:
-            comments_res = await self.get_note_comments(note_id, max_id)
+            comments_res = await self.get_note_comments(note_id, max_id, max_id_type)
             max_id: int = comments_res.get("max_id")
+            max_id_type: int = comments_res.get("max_id_type")
             comment_list: List[Dict] = comments_res.get("data", [])
             is_end = max_id == 0
             if len(result) + len(comment_list) > max_count:
