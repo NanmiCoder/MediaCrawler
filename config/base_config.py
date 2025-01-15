@@ -57,6 +57,17 @@ START_PAGE = 1
 # 爬取视频/帖子的数量控制
 CRAWLER_MAX_NOTES_COUNT = 200
 
+# 爬取开始的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
+START_DAY = '2024-01-01'
+
+# 爬取结束的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
+END_DAY = '2024-01-01'
+
+# 是否开启按每一天进行爬取的选项，仅支持 bilibili 关键字搜索
+# 若为 False，则忽略 START_DAY 与 END_DAY 设置的值
+# 若为 True，则按照 START_DAY 至 END_DAY 按照每一天进行筛选，这样能够突破 1000 条视频的限制，最大程度爬取该关键词下的所有视频
+ALL_DAY = True
+
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
 
@@ -68,7 +79,6 @@ ENABLE_GET_COMMENTS = True
 
 # 爬取一级评论的数量控制(单视频/帖子)
 CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
-
 
 # 是否开启爬二级评论模式, 默认不开启爬二级评论
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
@@ -86,7 +96,6 @@ XHS_SPECIFIED_NOTE_URL_LIST = [
     "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
     # ........................
 ]
-
 
 # 指定抖音需要爬取的ID列表
 DY_SPECIFIED_ID_LIST = [
@@ -126,6 +135,7 @@ TIEBA_NAME_LIST = [
     # "盗墓笔记"
 ]
 
+# 指定贴吧创作者URL列表
 TIEBA_CREATOR_URL_LIST = [
     "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
     # ........................

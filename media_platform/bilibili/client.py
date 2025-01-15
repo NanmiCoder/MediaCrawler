@@ -147,8 +147,8 @@ class BilibiliClient(AbstractApiClient):
             "page": page,
             "page_size": page_size,
             "order": order.value,
-            "pubtime_begin": pubtime_begin_s,
-            "pubtime_end": pubtime_end_s
+            "pubtime_begin_s": pubtime_begin_s,
+            "pubtime_end_s": pubtime_end_s
         }
         return await self.get(uri, post_data)
 
