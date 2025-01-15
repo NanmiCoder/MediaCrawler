@@ -537,3 +537,4 @@ CREATE TABLE `zhihu_creator` (
 alter table douyin_aweme_comment add column `like_count` varchar(255) NOT NULL DEFAULT '0' COMMENT '点赞数';
 
 alter table xhs_note add column xsec_token varchar(50) default null comment '签名算法';
+alter table douyin_aweme_comment add column `pictures` varchar(500) NOT NULL DEFAULT '' COMMENT '评论图片列表';
