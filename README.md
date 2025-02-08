@@ -122,6 +122,7 @@
 [加入微信交流群](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
   
 # 感谢下列Sponsors对本仓库赞助支持
+- <a href="https://www.ipwo.net/?ref=mediacrawler">【IPWO住宅代理】免费流量测试，9000万+海外纯净真实住宅IP，全球覆盖，高品质代理服务提供商</a>
 - <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
 
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan 或 email：relakkes@gmail.com
