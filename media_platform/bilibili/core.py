@@ -96,7 +96,8 @@ class BilibiliCrawler(AbstractCrawler):
             utils.logger.info(
                 "[BilibiliCrawler.start] Bilibili Crawler finished ...")
 
-    async def get_pubtime_datetime(self, start: str = config.START_DAY, end: str = config.END_DAY) -> tuple[str, str]:
+    @staticmethod
+    async def get_pubtime_datetime(start: str = config.START_DAY, end: str = config.END_DAY) -> Tuple[str, str]:
         """
         获取 bilibili 作品发布日期起始时间戳 pubtime_begin_s 与发布日期结束时间戳 pubtime_end_s
         ---
