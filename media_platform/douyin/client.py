@@ -1,3 +1,14 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 import asyncio
 import copy
 import json
@@ -34,7 +45,7 @@ class DOUYINClient(AbstractApiClient):
         self.cookie_dict = cookie_dict
 
     async def __process_req_params(
-            self, params: Optional[Dict] = None, headers: Optional[Dict] = None,
+            self, uri: str, params: Optional[Dict] = None, headers: Optional[Dict] = None,
             request_method="GET"
     ):
 
@@ -73,11 +84,11 @@ class DOUYINClient(AbstractApiClient):
         params.update(common_params)
         query_string = urllib.parse.urlencode(params)
 
-        # 20240610 a-bogus更新（Playwright版本）
+        # 20240927 a-bogus更新（JS版本）
         post_data = {}
         if request_method == "POST":
             post_data = params
-        a_bogus = await get_a_bogus(query_string, post_data, headers["User-Agent"], self.playwright_page)
+        a_bogus = await get_a_bogus(uri, query_string, post_data, headers["User-Agent"], self.playwright_page)
         params["a_bogus"] = a_bogus
 
     async def request(self, method, url, **kwargs):
@@ -98,12 +109,12 @@ class DOUYINClient(AbstractApiClient):
         """
         GET请求
         """
-        await self.__process_req_params(params, headers)
+        await self.__process_req_params(uri, params, headers)
         headers = headers or self.headers
         return await self.request(method="GET", url=f"{self._host}{uri}", params=params, headers=headers)
 
     async def post(self, uri: str, data: dict, headers: Optional[Dict] = None):
-        await self.__process_req_params(data, headers)
+        await self.__process_req_params(uri, data, headers)
         headers = headers or self.headers
         return await self.request(method="POST", url=f"{self._host}{uri}", data=data, headers=headers)
 
@@ -126,7 +137,8 @@ class DOUYINClient(AbstractApiClient):
             offset: int = 0,
             search_channel: SearchChannelType = SearchChannelType.GENERAL,
             sort_type: SearchSortType = SearchSortType.GENERAL,
-            publish_time: PublishTimeType = PublishTimeType.UNLIMITED
+            publish_time: PublishTimeType = PublishTimeType.UNLIMITED,
+            search_id: str = ""
     ):
         """
         DouYin Web Search API
@@ -135,6 +147,7 @@ class DOUYINClient(AbstractApiClient):
         :param search_channel:
         :param sort_type:
         :param publish_time: ·
+        :param search_id: ·
         :return:
         """
         query_params = {
@@ -149,6 +162,7 @@ class DOUYINClient(AbstractApiClient):
             'count': '15',
             'need_filter_settings': '1',
             'list_type': 'multi',
+            'search_id': search_id,
         }
         if sort_type.value != SearchSortType.GENERAL.value or publish_time.value != PublishTimeType.UNLIMITED.value:
             query_params["filter_selected"] = json.dumps({
@@ -216,6 +230,7 @@ class DOUYINClient(AbstractApiClient):
             crawl_interval: float = 1.0,
             is_fetch_sub_comments=False,
             callback: Optional[Callable] = None,
+            max_count: int = 10,
     ):
         """
         获取帖子的所有评论，包括子评论
@@ -223,18 +238,21 @@ class DOUYINClient(AbstractApiClient):
         :param crawl_interval: 抓取间隔
         :param is_fetch_sub_comments: 是否抓取子评论
         :param callback: 回调函数，用于处理抓取到的评论
+        :param max_count: 一次帖子爬取的最大评论数量
         :return: 评论列表
         """
         result = []
         comments_has_more = 1
         comments_cursor = 0
-        while comments_has_more:
+        while comments_has_more and len(result) < max_count:
             comments_res = await self.get_aweme_comments(aweme_id, comments_cursor)
             comments_has_more = comments_res.get("has_more", 0)
             comments_cursor = comments_res.get("cursor", 0)
             comments = comments_res.get("comments", [])
             if not comments:
                 continue
+            if len(result) + len(comments) > max_count:
+                comments = comments[:max_count - len(result)]
             result.extend(comments)
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(aweme_id, comments)

@@ -1,3 +1,14 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 # -*- coding: utf-8 -*-
 import asyncio
 import json
@@ -178,27 +189,29 @@ class KuaiShouClient(AbstractApiClient):
         photo_id: str,
         crawl_interval: float = 1.0,
         callback: Optional[Callable] = None,
+        max_count: int = 10,
     ):
         """
         get video all comments include sub comments
         :param photo_id:
         :param crawl_interval:
         :param callback:
+        :param max_count:
         :return:
         """
 
         result = []
         pcursor = ""
 
-        while pcursor != "no_more":
+        while pcursor != "no_more" and len(result) < max_count:
             comments_res = await self.get_video_comments(photo_id, pcursor)
             vision_commen_list = comments_res.get("visionCommentList", {})
             pcursor = vision_commen_list.get("pcursor", "")
             comments = vision_commen_list.get("rootComments", [])
-
+            if len(result) + len(comments) > max_count:
+                comments = comments[:max_count - len(result)]
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(photo_id, comments)
-
             result.extend(comments)
             await asyncio.sleep(crawl_interval)
             sub_comments = await self.get_comments_all_sub_comments(

@@ -1,3 +1,14 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 18:44
@@ -116,13 +127,17 @@ class BilibiliClient(AbstractApiClient):
         self.cookie_dict = cookie_dict
 
     async def search_video_by_keyword(self, keyword: str, page: int = 1, page_size: int = 20,
-                                      order: SearchOrderType = SearchOrderType.DEFAULT):
+                                      order: SearchOrderType = SearchOrderType.DEFAULT,
+                                      pubtime_begin_s: int = 0, pubtime_end_s: int = 0) -> Dict:
+
         """
         KuaiShou web search api
         :param keyword: 搜索关键词
         :param page: 分页参数具体第几页
         :param page_size: 每一页参数的数量
         :param order: 搜索结果排序，默认位综合排序
+        :param pubtime_begin_s: 发布时间开始时间戳
+        :param pubtime_end_s: 发布时间结束时间戳
         :return:
         """
         uri = "/x/web-interface/wbi/search/type"
@@ -131,7 +146,9 @@ class BilibiliClient(AbstractApiClient):
             "keyword": keyword,
             "page": page,
             "page_size": page_size,
-            "order": order.value
+            "order": order.value,
+            "pubtime_begin_s": pubtime_begin_s,
+            "pubtime_end_s": pubtime_end_s
         }
         return await self.get(uri, post_data)
 
@@ -205,20 +222,23 @@ class BilibiliClient(AbstractApiClient):
         return await self.get(uri, post_data)
 
     async def get_video_all_comments(self, video_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
-                                     callback: Optional[Callable] = None, ):
+                                     callback: Optional[Callable] = None,
+                                     max_count: int = 10,):
         """
         get video all comments include sub comments
         :param video_id:
         :param crawl_interval:
         :param is_fetch_sub_comments:
         :param callback:
+        max_count: 一次笔记爬取的最大评论数量
+
         :return:
         """
 
         result = []
         is_end = False
         next_page = 0
-        while not is_end:
+        while not is_end and len(result) < max_count:
             comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, next_page)
             cursor_info: Dict = comments_res.get("cursor")
             comment_list: List[Dict] = comments_res.get("replies", [])
@@ -232,6 +252,8 @@ class BilibiliClient(AbstractApiClient):
                             await self.get_video_all_level_two_comments(
                                 video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval,  callback)
                         }
+            if len(result) + len(comment_list) > max_count:
+                comment_list = comment_list[:max_count - len(result)]
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(video_id, comment_list)
             await asyncio.sleep(crawl_interval)

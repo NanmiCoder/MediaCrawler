@@ -1,3 +1,14 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 import asyncio
 import os
 import random
@@ -12,7 +23,7 @@ from base.base_crawler import AbstractCrawler
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import douyin as douyin_store
 from tools import utils
-from var import crawler_type_var
+from var import crawler_type_var, source_keyword_var
 
 from .client import DOUYINClient
 from .exception import DataFetchError
@@ -80,9 +91,11 @@ class DouYinCrawler(AbstractCrawler):
             config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
         start_page = config.START_PAGE  # start page number
         for keyword in config.KEYWORDS.split(","):
+            source_keyword_var.set(keyword)
             utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
             page = 0
+            dy_search_id = ""
             while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
@@ -92,7 +105,8 @@ class DouYinCrawler(AbstractCrawler):
                     utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page}")
                     posts_res = await self.dy_client.search_info_by_keyword(keyword=keyword,
                                                                             offset=page * dy_limit_count - dy_limit_count,
-                                                                            publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE)
+                                                                            publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE),
+                                                                            search_id=dy_search_id
                                                                             )
                 except DataFetchError:
                     utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
@@ -103,7 +117,7 @@ class DouYinCrawler(AbstractCrawler):
                     utils.logger.error(
                         f"[DouYinCrawler.search] search douyin keyword: {keyword} failed，账号也许被风控了。")
                     break
-
+                dy_search_id = posts_res.get("extra", {}).get("logid", "")
                 for post_item in posts_res.get("data"):
                     try:
                         aweme_info: Dict = post_item.get("aweme_info") or \
@@ -165,7 +179,8 @@ class DouYinCrawler(AbstractCrawler):
                     aweme_id=aweme_id,
                     crawl_interval=random.random(),
                     is_fetch_sub_comments=config.ENABLE_GET_SUB_COMMENTS,
-                    callback=douyin_store.batch_update_dy_aweme_comments
+                    callback=douyin_store.batch_update_dy_aweme_comments,
+                    max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
                 )
                 utils.logger.info(
                     f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} comments have all been obtained and filtered ...")

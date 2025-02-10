@@ -1,3 +1,14 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/1/14 21:35
@@ -33,9 +44,6 @@ def calculate_number_of_files(file_store_path: str) -> int:
 
 
 class WeiboCsvStoreImplement(AbstractStore):
-    async def store_creator(self, creator: Dict):
-        pass
-
     csv_store_path: str = "data/weibo"
     file_count: int = calculate_number_of_files(csv_store_path)
 
@@ -91,6 +99,17 @@ class WeiboCsvStoreImplement(AbstractStore):
         """
         await self.save_data_to_csv(save_item=comment_item, store_type="comments")
 
+    async def store_creator(self, creator: Dict):
+        """
+        Weibo creator CSV storage implementation
+        Args:
+            creator:
+
+        Returns:
+
+        """
+        await self.save_data_to_csv(save_item=creator, store_type="creators")
+
 
 class WeiboDbStoreImplement(AbstractStore):
 
@@ -136,7 +155,25 @@ class WeiboDbStoreImplement(AbstractStore):
             await update_comment_by_comment_id(comment_id, comment_item=comment_item)
 
     async def store_creator(self, creator: Dict):
-        pass
+        """
+        Weibo creator DB storage implementation
+        Args:
+            creator:
+
+        Returns:
+
+        """
+
+        from .weibo_store_sql import (add_new_creator,
+                                      query_creator_by_user_id,
+                                      update_creator_by_user_id)
+        user_id = creator.get("user_id")
+        user_detail: Dict = await query_creator_by_user_id(user_id)
+        if not user_detail:
+            creator["add_ts"] = utils.get_current_timestamp()
+            await add_new_creator(creator)
+        else:
+            await update_creator_by_user_id(user_id, creator)
 
 
 class WeiboJsonStoreImplement(AbstractStore):
@@ -214,4 +251,12 @@ class WeiboJsonStoreImplement(AbstractStore):
         await self.save_data_to_json(comment_item, "comments")
 
     async def store_creator(self, creator: Dict):
-        pass
+        """
+        creator JSON storage implementation
+        Args:
+            creator:
+
+        Returns:
+
+        """
+        await self.save_data_to_json(creator, "creators")

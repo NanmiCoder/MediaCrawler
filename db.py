@@ -1,3 +1,14 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/4/6 14:54
@@ -15,36 +26,19 @@ from tools import utils
 from var import db_conn_pool_var, media_crawler_db_var
 
 
-def parse_mysql_url(mysql_url) -> Dict:
-    """
-    从配置文件中解析db链接url，给到aiomysql用，因为aiomysql不支持直接以URL的方式传递链接信息。
-    Args:
-        mysql_url: mysql://root:{RELATION_DB_PWD}@localhost:3306/media_crawler
-
-    Returns:
-
-    """
-    parsed_url = urlparse(mysql_url)
-    db_params = {
-        'host': parsed_url.hostname,
-        'port': parsed_url.port or 3306,
-        'user': parsed_url.username,
-        'password': parsed_url.password,
-        'db': parsed_url.path.lstrip('/')
-    }
-    return db_params
-
-
 async def init_mediacrawler_db():
     """
     初始化数据库链接池对象，并将该对象塞给media_crawler_db_var上下文变量
     Returns:
 
     """
-    db_conn_params = parse_mysql_url(config.RELATION_DB_URL)
     pool = await aiomysql.create_pool(
+        host=config.RELATION_DB_HOST,
+        port=config.RELATION_DB_PORT,
+        user=config.RELATION_DB_USER,
+        password=config.RELATION_DB_PWD,
+        db=config.RELATION_DB_NAME,
         autocommit=True,
-        **db_conn_params
     )
     async_db_obj = AsyncMysqlDB(pool)
 

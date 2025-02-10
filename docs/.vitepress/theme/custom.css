@@ -1,0 +1,9 @@
+/* .vitepress/theme/custom.css */
+/**
+ * Component: Sidebar
+ * -------------------------------------------------------------------------- */
+
+:root {
+  --vp-sidebar-width: 285px;
+  --vp-sidebar-bg-color: var(--vp-c-bg-alt);
+}

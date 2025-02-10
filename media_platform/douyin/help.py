@@ -1,3 +1,14 @@
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
+# 1. 不得用于任何商业用途。  
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
+# 3. 不得进行大规模爬取或对平台造成运营干扰。  
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 5. 不得用于任何非法或不当的用途。
+#   
+# 详细许可条款请参阅项目根目录下的LICENSE文件。  
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+
+
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Name    : 程序员阿江-Relakkes
@@ -6,8 +17,10 @@
 
 import random
 
+import execjs
 from playwright.async_api import Page
 
+douyin_sign_obj = execjs.compile(open('libs/douyin.js', encoding='utf-8-sig').read())
 
 def get_web_id():
     """
@@ -30,16 +43,35 @@ def get_web_id():
     return web_id.replace('-', '')[:19]
 
 
-async def get_a_bogus(params: str, post_data: dict, user_agent: str, page: Page = None):
+
+async def get_a_bogus(url: str, params: str, post_data: dict, user_agent: str, page: Page = None):
     """
-    获取 a_bogus 参数
+    获取 a_bogus 参数, 目前不支持post请求类型的签名
     """
-    return await get_a_bogus_from_playright(params, post_data, user_agent, page)
+    return get_a_bogus_from_js(url, params, user_agent)
+
+def get_a_bogus_from_js(url: str, params: str, user_agent: str):
+    """
+    通过js获取 a_bogus 参数
+    Args:
+        url:
+        params:
+        user_agent:
+
+    Returns:
+
+    """
+    sign_js_name = "sign_datail"
+    if "/reply" in url:
+        sign_js_name = "sign_reply"
+    return douyin_sign_obj.call(sign_js_name, params, user_agent)
+
 
 
 async def get_a_bogus_from_playright(params: str, post_data: dict, user_agent: str, page: Page):
     """
     通过playright获取 a_bogus 参数
+    playwright版本已失效
     Returns:
 
     """
