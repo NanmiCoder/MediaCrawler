@@ -57,17 +57,6 @@ START_PAGE = 1
 # 爬取视频/帖子的数量控制
 CRAWLER_MAX_NOTES_COUNT = 200
 
-# 爬取开始的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
-START_DAY = '2024-01-01'
-
-# 爬取结束的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
-END_DAY = '2024-01-01'
-
-# 是否开启按每一天进行爬取的选项，仅支持 bilibili 关键字搜索
-# 若为 False，则忽略 START_DAY 与 END_DAY 设置的值
-# 若为 True，则按照 START_DAY 至 END_DAY 按照每一天进行筛选，这样能够突破 1000 条视频的限制，最大程度爬取该关键词下的所有视频
-ALL_DAY = False
-
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
 
@@ -194,3 +183,14 @@ STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 
 # 中文字体文件路径
 FONT_PATH = "./docs/STZHONGS.TTF"
+
+# 爬取开始的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
+START_DAY = '2024-01-01'
+
+# 爬取结束的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
+END_DAY = '2024-01-01'
+
+# 是否开启按每一天进行爬取的选项，仅支持 bilibili 关键字搜索
+# 若为 False，则忽略 START_DAY 与 END_DAY 设置的值
+# 若为 True，则按照 START_DAY 至 END_DAY 按照每一天进行筛选，这样能够突破 1000 条视频的限制，最大程度爬取该关键词下的所有视频
+ALL_DAY = False
