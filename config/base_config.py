@@ -66,7 +66,7 @@ END_DAY = '2024-01-01'
 # 是否开启按每一天进行爬取的选项，仅支持 bilibili 关键字搜索
 # 若为 False，则忽略 START_DAY 与 END_DAY 设置的值
 # 若为 True，则按照 START_DAY 至 END_DAY 按照每一天进行筛选，这样能够突破 1000 条视频的限制，最大程度爬取该关键词下的所有视频
-ALL_DAY = True
+ALL_DAY = False
 
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
