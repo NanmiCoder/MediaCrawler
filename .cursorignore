@@ -1,0 +1,53 @@
+# Python 虚拟环境
+venv/
+env/
+ENV/
+
+# Python 编译缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 数据目录
+data/
+browser_data/
+
+# 日志文件
+logs/
+*.log
+
+# 测试文件
+test/
+tests/
+
+# 文档
+docs/
+*.md
+
+# 第三方库
+libs/
+
+# 临时文件
+temp/
+tmp/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE 配置
+.vscode/
+.idea/
+
+# 构建输出
+dist/
+build/
+
+# 环境配置文件
+.env
+.env.*
+
+# 不忽略的重要配置文件
+!config/base_config.py
+!config/db_config.py 
