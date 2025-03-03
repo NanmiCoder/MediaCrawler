@@ -130,7 +130,7 @@ class ZhihuExtractor:
         res.content_id = article.get("id")
         res.content_type = article.get("type")
         res.content_text = extract_text_from_html(article.get("content"))
-        res.content_url = f"{zhihu_constant.ZHIHU_URL}/p/{res.content_id}"
+        res.content_url = f"{zhihu_constant.ZHIHU_ZHUANLAN_URL}/p/{res.content_id}"
         res.title = extract_text_from_html(article.get("title"))
         res.desc = extract_text_from_html(article.get("excerpt"))
         res.created_time = article.get("created_time", 0) or article.get("created", 0)
