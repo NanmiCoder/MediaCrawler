@@ -1,12 +1,12 @@
-# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
-# 1. 不得用于任何商业用途。  
-# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
-# 3. 不得进行大规模爬取或对平台造成运营干扰。  
-# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
+# 1. 不得用于任何商业用途。
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
+# 3. 不得进行大规模爬取或对平台造成运营干扰。
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
 # 5. 不得用于任何非法或不当的用途。
-#   
-# 详细许可条款请参阅项目根目录下的LICENSE文件。  
-# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
+#
+# 详细许可条款请参阅项目根目录下的LICENSE文件。
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 
 # -*- coding: utf-8 -*-
@@ -28,13 +28,13 @@ from .graphql import KuaiShouGraphQL
 
 class KuaiShouClient(AbstractApiClient):
     def __init__(
-            self,
-            timeout=10,
-            proxies=None,
-            *,
-            headers: Dict[str, str],
-            playwright_page: Page,
-            cookie_dict: Dict[str, str],
+        self,
+        timeout=10,
+        proxies=None,
+        *,
+        headers: Dict[str, str],
+        playwright_page: Page,
+        cookie_dict: Dict[str, str],
     ):
         self.proxies = proxies
         self.timeout = timeout
@@ -46,10 +46,7 @@ class KuaiShouClient(AbstractApiClient):
 
     async def request(self, method, url, **kwargs) -> Any:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
-            response = await client.request(
-                method, url, timeout=self.timeout,
-                **kwargs
-            )
+            response = await client.request(method, url, timeout=self.timeout, **kwargs)
         data: Dict = response.json()
         if data.get("errors"):
             raise DataFetchError(data.get("errors", "unkonw error"))
@@ -59,14 +56,16 @@ class KuaiShouClient(AbstractApiClient):
     async def get(self, uri: str, params=None) -> Dict:
         final_uri = uri
         if isinstance(params, dict):
-            final_uri = (f"{uri}?"
-                         f"{urlencode(params)}")
-        return await self.request(method="GET", url=f"{self._host}{final_uri}", headers=self.headers)
+            final_uri = f"{uri}?" f"{urlencode(params)}"
+        return await self.request(
+            method="GET", url=f"{self._host}{final_uri}", headers=self.headers
+        )
 
     async def post(self, uri: str, data: dict) -> Dict:
-        json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
-        return await self.request(method="POST", url=f"{self._host}{uri}",
-                                  data=json_str, headers=self.headers)
+        json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+        return await self.request(
+            method="POST", url=f"{self._host}{uri}", data=json_str, headers=self.headers
+        )
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
@@ -78,13 +77,15 @@ class KuaiShouClient(AbstractApiClient):
                 "variables": {
                     "ftype": 1,
                 },
-                "query": self.graphql.get("vision_profile_user_list")
+                "query": self.graphql.get("vision_profile_user_list"),
             }
             res = await self.post("", post_data)
             if res.get("visionProfileUserList", {}).get("result") == 1:
                 ping_flag = True
         except Exception as e:
-            utils.logger.error(f"[KuaiShouClient.pong] Pong kuaishou failed: {e}, and try to login again...")
+            utils.logger.error(
+                f"[KuaiShouClient.pong] Pong kuaishou failed: {e}, and try to login again..."
+            )
             ping_flag = False
         return ping_flag
 
@@ -93,11 +94,14 @@ class KuaiShouClient(AbstractApiClient):
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
 
-    async def search_info_by_keyword(self, keyword: str, pcursor: str):
+    async def search_info_by_keyword(
+        self, keyword: str, pcursor: str, search_session_id: str = ""
+    ):
         """
         KuaiShou web search api
         :param keyword: search keyword
         :param pcursor: limite page curson
+        :param search_session_id: search session id
         :return:
         """
         post_data = {
@@ -105,9 +109,10 @@ class KuaiShouClient(AbstractApiClient):
             "variables": {
                 "keyword": keyword,
                 "pcursor": pcursor,
-                "page": "search"
+                "page": "search",
+                "searchSessionId": search_session_id,
             },
-            "query": self.graphql.get("search_query")
+            "query": self.graphql.get("search_query"),
         }
         return await self.post("", post_data)
 
@@ -119,11 +124,8 @@ class KuaiShouClient(AbstractApiClient):
         """
         post_data = {
             "operationName": "visionVideoDetail",
-            "variables": {
-                "photoId": photo_id,
-                "page": "search"
-            },
-            "query": self.graphql.get("video_detail")
+            "variables": {"photoId": photo_id, "page": "search"},
+            "query": self.graphql.get("video_detail"),
         }
         return await self.post("", post_data)
 
@@ -135,11 +137,8 @@ class KuaiShouClient(AbstractApiClient):
         """
         post_data = {
             "operationName": "commentListQuery",
-            "variables": {
-                "photoId": photo_id,
-                "pcursor": pcursor
-            },
-            "query": self.graphql.get("comment_list")
+            "variables": {"photoId": photo_id, "pcursor": pcursor},
+            "query": self.graphql.get("comment_list"),
         }
         return await self.post("", post_data)
 
@@ -165,9 +164,7 @@ class KuaiShouClient(AbstractApiClient):
     async def get_creator_profile(self, userId: str) -> Dict:
         post_data = {
             "operationName": "visionProfile",
-            "variables": {
-                "userId": userId
-            },
+            "variables": {"userId": userId},
             "query": self.graphql.get("vision_profile"),
         }
         return await self.post("", post_data)
@@ -175,11 +172,7 @@ class KuaiShouClient(AbstractApiClient):
     async def get_video_by_creater(self, userId: str, pcursor: str = "") -> Dict:
         post_data = {
             "operationName": "visionProfilePhotoList",
-            "variables": {
-                "page": "profile", 
-                "pcursor": pcursor, 
-                "userId": userId
-            },
+            "variables": {"page": "profile", "pcursor": pcursor, "userId": userId},
             "query": self.graphql.get("vision_profile_photo_list"),
         }
         return await self.post("", post_data)
@@ -209,7 +202,7 @@ class KuaiShouClient(AbstractApiClient):
             pcursor = vision_commen_list.get("pcursor", "")
             comments = vision_commen_list.get("rootComments", [])
             if len(result) + len(comments) > max_count:
-                comments = comments[:max_count - len(result)]
+                comments = comments[: max_count - len(result)]
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(photo_id, comments)
             result.extend(comments)
@@ -260,7 +253,7 @@ class KuaiShouClient(AbstractApiClient):
                 comments_res = await self.get_video_sub_comments(
                     photo_id, root_comment_id, sub_comment_pcursor
                 )
-                vision_sub_comment_list = comments_res.get("visionSubCommentList",{})
+                vision_sub_comment_list = comments_res.get("visionSubCommentList", {})
                 sub_comment_pcursor = vision_sub_comment_list.get("pcursor", "no_more")
 
                 comments = vision_sub_comment_list.get("subComments", {})
