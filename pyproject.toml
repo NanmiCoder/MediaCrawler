@@ -1,0 +1,32 @@
+[project]
+name = "mediacrawler"
+author = "程序员阿江-Relakkes <relakkes@gmail.com>"
+version = "0.1.0"
+description = "A social media crawler project, support Xiaohongshu, Weibo, Zhihu, Bilibili, Douyin, BaiduTieBa etc."
+readme = "README.md"
+requires-python = "==3.9"
+dependencies = [
+    "aiofiles~=23.2.1",
+    "aiomysql==0.2.0",
+    "fastapi==0.110.2",
+    "httpx==0.24.0",
+    "jieba==0.42.1",
+    "matplotlib==3.9.0",
+    "opencv-python>=4.11.0.86",
+    "pandas==2.2.3",
+    "parsel==1.9.1",
+    "pillow==9.5.0",
+    "playwright==1.42.0",
+    "pydantic==2.5.2",
+    "pyexecjs==1.5.1",
+    "python-dotenv==1.0.1",
+    "redis~=4.6.0",
+    "requests==2.32.3",
+    "tenacity==8.2.2",
+    "uvicorn==0.29.0",
+    "wordcloud==1.9.3",
+]
+
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
