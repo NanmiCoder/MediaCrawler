@@ -161,7 +161,11 @@ class BilibiliCrawler(AbstractCrawler):
                     video_list: List[Dict] = videos_res.get("result")
 
                     semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                    task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                    task_list = []
+                    try:
+                        task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                    finally:
+                        pass
                     video_items = await asyncio.gather(*task_list)
                     for video_item in video_items:
                         if video_item:
@@ -199,7 +203,11 @@ class BilibiliCrawler(AbstractCrawler):
                             video_list: List[Dict] = videos_res.get("result")
 
                             semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                            task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                            task_list = []
+                            try:
+                                task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                            finally:
+                                pass
                             video_items = await asyncio.gather(*task_list)
                             for video_item in video_items:
                                 if video_item:
