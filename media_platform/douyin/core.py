@@ -108,6 +108,9 @@ class DouYinCrawler(AbstractCrawler):
                                                                             publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE),
                                                                             search_id=dy_search_id
                                                                             )
+                    if posts_res.get("data") is None or posts_res.get("data") == []:
+                        utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page} is empty,{posts_res.get('data')}`")
+                        break
                 except DataFetchError:
                     utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
                     break
