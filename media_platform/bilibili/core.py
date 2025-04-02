@@ -164,8 +164,10 @@ class BilibiliCrawler(AbstractCrawler):
                     task_list = []
                     try:
                         task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
-                    finally:
-                        pass
+                    except Exception as e :
+                        utils.logger.error(
+                            f"[BilibiliCrawler.search] {comments_res}"
+                        )
                     video_items = await asyncio.gather(*task_list)
                     for video_item in video_items:
                         if video_item:
