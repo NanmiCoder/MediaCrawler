@@ -192,15 +192,21 @@ class ZhihuExtractor:
 
         """
         res = ZhihuCreator()
-        if not author:
-            return res
-        if not author.get("id"):
-            author = author.get("member")
-        res.user_id = author.get("id")
-        res.user_link = f"{zhihu_constant.ZHIHU_URL}/people/{author.get('url_token')}"
-        res.user_nickname = author.get("name")
-        res.user_avatar = author.get("avatar_url")
-        res.url_token = author.get("url_token")
+        try:
+            if not author:
+                return res
+            if not author.get("id"):
+                author = author.get("member")
+            res.user_id = author.get("id")
+            res.user_link = f"{zhihu_constant.ZHIHU_URL}/people/{author.get('url_token')}"
+            res.user_nickname = author.get("name")
+            res.user_avatar = author.get("avatar_url")
+            res.url_token = author.get("url_token")
+            
+        except Exception as e :
+            utils.logger.warning(
+                f"[ZhihuExtractor._extract_content_or_comment_author] User Maybe Blocked. {e}"
+            )
         return res
 
     def extract_comments(self, page_content: ZhihuContent, comments: List[Dict]) -> List[ZhihuComment]:
