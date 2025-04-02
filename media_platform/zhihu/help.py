@@ -202,8 +202,11 @@ class ZhihuExtractor:
             res.user_nickname = author.get("name")
             res.user_avatar = author.get("avatar_url")
             res.url_token = author.get("url_token")
-        finally:
-            pass
+            
+        except Exception as e :
+            utils.logger.warning(
+                f"[ZhihuExtractor._extract_content_or_comment_author] User Maybe Blocked. {e}"
+            )
         return res
 
     def extract_comments(self, page_content: ZhihuContent, comments: List[Dict]) -> List[ZhihuComment]:
