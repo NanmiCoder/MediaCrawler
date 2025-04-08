@@ -77,7 +77,7 @@ class BilibiliLogin(AbstractLogin):
             "xpath=//div[@class='right-entry__outside go-login-btn']//div"
         )
         await login_button_ele.click()
-
+        await asyncio.sleep(1)
         # find login qrcode
         qrcode_img_selector = "//div[@class='login-scan-box']//img"
         base64_qrcode_img = await utils.find_login_qrcode(
