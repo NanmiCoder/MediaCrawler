@@ -4,7 +4,7 @@ author = "程序员阿江-Relakkes <relakkes@gmail.com>"
 version = "0.1.0"
 description = "A social media crawler project, support Xiaohongshu, Weibo, Zhihu, Bilibili, Douyin, BaiduTieBa etc."
 readme = "README.md"
-requires-python = "==3.9"
+requires-python = ">=3.9"
 dependencies = [
     "aiofiles~=23.2.1",
     "aiomysql==0.2.0",

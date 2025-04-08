@@ -101,7 +101,7 @@ class DouYinLogin(AbstractLogin):
 
     async def popup_login_dialog(self):
         """If the login dialog box does not pop up automatically, we will manually click the login button"""
-        dialog_selector = "xpath=//div[@id='login-pannel']"
+        dialog_selector = "xpath=//div[@id='login-panel-new']"
         try:
             # check dialog box is auto popup and wait for 10 seconds
             await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 10)
@@ -114,7 +114,7 @@ class DouYinLogin(AbstractLogin):
 
     async def login_by_qrcode(self):
         utils.logger.info("[DouYinLogin.login_by_qrcode] Begin login douyin by qrcode...")
-        qrcode_img_selector = "xpath=//article[@class='web-login']//img"
+        qrcode_img_selector = "xpath=//div[@id='animate_qrcode_container']//img"
         base64_qrcode_img = await utils.find_login_qrcode(
             self.context_page,
             selector=qrcode_img_selector
