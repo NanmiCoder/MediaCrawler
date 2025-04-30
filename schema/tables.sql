@@ -95,7 +95,7 @@ CREATE TABLE `douyin_aweme`
     `last_modify_ts`  bigint      NOT NULL COMMENT '记录最后修改时间戳',
     `aweme_id`        varchar(64) NOT NULL COMMENT '视频ID',
     `aweme_type`      varchar(16) NOT NULL COMMENT '视频类型',
-    `title`           varchar(500) DEFAULT NULL COMMENT '视频标题',
+    `title`           varchar(1024) DEFAULT NULL COMMENT '视频标题',
     `desc`            longtext COMMENT '视频描述',
     `create_time`     bigint      NOT NULL COMMENT '视频发布时间戳',
     `liked_count`     varchar(16)  DEFAULT NULL COMMENT '视频点赞数',
