@@ -300,8 +300,8 @@ class DOUYINClient(AbstractApiClient):
             "max_cursor": max_cursor,
             "locate_query": "false",
             "publish_video_strategy_type": 2,
-            'verifyFp': 'verify_lx901cuk_K7kaK4dK_bn2E_4dgk_BxAA_E0XS1VtUi130',
-            'fp': 'verify_lx901cuk_K7kaK4dK_bn2E_4dgk_BxAA_E0XS1VtUi130'
+            'verifyFp': 'verify_ma3hrt8n_q2q2HyYA_uLyO_4N6D_BLvX_E2LgoGmkA1BU',
+            'fp': 'verify_ma3hrt8n_q2q2HyYA_uLyO_4N6D_BLvX_E2LgoGmkA1BU'
         }
         return await self.get(uri, params)
 
