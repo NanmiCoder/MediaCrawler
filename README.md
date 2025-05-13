@@ -40,11 +40,12 @@
 [MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经重构出来了，相较于开源版本的优势：
 - 多账号+IP代理支持（重点！）
 - 去除Playwright依赖，使用更加简单
-- 支持linux部署（Docker docker-compose）
+- 支持linux环境使用
 - 代码重构优化，更加易读易维护（解耦JS签名逻辑）
 - 代码质量更高，对于构建更大型的爬虫项目更加友好
 - 完美的架构设计，更加易扩展，源码学习的价值更大
 - Pro中新增全新的自媒体视频下载器桌面端软件（适合学习全栈项目开发）
+- 支持多个平台的首页信息流推荐（HomeFeed）
 
 
 # 安装部署方法
