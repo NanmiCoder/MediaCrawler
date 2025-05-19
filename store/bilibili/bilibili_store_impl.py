@@ -107,6 +107,18 @@ class BiliCsvStoreImplement(AbstractStore):
         """
         await self.save_data_to_csv(save_item=creator, store_type="creators")
 
+    async def store_creator_contact(self, contact_item: Dict):
+        """
+        Bilibili comment CSV storage implementation
+        Args:
+            contact_item: creator's contact item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_csv(save_item=contact_item, store_type="fans")
+
 
 class BiliDbStoreImplement(AbstractStore):
     async def store_content(self, content_item: Dict):
@@ -239,7 +251,7 @@ class BiliJsonStoreImplement(AbstractStore):
 
     async def store_comment(self, comment_item: Dict):
         """
-        comment JSON storage implementatio
+        comment JSON storage implementation
         Args:
             comment_item:
 
@@ -250,7 +262,7 @@ class BiliJsonStoreImplement(AbstractStore):
 
     async def store_creator(self, creator: Dict):
         """
-        creator JSON storage implementatio
+        creator JSON storage implementation
         Args:
             creator:
 
@@ -258,3 +270,15 @@ class BiliJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(creator, "creators")
+
+    async def store_creator_contact(self, contact_item: Dict):
+        """
+        creator contact JSON storage implementation
+        Args:
+            contact_item: creator's contact item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_json(save_item=contact_item, store_type="fans")

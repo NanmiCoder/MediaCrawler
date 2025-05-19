@@ -21,6 +21,7 @@ from urllib.parse import urlencode
 import httpx
 from playwright.async_api import BrowserContext, Page
 
+import config
 from base.base_crawler import AbstractApiClient
 from tools import utils
 
@@ -223,7 +224,7 @@ class BilibiliClient(AbstractApiClient):
 
     async def get_video_all_comments(self, video_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
                                      callback: Optional[Callable] = None,
-                                     max_count: int = 10,):
+                                     max_count: int = 10, ):
         """
         get video all comments include sub comments
         :param video_id:
@@ -250,7 +251,7 @@ class BilibiliClient(AbstractApiClient):
                     if (comment.get("rcount", 0) > 0):
                         {
                             await self.get_video_all_level_two_comments(
-                                video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval,  callback)
+                                video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval, callback)
                         }
             if len(result) + len(comment_list) > max_count:
                 comment_list = comment_list[:max_count - len(result)]
@@ -320,7 +321,8 @@ class BilibiliClient(AbstractApiClient):
         result = await self.get(uri, post_data)
         return result
 
-    async def get_creator_videos(self, creator_id: str, pn: int, ps: int = 30, order_mode: SearchOrderType = SearchOrderType.LAST_PUBLISH) -> Dict:
+    async def get_creator_videos(self, creator_id: str, pn: int, ps: int = 30,
+                                 order_mode: SearchOrderType = SearchOrderType.LAST_PUBLISH) -> Dict:
         """get all videos for a creator
         :param creator_id: 创作者 ID
         :param pn: 页数
@@ -337,3 +339,120 @@ class BilibiliClient(AbstractApiClient):
             "order": order_mode,
         }
         return await self.get(uri, post_data)
+
+    async def get_creator_info(self, creator_id: int) -> Dict:
+        """get creator info
+        :param creator_id: 作者 ID
+        """
+        uri = "/x/space/wbi/acc/info"
+        post_data = {
+            "mid": creator_id,
+        }
+        return await self.get(uri, post_data)
+
+    async def get_creator_fans(self,
+                               creator_id: int,
+                               pn: int,
+                               ps: int = 24,
+                               ) -> Dict:
+        """get video comments
+        :param creator_id: 创作者 ID
+        :param pn: 开始页数
+        :param ps: 每页数量
+        :return:
+        """
+        uri = "/x/relation/fans"
+        post_data = {
+            'vmid': creator_id,
+            "pn": pn,
+            "ps": ps,
+            "gaia_source": "main_web",
+
+        }
+        return await self.get(uri, post_data)
+
+    async def get_creator_followings(self,
+                                     creator_id: int,
+                                     pn: int,
+                                     ps: int = 24,
+                                     ) -> Dict:
+        """get video comments
+        :param creator_id: 创作者 ID
+        :param pn: 开始页数
+        :param ps: 每页数量
+        :return:
+        """
+        uri = "/x/relation/followings"
+        post_data = {
+            "vmid": creator_id,
+            "pn": pn,
+            "ps": ps,
+            "gaia_source": "main_web",
+        }
+        return await self.get(uri, post_data)
+
+    async def get_creator_all_fans(self, creator_info: Dict, crawl_interval: float = 1.0,
+                                   callback: Optional[Callable] = None,
+                                   max_count: int = 100) -> List:
+        """
+        get video all comments include sub comments
+        :param creator_info:
+        :param crawl_interval:
+        :param callback:
+        :param max_count: 一个up主爬取的最大粉丝数量
+
+        :return: up主粉丝数列表
+        """
+        creator_id = creator_info["id"]
+        result = []
+        pn = config.START_CONTACTS_PAGE
+        while len(result) < max_count:
+            fans_res: Dict = await self.get_creator_fans(creator_id, pn=pn)
+            fans_list: List[Dict] = fans_res.get("list", [])
+
+            pn += 1
+            if len(result) + len(fans_list) > max_count:
+                fans_list = fans_list[:max_count - len(result)]
+            if callback:  # 如果有回调函数，就执行回调函数
+                await callback(creator_info, fans_list)
+            await asyncio.sleep(crawl_interval)
+            if not fans_list:
+                break
+            result.extend(fans_list)
+        utils.logger.info(
+            f"[BilibiliCrawler.get_fans] begin get creator_id: {creator_id} fans successfully")
+
+        return result
+
+    async def get_creator_all_followings(self, creator_info: Dict, crawl_interval: float = 1.0,
+                                         callback: Optional[Callable] = None,
+                                         max_count: int = 100) -> List:
+        """
+        get video all comments include sub comments
+        :param creator_info:
+        :param crawl_interval:
+        :param callback:
+        :param max_count: 一个up主爬取的最大关注者数量
+
+        :return: up主关注者列表
+        """
+        creator_id = creator_info["id"]
+        result = []
+        pn = config.START_CONTACTS_PAGE
+        while len(result) < max_count:
+            followings_res: Dict = await self.get_creator_followings(creator_id, pn=pn)
+            followings_list: List[Dict] = followings_res.get("list", [])
+
+            pn += 1
+            if len(result) + len(followings_list) > max_count:
+                followings_list = followings_list[:max_count - len(result)]
+            if callback:  # 如果有回调函数，就执行回调函数
+                await callback(creator_info, followings_list)
+            await asyncio.sleep(crawl_interval)
+            if not followings_list:
+                break
+            result.extend(followings_list)
+        utils.logger.info(
+            f"[BilibiliCrawler.get_followings] begin get creator_id: {creator_id} followings successfully")
+
+        return result

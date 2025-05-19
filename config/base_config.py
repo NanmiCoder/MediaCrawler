@@ -10,16 +10,16 @@
 
 
 # 基础配置
-PLATFORM = "xhs"
+PLATFORM = "bili"
 KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
-LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
+LOGIN_TYPE = "phone"  # qrcode or phone or cookie
 COOKIES = ""
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
 SORT_TYPE = "popularity_descending"
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
 PUBLISH_TIME_TYPE = 0
 CRAWLER_TYPE = (
-    "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
+    "creator"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 )
 # 自定义User Agent（暂时仅对XHS有效）
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0'
@@ -54,6 +54,9 @@ USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 # 爬取开始页数 默认从第一页开始
 START_PAGE = 1
 
+# 爬取粉丝列表开始页数 默认从第一页开始
+START_CONTACTS_PAGE = 1
+
 # 爬取视频/帖子的数量控制
 CRAWLER_MAX_NOTES_COUNT = 200
 
@@ -68,6 +71,9 @@ ENABLE_GET_COMMENTS = True
 
 # 爬取一级评论的数量控制(单视频/帖子)
 CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
+
+# 爬取作者粉丝和关注列表数量控制(单作者)
+CRAWLER_MAX_FANS_COUNT_SINGLENOTES = 100
 
 # 是否开启爬二级评论模式, 默认不开启爬二级评论
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
@@ -144,7 +150,11 @@ DY_CREATOR_ID_LIST = [
 
 # 指定bili创作者ID列表(sec_id)
 BILI_CREATOR_ID_LIST = [
-    "20813884",
+    # "20813884",
+    "520819684",
+    "472747194",
+    "519872016",
+    "372201438",
     # ........................
 ]
 

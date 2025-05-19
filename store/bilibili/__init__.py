@@ -71,25 +71,25 @@ async def update_bilibili_video(video_item: Dict):
     await BiliStoreFactory.create_store().store_content(content_item=save_content_item)
 
 
-async def update_up_info(video_item: Dict):  
+async def update_up_info(video_item: Dict):
     video_item_card_list: Dict = video_item.get("Card")
-    video_item_card: Dict = video_item_card_list.get("card") 
+    video_item_card: Dict = video_item_card_list.get("card")
     saver_up_info = {
-        "user_id": str(video_item_card.get("mid")), 
-        "nickname": video_item_card.get("name"),  
+        "user_id": str(video_item_card.get("mid")),
+        "nickname": video_item_card.get("name"),
         "sex": video_item_card.get("sex"),
         "sign": video_item_card.get("sign"),
-        "avatar": video_item_card.get("face"), 
-        "last_modify_ts": utils.get_current_timestamp(),  
-        "total_fans": video_item_card.get("fans"), 
-        "total_liked": video_item_card_list.get("like_num"), 
-        "user_rank": video_item_card.get("level_info").get("current_level"),  
-        "is_official": video_item_card.get("official_verify").get("type"), 
+        "avatar": video_item_card.get("face"),
+        "last_modify_ts": utils.get_current_timestamp(),
+        "total_fans": video_item_card.get("fans"),
+        "total_liked": video_item_card_list.get("like_num"),
+        "user_rank": video_item_card.get("level_info").get("current_level"),
+        "is_official": video_item_card.get("official_verify").get("type"),
     }
     utils.logger.info(
         f"[store.bilibili.update_up_info] bilibili user_id:{video_item_card.get('mid')}")
     await BiliStoreFactory.create_store().store_creator(creator=saver_up_info)
-    
+
 
 async def batch_update_bilibili_video_comments(video_id: str, comments: List[Dict]):
     if not comments:
@@ -132,3 +132,44 @@ async def store_video(aid, video_content, extension_file_name):
     """
     await BilibiliVideo().store_video(
         {"aid": aid, "video_content": video_content, "extension_file_name": extension_file_name})
+
+
+async def batch_update_bilibili_creator_fans(creator_info: Dict, fans_list: List[Dict]):
+    if not fans_list:
+        return
+    for fan_item in fans_list:
+        fan_info: Dict = {
+            "id": fan_item.get("mid"),
+            "name": fan_item.get("uname"),
+            "sign": fan_item.get("sign"),
+            "avatar": fan_item.get("face"),
+        }
+        await update_bilibili_creator_fans(creator_info=creator_info, fan_info=fan_info)
+
+
+async def batch_update_bilibili_creator_followings(creator_info: Dict, followings_list: List[Dict]):
+    if not followings_list:
+        return
+    for following_item in followings_list:
+        following_info: Dict = {
+            "id": following_item.get("mid"),
+            "name": following_item.get("uname"),
+            "sign": following_item.get("sign"),
+            "avatar": following_item.get("face"),
+        }
+        await update_bilibili_creator_fans(creator_info=following_info, fan_info=creator_info)
+
+
+async def update_bilibili_creator_fans(creator_info: Dict, fan_info: Dict):
+    save_contact_item = {
+        "up_id": creator_info["id"],
+        "fan_id": fan_info["id"],
+        "up_name": creator_info["name"],
+        "fan_name": fan_info["name"],
+        "up_sign": creator_info["sign"],
+        "fan_sign": fan_info["sign"],
+        "up_avatar": creator_info["avatar"],
+        "fan_avatar": fan_info["avatar"]
+    }
+
+    await BiliStoreFactory.create_store().store_creator_contact(contact_item=save_contact_item)
