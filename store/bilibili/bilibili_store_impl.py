@@ -239,7 +239,7 @@ class BiliJsonStoreImplement(AbstractStore):
 
     async def store_comment(self, comment_item: Dict):
         """
-        comment JSON storage implementatio
+        comment JSON storage implementation
         Args:
             comment_item:
 
@@ -250,7 +250,7 @@ class BiliJsonStoreImplement(AbstractStore):
 
     async def store_creator(self, creator: Dict):
         """
-        creator JSON storage implementatio
+        creator JSON storage implementation
         Args:
             creator:
 
