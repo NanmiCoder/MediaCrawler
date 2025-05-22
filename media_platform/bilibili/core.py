@@ -512,8 +512,8 @@ class BilibiliCrawler(AbstractCrawler):
                 "sign": creator_unhandled_info.get("sign"),
                 "avatar": creator_unhandled_info.get("face"),
             }
-        # await self.get_fans(creator_info, semaphore)
-        # await self.get_followings(creator_info, semaphore)
+        await self.get_fans(creator_info, semaphore)
+        await self.get_followings(creator_info, semaphore)
         await self.get_dynamics(creator_info, semaphore)
 
     async def get_fans(self, creator_info: Dict, semaphore: asyncio.Semaphore):

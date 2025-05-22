@@ -66,7 +66,6 @@ async def update_content_by_content_id(content_id: str, content_item: Dict) -> i
     return effect_row
 
 
-
 async def query_comment_by_comment_id(comment_id: str) -> Dict:
     """
     查询一条评论内容
@@ -158,6 +157,7 @@ async def update_creator_by_creator_id(creator_id: str, creator_item: Dict) -> i
     effect_row: int = await async_db_conn.update_table("bilibili_up_info", creator_item, "user_id", creator_id)
     return effect_row
 
+
 async def query_contact_by_up_and_fan(up_id: str, fan_id: str) -> Dict:
     """
     查询一条关联关系
@@ -204,3 +204,48 @@ async def update_contact_by_id(id: str, contact_item: Dict) -> int:
     effect_row: int = await async_db_conn.update_table("bilibili_contact_info", contact_item, "id", id)
     return effect_row
 
+
+async def query_dynamic_by_dynamic_id(dynamic_id: str) -> Dict:
+    """
+    查询一条动态信息
+    Args:
+        dynamic_id:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    sql: str = f"select * from bilibili_up_dynamic where dynamic_id = '{dynamic_id}'"
+    rows: List[Dict] = await async_db_conn.query(sql)
+    if len(rows) > 0:
+        return rows[0]
+    return dict()
+
+
+async def add_new_dynamic(dynamic_item: Dict) -> int:
+    """
+    新增动态信息
+    Args:
+        dynamic_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    last_row_id: int = await async_db_conn.item_to_table("bilibili_up_dynamic", dynamic_item)
+    return last_row_id
+
+
+async def update_dynamic_by_dynamic_id(dynamic_id: str, dynamic_item: Dict) -> int:
+    """
+    更新动态信息
+    Args:
+        dynamic_id:
+        dynamic_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    effect_row: int = await async_db_conn.update_table("bilibili_up_dynamic", dynamic_item, "dynamic_id", dynamic_id)
+    return effect_row

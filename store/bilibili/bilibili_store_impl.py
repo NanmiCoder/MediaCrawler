@@ -196,7 +196,7 @@ class BiliDbStoreImplement(AbstractStore):
             creator["add_ts"] = utils.get_current_timestamp()
             await add_new_creator(creator)
         else:
-            await update_creator_by_creator_id(creator_id,creator_item=creator)
+            await update_creator_by_creator_id(creator_id, creator_item=creator)
 
     async def store_contact(self, contact_item: Dict):
         """
@@ -232,6 +232,17 @@ class BiliDbStoreImplement(AbstractStore):
 
         """
 
+        from .bilibili_store_sql import (add_new_dynamic,
+                                         query_dynamic_by_dynamic_id,
+                                         update_dynamic_by_dynamic_id)
+
+        dynamic_id = dynamic_item.get("dynamic_id")
+        dynamic_detail = await query_dynamic_by_dynamic_id(dynamic_id=dynamic_id)
+        if not dynamic_detail:
+            dynamic_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_dynamic(dynamic_item)
+        else:
+            await update_dynamic_by_dynamic_id(dynamic_id, dynamic_item=dynamic_item)
 
 
 class BiliJsonStoreImplement(AbstractStore):

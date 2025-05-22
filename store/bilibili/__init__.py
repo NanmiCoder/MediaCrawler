@@ -179,9 +179,9 @@ async def batch_update_bilibili_creator_dynamics(creator_info: Dict, dynamics_li
             "text": dynamic_text,
             "type": dynamic_type,
             "pub_ts": dynamic_pub_ts,
-            "comment": dynamic_comment,
-            "forward": dynamic_forward,
-            "like": dynamic_like,
+            "total_comments": dynamic_comment,
+            "total_forwards": dynamic_forward,
+            "total_liked": dynamic_like,
         }
         await update_bilibili_creator_dynamic(creator_info=creator_info, dynamic_info=dynamic_info)
 
@@ -210,9 +210,9 @@ async def update_bilibili_creator_dynamic(creator_info: Dict, dynamic_info: Dict
         "text": dynamic_info["text"],
         "type": dynamic_info["type"],
         "pub_ts": dynamic_info["pub_ts"],
-        "comment": dynamic_info["comment"],
-        "forward": dynamic_info["forward"],
-        "like": dynamic_info["like"],
+        "total_comments": dynamic_info["total_comments"],
+        "total_forwards": dynamic_info["total_forwards"],
+        "total_liked": dynamic_info["total_liked"],
         "last_modify_ts": utils.get_current_timestamp(),
     }
 
