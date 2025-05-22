@@ -463,7 +463,7 @@ CREATE TABLE `tieba_creator`
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='贴吧创作者';
 
-
+DROP TABLE IF EXISTS `zhihu_content`;
 CREATE TABLE `zhihu_content` (
     `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
     `content_id` varchar(64) NOT NULL COMMENT '内容ID',
@@ -491,7 +491,7 @@ CREATE TABLE `zhihu_content` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='知乎内容（回答、文章、视频）';
 
 
-
+DROP TABLE IF EXISTS `zhihu_comment`;
 CREATE TABLE `zhihu_comment` (
     `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
     `comment_id` varchar(64) NOT NULL COMMENT '评论ID',
@@ -516,7 +516,7 @@ CREATE TABLE `zhihu_comment` (
     KEY `idx_zhihu_comment_publish_time` (`publish_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='知乎评论';
 
-
+DROP TABLE IF EXISTS `zhihu_creator`;
 CREATE TABLE `zhihu_creator` (
     `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
     `user_id` varchar(64) NOT NULL COMMENT '用户ID',
