@@ -144,7 +144,7 @@ async def batch_update_bilibili_creator_fans(creator_info: Dict, fans_list: List
             "sign": fan_item.get("sign"),
             "avatar": fan_item.get("face"),
         }
-        await update_bilibili_creator_fans(creator_info=creator_info, fan_info=fan_info)
+        await update_bilibili_creator_contact(creator_info=creator_info, fan_info=fan_info)
 
 
 async def batch_update_bilibili_creator_followings(creator_info: Dict, followings_list: List[Dict]):
@@ -157,10 +157,36 @@ async def batch_update_bilibili_creator_followings(creator_info: Dict, following
             "sign": following_item.get("sign"),
             "avatar": following_item.get("face"),
         }
-        await update_bilibili_creator_fans(creator_info=following_info, fan_info=creator_info)
+        await update_bilibili_creator_contact(creator_info=following_info, fan_info=creator_info)
 
 
-async def update_bilibili_creator_fans(creator_info: Dict, fan_info: Dict):
+async def batch_update_bilibili_creator_dynamics(creator_info: Dict, dynamics_list: List[Dict]):
+    if not dynamics_list:
+        return
+    for dynamic_item in dynamics_list:
+        dynamic_id: str = dynamic_item["id_str"]
+        dynamic_text: str = ""
+        if dynamic_item["modules"]["module_dynamic"].get("desc"):
+            dynamic_text = dynamic_item["modules"]["module_dynamic"]["desc"]["text"]
+        dynamic_type: str = dynamic_item["type"].split("_")[-1]
+        dynamic_pub_ts: str = dynamic_item["modules"]["module_author"]["pub_ts"]
+        dynamic_stat: Dict = dynamic_item["modules"]["module_stat"]
+        dynamic_comment: int = dynamic_stat["comment"]["count"]
+        dynamic_forward: int = dynamic_stat["forward"]["count"]
+        dynamic_like: int = dynamic_stat["like"]["count"]
+        dynamic_info: Dict = {
+            "dynamic_id": dynamic_id,
+            "text": dynamic_text,
+            "type": dynamic_type,
+            "pub_ts": dynamic_pub_ts,
+            "comment": dynamic_comment,
+            "forward": dynamic_forward,
+            "like": dynamic_like,
+        }
+        await update_bilibili_creator_dynamic(creator_info=creator_info, dynamic_info=dynamic_info)
+
+
+async def update_bilibili_creator_contact(creator_info: Dict, fan_info: Dict):
     save_contact_item = {
         "up_id": creator_info["id"],
         "fan_id": fan_info["id"],
@@ -169,7 +195,25 @@ async def update_bilibili_creator_fans(creator_info: Dict, fan_info: Dict):
         "up_sign": creator_info["sign"],
         "fan_sign": fan_info["sign"],
         "up_avatar": creator_info["avatar"],
-        "fan_avatar": fan_info["avatar"]
+        "fan_avatar": fan_info["avatar"],
+        "last_modify_ts": utils.get_current_timestamp(),
     }
 
-    await BiliStoreFactory.create_store().store_creator_contact(contact_item=save_contact_item)
+    await BiliStoreFactory.create_store().store_contact(contact_item=save_contact_item)
+
+
+async def update_bilibili_creator_dynamic(creator_info: Dict, dynamic_info: Dict):
+    save_dynamic_item = {
+        "dynamic_id": dynamic_info["dynamic_id"],
+        "user_id": creator_info["id"],
+        "user_name": creator_info["name"],
+        "text": dynamic_info["text"],
+        "type": dynamic_info["type"],
+        "pub_ts": dynamic_info["pub_ts"],
+        "comment": dynamic_info["comment"],
+        "forward": dynamic_info["forward"],
+        "like": dynamic_info["like"],
+        "last_modify_ts": utils.get_current_timestamp(),
+    }
+
+    await BiliStoreFactory.create_store().store_dynamic(dynamic_item=save_dynamic_item)

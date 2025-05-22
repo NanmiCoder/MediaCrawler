@@ -38,13 +38,15 @@ def calculate_number_of_files(file_store_path: str) -> int:
     if not os.path.exists(file_store_path):
         return 1
     try:
-        return max([int(file_name.split("_")[0])for file_name in os.listdir(file_store_path)])+1
+        return max([int(file_name.split("_")[0]) for file_name in os.listdir(file_store_path)]) + 1
     except ValueError:
         return 1
 
+
 class BiliCsvStoreImplement(AbstractStore):
     csv_store_path: str = "data/bilibili"
-    file_count:int=calculate_number_of_files(csv_store_path)
+    file_count: int = calculate_number_of_files(csv_store_path)
+
     def make_save_file_name(self, store_type: str) -> str:
         """
         make save file name by store type
@@ -107,9 +109,9 @@ class BiliCsvStoreImplement(AbstractStore):
         """
         await self.save_data_to_csv(save_item=creator, store_type="creators")
 
-    async def store_creator_contact(self, contact_item: Dict):
+    async def store_contact(self, contact_item: Dict):
         """
-        Bilibili comment CSV storage implementation
+        Bilibili contact CSV storage implementation
         Args:
             contact_item: creator's contact item dict
 
@@ -117,7 +119,19 @@ class BiliCsvStoreImplement(AbstractStore):
 
         """
 
-        await self.save_data_to_csv(save_item=contact_item, store_type="fans")
+        await self.save_data_to_csv(save_item=contact_item, store_type="contacts")
+
+    async def store_dynamic(self, dynamic_item: Dict):
+        """
+        Bilibili dynamic CSV storage implementation
+        Args:
+            dynamic_item: creator's dynamic item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_csv(save_item=dynamic_item, store_type="dynamics")
 
 
 class BiliDbStoreImplement(AbstractStore):
@@ -184,16 +198,50 @@ class BiliDbStoreImplement(AbstractStore):
         else:
             await update_creator_by_creator_id(creator_id,creator_item=creator)
 
+    async def store_contact(self, contact_item: Dict):
+        """
+        Bilibili contact DB storage implementation
+        Args:
+            contact_item: contact item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_contact,
+                                         query_contact_by_up_and_fan,
+                                         update_contact_by_id, )
+
+        up_id = contact_item.get("up_id")
+        fan_id = contact_item.get("fan_id")
+        contact_detail: Dict = await query_contact_by_up_and_fan(up_id=up_id, fan_id=fan_id)
+        if not contact_detail:
+            contact_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_contact(contact_item)
+        else:
+            key_id = contact_detail.get("id")
+            await update_contact_by_id(id=key_id, contact_item=contact_item)
+
+    async def store_dynamic(self, dynamic_item):
+        """
+        Bilibili dynamic DB storage implementation
+        Args:
+            dynamic_item: dynamic item dict
+
+        Returns:
+
+        """
+
+
 
 class BiliJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/bilibili/json"
     words_store_path: str = "data/bilibili/words"
     lock = asyncio.Lock()
-    file_count:int=calculate_number_of_files(json_store_path)
+    file_count: int = calculate_number_of_files(json_store_path)
     WordCloud = words.AsyncWordCloudGenerator()
 
-
-    def make_save_file_name(self, store_type: str) -> (str,str):
+    def make_save_file_name(self, store_type: str) -> (str, str):
         """
         make save file name by store type
         Args:
@@ -220,7 +268,7 @@ class BiliJsonStoreImplement(AbstractStore):
         """
         pathlib.Path(self.json_store_path).mkdir(parents=True, exist_ok=True)
         pathlib.Path(self.words_store_path).mkdir(parents=True, exist_ok=True)
-        save_file_name,words_file_name_prefix = self.make_save_file_name(store_type=store_type)
+        save_file_name, words_file_name_prefix = self.make_save_file_name(store_type=store_type)
         save_data = []
 
         async with self.lock:
@@ -271,7 +319,7 @@ class BiliJsonStoreImplement(AbstractStore):
         """
         await self.save_data_to_json(creator, "creators")
 
-    async def store_creator_contact(self, contact_item: Dict):
+    async def store_contact(self, contact_item: Dict):
         """
         creator contact JSON storage implementation
         Args:
@@ -281,4 +329,16 @@ class BiliJsonStoreImplement(AbstractStore):
 
         """
 
-        await self.save_data_to_json(save_item=contact_item, store_type="fans")
+        await self.save_data_to_json(save_item=contact_item, store_type="contacts")
+
+    async def store_dynamic(self, dynamic_item: Dict):
+        """
+        creator dynamic JSON storage implementation
+        Args:
+            dynamic_item: creator's contact item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_json(save_item=dynamic_item, store_type="dynamics")

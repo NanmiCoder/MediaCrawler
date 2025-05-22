@@ -341,7 +341,8 @@ class BilibiliClient(AbstractApiClient):
         return await self.get(uri, post_data)
 
     async def get_creator_info(self, creator_id: int) -> Dict:
-        """get creator info
+        """
+        get creator info
         :param creator_id: 作者 ID
         """
         uri = "/x/space/wbi/acc/info"
@@ -355,7 +356,8 @@ class BilibiliClient(AbstractApiClient):
                                pn: int,
                                ps: int = 24,
                                ) -> Dict:
-        """get video comments
+        """
+        get creator fans
         :param creator_id: 创作者 ID
         :param pn: 开始页数
         :param ps: 每页数量
@@ -376,7 +378,8 @@ class BilibiliClient(AbstractApiClient):
                                      pn: int,
                                      ps: int = 24,
                                      ) -> Dict:
-        """get video comments
+        """
+        get creator followings
         :param creator_id: 创作者 ID
         :param pn: 开始页数
         :param ps: 每页数量
@@ -391,11 +394,27 @@ class BilibiliClient(AbstractApiClient):
         }
         return await self.get(uri, post_data)
 
+    async def get_creator_dynamics(self, creator_id: int, offset: str = ""):
+        """
+        get creator comments
+        :param creator_id: 创作者 ID
+        :param offset: 发送请求所需参数
+        :return:
+        """
+        uri = "/x/polymer/web-dynamic/v1/feed/space"
+        post_data = {
+            "offset": offset,
+            "host_mid": creator_id,
+            "platform": "web",
+        }
+
+        return await self.get(uri, post_data)
+
     async def get_creator_all_fans(self, creator_info: Dict, crawl_interval: float = 1.0,
                                    callback: Optional[Callable] = None,
                                    max_count: int = 100) -> List:
         """
-        get video all comments include sub comments
+        get creator all fans
         :param creator_info:
         :param crawl_interval:
         :param callback:
@@ -419,16 +438,13 @@ class BilibiliClient(AbstractApiClient):
             if not fans_list:
                 break
             result.extend(fans_list)
-        utils.logger.info(
-            f"[BilibiliCrawler.get_fans] begin get creator_id: {creator_id} fans successfully")
-
         return result
 
     async def get_creator_all_followings(self, creator_info: Dict, crawl_interval: float = 1.0,
                                          callback: Optional[Callable] = None,
                                          max_count: int = 100) -> List:
         """
-        get video all comments include sub comments
+        get creator all followings
         :param creator_info:
         :param crawl_interval:
         :param callback:
@@ -452,7 +468,33 @@ class BilibiliClient(AbstractApiClient):
             if not followings_list:
                 break
             result.extend(followings_list)
-        utils.logger.info(
-            f"[BilibiliCrawler.get_followings] begin get creator_id: {creator_id} followings successfully")
+        return result
 
+    async def get_creator_all_dynamics(self, creator_info: Dict, crawl_interval: float = 1.0,
+                                       callback: Optional[Callable] = None,
+                                       max_count: int = 20) -> List:
+        """
+        get creator all followings
+        :param creator_info:
+        :param crawl_interval:
+        :param callback:
+        :param max_count: 一个up主爬取的最大动态数量
+
+        :return: up主关注者列表
+        """
+        creator_id = creator_info["id"]
+        result = []
+        offset = ""
+        has_more = True
+        while has_more and len(result) < max_count:
+            dynamics_res = await self.get_creator_dynamics(creator_id, offset)
+            dynamics_list: List[Dict] = dynamics_res["items"]
+            has_more = dynamics_res["has_more"]
+            offset = dynamics_res["offset"]
+            if len(result) + len(dynamics_list) > max_count:
+                dynamics_list = dynamics_list[:max_count - len(result)]
+            if callback:
+                await callback(creator_info, dynamics_list)
+            await asyncio.sleep(crawl_interval)
+            result.extend(dynamics_list)
         return result

@@ -158,3 +158,49 @@ async def update_creator_by_creator_id(creator_id: str, creator_item: Dict) -> i
     effect_row: int = await async_db_conn.update_table("bilibili_up_info", creator_item, "user_id", creator_id)
     return effect_row
 
+async def query_contact_by_up_and_fan(up_id: str, fan_id: str) -> Dict:
+    """
+    查询一条关联关系
+    Args:
+        up_id:
+        fan_id:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    sql: str = f"select * from bilibili_contact_info where up_id = '{up_id}' and fan_id = '{fan_id}'"
+    rows: List[Dict] = await async_db_conn.query(sql)
+    if len(rows) > 0:
+        return rows[0]
+    return dict()
+
+
+async def add_new_contact(contact_item: Dict) -> int:
+    """
+    新增关联关系
+    Args:
+        contact_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    last_row_id: int = await async_db_conn.item_to_table("bilibili_contact_info", contact_item)
+    return last_row_id
+
+
+async def update_contact_by_id(id: str, contact_item: Dict) -> int:
+    """
+    更新关联关系
+    Args:
+        id:
+        contact_item:
+
+    Returns:
+
+    """
+    async_db_conn: AsyncMysqlDB = media_crawler_db_var.get()
+    effect_row: int = await async_db_conn.update_table("bilibili_contact_info", contact_item, "id", id)
+    return effect_row
+
