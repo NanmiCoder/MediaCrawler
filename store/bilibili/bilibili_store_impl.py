@@ -107,6 +107,30 @@ class BiliCsvStoreImplement(AbstractStore):
         """
         await self.save_data_to_csv(save_item=creator, store_type="creators")
 
+    async def store_contact(self, contact_item: Dict):
+        """
+        Bilibili contact CSV storage implementation
+        Args:
+            contact_item: creator's contact item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_csv(save_item=contact_item, store_type="contacts")
+
+    async def store_dynamic(self, dynamic_item: Dict):
+        """
+        Bilibili dynamic CSV storage implementation
+        Args:
+            dynamic_item: creator's dynamic item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_csv(save_item=dynamic_item, store_type="dynamics")
+
 
 class BiliDbStoreImplement(AbstractStore):
     async def store_content(self, content_item: Dict):
@@ -171,6 +195,52 @@ class BiliDbStoreImplement(AbstractStore):
             await add_new_creator(creator)
         else:
             await update_creator_by_creator_id(creator_id,creator_item=creator)
+
+    async def store_contact(self, contact_item: Dict):
+        """
+        Bilibili contact DB storage implementation
+        Args:
+            contact_item: contact item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_contact,
+                                         query_contact_by_up_and_fan,
+                                         update_contact_by_id, )
+
+        up_id = contact_item.get("up_id")
+        fan_id = contact_item.get("fan_id")
+        contact_detail: Dict = await query_contact_by_up_and_fan(up_id=up_id, fan_id=fan_id)
+        if not contact_detail:
+            contact_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_contact(contact_item)
+        else:
+            key_id = contact_detail.get("id")
+            await update_contact_by_id(id=key_id, contact_item=contact_item)
+
+    async def store_dynamic(self, dynamic_item):
+        """
+        Bilibili dynamic DB storage implementation
+        Args:
+            dynamic_item: dynamic item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_dynamic,
+                                         query_dynamic_by_dynamic_id,
+                                         update_dynamic_by_dynamic_id)
+
+        dynamic_id = dynamic_item.get("dynamic_id")
+        dynamic_detail = await query_dynamic_by_dynamic_id(dynamic_id=dynamic_id)
+        if not dynamic_detail:
+            dynamic_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_dynamic(dynamic_item)
+        else:
+            await update_dynamic_by_dynamic_id(dynamic_id, dynamic_item=dynamic_item)
 
 
 class BiliJsonStoreImplement(AbstractStore):
@@ -258,3 +328,27 @@ class BiliJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(creator, "creators")
+
+    async def store_contact(self, contact_item: Dict):
+        """
+        creator contact JSON storage implementation
+        Args:
+            contact_item: creator's contact item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_json(save_item=contact_item, store_type="contacts")
+
+    async def store_dynamic(self, dynamic_item: Dict):
+        """
+        creator dynamic JSON storage implementation
+        Args:
+            dynamic_item: creator's contact item dict
+
+        Returns:
+
+        """
+
+        await self.save_data_to_json(save_item=dynamic_item, store_type="dynamics")

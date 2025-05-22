@@ -194,3 +194,16 @@ END_DAY = '2024-01-01'
 # 若为 False，则忽略 START_DAY 与 END_DAY 设置的值
 # 若为 True，则按照 START_DAY 至 END_DAY 按照每一天进行筛选，这样能够突破 1000 条视频的限制，最大程度爬取该关键词下的所有视频
 ALL_DAY = False
+
+#!!! 下面仅支持 bilibili creator搜索
+# 爬取评论creator主页还是爬取creator动态和关系列表(True为前者)
+CREATOR_MODE = True
+
+# 爬取creator粉丝列表时起始爬取页数
+START_CONTACTS_PAGE = 1
+
+# 爬取作者粉丝和关注列表数量控制(单作者)
+CRAWLER_MAX_CONTACTS_COUNT_SINGLENOTES = 100
+
+# 爬取作者动态数量控制(单作者)
+CRAWLER_MAX_DYNAMICS_COUNT_SINGLENOTES = 50
