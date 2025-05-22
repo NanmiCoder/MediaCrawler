@@ -224,7 +224,7 @@ class BilibiliClient(AbstractApiClient):
 
     async def get_video_all_comments(self, video_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
                                      callback: Optional[Callable] = None,
-                                     max_count: int = 10, ):
+                                     max_count: int = 10,):
         """
         get video all comments include sub comments
         :param video_id:
@@ -251,7 +251,7 @@ class BilibiliClient(AbstractApiClient):
                     if (comment.get("rcount", 0) > 0):
                         {
                             await self.get_video_all_level_two_comments(
-                                video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval, callback)
+                                video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval,  callback)
                         }
             if len(result) + len(comment_list) > max_count:
                 comment_list = comment_list[:max_count - len(result)]
@@ -321,8 +321,7 @@ class BilibiliClient(AbstractApiClient):
         result = await self.get(uri, post_data)
         return result
 
-    async def get_creator_videos(self, creator_id: str, pn: int, ps: int = 30,
-                                 order_mode: SearchOrderType = SearchOrderType.LAST_PUBLISH) -> Dict:
+    async def get_creator_videos(self, creator_id: str, pn: int, ps: int = 30, order_mode: SearchOrderType = SearchOrderType.LAST_PUBLISH) -> Dict:
         """get all videos for a creator
         :param creator_id: 创作者 ID
         :param pn: 页数

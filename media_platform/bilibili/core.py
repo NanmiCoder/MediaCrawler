@@ -89,9 +89,11 @@ class BilibiliCrawler(AbstractCrawler):
                 # Get the information and comments of the specified post
                 await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
             elif config.CRAWLER_TYPE == "creator":
-                # for creator_id in config.BILI_CREATOR_ID_LIST:
-                #     await self.get_creator_videos(int(creator_id))
-                await self.get_all_creator_details(config.BILI_CREATOR_ID_LIST)
+                if config.CREATOR_MODE:
+                    for creator_id in config.BILI_CREATOR_ID_LIST:
+                        await self.get_creator_videos(int(creator_id))
+                else:
+                    await self.get_all_creator_details(config.BILI_CREATOR_ID_LIST)
             else:
                 pass
             utils.logger.info(
@@ -119,11 +121,9 @@ class BilibiliCrawler(AbstractCrawler):
         start_day: datetime = datetime.strptime(start, '%Y-%m-%d')
         end_day: datetime = datetime.strptime(end, '%Y-%m-%d')
         if start_day > end_day:
-            raise ValueError(
-                'Wrong time range, please check your start and end argument, to ensure that the start cannot exceed end')
+            raise ValueError('Wrong time range, please check your start and end argument, to ensure that the start cannot exceed end')
         elif start_day == end_day:  # 搜索同一天的内容
-            end_day = start_day + timedelta(days=1) - timedelta(
-                seconds=1)  # 则将 end_day 设置为 start_day + 1 day - 1 second
+            end_day = start_day + timedelta(days=1) - timedelta(seconds=1)  # 则将 end_day 设置为 start_day + 1 day - 1 second
         else:  # 搜索 start 至 end
             end_day = end_day + timedelta(days=1) - timedelta(seconds=1)  # 则将 end_day 设置为 end_day + 1 day - 1 second
         # 将其重新转换为时间戳
@@ -166,11 +166,9 @@ class BilibiliCrawler(AbstractCrawler):
                     semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                     task_list = []
                     try:
-                        task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore)
-                                     for video_item in video_list]
+                        task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
                     except Exception as e:
-                        utils.logger.warning(
-                            f"[BilibiliCrawler.search] error in the task list. The video for this page will not be included. {e}")
+                        utils.logger.warning(f"[BilibiliCrawler.search] error in the task list. The video for this page will not be included. {e}")
                     video_items = await asyncio.gather(*task_list)
                     for video_item in video_items:
                         if video_item:
@@ -184,23 +182,21 @@ class BilibiliCrawler(AbstractCrawler):
             else:
                 for day in pd.date_range(start=config.START_DAY, end=config.END_DAY, freq='D'):
                     # 按照每一天进行爬取的时间戳参数
-                    pubtime_begin_s, pubtime_end_s = await self.get_pubtime_datetime(start=day.strftime('%Y-%m-%d'),
-                                                                                     end=day.strftime('%Y-%m-%d'))
+                    pubtime_begin_s, pubtime_end_s = await self.get_pubtime_datetime(start=day.strftime('%Y-%m-%d'), end=day.strftime('%Y-%m-%d'))
                     page = 1
-                    # !该段 while 语句在发生异常时（通常情况下为当天数据为空时）会自动跳转到下一天，以实现最大程度爬取该关键词下当天的所有视频
-                    # !除了仅保留现在原有的 try, except Exception 语句外，不要再添加其他的异常处理！！！否则将使该段代码失效，使其仅能爬取当天一天数据而无法跳转到下一天
-                    # !除非将该段代码的逻辑进行重构以实现相同的功能，否则不要进行修改！！！
+                    #!该段 while 语句在发生异常时（通常情况下为当天数据为空时）会自动跳转到下一天，以实现最大程度爬取该关键词下当天的所有视频
+                    #!除了仅保留现在原有的 try, except Exception 语句外，不要再添加其他的异常处理！！！否则将使该段代码失效，使其仅能爬取当天一天数据而无法跳转到下一天
+                    #!除非将该段代码的逻辑进行重构以实现相同的功能，否则不要进行修改！！！
                     while (page - start_page + 1) * bili_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
-                        # ! Catch any error if response return nothing, go to next day
+                        #! Catch any error if response return nothing, go to next day
                         try:
-                            # ! Don't skip any page, to make sure gather all video in one day
+                            #! Don't skip any page, to make sure gather all video in one day
                             # if page < start_page:
                             #     utils.logger.info(f"[BilibiliCrawler.search] Skip page: {page}")
                             #     page += 1
                             #     continue
 
-                            utils.logger.info(
-                                f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, date: {day.ctime()}, page: {page}")
+                            utils.logger.info(f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, date: {day.ctime()}, page: {page}")
                             video_id_list: List[str] = []
                             videos_res = await self.bili_client.search_video_by_keyword(
                                 keyword=keyword,
@@ -213,9 +209,7 @@ class BilibiliCrawler(AbstractCrawler):
                             video_list: List[Dict] = videos_res.get("result")
 
                             semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                            task_list = [
-                                self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for
-                                video_item in video_list]
+                            task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
                             video_items = await asyncio.gather(*task_list)
                             for video_item in video_items:
                                 if video_item:

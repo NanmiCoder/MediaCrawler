@@ -38,15 +38,13 @@ def calculate_number_of_files(file_store_path: str) -> int:
     if not os.path.exists(file_store_path):
         return 1
     try:
-        return max([int(file_name.split("_")[0]) for file_name in os.listdir(file_store_path)]) + 1
+        return max([int(file_name.split("_")[0])for file_name in os.listdir(file_store_path)])+1
     except ValueError:
         return 1
 
-
 class BiliCsvStoreImplement(AbstractStore):
     csv_store_path: str = "data/bilibili"
-    file_count: int = calculate_number_of_files(csv_store_path)
-
+    file_count:int=calculate_number_of_files(csv_store_path)
     def make_save_file_name(self, store_type: str) -> str:
         """
         make save file name by store type
@@ -196,7 +194,7 @@ class BiliDbStoreImplement(AbstractStore):
             creator["add_ts"] = utils.get_current_timestamp()
             await add_new_creator(creator)
         else:
-            await update_creator_by_creator_id(creator_id, creator_item=creator)
+            await update_creator_by_creator_id(creator_id,creator_item=creator)
 
     async def store_contact(self, contact_item: Dict):
         """
@@ -249,10 +247,11 @@ class BiliJsonStoreImplement(AbstractStore):
     json_store_path: str = "data/bilibili/json"
     words_store_path: str = "data/bilibili/words"
     lock = asyncio.Lock()
-    file_count: int = calculate_number_of_files(json_store_path)
+    file_count:int=calculate_number_of_files(json_store_path)
     WordCloud = words.AsyncWordCloudGenerator()
 
-    def make_save_file_name(self, store_type: str) -> (str, str):
+
+    def make_save_file_name(self, store_type: str) -> (str,str):
         """
         make save file name by store type
         Args:
@@ -279,7 +278,7 @@ class BiliJsonStoreImplement(AbstractStore):
         """
         pathlib.Path(self.json_store_path).mkdir(parents=True, exist_ok=True)
         pathlib.Path(self.words_store_path).mkdir(parents=True, exist_ok=True)
-        save_file_name, words_file_name_prefix = self.make_save_file_name(store_type=store_type)
+        save_file_name,words_file_name_prefix = self.make_save_file_name(store_type=store_type)
         save_data = []
 
         async with self.lock:
