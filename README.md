@@ -124,15 +124,6 @@
 [加入微信交流群](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
   
 # 感谢下列Sponsors对本仓库赞助支持
-<a href="https://www.swiftproxy.net/?ref=nanmi">
-<img src="docs/static/images/img_5.png">
-<br>
-Swiftproxy-90M+全球高质量纯净住宅IP，注册可领免费500MB测试流量，动态流量不过期！
-> 我推荐的专属折扣码：GHB5 立享九折优惠！
-</a>
-
-<br>
-<br>
 <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">【Sider】全网最火的ChatGPT插件，我也免费薅羊毛用了快一年了，体验拉满。</a>
 
 成为赞助者，可以将您产品展示在这里，每天获得大量曝光，联系作者微信：yzglan 或 email：relakkes@gmail.com
