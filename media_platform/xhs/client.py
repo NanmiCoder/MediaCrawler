@@ -498,7 +498,7 @@ class XiaoHongShuClient(AbstractApiClient):
         result = []
         notes_has_more = True
         notes_cursor = ""
-        while notes_has_more:
+        while notes_has_more and len(result) < config.CRAWLER_MAX_NOTES_COUNT:
             notes_res = await self.get_notes_by_creator(user_id, notes_cursor)
             if not notes_res:
                 utils.logger.error(
@@ -518,10 +518,21 @@ class XiaoHongShuClient(AbstractApiClient):
             utils.logger.info(
                 f"[XiaoHongShuClient.get_all_notes_by_creator] got user_id:{user_id} notes len : {len(notes)}"
             )
+
+            remaining = config.CRAWLER_MAX_NOTES_COUNT - len(result)
+            if remaining <= 0:
+                break
+
+            notes_to_add = notes[:remaining]
             if callback:
-                await callback(notes)
+                await callback(notes_to_add)
+
+            result.extend(notes_to_add)
             await asyncio.sleep(crawl_interval)
-            result.extend(notes)
+
+        utils.logger.info(
+            f"[XiaoHongShuClient.get_all_notes_by_creator] Finished getting notes for user {user_id}, total: {len(result)}"
+        )
         return result
 
     async def get_note_short_url(self, note_id: str) -> Dict:
