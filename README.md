@@ -97,8 +97,16 @@
    # 打开对应APP扫二维码登录
      
    # 其他平台爬虫使用示例，执行下面的命令查看
-   python main.py --help    
+   python main.py --help
    ```
+
+## 启动Web界面
+
+```shell
+python -m web_ui.app
+```
+
+访问 `http://localhost:8000` 即可在浏览器中通过表单配置并启动爬虫。
 
 ## 数据保存
 - 支持关系型数据库Mysql中保存（需要提前创建数据库）

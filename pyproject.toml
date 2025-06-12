@@ -22,6 +22,8 @@ dependencies = [
     "python-dotenv==1.0.1",
     "redis~=4.6.0",
     "requests==2.32.3",
+    "jinja2==3.1.3",
+    "python-multipart==0.0.9",
     "tenacity==8.2.2",
     "uvicorn==0.29.0",
     "wordcloud==1.9.3",
