@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>MediaCrawler UI</title>
+</head>
+<body>
+<h1>MediaCrawler 前端界面</h1>
+{% if message %}
+<p>{{ message }}</p>
+{% endif %}
+<form action="/run" method="post">
+    <label>平台:
+        <select name="platform">
+            <option value="xhs">小红书</option>
+            <option value="dy">抖音</option>
+            <option value="ks">快手</option>
+            <option value="bili">B站</option>
+            <option value="wb">微博</option>
+            <option value="tieba">贴吧</option>
+            <option value="zhihu">知乎</option>
+        </select>
+    </label>
+    <br>
+    <label>登录方式:
+        <select name="lt">
+            <option value="qrcode">qrcode</option>
+            <option value="phone">phone</option>
+            <option value="cookie">cookie</option>
+        </select>
+    </label>
+    <br>
+    <label>爬取类型:
+        <select name="crawler_type">
+            <option value="search">search</option>
+            <option value="detail">detail</option>
+            <option value="creator">creator</option>
+        </select>
+    </label>
+    <br>
+    <label>关键词: <input type="text" name="keywords"></label>
+    <br>
+    <label>起始页: <input type="number" name="start" value="1"></label>
+    <br>
+    <label>Cookies: <input type="text" name="cookies"></label>
+    <br>
+    <button type="submit">开始爬取</button>
+</form>
+<p>免责声明：本界面仅供学习和研究用途，禁止用于任何商业或非法目的。</p>
+</body>
+</html>
