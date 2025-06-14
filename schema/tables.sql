@@ -147,6 +147,8 @@ CREATE TABLE `douyin_aweme`
     `share_count`     varchar(16)  DEFAULT NULL COMMENT '视频分享数',
     `collected_count` varchar(16)  DEFAULT NULL COMMENT '视频收藏数',
     `aweme_url`       varchar(255) DEFAULT NULL COMMENT '视频详情页URL',
+    `cover_url`       varchar(500) DEFAULT NULL COMMENT '视频封面图URL',
+    `video_download_url`       varchar(1024) DEFAULT NULL COMMENT '视频下载地址',
     PRIMARY KEY (`id`),
     KEY               `idx_douyin_awem_aweme_i_6f7bc6` (`aweme_id`),
     KEY               `idx_douyin_awem_create__299dfe` (`create_time`)

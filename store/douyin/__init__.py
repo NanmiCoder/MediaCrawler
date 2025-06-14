@@ -62,6 +62,48 @@ def _extract_comment_image_list(comment_item: Dict) -> List[str]:
     return images_res
 
 
+def _extract_content_cover_url(aweme_detail: Dict) -> str:
+    """
+    提取视频封面地址
+
+    Args:
+        aweme_detail (Dict): 抖音内容详情
+
+    Returns:
+        str: 视频封面地址
+    """
+    res_cover_url = ""
+
+    video_item = aweme_detail.get("video", {})
+    raw_cover_url_list = (
+            video_item.get("raw_cover", {}) or video_item.get("origin_cover", {})
+    ).get("url_list", [])
+    if raw_cover_url_list and len(raw_cover_url_list) > 1:
+        res_cover_url = raw_cover_url_list[1]
+
+    return res_cover_url
+
+
+def _extract_video_download_url(aweme_detail: Dict) -> str:
+    """
+    提取视频下载地址
+
+    Args:
+        aweme_detail (Dict): 抖音视频
+
+    Returns:
+        str: 视频下载地址
+    """
+    video_item = aweme_detail.get("video", {})
+    url_h264_list = video_item.get("play_addr_h264", {}).get("url_list", [])
+    url_256_list = video_item.get("play_addr_256", {}).get("url_list", [])
+    url_list = video_item.get("play_addr", {}).get("url_list", [])
+    actual_url_list = url_h264_list or url_256_list or url_list
+    if not actual_url_list or len(actual_url_list) < 2:
+        return ""
+    return actual_url_list[-1]
+
+
 async def update_douyin_aweme(aweme_item: Dict):
     aweme_id = aweme_item.get("aweme_id")
     user_info = aweme_item.get("author", {})
@@ -86,6 +128,8 @@ async def update_douyin_aweme(aweme_item: Dict):
         "ip_location": aweme_item.get("ip_label", ""),
         "last_modify_ts": utils.get_current_timestamp(),
         "aweme_url": f"https://www.douyin.com/video/{aweme_id}",
+        "cover_url": _extract_content_cover_url(aweme_item),
+        "video_download_url": _extract_video_download_url(aweme_item),
         "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(
@@ -114,11 +158,11 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
     comment_id = comment_item.get("cid")
     parent_comment_id = comment_item.get("reply_id", "0")
     avatar_info = (
-        user_info.get("avatar_medium", {})
-        or user_info.get("avatar_300x300", {})
-        or user_info.get("avatar_168x168", {})
-        or user_info.get("avatar_thumb", {})
-        or {}
+            user_info.get("avatar_medium", {})
+            or user_info.get("avatar_300x300", {})
+            or user_info.get("avatar_168x168", {})
+            or user_info.get("avatar_thumb", {})
+            or {}
     )
     save_comment_item = {
         "comment_id": comment_id,
@@ -159,7 +203,7 @@ async def save_creator(user_id: str, creator: Dict):
         "nickname": user_info.get("nickname"),
         "gender": gender_map.get(user_info.get("gender"), "未知"),
         "avatar": f"https://p3-pc.douyinpic.com/img/{avatar_uri}"
-        + r"~c5_300x300.jpeg?from=2956013662",
+                  + r"~c5_300x300.jpeg?from=2956013662",
         "desc": user_info.get("signature"),
         "ip_location": user_info.get("ip_location"),
         "follows": user_info.get("following_count", 0),
