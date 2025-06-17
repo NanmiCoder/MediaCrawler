@@ -96,7 +96,6 @@ def get_newcoder_page(data, skip_words, start_date):
         if len(str(x['id'])) < 8:
             continue
         dic['url'] = 'https://www.nowcoder.com/discuss/' + str(dic['discuss_id'])
-        dic['is_analyzed'] = 0
 
         if len(skip_words) > 0 and pattern.search(x['title'] + x['content']) != None:  # 关键词正则过滤
             continue
