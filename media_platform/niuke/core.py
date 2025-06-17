@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import config
 from base.base_crawler import AbstractCrawler
 from tools import utils
+from store import niuke as niuke_store
 
 categories = [
     '腾讯',
@@ -34,7 +35,8 @@ class NiukeCrawler(AbstractCrawler):
         pass
 
     async def start(self):
-        await self.search()
+        items = await self.search()
+        await niuke_store.batch_update_niuke_notes(items)
 
     async def search(self):
         items = []

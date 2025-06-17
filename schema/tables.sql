@@ -586,6 +586,28 @@ CREATE TABLE `zhihu_creator` (
     UNIQUE KEY `idx_zhihu_creator_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='知乎创作者';
 
+-- ----------------------------
+-- Table structure for niuke_discussion
+-- ----------------------------
+DROP TABLE IF EXISTS `niuke_discussion`;
+CREATE TABLE `niuke_discussion` (
+    `id` int NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `discuss_id` bigint NOT NULL COMMENT '帖子ID',
+    `title` varchar(255) DEFAULT NULL COMMENT '帖子标题',
+    `content` longtext,
+    `detailed_content` longtext,
+    `url` varchar(255) NOT NULL COMMENT '帖子链接',
+    `user` varchar(64) DEFAULT NULL COMMENT '用户昵称',
+    `categories` json NOT NULL COMMENT '分类列表',
+    `create_time` varchar(32) NOT NULL COMMENT '创建时间',
+    `edit_time` varchar(32) NOT NULL COMMENT '编辑时间',
+    `is_analyzed` tinyint(1) DEFAULT 0 COMMENT '是否已分析',
+    `add_ts` bigint NOT NULL COMMENT '记录添加时间戳',
+    `last_modify_ts` bigint NOT NULL COMMENT '记录最后修改时间戳',
+    PRIMARY KEY (`id`),
+    KEY `idx_niuke_discuss_id` (`discuss_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='牛客网帖子';
+
 
 -- add column `like_count` to douyin_aweme_comment
 alter table douyin_aweme_comment add column `like_count` varchar(255) NOT NULL DEFAULT '0' COMMENT '点赞数';
