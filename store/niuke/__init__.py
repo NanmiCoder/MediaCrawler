@@ -41,7 +41,6 @@ async def update_niuke_note(note_item: Dict):
     note_item = note_item.copy()
     note_item.update({
         "last_modify_ts": utils.get_current_timestamp(),
-        "categories": json.dumps(note_item.get("categories", []), ensure_ascii=False),
+        "categories": json.dumps(config.CATEGORIES, ensure_ascii=False),
     })
-    utils.logger.info(f"[store.niuke.update_niuke_note] niuke note: {note_item}")
     await NiukeStoreFactory.create_store().store_content(note_item)

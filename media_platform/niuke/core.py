@@ -13,20 +13,10 @@ from base.base_crawler import AbstractCrawler
 from tools import utils
 from store import niuke as niuke_store
 
-categories = [
-    '腾讯',
-    '后台',
-]
-
 header = {
     "User-Agent": utils.get_user_agent(),
     "Content-Type": "application/json"
 }
-
-# 指定要过滤的词
-skip_words = ['求捞', '泡池子', '池子了', '池子中', 'offer对比', '给个建议', '开奖群', '没消息', '有消息', '拉垮', '求一个', '求助', '池子的',
-              '决赛圈', 'offer比较', '求捞', '补录面经', '捞捞', '收了我吧', 'offer选择', '有offer了', '想问一下', 'kpi吗', 'kpi面吗', 'kpi面吧']
-
 
 class NiukeCrawler(AbstractCrawler):
     """Simple crawler for Niuke discussions"""
@@ -56,9 +46,8 @@ class NiukeCrawler(AbstractCrawler):
                 assert resp.status_code == 200
 
                 data = json.loads(resp.text)
-                items.extend(get_newcoder_page(data, skip_words, '2024'))
+                items.extend(get_newcoder_page(data, config.NIUKE_SKIP_WORDS, '2024'))
 
-        utils.logger.info(f"[NiukeCrawler.search] items: {json.dumps(items, ensure_ascii=False)}")
         return items
 
     async def launch_browser(self, *args, **kwargs):
@@ -103,25 +92,24 @@ def get_newcoder_page(data, skip_words, start_date):
         x = x['contentData'] if 'contentData' in x else x['momentData']
         dic['title'] = x['title']
         dic['content'] = x['content']
-        dic['id'] = int(x['id'])
+        dic['discuss_id'] = int(x['id'])
         if len(str(x['id'])) < 8:
             continue
-        dic['url'] = 'https://www.nowcoder.com/discuss/' + str(x['id'])
-        dic['categories'] = categories
+        dic['url'] = 'https://www.nowcoder.com/discuss/' + str(dic['discuss_id'])
         dic['is_analyzed'] = 0
 
         if len(skip_words) > 0 and pattern.search(x['title'] + x['content']) != None:  # 关键词正则过滤
             continue
 
         createdTime = x['createdAt'] if 'createdAt' in x else x['createTime']
-        dic['createTime'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(createdTime // 1000))
-        dic['editTime'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x['editTime'] // 1000))
+        dic['create_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(createdTime // 1000))
+        dic['edit_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x['editTime'] // 1000))
 
-        if dic['editTime'] < start_date:  # 根据时间过滤
+        if dic['edit_time'] < start_date:  # 根据时间过滤
             continue
 
         # 拉取完整正文；放在最后，避免给被过滤的帖子多做一次网络请求
-        dic['detailed_content'] = get_newcoder_content_page(dic['id'], header=header)
+        dic['detailed_content'] = get_newcoder_content_page(dic['discuss_id'], header=header)
 
         if dic['detailed_content'] == '': # 过滤掉没有完整正文的帖子
             continue
