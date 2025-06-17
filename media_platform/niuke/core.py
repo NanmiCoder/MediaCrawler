@@ -31,7 +31,7 @@ class NiukeCrawler(AbstractCrawler):
     async def search(self):
         items = []
         for keyword in config.KEYWORDS.split(","):
-            for page in range(2, 4):
+            for page in range(2, 10):
                 data = {
                     "type": "all",
                     "query": keyword,
