@@ -38,6 +38,7 @@
 > 主打学习成熟项目的架构设计，不仅仅是爬虫，Pro中的其他代码设计思路也是值得学习，欢迎大家关注！！！
 
 [MediaCrawlerPro](https://github.com/MediaCrawlerPro) 版本已经重构出来了，相较于开源版本的优势：
+- 支持断点续爬功能（重点！）
 - 多账号+IP代理支持（重点！）
 - 去除Playwright依赖，使用更加简单
 - 支持linux环境使用
