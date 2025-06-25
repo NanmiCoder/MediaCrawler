@@ -11,6 +11,7 @@
 
 import asyncio
 import sys
+from typing import Optional
 
 import cmd_arg
 import config
@@ -43,8 +44,8 @@ class CrawlerFactory:
             raise ValueError("Invalid Media Platform Currently only supported xhs or dy or ks or bili ...")
         return crawler_class()
 
-
 async def main():
+
     # parse cmd
     await cmd_arg.parse_cmd()
 

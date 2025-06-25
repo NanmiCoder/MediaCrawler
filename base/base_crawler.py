@@ -12,7 +12,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
-from playwright.async_api import BrowserContext, BrowserType
+from playwright.async_api import BrowserContext, BrowserType, Playwright
 
 
 class AbstractCrawler(ABC):
@@ -42,6 +42,19 @@ class AbstractCrawler(ABC):
         :return: browser context
         """
         pass
+
+    async def launch_browser_with_cdp(self, playwright: Playwright, playwright_proxy: Optional[Dict],
+                                     user_agent: Optional[str], headless: bool = True) -> BrowserContext:
+        """
+        使用CDP模式启动浏览器（可选实现）
+        :param playwright: playwright实例
+        :param playwright_proxy: playwright代理配置
+        :param user_agent: 用户代理
+        :param headless: 无头模式
+        :return: 浏览器上下文
+        """
+        # 默认实现：回退到标准模式
+        return await self.launch_browser(playwright.chromium, playwright_proxy, user_agent, headless)
 
 
 class AbstractLogin(ABC):

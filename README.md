@@ -21,7 +21,7 @@
 目前能抓取小红书、抖音、快手、B站、微博、贴吧、知乎等平台的公开信息。
 
 原理：利用[playwright](https://playwright.dev/)搭桥，保留登录成功后的上下文浏览器环境，通过执行JS表达式获取一些加密参数
-通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低
+通过使用此方式，免去了复现核心加密JS代码，逆向难度大大降低。
 
 # 功能列表
 | 平台   | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
@@ -52,36 +52,38 @@
 # 安装部署方法
 > 开源不易，希望大家可以Star一下MediaCrawler仓库！！！！十分感谢！！！ <br>
 
-## 创建并激活 python 虚拟环境
-> 如果是爬取抖音和知乎，需要提前安装nodejs环境，版本大于等于：`16`即可 <br>
-> 新增 [uv](https://github.com/astral-sh/uv) 来管理项目依赖，使用uv来替代python版本管理、pip进行依赖安装，更加方便快捷
-   ```shell   
-   # 进入项目根目录
-   cd MediaCrawler
-   
-   # 创建虚拟环境
-   # 我的python版本是：3.9.6，requirements.txt中的库是基于这个版本的，如果是其他python版本，可能requirements.txt中的库不兼容，自行解决一下。
-   python -m venv venv
-   
-   # macos & linux 激活虚拟环境
-   source venv/bin/activate
+## 前置依赖
 
-   # windows 激活虚拟环境
-   venv\Scripts\activate
+### uv 安装
+> 在进行下一步操作之前, 请确保电脑上已经安装了uv，[uv安装地址](https://docs.astral.sh/uv/getting-started/installation)
+> 
+> uv是否安装成功的验证, 终端输入命令：uv --version  如果正常显示版本好，那证明已经安装成功
+> 
+> 强力安利 uv 给大家使用，简直是最强的python包管理工具
+>
 
-   ```
+### nodejs安装
+项目依赖nodejs，安装地址：https://nodejs.org/en/download/
+> 如果要用python的原生venv来管理环境的话，可以参考: [原生环境管理文档](docs/原生环境管理文档.md)
 
-## 安装依赖库
+### python包安装
 
-   ```shell
-   pip install -r requirements.txt
-   ```
+```shell
+# 进入项目目录
+cd MediaCrawler
 
-## 安装 playwright浏览器驱动
+# 使用 uv sync 命令来保证python版本和相关依赖包的一致性
+uv sync
+```
 
-   ```shell
-   playwright install
-   ```
+### 浏览器驱动安装
+```shell
+# 安装浏览器驱动
+playwright install
+```
+> MediaCrawler目前已经支持使用playwright连接你本地的Chrome浏览器了，一些因为Webdriver导致的问题迎刃而解了。
+> 
+> 目前开放了 xhs 和 dy 这两个使用 cdp 的方式连接本地浏览器，如有需要，查看config/base_config.py中的配置项。
 
 ## 运行爬虫程序
 
@@ -90,16 +92,16 @@
    ### 一些其他支持项，也可以在config/base_config.py查看功能，写的有中文注释
    
    # 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
-   python main.py --platform xhs --lt qrcode --type search
+   uv run main.py --platform xhs --lt qrcode --type search
    
    # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
-   python main.py --platform xhs --lt qrcode --type detail
+   uv run main.py --platform xhs --lt qrcode --type detail
   
    # 打开对应APP扫二维码登录
      
    # 其他平台爬虫使用示例，执行下面的命令查看
-   python main.py --help    
-   ```
+   uv run main.py --help    
+   ``` 
 
 ## 数据保存
 - 支持关系型数据库Mysql中保存（需要提前创建数据库）
@@ -107,7 +109,9 @@
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
 
-
+# 项目微信交流群
+[加入微信交流群](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
+  
 
 # 其他常见问题可以查看在线文档
 > 
@@ -120,10 +124,7 @@
 
 [作者的知识付费栏目介绍](https://nanmicoder.github.io/MediaCrawler/%E7%9F%A5%E8%AF%86%E4%BB%98%E8%B4%B9%E4%BB%8B%E7%BB%8D.html)
 
-# 项目微信交流群
 
-[加入微信交流群](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
-  
 # 感谢下列Sponsors对本仓库赞助支持
 <a href="https://www.swiftproxy.net/?ref=nanmi">
 <img src="docs/static/images/img_5.png">

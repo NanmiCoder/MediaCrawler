@@ -45,6 +45,33 @@ HEADLESS = False
 # 是否保存登录状态
 SAVE_LOGIN_STATE = True
 
+# ==================== CDP (Chrome DevTools Protocol) 配置 ====================
+# 是否启用CDP模式 - 使用用户现有的Chrome/Edge浏览器进行爬取，提供更好的反检测能力
+# 启用后将自动检测并启动用户的Chrome/Edge浏览器，通过CDP协议进行控制
+# 这种方式使用真实的浏览器环境，包括用户的扩展、Cookie和设置，大大降低被检测的风险
+ENABLE_CDP_MODE = False
+
+# CDP调试端口，用于与浏览器通信
+# 如果端口被占用，系统会自动尝试下一个可用端口
+CDP_DEBUG_PORT = 9222
+
+# 自定义浏览器路径（可选）
+# 如果为空，系统会自动检测Chrome/Edge的安装路径
+# Windows示例: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+# macOS示例: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+CUSTOM_BROWSER_PATH = ""
+
+# CDP模式下是否启用无头模式
+# 注意：即使设置为True，某些反检测功能在无头模式下可能效果不佳
+CDP_HEADLESS = False
+
+# 浏览器启动超时时间（秒）
+BROWSER_LAUNCH_TIMEOUT = 30
+
+# 是否在程序结束时自动关闭浏览器
+# 设置为False可以保持浏览器运行，便于调试
+AUTO_CLOSE_BROWSER = True
+
 # 数据保存类型选项配置,支持三种类型：csv、db、json, 最好保存到DB，有排重的功能。
 SAVE_DATA_OPTION = "json"  # csv or db or json
 
