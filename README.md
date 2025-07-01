@@ -44,6 +44,9 @@
 | 知乎   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
 
 
+<details id="pro-version">
+<summary>🔗 <strong>🚀 MediaCrawlerPro 重磅发布！更多的功能，更好的架构设计！</strong></summary>
+
 ### 🚀 MediaCrawlerPro 重磅发布！
 
 > 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计思路同样值得深入学习！
@@ -67,6 +70,7 @@
 - [ ] **基于自媒体平台的AI Agent正在开发中 🚀🚀**
 
 点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
+</details>
 
 ## 🚀 快速开始
 
@@ -81,6 +85,52 @@
 - **安装地址**：[uv 官方安装指南](https://docs.astral.sh/uv/getting-started/installation)
 - **验证安装**：终端输入命令 `uv --version`，如果正常显示版本号，证明已经安装成功
 - **推荐理由**：uv 是目前最强的 Python 包管理工具，速度快、依赖解析准确
+
+### 🟢 Node.js 安装
+
+项目依赖 Node.js，请前往官网下载安装：
+
+- **下载地址**：https://nodejs.org/en/download/
+- **版本要求**：>= 16.0.0
+
+### 📦 Python 包安装
+
+```shell
+# 进入项目目录
+cd MediaCrawler
+
+# 使用 uv sync 命令来保证 python 版本和相关依赖包的一致性
+uv sync
+```
+
+### 🌐 浏览器驱动安装
+
+```shell
+# 安装浏览器驱动
+uv run playwright install
+```
+
+> **💡 提示**：MediaCrawler 目前已经支持使用 playwright 连接你本地的 Chrome 浏览器了，一些因为 Webdriver 导致的问题迎刃而解了。
+>
+> 目前开放了 `xhs` 和 `dy` 这两个使用 CDP 的方式连接本地浏览器，如有需要，查看 `config/base_config.py` 中的配置项。
+
+## 🚀 运行爬虫程序
+
+```shell
+# 项目默认是没有开启评论爬取模式，如需评论请在 config/base_config.py 中的 ENABLE_GET_COMMENTS 变量修改
+# 一些其他支持项，也可以在 config/base_config.py 查看功能，写的有中文注释
+
+# 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
+uv run main.py --platform xhs --lt qrcode --type search
+
+# 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
+uv run main.py --platform xhs --lt qrcode --type detail
+
+# 打开对应APP扫二维码登录
+
+# 其他平台爬虫使用示例，执行下面的命令查看
+uv run main.py --help
+```
 
 <details>
 <summary>🔗 <strong>使用 Python 原生 venv 管理环境（不推荐）</strong></summary>
@@ -137,51 +187,6 @@ python main.py --help
 
 </details>
 
-### 🟢 Node.js 安装
-
-项目依赖 Node.js，请前往官网下载安装：
-
-- **下载地址**：https://nodejs.org/en/download/
-- **版本要求**：>= 16.0.0
-
-### 📦 Python 包安装
-
-```shell
-# 进入项目目录
-cd MediaCrawler
-
-# 使用 uv sync 命令来保证 python 版本和相关依赖包的一致性
-uv sync
-```
-
-### 🌐 浏览器驱动安装
-
-```shell
-# 安装浏览器驱动
-uv run playwright install
-```
-
-> **💡 提示**：MediaCrawler 目前已经支持使用 playwright 连接你本地的 Chrome 浏览器了，一些因为 Webdriver 导致的问题迎刃而解了。
->
-> 目前开放了 `xhs` 和 `dy` 这两个使用 CDP 的方式连接本地浏览器，如有需要，查看 `config/base_config.py` 中的配置项。
-
-## 🚀 运行爬虫程序
-
-```shell
-# 项目默认是没有开启评论爬取模式，如需评论请在 config/base_config.py 中的 ENABLE_GET_COMMENTS 变量修改
-# 一些其他支持项，也可以在 config/base_config.py 查看功能，写的有中文注释
-
-# 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
-uv run main.py --platform xhs --lt qrcode --type search
-
-# 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
-uv run main.py --platform xhs --lt qrcode --type detail
-
-# 打开对应APP扫二维码登录
-
-# 其他平台爬虫使用示例，执行下面的命令查看
-uv run main.py --help
-```
 
 ## 💾 数据保存
 
@@ -193,6 +198,8 @@ uv run main.py --help
 - **JSON 文件**：支持保存到 JSON 中（`data/` 目录下）
 
 ---
+
+[🚀 MediaCrawlerPro 重磅发布 🚀！更多的功能，更好的架构设计！](https://github.com/MediaCrawlerPro)
 
 ## 🤝 社区与支持
 
