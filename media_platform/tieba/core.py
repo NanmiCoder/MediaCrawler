@@ -15,7 +15,7 @@ import random
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
-from playwright.async_api import (BrowserContext, BrowserType, Page,
+from playwright.async_api import (BrowserContext, BrowserType, Page, Playwright,
                                   async_playwright)
 
 import config
@@ -24,6 +24,7 @@ from model.m_baidu_tieba import TiebaCreator, TiebaNote
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import tieba as tieba_store
 from tools import utils
+from tools.cdp_browser import CDPBrowserManager
 from tools.crawler_util import format_proxy_info
 from var import crawler_type_var, source_keyword_var
 
@@ -37,11 +38,13 @@ class TieBaCrawler(AbstractCrawler):
     context_page: Page
     tieba_client: BaiduTieBaClient
     browser_context: BrowserContext
+    cdp_manager: Optional[CDPBrowserManager]
 
     def __init__(self) -> None:
         self.index_url = "https://tieba.baidu.com"
         self.user_agent = utils.get_user_agent()
         self._page_extractor = TieBaExtractor()
+        self.cdp_manager = None
 
     async def start(self) -> None:
         """
@@ -305,11 +308,42 @@ class TieBaCrawler(AbstractCrawler):
             )
             return browser_context
 
+    async def launch_browser_with_cdp(self, playwright: Playwright, playwright_proxy: Optional[Dict],
+                                     user_agent: Optional[str], headless: bool = True) -> BrowserContext:
+        """
+        使用CDP模式启动浏览器
+        """
+        try:
+            self.cdp_manager = CDPBrowserManager()
+            browser_context = await self.cdp_manager.launch_and_connect(
+                playwright=playwright,
+                playwright_proxy=playwright_proxy,
+                user_agent=user_agent,
+                headless=headless
+            )
+
+            # 显示浏览器信息
+            browser_info = await self.cdp_manager.get_browser_info()
+            utils.logger.info(f"[TieBaCrawler] CDP浏览器信息: {browser_info}")
+
+            return browser_context
+
+        except Exception as e:
+            utils.logger.error(f"[TieBaCrawler] CDP模式启动失败，回退到标准模式: {e}")
+            # 回退到标准模式
+            chromium = playwright.chromium
+            return await self.launch_browser(chromium, playwright_proxy, user_agent, headless)
+
     async def close(self):
         """
         Close browser context
         Returns:
 
         """
-        await self.browser_context.close()
+        # 如果使用CDP模式，需要特殊处理
+        if self.cdp_manager:
+            await self.cdp_manager.cleanup()
+            self.cdp_manager = None
+        else:
+            await self.browser_context.close()
         utils.logger.info("[BaiduTieBaCrawler.close] Browser context closed ...")

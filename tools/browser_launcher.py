@@ -115,6 +115,7 @@ class BrowserLauncher:
         args = [
             browser_path,
             f"--remote-debugging-port={debug_port}",
+            "--remote-debugging-address=0.0.0.0",  # 允许远程访问
             "--no-first-run",
             "--no-default-browser-check",
             "--disable-background-timer-throttling",
@@ -127,8 +128,8 @@ class BrowserLauncher:
             "--disable-sync",
             "--disable-web-security",  # 可能有助于某些网站的访问
             "--disable-features=VizDisplayCompositor",
-            "--disable-extensions-except",  # 保留用户扩展
-            "--load-extension",  # 允许加载扩展
+            "--disable-dev-shm-usage",  # 避免共享内存问题
+            "--no-sandbox",  # 在CDP模式下关闭沙箱
         ]
         
         # 无头模式
@@ -136,7 +137,12 @@ class BrowserLauncher:
             args.extend([
                 "--headless",
                 "--disable-gpu",
-                "--no-sandbox",
+            ])
+        else:
+            # 非无头模式下也保持一些稳定性参数
+            args.extend([
+                "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
             ])
         
         # 用户数据目录

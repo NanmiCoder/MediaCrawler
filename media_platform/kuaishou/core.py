@@ -16,13 +16,14 @@ import time
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
-from playwright.async_api import BrowserContext, BrowserType, Page, async_playwright
+from playwright.async_api import BrowserContext, BrowserType, Page, Playwright, async_playwright
 
 import config
 from base.base_crawler import AbstractCrawler
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import kuaishou as kuaishou_store
 from tools import utils
+from tools.cdp_browser import CDPBrowserManager
 from var import comment_tasks_var, crawler_type_var, source_keyword_var
 
 from .client import KuaiShouClient
@@ -34,10 +35,12 @@ class KuaishouCrawler(AbstractCrawler):
     context_page: Page
     ks_client: KuaiShouClient
     browser_context: BrowserContext
+    cdp_manager: Optional[CDPBrowserManager]
 
     def __init__(self):
         self.index_url = "https://www.kuaishou.com"
         self.user_agent = utils.get_user_agent()
+        self.cdp_manager = None
 
     async def start(self):
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -51,11 +54,20 @@ class KuaishouCrawler(AbstractCrawler):
             )
 
         async with async_playwright() as playwright:
-            # Launch a browser context.
-            chromium = playwright.chromium
-            self.browser_context = await self.launch_browser(
-                chromium, None, self.user_agent, headless=config.HEADLESS
-            )
+            # 根据配置选择启动模式
+            if config.ENABLE_CDP_MODE:
+                utils.logger.info("[KuaishouCrawler] 使用CDP模式启动浏览器")
+                self.browser_context = await self.launch_browser_with_cdp(
+                    playwright, playwright_proxy_format, self.user_agent,
+                    headless=config.CDP_HEADLESS
+                )
+            else:
+                utils.logger.info("[KuaishouCrawler] 使用标准模式启动浏览器")
+                # Launch a browser context.
+                chromium = playwright.chromium
+                self.browser_context = await self.launch_browser(
+                    chromium, None, self.user_agent, headless=config.HEADLESS
+                )
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
             await self.browser_context.add_init_script(path="libs/stealth.min.js")
             self.context_page = await self.browser_context.new_page()
@@ -307,6 +319,32 @@ class KuaishouCrawler(AbstractCrawler):
             )
             return browser_context
 
+    async def launch_browser_with_cdp(self, playwright: Playwright, playwright_proxy: Optional[Dict],
+                                     user_agent: Optional[str], headless: bool = True) -> BrowserContext:
+        """
+        使用CDP模式启动浏览器
+        """
+        try:
+            self.cdp_manager = CDPBrowserManager()
+            browser_context = await self.cdp_manager.launch_and_connect(
+                playwright=playwright,
+                playwright_proxy=playwright_proxy,
+                user_agent=user_agent,
+                headless=headless
+            )
+
+            # 显示浏览器信息
+            browser_info = await self.cdp_manager.get_browser_info()
+            utils.logger.info(f"[KuaishouCrawler] CDP浏览器信息: {browser_info}")
+
+            return browser_context
+
+        except Exception as e:
+            utils.logger.error(f"[KuaishouCrawler] CDP模式启动失败，回退到标准模式: {e}")
+            # 回退到标准模式
+            chromium = playwright.chromium
+            return await self.launch_browser(chromium, playwright_proxy, user_agent, headless)
+
     async def get_creators_and_videos(self) -> None:
         """Get creator's videos and retrieve their comment information."""
         utils.logger.info(
@@ -347,5 +385,10 @@ class KuaishouCrawler(AbstractCrawler):
 
     async def close(self):
         """Close browser context"""
-        await self.browser_context.close()
+        # 如果使用CDP模式，需要特殊处理
+        if self.cdp_manager:
+            await self.cdp_manager.cleanup()
+            self.cdp_manager = None
+        else:
+            await self.browser_context.close()
         utils.logger.info("[KuaishouCrawler.close] Browser context closed ...")
