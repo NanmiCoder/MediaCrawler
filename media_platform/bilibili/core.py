@@ -290,16 +290,14 @@ class BilibiliCrawler(AbstractCrawler):
         """
         ps = 30
         pn = 1
-        video_bvids_list = []
         while True:
             result = await self.bili_client.get_creator_videos(creator_id, pn, ps)
-            for video in result["list"]["vlist"]:
-                video_bvids_list.append(video["bvid"])
-            if (int(result["page"]["count"]) <= pn * ps):
+            video_bvids_list = [video["bvid"] for video in result["list"]["vlist"]]
+            await self.get_specified_videos(video_bvids_list)
+            if int(result["page"]["count"]) <= pn * ps:
                 break
             await asyncio.sleep(random.random())
             pn += 1
-        await self.get_specified_videos(video_bvids_list)
 
     async def get_specified_videos(self, bvids_list: List[str]):
         """
