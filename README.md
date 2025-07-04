@@ -1,5 +1,17 @@
 # 🔥 MediaCrawler - 自媒体平台爬虫 🕷️
 
+## 🌐 Language / 语言 / Idioma
+
+<div align="center">
+
+| 🇨🇳 中文 | 🇺🇸 English | 🇪🇸 Español |
+|---------|----------|----------|
+| **[中文文档](README.md)** ← 当前 | **[English](README_en.md)** | **[Español](README_es.md)** |
+
+</div>
+
+---
+
 <div align="center">
 
 <a href="https://trendshift.io/repositories/8291" target="_blank">
