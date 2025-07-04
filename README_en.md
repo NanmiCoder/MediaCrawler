@@ -1,5 +1,17 @@
 # 🔥 MediaCrawler - Social Media Platform Crawler 🕷️
 
+## 🌐 Language / 语言 / Idioma
+
+<div align="center">
+
+| 🇨🇳 中文 | 🇺🇸 English | 🇪🇸 Español |
+|---------|----------|----------|
+| **[中文文档](README.md)** | **[English](README_en.md)** ← Current | **[Español](README_es.md)** |
+
+</div>
+
+---
+
 <div align="center">
 
 <a href="https://trendshift.io/repositories/8291" target="_blank">

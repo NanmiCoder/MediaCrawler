@@ -1,5 +1,17 @@
 # 🔥 MediaCrawler - Rastreador de Plataformas de Redes Sociales 🕷️
 
+## 🌐 Language / 语言 / Idioma
+
+<div align="center">
+
+| 🇨🇳 中文 | 🇺🇸 English | 🇪🇸 Español |
+|---------|----------|----------|
+| **[中文文档](README.md)** | **[English](README_en.md)** | **[Español](README_es.md)** ← Actual |
+
+</div>
+
+---
+
 <div align="center">
 
 <a href="https://trendshift.io/repositories/8291" target="_blank">
