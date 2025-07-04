@@ -1,17 +1,5 @@
 # 🔥 MediaCrawler - 自媒体平台爬虫 🕷️
 
-## 🌐 Language / 语言 / Idioma
-
-<div align="center">
-
-| 🇨🇳 中文 | 🇺🇸 English | 🇪🇸 Español |
-|---------|----------|----------|
-| **[中文文档](README.md)** ← 当前 | **[English](README_en.md)** | **[Español](README_es.md)** |
-
-</div>
-
----
-
 <div align="center">
 
 <a href="https://trendshift.io/repositories/8291" target="_blank">
@@ -23,8 +11,12 @@
 [![GitHub Issues](https://img.shields.io/github/issues/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/issues)
 [![GitHub Pull Requests](https://img.shields.io/github/issues-pr/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/pulls)
 [![License](https://img.shields.io/github/license/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/blob/main/LICENSE)
-
+[![中文](https://img.shields.io/badge/🇨🇳_中文-当前-blue)](README.md)
+[![English](https://img.shields.io/badge/🇺🇸_English-Available-green)](README_en.md)
+[![Español](https://img.shields.io/badge/🇪🇸_Español-Available-green)](README_es.md)
 </div>
+
+
 
 > **免责声明：**
 > 
@@ -33,6 +25,9 @@
 >本仓库的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及的爬虫技术仅用于学习和研究，不得用于对其他平台进行大规模爬虫或其他非法行为。对于因使用本仓库内容而引起的任何法律责任，本仓库不承担任何责任。使用本仓库的内容即表示您同意本免责声明的所有条款和条件。
 >
 > 点击查看更为详细的免责声明。[点击跳转](#disclaimer)
+
+
+
 
 ## 📖 项目简介
 

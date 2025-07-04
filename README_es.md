@@ -1,17 +1,5 @@
 # 🔥 MediaCrawler - Rastreador de Plataformas de Redes Sociales 🕷️
 
-## 🌐 Language / 语言 / Idioma
-
-<div align="center">
-
-| 🇨🇳 中文 | 🇺🇸 English | 🇪🇸 Español |
-|---------|----------|----------|
-| **[中文文档](README.md)** | **[English](README_en.md)** | **[Español](README_es.md)** ← Actual |
-
-</div>
-
----
-
 <div align="center">
 
 <a href="https://trendshift.io/repositories/8291" target="_blank">
@@ -23,6 +11,9 @@
 [![GitHub Issues](https://img.shields.io/github/issues/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/issues)
 [![GitHub Pull Requests](https://img.shields.io/github/issues-pr/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/pulls)
 [![License](https://img.shields.io/github/license/NanmiCoder/MediaCrawler)](https://github.com/NanmiCoder/MediaCrawler/blob/main/LICENSE)
+[![中文](https://img.shields.io/badge/🇨🇳_中文-Available-blue)](README.md)
+[![English](https://img.shields.io/badge/🇺🇸_English-Available-green)](README_en.md)
+[![Español](https://img.shields.io/badge/🇪🇸_Español-Current-green)](README_es.md)
 
 </div>
 
