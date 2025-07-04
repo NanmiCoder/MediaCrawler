@@ -1,4 +1,4 @@
-# 🔥 MediaCrawler - 自媒体平台爬虫 🕷️
+# 🔥 MediaCrawler - Multi-Platform Media Crawler 🕷️
 
 <div align="center">
 
@@ -18,283 +18,290 @@
 
 
 
-> **免责声明：**
+> **Disclaimer:**
 > 
-> 大家请以学习为目的使用本仓库⚠️⚠️⚠️⚠️，[爬虫违法违规的案件](https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China)  <br>
+> Please use this repository for learning purposes only ⚠️⚠️⚠️⚠️, [Cases of illegal crawler activities](https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China)  <br>
 >
->本仓库的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及的爬虫技术仅用于学习和研究，不得用于对其他平台进行大规模爬虫或其他非法行为。对于因使用本仓库内容而引起的任何法律责任，本仓库不承担任何责任。使用本仓库的内容即表示您同意本免责声明的所有条款和条件。
+>All contents of this repository are for learning and reference only, and are prohibited for commercial use. No individual or organization may use the contents of this repository for illegal purposes or to infringe on the legitimate rights and interests of others. The crawler technology involved in this repository is for learning and research only and may not be used for large-scale crawling of other platforms or other illegal activities. This repository does not assume any responsibility for any legal liability arising from the use of the contents. By using the contents of this repository, you agree to all terms and conditions of this disclaimer.
 >
-> 点击查看更为详细的免责声明。[点击跳转](#disclaimer)
+> Click here to view a more detailed disclaimer. [Jump to Disclaimer](#disclaimer)
 
 
 
 
-## 📖 项目简介
+## 📖 Project Overview
 
-一个功能强大的**多平台自媒体数据采集工具**，支持小红书、抖音、快手、B站、微博、贴吧、知乎等主流平台的公开信息抓取。
+A powerful **multi-platform self-media data collection tool**, supporting public information scraping from major platforms such as Xiaohongshu, Douyin, Kuaishou, Bilibili, Weibo, Tieba, and Zhihu.
 
-### 🔧 技术原理
+### 🔧 Technical Principles
 
-- **核心技术**：基于 [Playwright](https://playwright.dev/) 浏览器自动化框架登录保存登录态
-- **无需JS逆向**：利用保留登录态的浏览器上下文环境，通过 JS 表达式获取签名参数
-- **优势特点**：无需逆向复杂的加密算法，大幅降低技术门槛
+- **Core Technology**: Based on [Playwright](https://playwright.dev/) browser automation framework for login session persistence
+- **No JS Reverse Engineering Required**: Uses a browser context that preserves the login state to obtain signature parameters via JS expressions
+- **Advantages**: No need to reverse complex encryption algorithms, greatly reducing technical barriers
 
-## ✨ 功能特性
-| 平台   | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
-| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- |
-| 小红书 | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 抖音   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 快手   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| B 站   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 微博   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 贴吧   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 知乎   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
+## ✨ Features
+| Platform | Keyword Search | Specific Post ID Crawl | Secondary Comments | Specific Creator Homepage | Login Session Cache | IP Proxy Pool | Generate Comment Wordcloud |
+| -------- | --------------- | ---------------------- | ------------------ | ------------------------- | ------------------- | -------------- | -------------------------- |
+| Xiaohongshu | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Douyin   | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Kuaishou | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Bilibili | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Weibo    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Tieba    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Zhihu    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 
 <details id="pro-version">
-<summary>🔗 <strong>🚀 MediaCrawlerPro 重磅发布！更多的功能，更好的架构设计！</strong></summary>
+<summary>🔗 <strong>🚀 MediaCrawlerPro Released! More features, better architecture design!</strong></summary>
 
-### 🚀 MediaCrawlerPro 重磅发布！
+### 🚀 MediaCrawlerPro Released!
 
-> 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计思路同样值得深入学习！
+> Focus on learning mature project architecture design, not just crawler technology. The Pro version's code design ideas are also worth studying in depth!
 
-[MediaCrawlerPro](https://github.com/MediaCrawlerPro) 相较于开源版本的核心优势：
+[MediaCrawlerPro](https://github.com/MediaCrawlerPro) key advantages compared to the open source version:
 
-#### 🎯 核心功能升级
-- ✅ **断点续爬功能**（重点特性）
-- ✅ **多账号 + IP代理池支持**（重点特性）
-- ✅ **去除 Playwright 依赖**，使用更简单
-- ✅ **完整 Linux 环境支持**
+#### 🎯 Core Function Upgrades
+- ✅ **Breakpoint Resume** (Key Feature)
+- ✅ **Multi-Account + IP Proxy Pool Support** (Key Feature)
+- ✅ **Removed Playwright Dependency**, simpler to use
+- ✅ **Full Linux Environment Support**
 
-#### 🏗️ 架构设计优化
-- ✅ **代码重构优化**，更易读易维护（解耦 JS 签名逻辑）
-- ✅ **企业级代码质量**，适合构建大型爬虫项目
-- ✅ **完美架构设计**，高扩展性，源码学习价值更大
+#### 🏗️ Architecture Design Optimization
+- ✅ **Refactored and Optimized Code**, easier to read and maintain (decoupled JS signature logic)
+- ✅ **Enterprise-Level Code Quality**, suitable for building large crawler projects
+- ✅ **Perfect Architecture Design**, high scalability, greater source code learning value
 
-#### 🎁 额外功能
-- ✅ **自媒体视频下载器桌面端**（适合学习全栈开发）
-- ✅ **多平台首页信息流推荐**（HomeFeed）
-- [ ] **基于自媒体平台的AI Agent正在开发中 🚀🚀**
+#### 🎁 Extra Features
+- ✅ **Desktop Self-Media Video Downloader** (good for full-stack development learning)
+- ✅ **Multi-Platform Homepage Feed Recommendation** (HomeFeed)
+- [ ] **AI Agent Based on Self-Media Platform in Development 🚀🚀**
 
-点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
+Click to view: [MediaCrawlerPro Project Homepage](https://github.com/MediaCrawlerPro) for more info
 </details>
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-> 💡 **开源不易，如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！**
+> 💡 **Open source is not easy. If this project helps you, please give it a ⭐ Star for support!**
 
-## 📋 前置依赖
+## 📋 Prerequisites
 
-### 🚀 uv 安装（推荐）
+### 🚀 Install uv (Recommended)
 
-在进行下一步操作之前，请确保电脑上已经安装了 uv：
+Before proceeding, make sure uv is installed on your computer:
 
-- **安装地址**：[uv 官方安装指南](https://docs.astral.sh/uv/getting-started/installation)
-- **验证安装**：终端输入命令 `uv --version`，如果正常显示版本号，证明已经安装成功
-- **推荐理由**：uv 是目前最强的 Python 包管理工具，速度快、依赖解析准确
+- **Installation Guide**: [uv Official Installation Guide](https://docs.astral.sh/uv/getting-started/installation)
+- **Verify Installation**: Run `uv --version` in terminal; if the version number is displayed, installation is successful.
+- **Why uv**: uv is currently the most powerful Python package manager, fast and with accurate dependency resolution.
 
-### 🟢 Node.js 安装
+### 🟢 Install Node.js
 
-项目依赖 Node.js，请前往官网下载安装：
+This project requires Node.js. Please download and install it from the official website:
 
-- **下载地址**：https://nodejs.org/en/download/
-- **版本要求**：>= 16.0.0
+- **Download**: https://nodejs.org/en/download/
+- **Version Requirement**: >= 16.0.0
 
-### 📦 Python 包安装
+### 📦 Install Python Packages
 
 ```shell
-# 进入项目目录
+# Enter project directory
 cd MediaCrawler
 
-# 使用 uv sync 命令来保证 python 版本和相关依赖包的一致性
+# Use uv sync to ensure consistent Python version and dependencies
 uv sync
 ```
 
-### 🌐 浏览器驱动安装
+### 🌐 Install Browser Driver
 
 ```shell
-# 安装浏览器驱动
+# Install browser driver
 uv run playwright install
 ```
 
-> **💡 提示**：MediaCrawler 目前已经支持使用 playwright 连接你本地的 Chrome 浏览器了，一些因为 Webdriver 导致的问题迎刃而解了。
+> **💡 Tip**: MediaCrawler now supports using playwright to connect to your local Chrome browser, resolving issues caused by Webdriver.
 >
-> 目前开放了 `xhs` 和 `dy` 这两个使用 CDP 的方式连接本地浏览器，如有需要，查看 `config/base_config.py` 中的配置项。
+> Currently, `xhs` and `dy` support connecting to the local browser using CDP. See `config/base_config.py` for configuration options if needed.
 
-## 🚀 运行爬虫程序
+## 🚀 Run the Crawler
 
 ```shell
-# 项目默认是没有开启评论爬取模式，如需评论请在 config/base_config.py 中的 ENABLE_GET_COMMENTS 变量修改
-# 一些其他支持项，也可以在 config/base_config.py 查看功能，写的有中文注释
+# By default, comment crawling is disabled. To enable it, modify ENABLE_GET_COMMENTS in config/base_config.py
+# Other supported options can also be found in config/base_config.py with Chinese comments.
 
-# 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
+# Crawl posts and comments using keywords from config file
 uv run main.py --platform xhs --lt qrcode --type search
 
-# 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
+# Get information and comments for specified post IDs from config file
 uv run main.py --platform xhs --lt qrcode --type detail
 
-# 打开对应APP扫二维码登录
+# Scan the QR code in the corresponding app to log in
 
-# 其他平台爬虫使用示例，执行下面的命令查看
+# For other platforms, run the command below for help
 uv run main.py --help
 ```
 
 <details>
-<summary>🔗 <strong>使用 Python 原生 venv 管理环境（不推荐）</strong></summary>
+<summary>🔗 <strong>Using Python native venv for environment management (Not Recommended)</strong></summary>
 
-#### 创建并激活 Python 虚拟环境
+#### Create and Activate Python Virtual Environment
 
-> 如果是爬取抖音和知乎，需要提前安装 nodejs 环境，版本大于等于：`16` 即可
+> For Douyin and Zhihu crawling, you need to install Node.js >= version 16
 
 ```shell
-# 进入项目根目录
+# Enter project root directory
 cd MediaCrawler
 
-# 创建虚拟环境
-# 我的 python 版本是：3.9.6，requirements.txt 中的库是基于这个版本的
-# 如果是其他 python 版本，可能 requirements.txt 中的库不兼容，需自行解决
+# Create virtual environment
+# My Python version: 3.9.6, requirements.txt is based on this version.
+# For other Python versions, some packages may be incompatible; resolve manually.
 python -m venv venv
 
-# macOS & Linux 激活虚拟环境
+# macOS & Linux activate virtual environment
 source venv/bin/activate
 
-# Windows 激活虚拟环境
+# Windows activate virtual environment
 venv\Scripts\activate
 ```
 
-#### 安装依赖库
+#### Install Dependencies
 
 ```shell
 pip install -r requirements.txt
 ```
 
-#### 安装 playwright 浏览器驱动
+#### Install playwright Browser Driver
 
 ```shell
 playwright install
 ```
 
-#### 运行爬虫程序（原生环境）
+#### Run Crawler (Native Environment)
 
 ```shell
-# 项目默认是没有开启评论爬取模式，如需评论请在 config/base_config.py 中的 ENABLE_GET_COMMENTS 变量修改
-# 一些其他支持项，也可以在 config/base_config.py 查看功能，写的有中文注释
+# By default, comment crawling is disabled. To enable it, modify ENABLE_GET_COMMENTS in config/base_config.py
+# Other supported options can also be found in config/base_config.py with Chinese comments.
 
-# 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
+# Crawl posts and comments using keywords from config file
 python main.py --platform xhs --lt qrcode --type search
 
-# 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
+# Get information and comments for specified post IDs from config file
 python main.py --platform xhs --lt qrcode --type detail
 
-# 打开对应APP扫二维码登录
+# Scan the QR code in the corresponding app to log in
 
-# 其他平台爬虫使用示例，执行下面的命令查看
+# For other platforms, run the command below for help
 python main.py --help
 ```
 
 </details>
 
 
-## 💾 数据保存
+## 💾 Data Storage
 
-支持多种数据存储方式：
+Supports multiple storage options:
 
-- **MySQL 数据库**：支持关系型数据库 MySQL 中保存（需要提前创建数据库）
-  - 执行 `python db.py` 初始化数据库表结构（只在首次执行）
-- **CSV 文件**：支持保存到 CSV 中（`data/` 目录下）
-- **JSON 文件**：支持保存到 JSON 中（`data/` 目录下）
+- **MySQL Database**: Save to MySQL relational database (create database in advance)
+  - Run `python db.py` to initialize database tables (only for first run)
+- **CSV File**: Save to CSV (`data/` directory)
+- **JSON File**: Save to JSON (`data/` directory)
 
 ---
 
-[🚀 MediaCrawlerPro 重磅发布 🚀！更多的功能，更好的架构设计！](https://github.com/MediaCrawlerPro)
+[🚀 MediaCrawlerPro Released 🚀! More features, better architecture design!](https://github.com/MediaCrawlerPro)
 
-## 🤝 社区与支持
+## 🤝 Community and Support
 
-### 💬 交流群组
-- **微信交流群**：[点击加入](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
+### 💬 Group Chat
+- **WeChat Group**: [Join here](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
 
-### 📚 文档与教程
-- **在线文档**：[MediaCrawler 完整文档](https://nanmicoder.github.io/MediaCrawler/)
-- **爬虫教程**：[CrawlerTutorial 免费教程](https://github.com/NanmiCoder/CrawlerTutorial)
+### 📚 Docs and Tutorials
+- **Online Docs**: [Complete MediaCrawler Docs](https://nanmicoder.github.io/MediaCrawler/)
+- **Crawler Tutorials**: [CrawlerTutorial Free Tutorials](https://github.com/NanmiCoder/CrawlerTutorial)
   
 
-# 其他常见问题可以查看在线文档
+# For other common issues, check the online documentation
 > 
-> 在线文档包含使用方法、常见问题、加入项目交流群等。
-> [MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
+> The online docs include usage guides, FAQs, how to join the group chat, and more.
+> [MediaCrawler Online Docs](https://nanmicoder.github.io/MediaCrawler/)
 > 
 
-# 作者提供的知识服务
-> 如果想快速入门和学习该项目的使用、源码架构设计等、学习编程技术、亦或者想了解MediaCrawlerPro的源代码设计可以看下我的知识付费栏目。
+# Knowledge Services Provided by the Author
+> If you want to quickly learn how to use this project, understand its source code architecture, learn programming techniques, or explore the source code design of MediaCrawlerPro, check out my paid knowledge column.
 
-[作者的知识付费栏目介绍](https://nanmicoder.github.io/MediaCrawler/%E7%9F%A5%E8%AF%86%E4%BB%98%E8%B4%B9%E4%BB%8B%E7%BB%8D.html)
+[Author's Paid Knowledge Column Introduction](https://nanmicoder.github.io/MediaCrawler/%E7%9F%A5%E8%AF%86%E4%BB%98%E8%B4%B9%E4%BB%8B%E7%BB%8D.html)
 
 
 ---
 
-## ⭐ Star 趋势图
+## ⭐ Star History Chart
 
-如果这个项目对您有帮助，请给个 ⭐ Star 支持一下，让更多的人看到 MediaCrawler！
+If this project helps you, please give it a ⭐ Star to support and let more people discover MediaCrawler!
 
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
 
-### 💰 赞助商展示
+### 💰 Sponsor Display
+
+
+<img src="docs/static/images/img_5.png" alt="Swiftproxy Banner">
+
+<br>
 
 <a href="https://www.swiftproxy.net/?ref=nanmi">
-<img src="docs/static/images/img_5.png">
-<br>
-**Swiftproxy** - 90M+ 全球高质量纯净住宅IP，注册可领免费 500MB 测试流量，动态流量不过期！
-> 专属折扣码：**GHB5** 立享九折优惠！
+  <strong>Swiftproxy</strong> - 90M+ high-quality global residential IPs, register to get free 500MB test traffic, dynamic traffic never expires!  
+  <br>
+  <blockquote>Exclusive discount code: <strong>GHB5</strong> for 10% off!</blockquote>
 </a>
 
 <br><br>
 
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">**Sider** - 全网最火的 ChatGPT 插件，体验拉满！</a>
-
-### 🤝 成为赞助者
-
-成为赞助者，可以将您的产品展示在这里，每天获得大量曝光！
-
-**联系方式**：
-- 微信：`yzglan`
-- 邮箱：`relakkes@gmail.com`
+<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">
+  <strong>Sider</strong> - The hottest ChatGPT plugin on the web, ultimate experience!
+</a>
 
 
-## 📚 参考
+### 🤝 Become a Sponsor
 
-- **小红书客户端**：[ReaJason 的 xhs 仓库](https://github.com/ReaJason/xhs)
-- **短信转发**：[SmsForwarder 参考仓库](https://github.com/pppscn/SmsForwarder)
-- **内网穿透工具**：[ngrok 官方文档](https://ngrok.com/docs/)
+Become a sponsor and showcase your product here, getting massive daily exposure!
+
+**Contact Info**:
+- WeChat: `yzglan`
+- Email: `relakkes@gmail.com`
 
 
-# 免责声明
+## 📚 References
+
+- **Xiaohongshu Client**: [ReaJason's xhs repository](https://github.com/ReaJason/xhs)
+- **SMS Forwarding**: [SmsForwarder Reference Repository](https://github.com/pppscn/SmsForwarder)
+- **Intranet Penetration Tool**: [ngrok Official Docs](https://ngrok.com/docs/)
+
+
+# Disclaimer
 <div id="disclaimer"> 
 
-## 1. 项目目的与性质
-本项目（以下简称“本项目”）是作为一个技术研究与学习工具而创建的，旨在探索和学习网络数据采集技术。本项目专注于自媒体平台的数据爬取技术研究，旨在提供给学习者和研究者作为技术交流之用。
+## 1. Project Purpose and Nature
+This project (hereinafter referred to as “the Project”) was created as a tool for technical research and learning, intended to explore and study web data scraping technologies. This Project focuses on the study of data scraping technology for self-media platforms and is provided for learners and researchers for technical communication only.
 
-## 2. 法律合规性声明
-本项目开发者（以下简称“开发者”）郑重提醒用户在下载、安装和使用本项目时，严格遵守中华人民共和国相关法律法规，包括但不限于《中华人民共和国网络安全法》、《中华人民共和国反间谍法》等所有适用的国家法律和政策。用户应自行承担一切因使用本项目而可能引起的法律责任。
+## 2. Legal Compliance Statement
+The Project developers (hereinafter referred to as “Developers”) solemnly remind users to strictly comply with the relevant laws and regulations of the People’s Republic of China, including but not limited to the Cybersecurity Law of the People’s Republic of China, the Counter-Espionage Law of the People’s Republic of China, and all other applicable national laws and policies when downloading, installing, and using the Project. Users shall bear all legal responsibility arising from their use of the Project.
 
-## 3. 使用目的限制
-本项目严禁用于任何非法目的或非学习、非研究的商业行为。本项目不得用于任何形式的非法侵入他人计算机系统，不得用于任何侵犯他人知识产权或其他合法权益的行为。用户应保证其使用本项目的目的纯属个人学习和技术研究，不得用于任何形式的非法活动。
+## 3. Usage Purpose Restriction
+This Project is strictly prohibited from being used for any illegal purpose or for commercial activities other than learning or research. This Project may not be used for any form of illegal intrusion into other computer systems, nor for infringing the intellectual property rights or other legitimate rights and interests of others. Users must ensure that their use of this Project is solely for personal learning and technical research and must not be used for any form of illegal activity.
 
-## 4. 免责声明
-开发者已尽最大努力确保本项目的正当性及安全性，但不对用户使用本项目可能引起的任何形式的直接或间接损失承担责任。包括但不限于由于使用本项目而导致的任何数据丢失、设备损坏、法律诉讼等。
+## 4. Disclaimer
+The Developers have made every effort to ensure the legitimacy and security of this Project but assume no responsibility for any direct or indirect loss that may result from the use of this Project, including but not limited to data loss, equipment damage, legal proceedings, etc.
 
-## 5. 知识产权声明
-本项目的知识产权归开发者所有。本项目受到著作权法和国际著作权条约以及其他知识产权法律和条约的保护。用户在遵守本声明及相关法律法规的前提下，可以下载和使用本项目。
+## 5. Intellectual Property Statement
+The intellectual property of this Project belongs to the Developers. This Project is protected by copyright law and international copyright treaties, as well as other intellectual property laws and treaties. Users may download and use this Project in compliance with this statement and relevant laws and regulations.
 
-## 6. 最终解释权
-关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。
+## 6. Final Interpretation Right
+The final right of interpretation of this Project belongs to the Developers. The Developers reserve the right to modify or update this disclaimer at any time without prior notice.
 </div>
 
 
-## 🙏 致谢
+## 🙏 Acknowledgements
 
-### JetBrains 开源许可证支持
+### JetBrains Open Source License Support
 
-感谢 JetBrains 为本项目提供免费的开源许可证支持！
+Thanks to JetBrains for providing free open source license support for this Project!
 
 <a href="https://www.jetbrains.com/?from=MediaCrawler">
     <img src="https://www.jetbrains.com/company/brand/img/jetbrains_logo.png" width="100" alt="JetBrains" />
