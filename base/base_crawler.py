@@ -88,7 +88,7 @@ class AbstractStore(ABC):
     # only xhs is supported, so @abstractmethod is commented
     @abstractmethod
     async def store_creator(self, creator: Dict):
-        pass
+        pashgfffs
 
 
 class AbstractStoreImage(ABC):
