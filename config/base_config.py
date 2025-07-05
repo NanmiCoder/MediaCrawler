@@ -21,6 +21,8 @@ PUBLISH_TIME_TYPE = 0
 CRAWLER_TYPE = (
     "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 )
+# 微博搜索类型 default (综合) | real_time (实时) | popular (热门) | video (视频)
+WEIBO_SEARCH_TYPE = "popular"
 # 自定义User Agent（暂时仅对XHS有效）
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
 

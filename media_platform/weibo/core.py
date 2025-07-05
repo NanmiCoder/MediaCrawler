@@ -124,6 +124,20 @@ class WeiboCrawler(AbstractCrawler):
         if config.CRAWLER_MAX_NOTES_COUNT < weibo_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = weibo_limit_count
         start_page = config.START_PAGE
+
+        # Set the search type based on the configuration for weibo
+        if config.WEIBO_SEARCH_TYPE == "default":
+            search_type = SearchType.DEFAULT
+        elif config.WEIBO_SEARCH_TYPE == "real_time":
+            search_type = SearchType.REAL_TIME
+        elif config.WEIBO_SEARCH_TYPE == "popular":
+            search_type = SearchType.POPULAR
+        elif config.WEIBO_SEARCH_TYPE == "video":
+            search_type = SearchType.VIDEO
+        else:
+            utils.logger.error(f"[WeiboCrawler.search] Invalid WEIBO_SEARCH_TYPE: {config.WEIBO_SEARCH_TYPE}")
+            return
+
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[WeiboCrawler.search] Current search keyword: {keyword}")
@@ -137,7 +151,7 @@ class WeiboCrawler(AbstractCrawler):
                 search_res = await self.wb_client.get_note_by_keyword(
                     keyword=keyword,
                     page=page,
-                    search_type=SearchType.DEFAULT
+                    search_type=search_type
                 )
                 note_id_list: List[str] = []
                 note_list = filter_search_result_card(search_res.get("cards"))
