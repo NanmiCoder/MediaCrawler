@@ -243,11 +243,21 @@ python main.py --help
 <a href="https://www.swiftproxy.net/?ref=nanmi">
 <img src="docs/static/images/img_5.png">
 <br>
-**Swiftproxy** - 90M+ 全球高质量纯净住宅IP，注册可领免费 500MB 测试流量，动态流量不过期！
+Swiftproxy - 90M+ 全球高质量纯净住宅IP，注册可领免费 500MB 测试流量，动态流量不过期！
 > 专属折扣码：**GHB5** 立享九折优惠！
 </a>
 
-<br><br>
+<br>
+<br>
+
+<a href="https://www.tkyds.com/?=MediaCrawler">
+<img src="docs/static/images/img_6.png">
+<br>
+TK云大师,专业的TikTok矩阵系统,AI赋能自动化,单人轻松管理上万账号！
+</a>
+
+<br>
+<br>
 
 <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">**Sider** - 全网最火的 ChatGPT 插件，体验拉满！</a>
 
