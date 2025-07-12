@@ -196,10 +196,14 @@ class BilibiliCrawler(AbstractCrawler):
                     # 按照每一天进行爬取的时间戳参数
                     pubtime_begin_s, pubtime_end_s = await self.get_pubtime_datetime(start=day.strftime('%Y-%m-%d'), end=day.strftime('%Y-%m-%d'))
                     page = 1
+                    notes_count_this_day = 0
                     #!该段 while 语句在发生异常时（通常情况下为当天数据为空时）会自动跳转到下一天，以实现最大程度爬取该关键词下当天的所有视频
                     #!除了仅保留现在原有的 try, except Exception 语句外，不要再添加其他的异常处理！！！否则将使该段代码失效，使其仅能爬取当天一天数据而无法跳转到下一天
                     #!除非将该段代码的逻辑进行重构以实现相同的功能，否则不要进行修改！！！
                     while (page - start_page + 1) * bili_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+                        if notes_count_this_day >= config.MAX_NOTES_PER_DAY:
+                            utils.logger.info(f"[BilibiliCrawler.search] Reached the maximum number of notes for today {day.ctime()}.")
+                            break
                         #! Catch any error if response return nothing, go to next day
                         try:
                             #! Don't skip any page, to make sure gather all video in one day
@@ -225,6 +229,7 @@ class BilibiliCrawler(AbstractCrawler):
                             video_items = await asyncio.gather(*task_list)
                             for video_item in video_items:
                                 if video_item:
+                                    notes_count_this_day += 1
                                     video_id_list.append(video_item.get("View").get("aid"))
                                     await bilibili_store.update_bilibili_video(video_item)
                                     await bilibili_store.update_up_info(video_item)
