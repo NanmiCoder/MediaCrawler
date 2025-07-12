@@ -18,7 +18,7 @@ COOKIES = ""
 SORT_TYPE = "popularity_descending"
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
 PUBLISH_TIME_TYPE = 0
-CRAWLER_TYPE = "search"
+CRAWLER_TYPE = (
     "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 )
 # 微博搜索类型 default (综合) | real_time (实时) | popular (热门) | video (视频)
@@ -78,7 +78,7 @@ AUTO_CLOSE_BROWSER = True
 SAVE_DATA_OPTION = "json"
 
 # 用户浏览器缓存的浏览器文件配置
-USER_DATA_DIR = ""%s_user_data_dir"  # %s will be replaced by platform name"
+USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
 # 爬取开始页数 默认从第一页开始
 START_PAGE = 1
@@ -202,7 +202,7 @@ ZHIHU_SPECIFIED_ID_LIST = [
 ENABLE_GET_WORDCLOUD = False
 # 自定义词语及其分组
 # 添加规则：xx:yy 其中xx为自定义添加的词组，yy为将xx该词组分到的组名。
-CUSTOM_WORDS = "{"
+CUSTOM_WORDS = {
     "零几": "年份",  # 将“零几”识别为一个整体
     "高频词": "专业术语",  # 示例自定义词
 }
