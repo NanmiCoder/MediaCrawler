@@ -96,7 +96,14 @@ class BilibiliCrawler(AbstractCrawler):
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
                 # Search for video and retrieve their comment information.
-                await self.search()
+                if config.BILI_SEARCH_MODE == "normal":
+                    await self.search_by_keywords()
+                elif config.BILI_SEARCH_MODE == "all_in_time_range":
+                    await self.search_by_keywords_in_time_range(daily_limit=False)
+                elif config.BILI_SEARCH_MODE == "daily_limit_in_time_range":
+                    await self.search_by_keywords_in_time_range(daily_limit=True)
+                else:
+                    utils.logger.warning(f"Unknown BILI_SEARCH_MODE: {config.BILI_SEARCH_MODE}")
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
@@ -141,105 +148,130 @@ class BilibiliCrawler(AbstractCrawler):
         # 将其重新转换为时间戳
         return str(int(start_day.timestamp())), str(int(end_day.timestamp()))
 
-    async def search(self):
+    async def search_by_keywords(self):
         """
-        search bilibili video with keywords
+        search bilibili video with keywords in normal mode
         :return:
         """
-        utils.logger.info("[BilibiliCrawler.search] Begin search bilibli keywords")
+        utils.logger.info("[BilibiliCrawler.search_by_keywords] Begin search bilibli keywords")
         bili_limit_count = 20  # bilibili limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < bili_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = bili_limit_count
         start_page = config.START_PAGE  # start page number
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
-            utils.logger.info(f"[BilibiliCrawler.search] Current search keyword: {keyword}")
-            # 每个关键词最多返回 1000 条数据
-            if not config.ALL_DAY:
-                page = 1
-                while (page - start_page + 1) * bili_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
-                    if page < start_page:
-                        utils.logger.info(f"[BilibiliCrawler.search] Skip page: {page}")
-                        page += 1
-                        continue
-
-                    utils.logger.info(f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, page: {page}")
-                    video_id_list: List[str] = []
-                    videos_res = await self.bili_client.search_video_by_keyword(
-                        keyword=keyword,
-                        page=page,
-                        page_size=bili_limit_count,
-                        order=SearchOrderType.DEFAULT,
-                        pubtime_begin_s=0,  # 作品发布日期起始时间戳
-                        pubtime_end_s=0  # 作品发布日期结束日期时间戳
-                    )
-                    video_list: List[Dict] = videos_res.get("result")
-
-                    semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                    task_list = []
-                    try:
-                        task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
-                    except Exception as e:
-                        utils.logger.warning(f"[BilibiliCrawler.search] error in the task list. The video for this page will not be included. {e}")
-                    video_items = await asyncio.gather(*task_list)
-                    for video_item in video_items:
-                        if video_item:
-                            video_id_list.append(video_item.get("View").get("aid"))
-                            await bilibili_store.update_bilibili_video(video_item)
-                            await bilibili_store.update_up_info(video_item)
-                            await self.get_bilibili_video(video_item, semaphore)
+            utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Current search keyword: {keyword}")
+            page = 1
+            while (page - start_page + 1) * bili_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+                if page < start_page:
+                    utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Skip page: {page}")
                     page += 1
-                    await self.batch_get_video_comments(video_id_list)
-            # 按照 START_DAY 至 END_DAY 按照每一天进行筛选，这样能够突破 1000 条视频的限制，最大程度爬取该关键词下每一天的所有视频
-            else:
-                for day in pd.date_range(start=config.START_DAY, end=config.END_DAY, freq='D'):
-                    # 按照每一天进行爬取的时间戳参数
-                    pubtime_begin_s, pubtime_end_s = await self.get_pubtime_datetime(start=day.strftime('%Y-%m-%d'), end=day.strftime('%Y-%m-%d'))
-                    page = 1
-                    notes_count_this_day = 0
-                    #!该段 while 语句在发生异常时（通常情况下为当天数据为空时）会自动跳转到下一天，以实现最大程度爬取该关键词下当天的所有视频
-                    #!除了仅保留现在原有的 try, except Exception 语句外，不要再添加其他的异常处理！！！否则将使该段代码失效，使其仅能爬取当天一天数据而无法跳转到下一天
-                    #!除非将该段代码的逻辑进行重构以实现相同的功能，否则不要进行修改！！！
-                    while (page - start_page + 1) * bili_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
-                        if notes_count_this_day >= config.MAX_NOTES_PER_DAY:
-                            utils.logger.info(f"[BilibiliCrawler.search] Reached the maximum number of notes for today {day.ctime()}.")
-                            break
-                        #! Catch any error if response return nothing, go to next day
-                        try:
-                            #! Don't skip any page, to make sure gather all video in one day
-                            # if page < start_page:
-                            #     utils.logger.info(f"[BilibiliCrawler.search] Skip page: {page}")
-                            #     page += 1
-                            #     continue
+                    continue
 
-                            utils.logger.info(f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, date: {day.ctime()}, page: {page}")
-                            video_id_list: List[str] = []
-                            videos_res = await self.bili_client.search_video_by_keyword(
-                                keyword=keyword,
-                                page=page,
-                                page_size=bili_limit_count,
-                                order=SearchOrderType.DEFAULT,
-                                pubtime_begin_s=pubtime_begin_s,  # 作品发布日期起始时间戳
-                                pubtime_end_s=pubtime_end_s  # 作品发布日期结束日期时间戳
-                            )
-                            video_list: List[Dict] = videos_res.get("result")
+                utils.logger.info(f"[BilibiliCrawler.search_by_keywords] search bilibili keyword: {keyword}, page: {page}")
+                video_id_list: List[str] = []
+                videos_res = await self.bili_client.search_video_by_keyword(
+                    keyword=keyword,
+                    page=page,
+                    page_size=bili_limit_count,
+                    order=SearchOrderType.DEFAULT,
+                    pubtime_begin_s=0,  # 作品发布日期起始时间戳
+                    pubtime_end_s=0  # 作品发布日期结束日期时间戳
+                )
+                video_list: List[Dict] = videos_res.get("result")
 
-                            semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                            task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
-                            video_items = await asyncio.gather(*task_list)
-                            for video_item in video_items:
-                                if video_item:
-                                    notes_count_this_day += 1
-                                    video_id_list.append(video_item.get("View").get("aid"))
-                                    await bilibili_store.update_bilibili_video(video_item)
-                                    await bilibili_store.update_up_info(video_item)
-                                    await self.get_bilibili_video(video_item, semaphore)
-                            page += 1
-                            await self.batch_get_video_comments(video_id_list)
-                        # go to next day
-                        except Exception as e:
-                            print(e)
+                if not video_list:
+                    utils.logger.info(f"[BilibiliCrawler.search_by_keywords] No more videos for '{keyword}', moving to next keyword.")
+                    break
+
+                semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+                task_list = []
+                try:
+                    task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                except Exception as e:
+                    utils.logger.warning(f"[BilibiliCrawler.search_by_keywords] error in the task list. The video for this page will not be included. {e}")
+                video_items = await asyncio.gather(*task_list)
+                for video_item in video_items:
+                    if video_item:
+                        video_id_list.append(video_item.get("View").get("aid"))
+                        await bilibili_store.update_bilibili_video(video_item)
+                        await bilibili_store.update_up_info(video_item)
+                        await self.get_bilibili_video(video_item, semaphore)
+                page += 1
+                await self.batch_get_video_comments(video_id_list)
+
+    async def search_by_keywords_in_time_range(self, daily_limit: bool):
+        """
+        Search bilibili video with keywords in a given time range.
+        :param daily_limit: if True, strictly limit the number of notes per day and total.
+        """
+        utils.logger.info(f"[BilibiliCrawler.search_by_keywords_in_time_range] Begin search with daily_limit={daily_limit}")
+        bili_limit_count = 20
+        start_page = config.START_PAGE
+
+        for keyword in config.KEYWORDS.split(","):
+            source_keyword_var.set(keyword)
+            utils.logger.info(f"[BilibiliCrawler.search_by_keywords_in_time_range] Current search keyword: {keyword}")
+            total_notes_crawled = 0
+
+            for day in pd.date_range(start=config.START_DAY, end=config.END_DAY, freq='D'):
+                if daily_limit and total_notes_crawled >= config.CRAWLER_MAX_NOTES_COUNT:
+                    utils.logger.info(f"[BilibiliCrawler.search] Reached CRAWLER_MAX_NOTES_COUNT limit for keyword '{keyword}', skipping remaining days.")
+                    break
+
+                pubtime_begin_s, pubtime_end_s = await self.get_pubtime_datetime(start=day.strftime('%Y-%m-%d'), end=day.strftime('%Y-%m-%d'))
+                page = 1
+                notes_count_this_day = 0
+
+                while True:
+                    if notes_count_this_day >= config.MAX_NOTES_PER_DAY:
+                        utils.logger.info(f"[BilibiliCrawler.search] Reached MAX_NOTES_PER_DAY limit for {day.ctime()}.")
+                        break
+                    if daily_limit and total_notes_crawled >= config.CRAWLER_MAX_NOTES_COUNT:
+                        utils.logger.info(f"[BilibiliCrawler.search] Reached CRAWLER_MAX_NOTES_COUNT limit for keyword '{keyword}'.")
+                        break
+                    if not daily_limit and (page - start_page + 1) * bili_limit_count > config.CRAWLER_MAX_NOTES_COUNT:
+                        # For non-daily-limit mode, we still respect the total count in a loose way per day.
+                        break
+
+                    try:
+                        utils.logger.info(f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, date: {day.ctime()}, page: {page}")
+                        video_id_list: List[str] = []
+                        videos_res = await self.bili_client.search_video_by_keyword(
+                            keyword=keyword,
+                            page=page,
+                            page_size=bili_limit_count,
+                            order=SearchOrderType.DEFAULT,
+                            pubtime_begin_s=pubtime_begin_s,
+                            pubtime_end_s=pubtime_end_s
+                        )
+                        video_list: List[Dict] = videos_res.get("result")
+
+                        if not video_list:
+                            utils.logger.info(f"[BilibiliCrawler.search] No more videos for '{keyword}' on {day.ctime()}, moving to next day.")
                             break
+
+                        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+                        task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                        video_items = await asyncio.gather(*task_list)
+
+                        for video_item in video_items:
+                            if video_item:
+                                if daily_limit and total_notes_crawled >= config.CRAWLER_MAX_NOTES_COUNT:
+                                    break
+                                notes_count_this_day += 1
+                                total_notes_crawled += 1
+                                video_id_list.append(video_item.get("View").get("aid"))
+                                await bilibili_store.update_bilibili_video(video_item)
+                                await bilibili_store.update_up_info(video_item)
+                                await self.get_bilibili_video(video_item, semaphore)
+
+                        page += 1
+                        await self.batch_get_video_comments(video_id_list)
+
+                    except Exception as e:
+                        utils.logger.error(f"[BilibiliCrawler.search] Error searching on {day.ctime()}: {e}")
+                        break
 
     async def batch_get_video_comments(self, video_id_list: List[str]):
         """
