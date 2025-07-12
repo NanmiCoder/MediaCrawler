@@ -168,5 +168,18 @@ cython_debug/
 
 */.DS_Store
 .vscode
+
+# Node.js
 /node_modules
+**/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.next/
+out/
+build/
+dist/
+
 docs/.vitepress/cache

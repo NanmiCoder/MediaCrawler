@@ -11,14 +11,14 @@
 
 # 基础配置
 PLATFORM = "xhs"
-KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
-LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
+KEYWORDS = "编程副业,编程兼职"
+LOGIN_TYPE = "qrcode"
 COOKIES = ""
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
 SORT_TYPE = "popularity_descending"
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
 PUBLISH_TIME_TYPE = 0
-CRAWLER_TYPE = (
+CRAWLER_TYPE = "search"
     "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 )
 # 微博搜索类型 default (综合) | real_time (实时) | popular (热门) | video (视频)
@@ -75,16 +75,16 @@ BROWSER_LAUNCH_TIMEOUT = 30
 AUTO_CLOSE_BROWSER = True
 
 # 数据保存类型选项配置,支持三种类型：csv、db、json, 最好保存到DB，有排重的功能。
-SAVE_DATA_OPTION = "json"  # csv or db or json
+SAVE_DATA_OPTION = "json"
 
 # 用户浏览器缓存的浏览器文件配置
-USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
+USER_DATA_DIR = ""%s_user_data_dir"  # %s will be replaced by platform name"
 
 # 爬取开始页数 默认从第一页开始
 START_PAGE = 1
 
 # 爬取视频/帖子的数量控制
-CRAWLER_MAX_NOTES_COUNT = 200
+CRAWLER_MAX_NOTES_COUNT = 10
 
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
@@ -111,7 +111,7 @@ ENABLE_GET_SUB_COMMENTS = False
 
 # 指定小红书需要爬虫的笔记URL列表, 目前要携带xsec_token和xsec_source参数
 XHS_SPECIFIED_NOTE_URL_LIST = [
-    "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
+    "https://www.xiaohongshu.com/explore/6860363a000000001703515c?xsec_token=AB3a3ztcmSRD9_HWWviSeByeJUI7ZjAeUW73Sa2sOBono=&xsec_source=pc_feed"
     # ........................
 ]
 
@@ -202,7 +202,7 @@ ZHIHU_SPECIFIED_ID_LIST = [
 ENABLE_GET_WORDCLOUD = False
 # 自定义词语及其分组
 # 添加规则：xx:yy 其中xx为自定义添加的词组，yy为将xx该词组分到的组名。
-CUSTOM_WORDS = {
+CUSTOM_WORDS = "{"
     "零几": "年份",  # 将“零几”识别为一个整体
     "高频词": "专业术语",  # 示例自定义词
 }

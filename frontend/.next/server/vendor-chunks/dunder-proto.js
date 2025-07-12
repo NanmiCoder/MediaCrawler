@@ -1,0 +1,25 @@
+"use strict";
+/*
+ * ATTENTION: An "eval-source-map" devtool has been used.
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file with attached SourceMaps in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+exports.id = "vendor-chunks/dunder-proto";
+exports.ids = ["vendor-chunks/dunder-proto"];
+exports.modules = {
+
+/***/ "(ssr)/./node_modules/dunder-proto/get.js":
+/*!******************************************!*\
+  !*** ./node_modules/dunder-proto/get.js ***!
+  \******************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+eval("\nvar callBind = __webpack_require__(/*! call-bind-apply-helpers */ \"(ssr)/./node_modules/call-bind-apply-helpers/index.js\");\nvar gOPD = __webpack_require__(/*! gopd */ \"(ssr)/./node_modules/gopd/index.js\");\nvar hasProtoAccessor;\ntry {\n    // eslint-disable-next-line no-extra-parens, no-proto\n    hasProtoAccessor = /** @type {{ __proto__?: typeof Array.prototype }} */ [].__proto__ === Array.prototype;\n} catch (e) {\n    if (!e || typeof e !== \"object\" || !(\"code\" in e) || e.code !== \"ERR_PROTO_ACCESS\") {\n        throw e;\n    }\n}\n// eslint-disable-next-line no-extra-parens\nvar desc = !!hasProtoAccessor && gOPD && gOPD(Object.prototype, /** @type {keyof typeof Object.prototype} */ \"__proto__\");\nvar $Object = Object;\nvar $getPrototypeOf = $Object.getPrototypeOf;\n/** @type {import('./get')} */ module.exports = desc && typeof desc.get === \"function\" ? callBind([\n    desc.get\n]) : typeof $getPrototypeOf === \"function\" ? /** @type {import('./get')} */ function getDunder(value) {\n    // eslint-disable-next-line eqeqeq\n    return $getPrototypeOf(value == null ? value : $Object(value));\n} : false;\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHNzcikvLi9ub2RlX21vZHVsZXMvZHVuZGVyLXByb3RvL2dldC5qcyIsIm1hcHBpbmdzIjoiQUFBQTtBQUVBLElBQUlBLFdBQVdDLG1CQUFPQSxDQUFDO0FBQ3ZCLElBQUlDLE9BQU9ELG1CQUFPQSxDQUFDO0FBRW5CLElBQUlFO0FBQ0osSUFBSTtJQUNILHFEQUFxRDtJQUNyREEsbUJBQXlFLG1EQUFILEdBQUksRUFBRSxDQUFFQyxTQUFTLEtBQUtDLE1BQU1DLFNBQVM7QUFDNUcsRUFBRSxPQUFPQyxHQUFHO0lBQ1gsSUFBSSxDQUFDQSxLQUFLLE9BQU9BLE1BQU0sWUFBWSxDQUFFLFdBQVVBLENBQUFBLEtBQU1BLEVBQUVDLElBQUksS0FBSyxvQkFBb0I7UUFDbkYsTUFBTUQ7SUFDUDtBQUNEO0FBRUEsMkNBQTJDO0FBQzNDLElBQUlFLE9BQU8sQ0FBQyxDQUFDTixvQkFBb0JELFFBQVFBLEtBQUtRLE9BQU9KLFNBQVMsRUFBRSwwQ0FBMEMsR0FBSTtBQUU5RyxJQUFJSyxVQUFVRDtBQUNkLElBQUlFLGtCQUFrQkQsUUFBUUUsY0FBYztBQUU1Qyw0QkFBNEIsR0FDNUJDLE9BQU9DLE9BQU8sR0FBR04sUUFBUSxPQUFPQSxLQUFLTyxHQUFHLEtBQUssYUFDMUNoQixTQUFTO0lBQUNTLEtBQUtPLEdBQUc7Q0FBQyxJQUNuQixPQUFPSixvQkFBb0IsYUFDMUIsNEJBQTRCLEdBQUcsU0FBU0ssVUFBVUMsS0FBSztJQUN4RCxrQ0FBa0M7SUFDbEMsT0FBT04sZ0JBQWdCTSxTQUFTLE9BQU9BLFFBQVFQLFFBQVFPO0FBQ3hELElBQ0UiLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly9tZWRpYWNyYXdsZXItZnJvbnRlbmQvLi9ub2RlX21vZHVsZXMvZHVuZGVyLXByb3RvL2dldC5qcz9mNmNjIl0sInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcblxudmFyIGNhbGxCaW5kID0gcmVxdWlyZSgnY2FsbC1iaW5kLWFwcGx5LWhlbHBlcnMnKTtcbnZhciBnT1BEID0gcmVxdWlyZSgnZ29wZCcpO1xuXG52YXIgaGFzUHJvdG9BY2Nlc3NvcjtcbnRyeSB7XG5cdC8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZSBuby1leHRyYS1wYXJlbnMsIG5vLXByb3RvXG5cdGhhc1Byb3RvQWNjZXNzb3IgPSAvKiogQHR5cGUge3sgX19wcm90b19fPzogdHlwZW9mIEFycmF5LnByb3RvdHlwZSB9fSAqLyAoW10pLl9fcHJvdG9fXyA9PT0gQXJyYXkucHJvdG90eXBlO1xufSBjYXRjaCAoZSkge1xuXHRpZiAoIWUgfHwgdHlwZW9mIGUgIT09ICdvYmplY3QnIHx8ICEoJ2NvZGUnIGluIGUpIHx8IGUuY29kZSAhPT0gJ0VSUl9QUk9UT19BQ0NFU1MnKSB7XG5cdFx0dGhyb3cgZTtcblx0fVxufVxuXG4vLyBlc2xpbnQtZGlzYWJsZS1uZXh0LWxpbmUgbm8tZXh0cmEtcGFyZW5zXG52YXIgZGVzYyA9ICEhaGFzUHJvdG9BY2Nlc3NvciAmJiBnT1BEICYmIGdPUEQoT2JqZWN0LnByb3RvdHlwZSwgLyoqIEB0eXBlIHtrZXlvZiB0eXBlb2YgT2JqZWN0LnByb3RvdHlwZX0gKi8gKCdfX3Byb3RvX18nKSk7XG5cbnZhciAkT2JqZWN0ID0gT2JqZWN0O1xudmFyICRnZXRQcm90b3R5cGVPZiA9ICRPYmplY3QuZ2V0UHJvdG90eXBlT2Y7XG5cbi8qKiBAdHlwZSB7aW1wb3J0KCcuL2dldCcpfSAqL1xubW9kdWxlLmV4cG9ydHMgPSBkZXNjICYmIHR5cGVvZiBkZXNjLmdldCA9PT0gJ2Z1bmN0aW9uJ1xuXHQ/IGNhbGxCaW5kKFtkZXNjLmdldF0pXG5cdDogdHlwZW9mICRnZXRQcm90b3R5cGVPZiA9PT0gJ2Z1bmN0aW9uJ1xuXHRcdD8gLyoqIEB0eXBlIHtpbXBvcnQoJy4vZ2V0Jyl9ICovIGZ1bmN0aW9uIGdldER1bmRlcih2YWx1ZSkge1xuXHRcdFx0Ly8gZXNsaW50LWRpc2FibGUtbmV4dC1saW5lIGVxZXFlcVxuXHRcdFx0cmV0dXJuICRnZXRQcm90b3R5cGVPZih2YWx1ZSA9PSBudWxsID8gdmFsdWUgOiAkT2JqZWN0KHZhbHVlKSk7XG5cdFx0fVxuXHRcdDogZmFsc2U7XG4iXSwibmFtZXMiOlsiY2FsbEJpbmQiLCJyZXF1aXJlIiwiZ09QRCIsImhhc1Byb3RvQWNjZXNzb3IiLCJfX3Byb3RvX18iLCJBcnJheSIsInByb3RvdHlwZSIsImUiLCJjb2RlIiwiZGVzYyIsIk9iamVjdCIsIiRPYmplY3QiLCIkZ2V0UHJvdG90eXBlT2YiLCJnZXRQcm90b3R5cGVPZiIsIm1vZHVsZSIsImV4cG9ydHMiLCJnZXQiLCJnZXREdW5kZXIiLCJ2YWx1ZSJdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(ssr)/./node_modules/dunder-proto/get.js\n");
+
+/***/ })
+
+};
+;
