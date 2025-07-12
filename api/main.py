@@ -5,19 +5,24 @@ import os
 import re
 import subprocess
 import asyncio
+import uuid
+import time
 from typing import Dict, Any, Optional
 import json
 
-app = FastAPI(title="MediaCrawler API", description="API for MediaCrawler configuration and execution")
+app = FastAPI(title="MediaCrawler API", version="1.0.0")
 
-# Configure CORS
+# Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js dev server
+    allow_origins=["http://localhost:3000"],  # Frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global storage for running processes
+running_processes: Dict[str, Dict] = {}
 
 # Define request/response models
 class ConfigUpdateRequest(BaseModel):
@@ -37,6 +42,13 @@ class CommandRequest(BaseModel):
 class CommandResponse(BaseModel):
     success: bool
     message: str
+    output: Optional[str] = None
+    error: Optional[str] = None
+    process_id: Optional[str] = None
+
+class ProcessStatusResponse(BaseModel):
+    process_id: str
+    status: str  # "running", "completed", "failed"
     output: Optional[str] = None
     error: Optional[str] = None
 
@@ -175,6 +187,8 @@ async def update_config(request: ConfigUpdateRequest):
 async def run_crawler(request: CommandRequest):
     """Execute crawler command"""
     try:
+        process_id = str(uuid.uuid4())
+        
         # Build the command
         cmd = ["uv", "run", "main.py", "--platform", request.platform, "--lt", request.login_type, "--type", request.crawler_type]
         
@@ -195,35 +209,82 @@ async def run_crawler(request: CommandRequest):
         # Change to the parent directory to run the command
         parent_dir = os.path.abspath("..")
         
-        # Run the command asynchronously
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            cwd=parent_dir,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+        # Start the background task to run the crawler
+        asyncio.create_task(run_crawler_background(process_id, cmd, parent_dir))
+        
+        return CommandResponse(
+            success=True,
+            message="Crawler execution started",
+            process_id=process_id
         )
-        
-        stdout, stderr = await process.communicate()
-        
-        if process.returncode == 0:
-            return CommandResponse(
-                success=True,
-                message="Crawler executed successfully",
-                output=stdout.decode('utf-8') if stdout else None
-            )
-        else:
-            return CommandResponse(
-                success=False,
-                message="Crawler execution failed",
-                error=stderr.decode('utf-8') if stderr else None
-            )
             
     except Exception as e:
         return CommandResponse(
             success=False,
-            message="Failed to execute crawler",
+            message="Failed to start crawler",
             error=str(e)
         )
+
+async def run_crawler_background(process_id: str, cmd: list, cwd: str):
+    """Background task to run the crawler process"""
+    try:
+        # Initialize process info
+        running_processes[process_id] = {
+            "status": "running",
+            "start_time": time.time(),
+            "output": "",
+            "error": "",
+            "process": None
+        }
+        
+        # Run the command asynchronously
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            cwd=cwd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        
+        running_processes[process_id]["process"] = process
+        
+        # Wait for process to complete
+        stdout, stderr = await process.communicate()
+        
+        # Update process status
+        if process.returncode == 0:
+            running_processes[process_id].update({
+                "status": "completed",
+                "output": stdout.decode('utf-8') if stdout else "Crawler completed successfully",
+                "error": None
+            })
+        else:
+            running_processes[process_id].update({
+                "status": "failed",
+                "output": stdout.decode('utf-8') if stdout else None,
+                "error": stderr.decode('utf-8') if stderr else "Crawler execution failed"
+            })
+            
+    except Exception as e:
+        running_processes[process_id].update({
+            "status": "failed",
+            "output": None,
+            "error": f"Failed to execute crawler: {str(e)}"
+        })
+
+@app.get("/process-status/{process_id}")
+async def get_process_status(process_id: str):
+    """Get the status of a running process"""
+    if process_id not in running_processes:
+        raise HTTPException(status_code=404, detail="Process not found")
+    
+    process_info = running_processes[process_id]
+    
+    return ProcessStatusResponse(
+        process_id=process_id,
+        status=process_info["status"],
+        output=process_info.get("output"),
+        error=process_info.get("error")
+    )
 
 @app.get("/command-options")
 async def get_command_options():

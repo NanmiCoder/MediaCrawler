@@ -44,12 +44,40 @@ export function CrawlerTab() {
     crawler_type: ""
   })
   const [isRunning, setIsRunning] = useState(false)
-  const [output, setOutput] = useState("")
-  const [error, setError] = useState("")
+  const [runningStatus, setRunningStatus] = useState<string>("")
+  const [output, setOutput] = useState<string>("")
+  const [error, setError] = useState<string>("")
   const { toast } = useToast()
 
   useEffect(() => {
     fetchCommandOptions()
+    
+    // Restore running state from localStorage if exists
+    const savedState = localStorage.getItem("crawler_running_state")
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState)
+        // Only restore if the state is recent (within 10 minutes)
+        const now = Date.now()
+        const tenMinutes = 10 * 60 * 1000
+        
+        if (state.timestamp && (now - state.timestamp) < tenMinutes) {
+          setIsRunning(state.isRunning)
+          setRunningStatus(state.runningStatus)
+          
+          // Resume polling if there's a process ID
+          if (state.processId && state.isRunning) {
+            pollProcessStatus(state.processId)
+          }
+        } else {
+          // Remove stale state
+          localStorage.removeItem("crawler_running_state")
+        }
+      } catch (error) {
+        // Remove invalid state
+        localStorage.removeItem("crawler_running_state")
+      }
+    }
   }, [])
 
   const fetchCommandOptions = async () => {
@@ -101,36 +129,147 @@ export function CrawlerTab() {
     }
 
     setIsRunning(true)
+    setRunningStatus("启动中... (Starting...)")
     setOutput("")
     setError("")
     
+    // Save initial running state to localStorage
+    localStorage.setItem("crawler_running_state", JSON.stringify({
+      processId: null,
+      isRunning: true,
+      runningStatus: "启动中... (Starting...)",
+      timestamp: Date.now()
+    }))
+    
     try {
+      // Start the crawler
       const response = await axios.post("http://localhost:8000/run-crawler", command)
       
-      if (response.data.success) {
-        setOutput(response.data.output || "Command executed successfully")
+      if (response.data.success && response.data.process_id) {
+        setRunningStatus("运行中... (Running...)")
+        
+        // Update localStorage with process ID
+        localStorage.setItem("crawler_running_state", JSON.stringify({
+          processId: response.data.process_id,
+          isRunning: true,
+          runningStatus: "运行中... (Running...)",
+          timestamp: Date.now()
+        }))
+        
         toast({
           title: "Success",
-          description: "Crawler executed successfully"
+          description: "Crawler started successfully"
         })
+        
+        // Start polling for status
+        pollProcessStatus(response.data.process_id)
       } else {
-        setError(response.data.error || "Command failed")
+        setError(response.data.error || "Failed to start crawler")
+        setIsRunning(false)
+        setRunningStatus("")
+        // Remove from localStorage on failure
+        localStorage.removeItem("crawler_running_state")
         toast({
           title: "Error",
-          description: "Crawler execution failed",
+          description: "Failed to start crawler",
           variant: "destructive"
         })
       }
     } catch (error) {
-      setError("Failed to execute command")
+      setError("Failed to start crawler")
+      setIsRunning(false)
+      setRunningStatus("")
+      // Remove from localStorage on error
+      localStorage.removeItem("crawler_running_state")
       toast({
         title: "Error",
-        description: "Failed to execute crawler",
+        description: "Failed to start crawler",
         variant: "destructive"
       })
-    } finally {
-      setIsRunning(false)
     }
+  }
+
+  const pollProcessStatus = async (processId: string) => {
+    const maxAttempts = 300 // 5 minutes with 1 second intervals
+    let attempts = 0
+    
+    const checkStatus = async () => {
+      try {
+        setRunningStatus("检查状态中... (Checking status...)")
+        const response = await axios.get(`http://localhost:8000/process-status/${processId}`)
+        const status = response.data.status
+        
+        if (status === "completed") {
+          setOutput(response.data.output || "Crawler completed successfully")
+          setIsRunning(false)
+          setRunningStatus("")
+          // Remove from localStorage when completed
+          localStorage.removeItem("crawler_running_state")
+          toast({
+            title: "Success",
+            description: "Crawler completed successfully"
+          })
+          return
+        } else if (status === "failed") {
+          setError(response.data.error || "Crawler execution failed")
+          setIsRunning(false)
+          setRunningStatus("")
+          // Remove from localStorage when failed
+          localStorage.removeItem("crawler_running_state")
+          toast({
+            title: "Error",
+            description: "Crawler execution failed",
+            variant: "destructive"
+          })
+          return
+        } else if (status === "running") {
+          setRunningStatus("爬虫运行中... (Crawler running...)")
+          
+          // Update output if available
+          if (response.data.output) {
+            setOutput(response.data.output)
+          }
+          
+          // Save running state to localStorage
+          localStorage.setItem("crawler_running_state", JSON.stringify({
+            processId,
+            isRunning: true,
+            runningStatus: "爬虫运行中... (Crawler running...)",
+            timestamp: Date.now()
+          }))
+          
+          // Continue polling if still running
+          attempts++
+          if (attempts < maxAttempts) {
+            setTimeout(checkStatus, 1000) // Poll every second
+          } else {
+            setError("Crawler execution timed out")
+            setIsRunning(false)
+            setRunningStatus("")
+            // Remove from localStorage when timed out
+            localStorage.removeItem("crawler_running_state")
+            toast({
+              title: "Error",
+              description: "Crawler execution timed out",
+              variant: "destructive"
+            })
+          }
+        }
+      } catch (error) {
+        setError("Failed to check crawler status")
+        setIsRunning(false)
+        setRunningStatus("")
+        // Remove from localStorage on error
+        localStorage.removeItem("crawler_running_state")
+        toast({
+          title: "Error",
+          description: "Failed to check crawler status",
+          variant: "destructive"
+        })
+      }
+    }
+    
+    checkStatus()
   }
 
   const isValidCommand = command.platform && command.login_type && command.crawler_type
@@ -297,7 +436,7 @@ export function CrawlerTab() {
           className="w-full md:w-auto"
         >
           <Play className="h-4 w-4 mr-2" />
-          {isRunning ? "执行中... (Running...)" : "运行爬虫 (Run Crawler)"}
+          {isRunning ? runningStatus || "执行中... (Running...)" : "运行爬虫 (Run Crawler)"}
         </Button>
       </div>
 

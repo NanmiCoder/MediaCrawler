@@ -11,7 +11,7 @@
 
 # 基础配置
 PLATFORM = "xhs"
-KEYWORDS = "编程副业,编程兼职"
+KEYWORDS = "比特币"
 LOGIN_TYPE = "qrcode"
 COOKIES = ""
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
@@ -78,7 +78,7 @@ AUTO_CLOSE_BROWSER = True
 SAVE_DATA_OPTION = "json"
 
 # 用户浏览器缓存的浏览器文件配置
-USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
+USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name"
 
 # 爬取开始页数 默认从第一页开始
 START_PAGE = 1
