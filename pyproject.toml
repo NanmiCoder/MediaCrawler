@@ -7,8 +7,15 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "aiofiles~=23.2.1",
+<<<<<<< HEAD
+    "aiohttp>=3.12.14",
     "aiomysql==0.2.0",
     "fastapi==0.110.2",
+    "fastapi-offline>=1.7.3",
+=======
+    "aiomysql==0.2.0",
+    "fastapi==0.110.2",
+>>>>>>> dd8a3f5db89e3d52fe7ebf51add33c92ac770b63
     "httpx==0.24.0",
     "jieba==0.42.1",
     "matplotlib==3.9.0",
@@ -19,14 +26,26 @@ dependencies = [
     "playwright==1.45.0",
     "pydantic==2.5.2",
     "pyexecjs==1.5.1",
+<<<<<<< HEAD
+    "pytest>=8.4.1",
     "python-dotenv==1.0.1",
     "redis~=4.6.0",
     "requests==2.32.3",
+    "rich>=14.0.0",
+=======
+    "python-dotenv==1.0.1",
+    "redis~=4.6.0",
+    "requests==2.32.3",
+>>>>>>> dd8a3f5db89e3d52fe7ebf51add33c92ac770b63
     "tenacity==8.2.2",
     "uvicorn==0.29.0",
     "wordcloud==1.9.3",
 ]
 
 [[tool.uv.index]]
+<<<<<<< HEAD
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+=======
 url = "https://mirrors.aliyun.com/pypi/simple"
+>>>>>>> dd8a3f5db89e3d52fe7ebf51add33c92ac770b63
 default = true

@@ -17,3 +17,7 @@ requests==2.32.3
 parsel==1.9.1
 pyexecjs==1.5.1
 pandas==2.2.3
+<<<<<<< HEAD
+python-multipart>=0.0.6
+=======
+>>>>>>> dd8a3f5db89e3d52fe7ebf51add33c92ac770b63
