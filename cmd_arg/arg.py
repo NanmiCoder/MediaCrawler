@@ -36,6 +36,18 @@ async def parse_cmd():
                         help='where to save the data (csv or db or json)', choices=['csv', 'db', 'json'], default=config.SAVE_DATA_OPTION)
     parser.add_argument('--cookies', type=str,
                         help='cookies used for cookie login type', default=config.COOKIES)
+    parser.add_argument('--creator_urls', type=str, nargs='*',
+                        help='creator urls or sec_user_ids for dy platform creator crawling (support multiple URLs separated by space)')
+    parser.add_argument('--video_urls', type=str, nargs='*',
+                        help='video urls or video_ids for dy platform detail crawling (support multiple URLs separated by space)')
+    parser.add_argument('--xhs_note_urls', type=str, nargs='*',
+                        help='note urls or note_ids for xhs platform detail crawling (support multiple URLs separated by space)')
+    parser.add_argument('--xhs_creator_urls', type=str, nargs='*',
+                        help='creator urls or creator_ids for xhs platform creator crawling (support multiple URLs separated by space)')
+    parser.add_argument('--ks_video_urls', type=str, nargs='*',
+                        help='video urls or video_ids for ks platform detail crawling (support multiple URLs separated by space)')
+    parser.add_argument('--ks_creator_urls', type=str, nargs='*',
+                        help='creator urls or creator_ids for ks platform creator crawling (support multiple URLs separated by space)')
 
     args = parser.parse_args()
 
@@ -49,3 +61,33 @@ async def parse_cmd():
     config.ENABLE_GET_SUB_COMMENTS = args.get_sub_comment
     config.SAVE_DATA_OPTION = args.save_data_option
     config.COOKIES = args.cookies
+    
+    # 处理创作者URL参数（仅对抖音平台的creator类型有效）
+    if args.creator_urls and config.PLATFORM == "dy" and config.CRAWLER_TYPE == "creator":
+        config.DY_CREATOR_URL_LIST = args.creator_urls
+        print(f"[CMD] 已设置抖音创作者URL列表: {args.creator_urls}")
+        
+    # 处理视频URL参数（仅对抖音平台的detail类型有效）
+    if args.video_urls and config.PLATFORM == "dy" and config.CRAWLER_TYPE == "detail":
+        config.DY_SPECIFIED_ID_LIST = args.video_urls
+        print(f"[CMD] 已设置抖音视频URL列表: {args.video_urls}")
+        
+    # 处理小红书笔记URL参数（仅对小红书平台的detail类型有效）
+    if args.xhs_note_urls and config.PLATFORM == "xhs" and config.CRAWLER_TYPE == "detail":
+        config.XHS_SPECIFIED_NOTE_URL_LIST = args.xhs_note_urls
+        print(f"[CMD] 已设置小红书笔记URL列表: {args.xhs_note_urls}")
+        
+    # 处理小红书创作者URL参数（仅对小红书平台的creator类型有效）
+    if args.xhs_creator_urls and config.PLATFORM == "xhs" and config.CRAWLER_TYPE == "creator":
+        config.XHS_CREATOR_ID_LIST = args.xhs_creator_urls
+        print(f"[CMD] 已设置小红书创作者URL列表: {args.xhs_creator_urls}")
+        
+    # 处理快手视频URL参数（仅对快手平台的detail类型有效）
+    if args.ks_video_urls and config.PLATFORM == "ks" and config.CRAWLER_TYPE == "detail":
+        config.KS_SPECIFIED_ID_LIST = args.ks_video_urls
+        print(f"[CMD] 已设置快手视频URL列表: {args.ks_video_urls}")
+        
+    # 处理快手创作者URL参数（仅对快手平台的creator类型有效）
+    if args.ks_creator_urls and config.PLATFORM == "ks" and config.CRAWLER_TYPE == "creator":
+        config.KS_CREATOR_ID_LIST = args.ks_creator_urls
+        print(f"[CMD] 已设置快手创作者URL列表: {args.ks_creator_urls}")

@@ -320,3 +320,53 @@ class DOUYINClient(AbstractApiClient):
                 await callback(aweme_list)
             result.extend(aweme_list)
         return result
+
+    async def resolve_username_to_sec_user_id(self, username: str) -> str:
+        """
+        通过用户名解析出sec_user_id
+        适用于 @username 格式的输入
+        
+        Args:
+            username: 用户名（不包含@符号）
+            
+        Returns:
+            str: sec_user_id 或空字符串
+        """
+        try:
+            # 尝试通过搜索接口查找用户
+            search_params = {
+                'search_channel': 'aweme_user_web',
+                'enable_history': '1',
+                'keyword': username,
+                'search_source': 'normal_search',
+                'query_correct_type': '1',
+                'is_filter_search': '0',
+                'offset': 0,
+                'count': '10',
+                'need_filter_settings': '1',
+                'list_type': 'single',
+            }
+            
+            headers = copy.copy(self.headers)
+            headers["Referer"] = f"https://www.douyin.com/search/{username}?type=user"
+            
+            response = await self.get("/aweme/v1/web/discover/search/", search_params, headers=headers)
+            
+            # 从搜索结果中找到匹配的用户
+            user_list = response.get("user_list", [])
+            for user_item in user_list:
+                user_info = user_item.get("user_info", {})
+                if (user_info.get("unique_id") == username or 
+                    user_info.get("short_id") == username or
+                    user_info.get("nickname") == username):
+                    sec_user_id = user_info.get("sec_uid")
+                    if sec_user_id:
+                        utils.logger.info(f"[DOUYINClient.resolve_username_to_sec_user_id] 找到用户: {username} -> {sec_user_id}")
+                        return sec_user_id
+            
+            utils.logger.warning(f"[DOUYINClient.resolve_username_to_sec_user_id] 未找到用户: {username}")
+            return ""
+            
+        except Exception as e:
+            utils.logger.error(f"[DOUYINClient.resolve_username_to_sec_user_id] 解析用户名失败: {username}, error: {e}")
+            return ""

@@ -40,16 +40,100 @@
 - **优势特点**：无需逆向复杂的加密算法，大幅降低技术门槛
 
 ## ✨ 功能特性
-| 平台   | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
-| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- |
-| 小红书 | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 抖音   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 快手   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| B 站   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 微博   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 贴吧   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| 知乎   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
+| 平台   | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 | 智能URL解析 |
+| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ |
+| 小红书 | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| 抖音   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   |
+| 快手   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   |
+| B 站   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| 微博   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   |
+| 贴吧   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| 知乎   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
 
+### 🔥 抖音爬取增强功能
+
+**支持多种输入格式，智能识别和解析**：
+
+#### 创作者主页爬取
+| 输入格式 | 示例 | 解析方式 |
+|---------|------|----------|
+| 完整用户主页URL | `https://www.douyin.com/user/MS4wLjABAAAA...` | 直接提取sec_user_id |
+| 分享短链接 | `https://v.douyin.com/J7v_LxD7vUQ/` | 浏览器重定向解析 |
+| 直接sec_user_id | `MS4wLjABAAAA...` | 直接使用 |
+
+#### 单个视频爬取
+| 输入格式 | 示例 | 解析方式 |
+|---------|------|----------|
+| 完整视频URL | `https://www.douyin.com/video/7525082444551310602` | 直接提取video_id |
+| 分享短链接 | `https://v.douyin.com/iXXXXXX/` | 浏览器重定向解析 |
+| 直接video_id | `7525082444551310602` | 直接使用 |
+
+**使用方式**：
+```bash
+# 创作者主页爬取
+uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
+
+# 单个视频爬取
+uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
+
+# 交互式输入（推荐）
+uv run main.py --platform dy --lt qrcode --type creator
+uv run main.py --platform dy --lt qrcode --type detail
+```
+
+### 🔥 快手爬取增强功能
+
+**支持多种输入格式，智能识别和解析**：
+
+#### 视频爬取
+| 输入格式 | 示例 | 解析方式 |
+|---------|------|----------|
+| 完整视频URL | `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig` | 直接提取video_id |
+| 分享短链接 | `https://v.kuaishou.com/2F50ZXj` | 浏览器重定向解析 |
+| 直接video_id | `3xf8enb8dbj6uig` | 直接使用 |
+
+#### 创作者主页爬取
+| 输入格式 | 示例 | 解析方式 |
+|---------|------|----------|
+| 完整用户主页URL | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | 直接提取user_id |
+| 直接user_id | `3xi4kwp2pg8tp8k` | 直接使用 |
+
+**使用方式**：
+```bash
+# 视频爬取
+uv run main.py --platform ks --lt qrcode --type detail --ks_video_urls "https://v.kuaishou.com/2F50ZXj"
+
+# 创作者主页爬取
+uv run main.py --platform ks --lt qrcode --type creator --ks_creator_urls "https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k"
+```
+
+### 🔥 微博爬取增强功能
+
+**支持多种输入格式，智能识别和解析**：
+
+#### 帖子爬取
+| 输入格式 | 示例 | 解析方式 |
+|---------|------|----------|
+| 桌面版分享链接 | `https://weibo.com/7643904561/5182160183232445` | 直接提取post_id |
+| 手机版URL | `https://m.weibo.cn/detail/5182160183232445` | 直接提取post_id |
+| 带参数URL | `https://weibo.com/detail?id=5182160183232445` | 从参数提取post_id |
+| 直接post_id | `5182160183232445` | 直接使用 |
+
+#### 创作者主页爬取
+| 输入格式 | 示例 | 解析方式 |
+|---------|------|----------|
+| 桌面版用户主页 | `https://weibo.com/u/5533390220` | 直接提取user_id |
+| 手机版用户主页 | `https://m.weibo.cn/u/5533390220` | 直接提取user_id |
+| 直接user_id | `5533390220` | 直接使用 |
+
+**使用方式**：
+```bash
+# 帖子爬取
+uv run main.py --platform wb --lt qrcode --type detail
+
+# 创作者主页爬取
+uv run main.py --platform wb --lt qrcode --type creator
+```
 
 <details id="pro-version">
 <summary>🔗 <strong>🚀 MediaCrawlerPro 重磅发布！更多的功能，更好的架构设计！</strong></summary>
@@ -123,21 +207,61 @@ uv run playwright install
 
 ## 🚀 运行爬虫程序
 
+### 基础使用
+
 ```shell
 # 项目默认是没有开启评论爬取模式，如需评论请在 config/base_config.py 中的 ENABLE_GET_COMMENTS 变量修改
 # 一些其他支持项，也可以在 config/base_config.py 查看功能，写的有中文注释
 
-# 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
+# 关键词搜索爬取
 uv run main.py --platform xhs --lt qrcode --type search
 
-# 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
+# 指定帖子ID爬取
 uv run main.py --platform xhs --lt qrcode --type detail
 
-# 打开对应APP扫二维码登录
+# 创作者主页爬取
+uv run main.py --platform xhs --lt qrcode --type creator
 
 # 其他平台爬虫使用示例，执行下面的命令查看
 uv run main.py --help
 ```
+
+### 🔥 抖音智能URL解析新功能
+
+**无需手动提取ID，支持直接粘贴分享链接**：
+
+#### 创作者主页爬取
+```shell
+# 命令行直接输入（支持任意格式）
+uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
+
+# 交互式输入（推荐）
+uv run main.py --platform dy --lt qrcode --type creator
+
+# 批量爬取多个创作者
+uv run main.py --platform dy --lt qrcode --type creator --creator_urls "URL1" "URL2" "URL3"
+```
+
+#### 单个视频爬取
+```shell
+# 命令行直接输入（支持任意格式）
+uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
+
+# 交互式输入（推荐）
+uv run main.py --platform dy --lt qrcode --type detail
+
+# 批量爬取多个视频
+uv run main.py --platform dy --lt qrcode --type detail --video_urls "URL1" "URL2" "URL3"
+
+# 关闭评论爬取以提高速度
+uv run main.py --platform dy --lt qrcode --type detail --video_urls "URL" --get_comment false
+```
+
+**支持的输入格式示例**：
+- 创作者完整URL：`https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE`
+- 视频完整URL：`https://www.douyin.com/video/7525082444551310602`
+- 分享短链接：`https://v.douyin.com/J7v_LxD7vUQ/`（从APP分享获得）
+- 直接ID：`MS4wLjABAAAA...` 或 `7525082444551310602`
 
 <details>
 <summary>🔗 <strong>使用 Python 原生 venv 管理环境（不推荐）</strong></summary>
@@ -204,6 +328,89 @@ python main.py --help
 - **CSV 文件**：支持保存到 CSV 中（`data/` 目录下）
 - **JSON 文件**：支持保存到 JSON 中（`data/` 目录下）
 
+### 📊 抖音创作者爬取数据文件
+
+creator模式下会生成三个数据文件：
+
+#### CSV格式 (`SAVE_DATA_OPTION = "csv"`)
+```
+data/douyin/
+├── 1_creator_contents_2025-07-12.csv    # 所有视频详细信息
+├── 1_creator_comments_2025-07-12.csv    # 视频评论信息（如果开启）
+└── 1_creator_creator_2025-07-12.csv     # 创作者基本信息
+```
+
+#### JSON格式 (`SAVE_DATA_OPTION = "json"`)
+```
+data/douyin/json/
+├── creator_contents_2025-07-12.json     # 所有视频详细信息
+├── creator_comments_2025-07-12.json     # 视频评论信息
+└── creator_creator_2025-07-12.json      # 创作者基本信息
+```
+
+**数据内容说明**：
+- **contents文件**：包含创作者所有视频的详细信息（标题、描述、播放量、点赞数、发布时间、下载链接等）
+- **creator文件**：包含创作者基本信息（昵称、头像、简介、粉丝数、关注数等）
+- **comments文件**：包含所有视频的评论信息（评论内容、评论者、点赞数等，需开启`ENABLE_GET_COMMENTS`）
+
+## ⚙️ 配置说明
+
+### 抖音智能URL解析配置
+
+在 `config/base_config.py` 中可以配置URL列表：
+
+#### 创作者主页爬取配置
+```python
+# 指定抖音创作者主页URL列表 - 支持四种格式自动识别和解析
+DY_CREATOR_URL_LIST = [
+    # 格式1: 完整用户主页URL
+    "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    
+    # 格式2: 用户名URL（通过搜索API解析）
+    "https://www.douyin.com/@username",
+    
+    # 格式3: 分享短链接（通过浏览器重定向解析）
+    "https://v.douyin.com/J7v_LxD7vUQ/",
+    
+    # 格式4: 直接的sec_user_id
+    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+]
+```
+
+#### 单个视频爬取配置
+```python
+# 指定抖音视频列表 - 支持三种格式自动识别和解析
+DY_SPECIFIED_ID_LIST = [
+    # 格式1: 完整视频URL
+    "https://www.douyin.com/video/7525082444551310602",
+    
+    # 格式2: 分享短链接（通过浏览器重定向解析）
+    "https://v.douyin.com/iXXXXXX/",
+    
+    # 格式3: 直接的video_id（19位数字）
+    "7525082444551310602",
+]
+```
+
+### 常用配置项
+
+```python
+# 爬取模式设置
+PLATFORM = "dy"              # 平台选择
+CRAWLER_TYPE = "creator"     # 爬取类型（search/detail/creator）
+
+# 数据保存设置
+SAVE_DATA_OPTION = "csv"     # 数据保存格式（csv/db/json）
+
+# 评论爬取设置
+ENABLE_GET_COMMENTS = True                           # 是否爬取评论
+ENABLE_GET_SUB_COMMENTS = False                      # 是否爬取二级评论
+CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10         # 单视频最大评论数
+
+# 并发控制
+MAX_CONCURRENCY_NUM = 1      # 并发数量控制
+```
+
 ---
 
 [🚀 MediaCrawlerPro 重磅发布 🚀！更多的功能，更好的架构设计！](https://github.com/MediaCrawlerPro)
@@ -243,21 +450,11 @@ python main.py --help
 <a href="https://www.swiftproxy.net/?ref=nanmi">
 <img src="docs/static/images/img_5.png">
 <br>
-Swiftproxy - 90M+ 全球高质量纯净住宅IP，注册可领免费 500MB 测试流量，动态流量不过期！
+**Swiftproxy** - 90M+ 全球高质量纯净住宅IP，注册可领免费 500MB 测试流量，动态流量不过期！
 > 专属折扣码：**GHB5** 立享九折优惠！
 </a>
 
-<br>
-<br>
-
-<a href="https://www.tkyds.com/?=MediaCrawler">
-<img src="docs/static/images/img_6.png">
-<br>
-TK云大师,专业的TikTok矩阵系统,AI赋能自动化,单人轻松管理上万账号！
-</a>
-
-<br>
-<br>
+<br><br>
 
 <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">**Sider** - 全网最火的 ChatGPT 插件，体验拉满！</a>
 

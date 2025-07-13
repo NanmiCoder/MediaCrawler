@@ -273,11 +273,25 @@ class WeiboClient:
         Returns: {
 
         """
+        utils.logger.info(f"[WeiboClient.get_creator_container_info] 开始获取用户容器信息，用户ID: {creator_id}")
+        
         response = await self.get(f"/u/{creator_id}", return_response=True)
+        utils.logger.info(f"[WeiboClient.get_creator_container_info] 响应状态码: {response.status_code}")
+        
         m_weibocn_params = response.cookies.get("M_WEIBOCN_PARAMS")
+        utils.logger.info(f"[WeiboClient.get_creator_container_info] M_WEIBOCN_PARAMS cookie: {m_weibocn_params}")
+        utils.logger.info(f"[WeiboClient.get_creator_container_info] 所有cookies: {list(response.cookies.keys())}")
+        
         if not m_weibocn_params:
+            utils.logger.error(f"[WeiboClient.get_creator_container_info] 未找到M_WEIBOCN_PARAMS cookie，可能用户ID不存在或需要登录")
+            # 尝试检查响应内容
+            content = response.text[:500] if hasattr(response, 'text') else str(response.content)[:500]
+            utils.logger.error(f"[WeiboClient.get_creator_container_info] 响应内容片段: {content}")
             raise DataFetchError("get containerid failed")
+            
         m_weibocn_params_dict = parse_qs(unquote(m_weibocn_params))
+        utils.logger.info(f"[WeiboClient.get_creator_container_info] 解析后的参数: {m_weibocn_params_dict}")
+        
         return {
             "fid_container_id": m_weibocn_params_dict.get("fid", [""])[0],
             "lfid_container_id": m_weibocn_params_dict.get("lfid", [""])[0]
@@ -294,14 +308,25 @@ class WeiboClient:
         """
         uri = "/api/container/getIndex"
         container_info = await self.get_creator_container_info(creator_id)
-        if container_info.get("fid_container_id") == "" or container_info.get("lfid_container_id") == "":
-            utils.logger.error(f"[WeiboClient.get_creator_info_by_id] get containerid failed")
+        utils.logger.info(f"[WeiboClient.get_creator_info_by_id] 获取到的容器信息: {container_info}")
+        
+        fid_container_id = container_info.get("fid_container_id", "")
+        lfid_container_id = container_info.get("lfid_container_id", "")
+        
+        utils.logger.info(f"[WeiboClient.get_creator_info_by_id] fid_container_id: '{fid_container_id}', lfid_container_id: '{lfid_container_id}'")
+        
+        if fid_container_id == "":
+            utils.logger.error(f"[WeiboClient.get_creator_info_by_id] fid_container_id为空")
             raise DataFetchError("get containerid failed")
+        
+        # lfid_container_id可能为空，这是正常的，不应该阻止继续执行
+        if lfid_container_id == "":
+            utils.logger.warning(f"[WeiboClient.get_creator_info_by_id] lfid_container_id为空，但继续执行")
         params = {
             "jumpfrom": "weibocom",
             "type": "uid",
             "value": creator_id,
-            "containerid": container_info["fid_container_id"],
+            "containerid": fid_container_id,
         }
 
         user_res = await self.get(uri, params)

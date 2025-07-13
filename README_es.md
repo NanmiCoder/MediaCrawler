@@ -36,15 +36,100 @@ Una poderosa **herramienta de recolección de datos de redes sociales multiplata
 - **Ventajas**: No necesita hacer ingeniería inversa de algoritmos de encriptación complejos, reduciendo significativamente la barrera técnica
 
 ## ✨ Características
-| Plataforma | Búsqueda por Palabras Clave | Rastreo de ID de Publicación Específica | Comentarios Secundarios | Página de Inicio de Creador Específico | Caché de Estado de Login | Pool de Proxy IP | Generar Nube de Palabras de Comentarios |
-| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- |
-| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Douyin   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Kuaishou   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Bilibili   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Weibo   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
+| Plataforma | Búsqueda por Palabras Clave | Rastreo de ID de Publicación Específica | Comentarios Secundarios | Página de Inicio de Creador Específico | Caché de Estado de Login | Pool de Proxy IP | Generar Nube de Palabras de Comentarios | Análisis Inteligente de URL |
+| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ |
+| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Douyin   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** |
+| Kuaishou   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** |
+| Bilibili   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Weibo   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** |
+| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+
+### 🔥 Funciones Mejoradas de Douyin
+
+**Soporte para múltiples formatos de entrada con reconocimiento y análisis inteligente**:
+
+#### Rastreo de Página de Inicio de Creador
+| Formato de Entrada | Ejemplo | Método de Análisis |
+|---------|------|----------|
+| URL Completa de Página de Usuario | `https://www.douyin.com/user/MS4wLjABAAAA...` | Extraer sec_user_id directamente |
+| Enlace Corto Compartido | `https://v.douyin.com/J7v_LxD7vUQ/` | Análisis de redirección del navegador |
+| sec_user_id Directo | `MS4wLjABAAAA...` | Usar directamente |
+
+#### Rastreo de Video Individual
+| Formato de Entrada | Ejemplo | Método de Análisis |
+|---------|------|----------|
+| URL Completa de Video | `https://www.douyin.com/video/7525082444551310602` | Extraer video_id directamente |
+| Enlace Corto Compartido | `https://v.douyin.com/iXXXXXX/` | Análisis de redirección del navegador |
+| video_id Directo | `7525082444551310602` | Usar directamente |
+
+**Uso**:
+```bash
+# Rastreo de página de inicio de creador
+uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
+
+# Rastreo de video individual
+uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
+
+# Entrada interactiva (recomendada)
+uv run main.py --platform dy --lt qrcode --type creator
+uv run main.py --platform dy --lt qrcode --type detail
+```
+
+### 🔥 Funciones Mejoradas de Kuaishou
+
+**Soporte para múltiples formatos de entrada con reconocimiento y análisis inteligente**:
+
+#### Rastreo de Video
+| Formato de Entrada | Ejemplo | Método de Análisis |
+|---------|------|----------|
+| URL Completa de Video | `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig` | Extraer video_id directamente |
+| Enlace Corto Compartido | `https://v.kuaishou.com/2F50ZXj` | Análisis de redirección del navegador |
+| video_id Directo | `3xf8enb8dbj6uig` | Usar directamente |
+
+#### Rastreo de Página de Inicio de Creador
+| Formato de Entrada | Ejemplo | Método de Análisis |
+|---------|------|----------|
+| URL Completa de Página de Usuario | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | Extraer user_id directamente |
+| user_id Directo | `3xi4kwp2pg8tp8k` | Usar directamente |
+
+**Uso**:
+```bash
+# Rastreo de video
+uv run main.py --platform ks --lt qrcode --type detail --ks_video_urls "https://v.kuaishou.com/2F50ZXj"
+
+# Rastreo de página de inicio de creador
+uv run main.py --platform ks --lt qrcode --type creator --ks_creator_urls "https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k"
+```
+
+### 🔥 Funciones Mejoradas de Weibo
+
+**Soporte para múltiples formatos de entrada con reconocimiento y análisis inteligente**:
+
+#### Rastreo de Publicación
+| Formato de Entrada | Ejemplo | Método de Análisis |
+|---------|------|----------|
+| Enlace Compartido de Escritorio | `https://weibo.com/7643904561/5182160183232445` | Extraer post_id directamente |
+| URL Móvil | `https://m.weibo.cn/detail/5182160183232445` | Extraer post_id directamente |
+| URL con Parámetros | `https://weibo.com/detail?id=5182160183232445` | Extraer post_id de parámetros |
+| post_id Directo | `5182160183232445` | Usar directamente |
+
+#### Rastreo de Página de Inicio de Creador
+| Formato de Entrada | Ejemplo | Método de Análisis |
+|---------|------|----------|
+| Página de Usuario de Escritorio | `https://weibo.com/u/5533390220` | Extraer user_id directamente |
+| Página de Usuario Móvil | `https://m.weibo.cn/u/5533390220` | Extraer user_id directamente |
+| user_id Directo | `5533390220` | Usar directamente |
+
+**Uso**:
+```bash
+# Rastreo de publicación
+uv run main.py --platform wb --lt qrcode --type detail
+
+# Rastreo de página de inicio de creador
+uv run main.py --platform wb --lt qrcode --type creator
+```
 
 
 <details id="pro-version">

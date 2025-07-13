@@ -36,15 +36,100 @@ A powerful **multi-platform social media data collection tool** that supports cr
 - **Advantages**: No need to reverse complex encryption algorithms, significantly lowering the technical barrier
 
 ## ✨ Features
-| Platform | Keyword Search | Specific Post ID Crawling | Secondary Comments | Specific Creator Homepage | Login State Cache | IP Proxy Pool | Generate Comment Word Cloud |
-| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- |
-| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Douyin   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Kuaishou   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Bilibili   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Weibo   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
-| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
+| Platform | Keyword Search | Specific Post ID Crawling | Secondary Comments | Specific Creator Homepage | Login State Cache | IP Proxy Pool | Generate Comment Word Cloud | Smart URL Parsing |
+| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ |
+| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Douyin   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** |
+| Kuaishou   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** |
+| Bilibili   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Weibo   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** |
+| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+
+### 🔥 Douyin Enhanced Features
+
+**Supports multiple input formats with intelligent recognition and parsing**:
+
+#### Creator Homepage Crawling
+| Input Format | Example | Parsing Method |
+|---------|------|----------|
+| Complete User Homepage URL | `https://www.douyin.com/user/MS4wLjABAAAA...` | Extract sec_user_id directly |
+| Share Short Link | `https://v.douyin.com/J7v_LxD7vUQ/` | Browser redirect parsing |
+| Direct sec_user_id | `MS4wLjABAAAA...` | Use directly |
+
+#### Single Video Crawling
+| Input Format | Example | Parsing Method |
+|---------|------|----------|
+| Complete Video URL | `https://www.douyin.com/video/7525082444551310602` | Extract video_id directly |
+| Share Short Link | `https://v.douyin.com/iXXXXXX/` | Browser redirect parsing |
+| Direct video_id | `7525082444551310602` | Use directly |
+
+**Usage**:
+```bash
+# Creator homepage crawling
+uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
+
+# Single video crawling
+uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
+
+# Interactive input (recommended)
+uv run main.py --platform dy --lt qrcode --type creator
+uv run main.py --platform dy --lt qrcode --type detail
+```
+
+### 🔥 Kuaishou Enhanced Features
+
+**Supports multiple input formats with intelligent recognition and parsing**:
+
+#### Video Crawling
+| Input Format | Example | Parsing Method |
+|---------|------|----------|
+| Complete Video URL | `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig` | Extract video_id directly |
+| Share Short Link | `https://v.kuaishou.com/2F50ZXj` | Browser redirect parsing |
+| Direct video_id | `3xf8enb8dbj6uig` | Use directly |
+
+#### Creator Homepage Crawling
+| Input Format | Example | Parsing Method |
+|---------|------|----------|
+| Complete User Homepage URL | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | Extract user_id directly |
+| Direct user_id | `3xi4kwp2pg8tp8k` | Use directly |
+
+**Usage**:
+```bash
+# Video crawling
+uv run main.py --platform ks --lt qrcode --type detail --ks_video_urls "https://v.kuaishou.com/2F50ZXj"
+
+# Creator homepage crawling
+uv run main.py --platform ks --lt qrcode --type creator --ks_creator_urls "https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k"
+```
+
+### 🔥 Weibo Enhanced Features
+
+**Supports multiple input formats with intelligent recognition and parsing**:
+
+#### Post Crawling
+| Input Format | Example | Parsing Method |
+|---------|------|----------|
+| Desktop Share Link | `https://weibo.com/7643904561/5182160183232445` | Extract post_id directly |
+| Mobile URL | `https://m.weibo.cn/detail/5182160183232445` | Extract post_id directly |
+| URL with Parameters | `https://weibo.com/detail?id=5182160183232445` | Extract post_id from parameters |
+| Direct post_id | `5182160183232445` | Use directly |
+
+#### Creator Homepage Crawling
+| Input Format | Example | Parsing Method |
+|---------|------|----------|
+| Desktop User Homepage | `https://weibo.com/u/5533390220` | Extract user_id directly |
+| Mobile User Homepage | `https://m.weibo.cn/u/5533390220` | Extract user_id directly |
+| Direct user_id | `5533390220` | Use directly |
+
+**Usage**:
+```bash
+# Post crawling
+uv run main.py --platform wb --lt qrcode --type detail
+
+# Creator homepage crawling
+uv run main.py --platform wb --lt qrcode --type creator
+```
 
 
 <details id="pro-version">

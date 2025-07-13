@@ -28,6 +28,7 @@ from var import comment_tasks_var, crawler_type_var, source_keyword_var
 
 from .client import KuaiShouClient
 from .exception import DataFetchError
+from .help import resolve_any_video_url_to_id, resolve_any_creator_url_to_id
 from .login import KuaishouLogin
 
 
@@ -155,16 +156,27 @@ class KuaishouCrawler(AbstractCrawler):
 
     async def get_specified_videos(self):
         """Get the information and comments of the specified post"""
+        # 智能解析视频输入
+        resolved_video_ids = []
+        for video_input in config.KS_SPECIFIED_ID_LIST:
+            video_id = await self._process_video_input(video_input)
+            if video_id:
+                resolved_video_ids.append(video_id)
+        
+        # 去重处理
+        resolved_video_ids = list(set(resolved_video_ids))
+        utils.logger.info(f"[KuaishouCrawler.get_specified_videos] 解析得到的视频ID: {resolved_video_ids}")
+        
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_video_info_task(video_id=video_id, semaphore=semaphore)
-            for video_id in config.KS_SPECIFIED_ID_LIST
+            for video_id in resolved_video_ids
         ]
         video_details = await asyncio.gather(*task_list)
         for video_detail in video_details:
             if video_detail is not None:
                 await kuaishou_store.update_kuaishou_video(video_detail)
-        await self.batch_get_video_comments(config.KS_SPECIFIED_ID_LIST)
+        await self.batch_get_video_comments(resolved_video_ids)
 
     async def get_video_info_task(
         self, video_id: str, semaphore: asyncio.Semaphore
@@ -350,7 +362,19 @@ class KuaishouCrawler(AbstractCrawler):
         utils.logger.info(
             "[KuaiShouCrawler.get_creators_and_videos] Begin get kuaishou creators"
         )
-        for user_id in config.KS_CREATOR_ID_LIST:
+        
+        # 智能解析创作者输入
+        resolved_creator_ids = []
+        for creator_input in config.KS_CREATOR_ID_LIST:
+            creator_id = await self._process_creator_input(creator_input)
+            if creator_id:
+                resolved_creator_ids.append(creator_id)
+        
+        # 去重处理
+        resolved_creator_ids = list(set(resolved_creator_ids))
+        utils.logger.info(f"[KuaiShouCrawler.get_creators_and_videos] 解析得到的创作者ID: {resolved_creator_ids}")
+        
+        for user_id in resolved_creator_ids:
             # get creator detail info from web html content
             createor_info: Dict = await self.ks_client.get_creator_info(user_id=user_id)
             if createor_info:
@@ -367,6 +391,88 @@ class KuaishouCrawler(AbstractCrawler):
                 video_item.get("photo", {}).get("id") for video_item in all_video_list
             ]
             await self.batch_get_video_comments(video_ids)
+
+    async def _process_video_input(self, video_input: str) -> str:
+        """
+        处理视频输入，支持智能URL解析
+        如果解析失败，回退到基础解析
+        """
+        try:
+            utils.logger.info(f"[KuaiShouCrawler._process_video_input] 开始解析视频输入: {video_input}")
+            
+            # 如果是短链接，给出提示但继续尝试解析
+            if 'v.kuaishou.com' in video_input or 'chenzhongtech.com' in video_input:
+                utils.logger.info(f"[KuaiShouCrawler._process_video_input] 检测到短链接，尝试解析: {video_input}")
+                # 注意：短链接解析可能失败，如果经常失败可以考虑直接使用完整URL或video_id
+            
+            video_id = await resolve_any_video_url_to_id(video_input, self.context_page)
+            if video_id:
+                utils.logger.info(f"[KuaiShouCrawler._process_video_input] 解析成功，video_id: {video_id}")
+                return video_id
+            else:
+                # 回退到基础解析
+                utils.logger.info(f"[KuaiShouCrawler._process_video_input] 智能解析失败，尝试基础解析")
+                from .help import extract_video_id_from_url
+                basic_video_id = extract_video_id_from_url(video_input)
+                if basic_video_id:
+                    utils.logger.info(f"[KuaiShouCrawler._process_video_input] 基础解析成功，video_id: {basic_video_id}")
+                    return basic_video_id
+                    
+                utils.logger.warning(f"[KuaiShouCrawler._process_video_input] 无法解析视频输入: {video_input}")
+                return ""
+        except Exception as e:
+            utils.logger.error(f"[KuaiShouCrawler._process_video_input] 解析视频输入时发生错误: {e}")
+            # 尝试基础解析作为后备
+            try:
+                from .help import extract_video_id_from_url
+                basic_video_id = extract_video_id_from_url(video_input)
+                if basic_video_id:
+                    utils.logger.info(f"[KuaiShouCrawler._process_video_input] 后备解析成功，video_id: {basic_video_id}")
+                    return basic_video_id
+            except:
+                pass
+            return ""
+
+    async def _process_creator_input(self, creator_input: str) -> str:
+        """
+        处理创作者输入，支持智能URL解析
+        如果解析失败，回退到基础解析
+        """
+        try:
+            utils.logger.info(f"[KuaiShouCrawler._process_creator_input] 开始解析创作者输入: {creator_input}")
+            
+            # 如果是短链接，给出提示但继续尝试解析
+            if 'v.kuaishou.com' in creator_input or 'chenzhongtech.com' in creator_input:
+                utils.logger.info(f"[KuaiShouCrawler._process_creator_input] 检测到短链接，尝试解析: {creator_input}")
+                # 注意：短链接解析可能失败，如果经常失败可以考虑直接使用完整URL或creator_id
+            
+            creator_id = await resolve_any_creator_url_to_id(creator_input, self.context_page)
+            if creator_id:
+                utils.logger.info(f"[KuaiShouCrawler._process_creator_input] 解析成功，creator_id: {creator_id}")
+                return creator_id
+            else:
+                # 回退到基础解析
+                utils.logger.info(f"[KuaiShouCrawler._process_creator_input] 智能解析失败，尝试基础解析")
+                from .help import extract_creator_id_from_url
+                basic_creator_id = extract_creator_id_from_url(creator_input)
+                if basic_creator_id:
+                    utils.logger.info(f"[KuaiShouCrawler._process_creator_input] 基础解析成功，creator_id: {basic_creator_id}")
+                    return basic_creator_id
+                    
+                utils.logger.warning(f"[KuaiShouCrawler._process_creator_input] 无法解析创作者输入: {creator_input}")
+                return ""
+        except Exception as e:
+            utils.logger.error(f"[KuaiShouCrawler._process_creator_input] 解析创作者输入时发生错误: {e}")
+            # 尝试基础解析作为后备
+            try:
+                from .help import extract_creator_id_from_url
+                basic_creator_id = extract_creator_id_from_url(creator_input)
+                if basic_creator_id:
+                    utils.logger.info(f"[KuaiShouCrawler._process_creator_input] 后备解析成功，creator_id: {basic_creator_id}")
+                    return basic_creator_id
+            except:
+                pass
+            return ""
 
     async def fetch_creator_video_detail(self, video_list: List[Dict]):
         """

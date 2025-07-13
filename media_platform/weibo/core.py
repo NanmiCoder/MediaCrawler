@@ -35,7 +35,7 @@ from var import crawler_type_var, source_keyword_var
 from .client import WeiboClient
 from .exception import DataFetchError
 from .field import SearchType
-from .help import filter_search_result_card
+from .help import filter_search_result_card, resolve_any_post_url_to_id, resolve_any_user_url_to_id
 from .login import WeiboLogin
 
 
@@ -171,16 +171,27 @@ class WeiboCrawler(AbstractCrawler):
         get specified notes info
         :return:
         """
+        # 智能解析帖子输入
+        resolved_post_ids = []
+        for post_input in config.WEIBO_SPECIFIED_ID_LIST:
+            post_id = await self._process_post_input(post_input)
+            if post_id:
+                resolved_post_ids.append(post_id)
+        
+        # 去重处理
+        resolved_post_ids = list(set(resolved_post_ids))
+        utils.logger.info(f"[WeiboCrawler.get_specified_notes] 解析得到的帖子ID: {resolved_post_ids}")
+        
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_note_info_task(note_id=note_id, semaphore=semaphore) for note_id in
-            config.WEIBO_SPECIFIED_ID_LIST
+            resolved_post_ids
         ]
         video_details = await asyncio.gather(*task_list)
         for note_item in video_details:
             if note_item:
                 await weibo_store.update_weibo_note(note_item)
-        await self.batch_get_notes_comments(config.WEIBO_SPECIFIED_ID_LIST)
+        await self.batch_get_notes_comments(resolved_post_ids)
 
     async def get_note_info_task(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """
@@ -270,7 +281,19 @@ class WeiboCrawler(AbstractCrawler):
 
         """
         utils.logger.info("[WeiboCrawler.get_creators_and_notes] Begin get weibo creators")
-        for user_id in config.WEIBO_CREATOR_ID_LIST:
+        
+        # 智能解析创作者输入
+        resolved_creator_ids = []
+        for creator_input in config.WEIBO_CREATOR_ID_LIST:
+            creator_id = await self._process_creator_input(creator_input)
+            if creator_id:
+                resolved_creator_ids.append(creator_id)
+        
+        # 去重处理
+        resolved_creator_ids = list(set(resolved_creator_ids))
+        utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] 解析得到的创作者ID: {resolved_creator_ids}")
+        
+        for user_id in resolved_creator_ids:
             createor_info_res: Dict = await self.wb_client.get_creator_info_by_id(creator_id=user_id)
             if createor_info_res:
                 createor_info: Dict = createor_info_res.get("userInfo", {})
@@ -295,7 +318,79 @@ class WeiboCrawler(AbstractCrawler):
                 utils.logger.error(
                     f"[WeiboCrawler.get_creators_and_notes] get creator info error, creator_id:{user_id}")
 
+    async def _process_post_input(self, post_input: str) -> str:
+        """
+        处理帖子输入，支持智能URL解析
+        如果解析失败，回退到基础解析
+        """
+        try:
+            utils.logger.info(f"[WeiboCrawler._process_post_input] 开始解析帖子输入: {post_input}")
+            
+            # 智能解析
+            post_id = await resolve_any_post_url_to_id(post_input, self.context_page)
+            if post_id:
+                utils.logger.info(f"[WeiboCrawler._process_post_input] 解析成功，post_id: {post_id}")
+                return post_id
+            else:
+                # 回退到基础解析
+                utils.logger.info(f"[WeiboCrawler._process_post_input] 智能解析失败，尝试基础解析")
+                from .help import extract_post_id_from_url
+                basic_post_id = extract_post_id_from_url(post_input)
+                if basic_post_id:
+                    utils.logger.info(f"[WeiboCrawler._process_post_input] 基础解析成功，post_id: {basic_post_id}")
+                    return basic_post_id
+                    
+                utils.logger.warning(f"[WeiboCrawler._process_post_input] 无法解析帖子输入: {post_input}")
+                return ""
+        except Exception as e:
+            utils.logger.error(f"[WeiboCrawler._process_post_input] 解析帖子输入时发生错误: {e}")
+            # 尝试基础解析作为后备
+            try:
+                from .help import extract_post_id_from_url
+                basic_post_id = extract_post_id_from_url(post_input)
+                if basic_post_id:
+                    utils.logger.info(f"[WeiboCrawler._process_post_input] 后备解析成功，post_id: {basic_post_id}")
+                    return basic_post_id
+            except:
+                pass
+            return ""
 
+    async def _process_creator_input(self, creator_input: str) -> str:
+        """
+        处理创作者输入，支持智能URL解析
+        如果解析失败，回退到基础解析
+        """
+        try:
+            utils.logger.info(f"[WeiboCrawler._process_creator_input] 开始解析创作者输入: {creator_input}")
+            
+            # 智能解析
+            creator_id = await resolve_any_user_url_to_id(creator_input, self.context_page)
+            if creator_id:
+                utils.logger.info(f"[WeiboCrawler._process_creator_input] 解析成功，creator_id: {creator_id}")
+                return creator_id
+            else:
+                # 回退到基础解析
+                utils.logger.info(f"[WeiboCrawler._process_creator_input] 智能解析失败，尝试基础解析")
+                from .help import extract_user_id_from_url
+                basic_creator_id = extract_user_id_from_url(creator_input)
+                if basic_creator_id:
+                    utils.logger.info(f"[WeiboCrawler._process_creator_input] 基础解析成功，creator_id: {basic_creator_id}")
+                    return basic_creator_id
+                    
+                utils.logger.warning(f"[WeiboCrawler._process_creator_input] 无法解析创作者输入: {creator_input}")
+                return ""
+        except Exception as e:
+            utils.logger.error(f"[WeiboCrawler._process_creator_input] 解析创作者输入时发生错误: {e}")
+            # 尝试基础解析作为后备
+            try:
+                from .help import extract_user_id_from_url
+                basic_creator_id = extract_user_id_from_url(creator_input)
+                if basic_creator_id:
+                    utils.logger.info(f"[WeiboCrawler._process_creator_input] 后备解析成功，creator_id: {basic_creator_id}")
+                    return basic_creator_id
+            except:
+                pass
+            return ""
 
     async def create_weibo_client(self, httpx_proxy: Optional[str]) -> WeiboClient:
         """Create xhs client"""

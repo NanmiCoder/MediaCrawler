@@ -11,9 +11,9 @@
 
 # 基础配置
 PLATFORM = "xhs"
-KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
+KEYWORDS = "马自达EZ-60"  # 关键词搜索配置，以英文逗号分隔
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
-COOKIES = ""
+COOKIES = ""  
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
 SORT_TYPE = "popularity_descending"
 # 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
@@ -30,7 +30,8 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 ENABLE_IP_PROXY = False
 
 # 未启用代理时的最大爬取间隔，单位秒（暂时仅对XHS有效）
-CRAWLER_MAX_SLEEP_SEC = 2
+# 增加延时以应对小红书反爬虫检测
+CRAWLER_MAX_SLEEP_SEC = 5
 
 # 代理IP池数量
 IP_PROXY_POOL_COUNT = 2
@@ -75,7 +76,7 @@ BROWSER_LAUNCH_TIMEOUT = 30
 AUTO_CLOSE_BROWSER = True
 
 # 数据保存类型选项配置,支持三种类型：csv、db、json, 最好保存到DB，有排重的功能。
-SAVE_DATA_OPTION = "json"  # csv or db or json
+SAVE_DATA_OPTION = "csv"  # csv or db or json
 
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
@@ -109,21 +110,38 @@ ENABLE_GET_SUB_COMMENTS = False
 #     # ........................
 # ]
 
-# 指定小红书需要爬虫的笔记URL列表, 目前要携带xsec_token和xsec_source参数
+# 指定小红书笔记列表URL,目前要携带xsec_token和xsec_source参数
 XHS_SPECIFIED_NOTE_URL_LIST = [
-    "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
+    "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search",
     # ........................
 ]
 
-# 指定抖音需要爬取的ID列表
+# 指定抖音视频列表 - 支持三种格式自动识别和解析
 DY_SPECIFIED_ID_LIST = [
-    "7280854932641664319",
-    "7202432992642387233",
+    # 格式1: 完整视频URL
+    # "https://www.douyin.com/video/7525082444551310602",
+    
+    # 格式2: 分享短链接（通过浏览器重定向解析）
+     "https://v.douyin.com/XfjzKi_ZFLA/",
+    
+    # 格式3: 直接的video_id（19位数字）
+     # "7525082444551310602",
     # ........................
 ]
 
-# 指定快手平台需要爬取的ID列表
-KS_SPECIFIED_ID_LIST = ["3xf8enb8dbj6uig", "3x6zz972bchmvqe"]
+# 指定快手视频列表 - 支持三种格式自动识别和解析
+KS_SPECIFIED_ID_LIST = [
+    # 格式1: 完整视频URL
+     "https://www.kuaishou.com/short-video/3xf8enb8dbj6uig",
+    
+    # 格式2: 分享短链接（通过浏览器重定向解析）
+    # "https://v.kuaishou.com/2F50ZXj",
+    
+    # 格式3: 直接的video_id（推荐使用，避免网络问题）
+    # "3xf8enb8dbj6uig", 
+    # "3x6zz972bchmvqe",
+    # ........................
+]
 
 # 指定B站平台需要爬取的视频bvid列表
 BILI_SPECIFIED_ID_LIST = [
@@ -133,16 +151,36 @@ BILI_SPECIFIED_ID_LIST = [
     # ........................
 ]
 
-# 指定微博平台需要爬取的帖子列表
+# 指定微博平台需要爬取的帖子列表 - 支持三种格式自动识别和解析
 WEIBO_SPECIFIED_ID_LIST = [
-    "4982041758140155",
+    # 格式1: 完整帖子URL（桌面版分享链接）
+     "https://weibo.com/7643904561/5182160183232445",
+    
+    # 格式2: 手机版帖子URL
+    # "https://m.weibo.cn/detail/5182160183232445",
+    # "https://m.weibo.cn/status/5182160183232445",
+    
+    # 格式3: 直接的post_id（推荐使用，避免网络问题）
+    # "5182160183232445",
+    # "4982041758140155",
     # ........................
 ]
 
-# 指定weibo创作者ID列表
+# 指定微博创作者列表 - 支持四种格式自动识别和解析
 WEIBO_CREATOR_ID_LIST = [
-    "5533390220",
-    # ........................
+    # 格式1: 完整用户主页URL
+    # "https://weibo.com/u/5533390220",
+    
+    # 格式2: 桌面版用户主页URL（不带/u/前缀）
+    # "https://weibo.com/5533390220",
+    
+    # 格式3: 手机版用户主页URL
+     # "https://m.weibo.cn/u/5533390220",
+    # "https://m.weibo.cn/profile/5533390220",
+    
+    # 格式4: 直接的user_id（推荐使用，避免网络问题）
+     "5533390220",
+
 ]
 
 # 指定贴吧需要爬取的帖子列表
@@ -159,15 +197,35 @@ TIEBA_CREATOR_URL_LIST = [
     # ........................
 ]
 
-# 指定小红书创作者ID列表
+# 指定小红书创作者列表 - 支持三种格式自动识别和解析
 XHS_CREATOR_ID_LIST = [
+    # 格式1: 完整用户主页URL
+    # "https://www.xiaohongshu.com/user/profile/63e36c9a000000002703502b",
+    
+    # 格式2: 分享短链接（通过浏览器重定向解析）
+    # "https://xhslink.com/XXXXX",
+    
+    # 格式3: 直接的creator_id（24位十六进制）
     "63e36c9a000000002703502b",
     # ........................
 ]
 
-# 指定Dy创作者ID列表(sec_id)
+# 指定抖音创作者列表 - 支持三种输入格式（推荐使用DY_CREATOR_URL_LIST）
 DY_CREATOR_ID_LIST = [
-    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # 兼容旧版本：可填写任意格式，会自动解析
+    # ........................
+]
+
+# 指定抖音创作者主页URL列表 - 支持三种格式自动识别和解析
+DY_CREATOR_URL_LIST = [
+    # 格式1: 完整用户主页URL
+      # "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    
+    # 格式2: 分享短链接（通过浏览器重定向解析）
+     # "https://v.douyin.com/J7v_LxD7vUQ/",
+    
+    # 格式3: 直接的sec_user_id
+     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]
 
@@ -177,9 +235,19 @@ BILI_CREATOR_ID_LIST = [
     # ........................
 ]
 
-# 指定快手创作者ID列表
+# 指定快手创作者列表 - 支持四种格式自动识别和解析
 KS_CREATOR_ID_LIST = [
-    "3x4sm73aye7jq7i",
+    # 格式1: 完整用户主页URL
+      "https://www.kuaishou.com/profile/3x4sm73aye7jq7i",
+    
+    # 格式2: 完整直播用户主页URL  
+     # "https://live.kuaishou.com/profile/3xqrp5h7gg392vg",
+    
+    # 格式3: 分享短链接（通过浏览器重定向解析）
+     # "https://v.kuaishou.com/2HJ1YXC",
+    
+    # 格式4: 直接的creator_id（推荐使用，避免网络问题）
+     # "3xqrp5h7gg392vg",
     # ........................
 ]
 

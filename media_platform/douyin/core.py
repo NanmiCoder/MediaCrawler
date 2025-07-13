@@ -29,6 +29,7 @@ from var import crawler_type_var, source_keyword_var
 from .client import DOUYINClient
 from .exception import DataFetchError
 from .field import PublishTimeType
+from .help import resolve_any_url_to_sec_user_id, resolve_any_video_url_to_id
 from .login import DouYinLogin
 
 
@@ -146,15 +147,56 @@ class DouYinCrawler(AbstractCrawler):
 
     async def get_specified_awemes(self):
         """Get the information and comments of the specified post"""
+        utils.logger.info("[DouYinCrawler.get_specified_awemes] Begin get specified videos")
+        
+        # 解析所有视频输入，支持URL和纯ID
+        resolved_video_ids = []
+        for video_input in config.DY_SPECIFIED_ID_LIST:
+            if video_input and video_input.strip():
+                video_id = await self._process_video_input(video_input)
+                if video_id:
+                    resolved_video_ids.append(video_id)
+        
+        if not resolved_video_ids:
+            utils.logger.warning("[DouYinCrawler.get_specified_awemes] No valid video IDs resolved")
+            return
+        
+        utils.logger.info(f"[DouYinCrawler.get_specified_awemes] Resolved {len(resolved_video_ids)} video IDs: {resolved_video_ids}")
+        
+        # 并发获取视频详情
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
-            self.get_aweme_detail(aweme_id=aweme_id, semaphore=semaphore) for aweme_id in config.DY_SPECIFIED_ID_LIST
+            self.get_aweme_detail(aweme_id=video_id, semaphore=semaphore) for video_id in resolved_video_ids
         ]
         aweme_details = await asyncio.gather(*task_list)
+        
+        # 保存视频详情
         for aweme_detail in aweme_details:
             if aweme_detail is not None:
                 await douyin_store.update_douyin_aweme(aweme_detail)
-        await self.batch_get_note_comments(config.DY_SPECIFIED_ID_LIST)
+        
+        # 获取评论
+        await self.batch_get_note_comments(resolved_video_ids)
+        
+    async def _process_video_input(self, video_input: str) -> str:
+        """
+        统一处理视频输入（支持video_id、完整URL、短链接）
+        """
+        try:
+            utils.logger.info(f"[DouYinCrawler._process_video_input] 处理视频输入: {video_input}")
+            
+            # 使用统一的解析函数
+            video_id = await resolve_any_video_url_to_id(video_input, self.context_page)
+            if not video_id:
+                utils.logger.error(f"[DouYinCrawler._process_video_input] 无法解析视频输入: {video_input}")
+                return ""
+            
+            utils.logger.info(f"[DouYinCrawler._process_video_input] 解析成功: {video_input} -> {video_id}")
+            return video_id
+            
+        except Exception as e:
+            utils.logger.error(f"[DouYinCrawler._process_video_input] 处理视频输入失败: {video_input}, 错误: {e}")
+            return ""
 
     async def get_aweme_detail(self, aweme_id: str, semaphore: asyncio.Semaphore) -> Any:
         """Get note detail"""
@@ -207,19 +249,109 @@ class DouYinCrawler(AbstractCrawler):
         Get the information and videos of the specified creator
         """
         utils.logger.info("[DouYinCrawler.get_creators_and_videos] Begin get douyin creators")
-        for user_id in config.DY_CREATOR_ID_LIST:
-            creator_info: Dict = await self.dy_client.get_user_info(user_id)
-            if creator_info:
-                await douyin_store.save_creator(user_id, creator=creator_info)
+        
+        # 检查是否有配置的创作者信息
+        has_config_creators = bool(config.DY_CREATOR_ID_LIST or config.DY_CREATOR_URL_LIST)
+        
+        # 如果没有配置创作者信息，则提示用户交互式输入
+        if not has_config_creators:
+            await self._interactive_creator_input()
+        
+        # 用于去重的集合，记录已处理的sec_user_id
+        processed_creators = set()
+        
+        # 合并处理所有输入（传统的ID列表和新的URL列表）
+        all_creator_inputs = []
+        all_creator_inputs.extend(config.DY_CREATOR_ID_LIST)
+        all_creator_inputs.extend(config.DY_CREATOR_URL_LIST)
+        
+        # 统一处理所有输入
+        for creator_input in all_creator_inputs:
+            if creator_input and creator_input.strip():
+                await self._process_creator_input(creator_input, processed_creators)
+            
+    async def _interactive_creator_input(self) -> None:
+        """
+        交互式输入创作者信息
+        """
+        print("\n" + "="*60)
+        print("🎯 抖音创作者爬取模式")
+        print("="*60)
+        print("请输入创作者信息，支持以下格式：")
+        print("1. 完整URL: https://www.douyin.com/user/MS4wLjABAAAA...")
+        print("2. 短链接: https://v.douyin.com/iXXXXXX/")  
+        print("3. sec_user_id: MS4wLjABAAAA...")
+        print("4. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入创作者URL或sec_user_id (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            creator_inputs = user_input.split()
+            config.DY_CREATOR_URL_LIST.extend(creator_inputs)
+            utils.logger.info(f"[DouYinCrawler._interactive_creator_input] 已添加 {len(creator_inputs)} 个创作者")
+        else:
+            utils.logger.warning("[DouYinCrawler._interactive_creator_input] 未输入任何创作者信息，将退出程序")
+            raise ValueError("未输入任何创作者信息")
+            
+    async def _process_creator_input(self, creator_input: str, processed_creators: set) -> None:
+        """
+        统一处理创作者输入（支持sec_user_id、完整URL、短链接）
+        """
+        try:
+            utils.logger.info(f"[DouYinCrawler._process_creator_input] 处理创作者输入: {creator_input}")
+            
+            # 使用统一的解析函数
+            sec_user_id = await resolve_any_url_to_sec_user_id(creator_input, self.context_page, self.dy_client)
+            if not sec_user_id:
+                utils.logger.error(f"[DouYinCrawler._process_creator_input] 无法解析输入: {creator_input}")
+                return
+            
+            # 去重检查
+            if sec_user_id in processed_creators:
+                utils.logger.info(f"[DouYinCrawler._process_creator_input] 跳过重复的创作者: {sec_user_id}")
+                return
+            
+            # 添加到已处理集合
+            processed_creators.add(sec_user_id)
+            
+            # 处理创作者
+            utils.logger.info(f"[DouYinCrawler._process_creator_input] 开始处理创作者: {sec_user_id}")
+            await self._process_creator_by_sec_id(sec_user_id)
+            
+        except Exception as e:
+            utils.logger.error(f"[DouYinCrawler._process_creator_input] 处理创作者输入失败: {creator_input}, 错误: {e}")
 
-            # Get all video information of the creator
+    async def _process_creator_by_sec_id(self, sec_user_id: str) -> None:
+        """
+        通过sec_user_id处理创作者信息和视频
+        注意：传入的必须是纯净的sec_user_id
+        """
+        utils.logger.info(f"[DouYinCrawler._process_creator_by_sec_id] 处理创作者: {sec_user_id}")
+        
+        try:
+            # 获取创作者信息
+            creator_info: Dict = await self.dy_client.get_user_info(sec_user_id)
+            if creator_info:
+                await douyin_store.save_creator(sec_user_id, creator=creator_info)
+            else:
+                utils.logger.warning(f"[DouYinCrawler._process_creator_by_sec_id] 未获取到创作者信息: {sec_user_id}")
+
+            # 获取创作者的所有视频
             all_video_list = await self.dy_client.get_all_user_aweme_posts(
-                sec_user_id=user_id,
+                sec_user_id=sec_user_id,
                 callback=self.fetch_creator_video_detail
             )
 
+            # 爬取视频评论
             video_ids = [video_item.get("aweme_id") for video_item in all_video_list]
             await self.batch_get_note_comments(video_ids)
+            
+            utils.logger.info(f"[DouYinCrawler._process_creator_by_sec_id] 创作者处理完成: {sec_user_id}, 视频数量: {len(video_ids)}")
+            
+        except Exception as e:
+            utils.logger.error(f"[DouYinCrawler._process_creator_by_sec_id] 处理创作者失败: {sec_user_id}, 错误: {e}")
 
     async def fetch_creator_video_detail(self, video_list: List[Dict]):
         """
