@@ -53,7 +53,11 @@ class BilibiliClient(AbstractApiClient):
                 method, url, timeout=self.timeout,
                 **kwargs
             )
-        data: Dict = response.json()
+        try:
+            data: Dict = response.json()
+        except json.JSONDecodeError:
+            utils.logger.error(f"[BilibiliClient.request] Failed to decode JSON from response. status_code: {response.status_code}, response_text: {response.text}")
+            raise DataFetchError(f"Failed to decode JSON, content: {response.text}")
         if data.get("code") != 0:
             raise DataFetchError(data.get("message", "unkonw error"))
         else:
@@ -235,13 +239,37 @@ class BilibiliClient(AbstractApiClient):
 
         :return:
         """
-
         result = []
         is_end = False
         next_page = 0
+        max_retries = 3
         while not is_end and len(result) < max_count:
-            comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, next_page)
+            comments_res = None
+            for attempt in range(max_retries):
+                try:
+                    comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, next_page)
+                    break  # Success
+                except DataFetchError as e:
+                    if attempt < max_retries - 1:
+                        delay = 5 * (2 ** attempt) + random.uniform(0, 1)
+                        utils.logger.warning(
+                            f"[BilibiliClient.get_video_all_comments] Retrying video_id {video_id} in {delay:.2f}s... (Attempt {attempt + 1}/{max_retries})"
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        utils.logger.error(
+                            f"[BilibiliClient.get_video_all_comments] Max retries reached for video_id: {video_id}. Skipping comments. Error: {e}"
+                        )
+                        is_end = True
+                        break
+            if not comments_res:
+                break
+
             cursor_info: Dict = comments_res.get("cursor")
+            if not cursor_info:
+                utils.logger.warning(f"[BilibiliClient.get_video_all_comments] Could not find 'cursor' in response for video_id: {video_id}. Skipping.")
+                break
+
             comment_list: List[Dict] = comments_res.get("replies", [])
             is_end = cursor_info.get("is_end")
             next_page = cursor_info.get("next")

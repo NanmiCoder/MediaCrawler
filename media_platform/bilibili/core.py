@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from playwright.async_api import (BrowserContext, BrowserType, Page, Playwright, async_playwright)
+from playwright._impl._errors import TargetClosedError
 
 import config
 from base.base_crawler import AbstractCrawler
@@ -95,15 +96,7 @@ class BilibiliCrawler(AbstractCrawler):
 
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
-                # Search for video and retrieve their comment information.
-                if config.BILI_SEARCH_MODE == "normal":
-                    await self.search_by_keywords()
-                elif config.BILI_SEARCH_MODE == "all_in_time_range":
-                    await self.search_by_keywords_in_time_range(daily_limit=False)
-                elif config.BILI_SEARCH_MODE == "daily_limit_in_time_range":
-                    await self.search_by_keywords_in_time_range(daily_limit=True)
-                else:
-                    utils.logger.warning(f"Unknown BILI_SEARCH_MODE: {config.BILI_SEARCH_MODE}")
+                await self.search()
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
@@ -117,6 +110,20 @@ class BilibiliCrawler(AbstractCrawler):
                 pass
             utils.logger.info(
                 "[BilibiliCrawler.start] Bilibili Crawler finished ...")
+
+    async def search(self):
+        """
+        search bilibili video
+        """
+        # Search for video and retrieve their comment information.
+        if config.BILI_SEARCH_MODE == "normal":
+            await self.search_by_keywords()
+        elif config.BILI_SEARCH_MODE == "all_in_time_range":
+            await self.search_by_keywords_in_time_range(daily_limit=False)
+        elif config.BILI_SEARCH_MODE == "daily_limit_in_time_range":
+            await self.search_by_keywords_in_time_range(daily_limit=True)
+        else:
+            utils.logger.warning(f"Unknown BILI_SEARCH_MODE: {config.BILI_SEARCH_MODE}")
 
     @staticmethod
     async def get_pubtime_datetime(start: str = config.START_DAY, end: str = config.END_DAY) -> Tuple[str, str]:
@@ -259,6 +266,8 @@ class BilibiliCrawler(AbstractCrawler):
                             if video_item:
                                 if daily_limit and total_notes_crawled >= config.CRAWLER_MAX_NOTES_COUNT:
                                     break
+                                if notes_count_this_day >= config.MAX_NOTES_PER_DAY:
+                                    break
                                 notes_count_this_day += 1
                                 total_notes_crawled += 1
                                 video_id_list.append(video_item.get("View").get("aid"))
@@ -305,6 +314,7 @@ class BilibiliCrawler(AbstractCrawler):
             try:
                 utils.logger.info(
                     f"[BilibiliCrawler.get_comments] begin get video_id: {video_id} comments ...")
+                await asyncio.sleep(random.uniform(0.5, 1.5))
                 await self.bili_client.get_video_all_comments(
                     video_id=video_id,
                     crawl_interval=random.random(),
@@ -509,13 +519,18 @@ class BilibiliCrawler(AbstractCrawler):
 
     async def close(self):
         """Close browser context"""
-        # 如果使用CDP模式，需要特殊处理
-        if self.cdp_manager:
-            await self.cdp_manager.cleanup()
-            self.cdp_manager = None
-        else:
-            await self.browser_context.close()
-        utils.logger.info("[BilibiliCrawler.close] Browser context closed ...")
+        try:
+            # 如果使用CDP模式，需要特殊处理
+            if self.cdp_manager:
+                await self.cdp_manager.cleanup()
+                self.cdp_manager = None
+            elif self.browser_context:
+                await self.browser_context.close()
+            utils.logger.info("[BilibiliCrawler.close] Browser context closed ...")
+        except TargetClosedError:
+            utils.logger.warning("[BilibiliCrawler.close] Browser context was already closed.")
+        except Exception as e:
+            utils.logger.error(f"[BilibiliCrawler.close] An error occurred during close: {e}")
 
     async def get_bilibili_video(self, video_item: Dict, semaphore: asyncio.Semaphore):
         """
