@@ -120,6 +120,11 @@ class WeiboCrawler(AbstractCrawler):
         :return:
         """
         utils.logger.info("[WeiboCrawler.search] Begin search weibo keywords")
+        
+        # 检查是否有搜索关键词，如果没有则提示用户交互式输入
+        if not config.KEYWORDS or config.KEYWORDS.strip() == "":
+            await self._interactive_search_input()
+        
         weibo_limit_count = 10  # weibo limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < weibo_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = weibo_limit_count
@@ -171,6 +176,11 @@ class WeiboCrawler(AbstractCrawler):
         get specified notes info
         :return:
         """
+        
+        # 检查是否有配置的帖子信息，如果没有则提示用户交互式输入
+        if not config.WEIBO_SPECIFIED_ID_LIST:
+            await self._interactive_detail_input()
+        
         # 智能解析帖子输入
         resolved_post_ids = []
         for post_input in config.WEIBO_SPECIFIED_ID_LIST:
@@ -281,6 +291,10 @@ class WeiboCrawler(AbstractCrawler):
 
         """
         utils.logger.info("[WeiboCrawler.get_creators_and_notes] Begin get weibo creators")
+        
+        # 检查是否有配置的创作者信息，如果没有则提示用户交互式输入
+        if not config.WEIBO_CREATOR_ID_LIST:
+            await self._interactive_creator_input()
         
         # 智能解析创作者输入
         resolved_creator_ids = []
@@ -487,3 +501,77 @@ class WeiboCrawler(AbstractCrawler):
         else:
             await self.browser_context.close()
         utils.logger.info("[WeiboCrawler.close] Browser context closed ...")
+    
+    async def _interactive_search_input(self) -> None:
+        """
+        交互式输入搜索关键词
+        """
+        print("\n" + "="*60)
+        print("🔍 微博搜索模式")
+        print("="*60)
+        print("请输入搜索关键词：")
+        print("1. 支持单个关键词：美食")
+        print("2. 支持多个关键词（空格分隔）：美食 旅游 音乐")
+        print("-"*60)
+        
+        user_input = input("请输入搜索关键词 (回车键结束): ").strip()
+        
+        if user_input:
+            config.KEYWORDS = user_input.replace(" ", ",")
+            utils.logger.info(f"[WeiboCrawler._interactive_search_input] 已设置搜索关键词: {config.KEYWORDS}")
+        else:
+            utils.logger.warning("[WeiboCrawler._interactive_search_input] 未输入任何搜索关键词，将退出程序")
+            raise ValueError("未输入任何搜索关键词")
+    
+    async def _interactive_detail_input(self) -> None:
+        """
+        交互式输入帖子详情信息
+        """
+        print("\n" + "="*60)
+        print("📝 微博帖子详情爬取模式")
+        print("="*60)
+        print("请输入帖子信息，支持以下格式：")
+        print("1. 桌面版帖子URL: https://weibo.com/7643904561/5182160183232445")
+        print("2. 手机版帖子URL: https://m.weibo.cn/detail/5182160183232445")
+        print("3. 手机版状态URL: https://m.weibo.cn/status/5182160183232445")
+        print("4. post_id: 5182160183232445")
+        print("5. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入帖子URL或post_id (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            post_inputs = user_input.split()
+            config.WEIBO_SPECIFIED_ID_LIST.extend(post_inputs)
+            utils.logger.info(f"[WeiboCrawler._interactive_detail_input] 已添加 {len(post_inputs)} 个帖子")
+        else:
+            utils.logger.warning("[WeiboCrawler._interactive_detail_input] 未输入任何帖子信息，将退出程序")
+            raise ValueError("未输入任何帖子信息")
+    
+    async def _interactive_creator_input(self) -> None:
+        """
+        交互式输入创作者信息
+        """
+        print("\n" + "="*60)
+        print("🎯 微博创作者爬取模式")
+        print("="*60)
+        print("请输入创作者信息，支持以下格式：")
+        print("1. 桌面版用户主页: https://weibo.com/u/5533390220")
+        print("2. 桌面版简化格式: https://weibo.com/5533390220") 
+        print("3. 手机版用户主页: https://m.weibo.cn/u/5533390220")
+        print("4. 手机版个人资料: https://m.weibo.cn/profile/5533390220")
+        print("5. user_id: 5533390220")
+        print("6. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入创作者URL或user_id (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            creator_inputs = user_input.split()
+            config.WEIBO_CREATOR_ID_LIST.extend(creator_inputs)
+            utils.logger.info(f"[WeiboCrawler._interactive_creator_input] 已添加 {len(creator_inputs)} 个创作者")
+        else:
+            utils.logger.warning("[WeiboCrawler._interactive_creator_input] 未输入任何创作者信息，将退出程序")
+            raise ValueError("未输入任何创作者信息")

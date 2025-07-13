@@ -99,6 +99,11 @@ class DouYinCrawler(AbstractCrawler):
 
     async def search(self) -> None:
         utils.logger.info("[DouYinCrawler.search] Begin search douyin keywords")
+        
+        # 检查是否有搜索关键词，如果没有则提示用户交互式输入
+        if not config.KEYWORDS or config.KEYWORDS.strip() == "":
+            await self._interactive_search_input()
+        
         dy_limit_count = 10  # douyin limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < dy_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
@@ -148,6 +153,10 @@ class DouYinCrawler(AbstractCrawler):
     async def get_specified_awemes(self):
         """Get the information and comments of the specified post"""
         utils.logger.info("[DouYinCrawler.get_specified_awemes] Begin get specified videos")
+        
+        # 检查是否有配置的视频信息，如果没有则提示用户交互式输入
+        if not config.DY_SPECIFIED_ID_LIST:
+            await self._interactive_detail_input()
         
         # 解析所有视频输入，支持URL和纯ID
         resolved_video_ids = []
@@ -294,6 +303,52 @@ class DouYinCrawler(AbstractCrawler):
         else:
             utils.logger.warning("[DouYinCrawler._interactive_creator_input] 未输入任何创作者信息，将退出程序")
             raise ValueError("未输入任何创作者信息")
+    
+    async def _interactive_search_input(self) -> None:
+        """
+        交互式输入搜索关键词
+        """
+        print("\n" + "="*60)
+        print("🔍 抖音搜索模式")
+        print("="*60)
+        print("请输入搜索关键词：")
+        print("1. 支持单个关键词：美食")
+        print("2. 支持多个关键词（空格分隔）：美食 旅游 音乐")
+        print("-"*60)
+        
+        user_input = input("请输入搜索关键词 (回车键结束): ").strip()
+        
+        if user_input:
+            config.KEYWORDS = user_input.replace(" ", ",")
+            utils.logger.info(f"[DouYinCrawler._interactive_search_input] 已设置搜索关键词: {config.KEYWORDS}")
+        else:
+            utils.logger.warning("[DouYinCrawler._interactive_search_input] 未输入任何搜索关键词，将退出程序")
+            raise ValueError("未输入任何搜索关键词")
+    
+    async def _interactive_detail_input(self) -> None:
+        """
+        交互式输入视频详情信息
+        """
+        print("\n" + "="*60)
+        print("📹 抖音视频详情爬取模式")
+        print("="*60)
+        print("请输入视频信息，支持以下格式：")
+        print("1. 完整URL: https://www.douyin.com/video/7525082444551310602")
+        print("2. 短链接: https://v.douyin.com/iXXXXXX/")
+        print("3. video_id: 7525082444551310602")
+        print("4. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入视频URL或video_id (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            video_inputs = user_input.split()
+            config.DY_SPECIFIED_ID_LIST.extend(video_inputs)
+            utils.logger.info(f"[DouYinCrawler._interactive_detail_input] 已添加 {len(video_inputs)} 个视频")
+        else:
+            utils.logger.warning("[DouYinCrawler._interactive_detail_input] 未输入任何视频信息，将退出程序")
+            raise ValueError("未输入任何视频信息")
             
     async def _process_creator_input(self, creator_input: str, processed_creators: set) -> None:
         """

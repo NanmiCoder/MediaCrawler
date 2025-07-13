@@ -186,17 +186,26 @@ async def resolve_short_url(url: str, page: Page) -> str:
             
             # 检查是否是我们需要的视频页面
             if 'kuaishou.com' in current_url and '/short-video/' in current_url:
-                final_url = current_url
-                print(f"[resolve_short_url] 找到视频页面: {current_url}")
+                # 验证URL中是否包含有效的video_id（避免undefined等无效值）
+                video_id_from_url = extract_video_id_from_url(current_url)
+                if video_id_from_url and validate_kuaishou_id(video_id_from_url, "video"):
+                    final_url = current_url
+                    print(f"[resolve_short_url] 找到有效视频页面: {current_url} (video_id: {video_id_from_url})")
+                else:
+                    print(f"[resolve_short_url] 跳过无效视频页面: {current_url}")
             elif 'kuaishou.com' in current_url and 'photoId=' in current_url:
                 final_url = current_url
                 print(f"[resolve_short_url] 找到带photoId的页面: {current_url}")
             elif 'kuaishou.com' in current_url and '/profile/' in current_url:
                 if '/live_api/' not in current_url:
-                    # 这是用户主页URL，优先保存
-                    profile_url = current_url
-                    final_url = current_url
-                    print(f"[resolve_short_url] 找到创作者主页: {current_url}")
+                    # 验证URL中是否包含有效的creator_id
+                    creator_id_from_url = extract_creator_id_from_url(current_url)
+                    if creator_id_from_url and validate_kuaishou_id(creator_id_from_url, "user"):
+                        profile_url = current_url
+                        final_url = current_url
+                        print(f"[resolve_short_url] 找到有效创作者主页: {current_url} (creator_id: {creator_id_from_url})")
+                    else:
+                        print(f"[resolve_short_url] 跳过无效创作者主页: {current_url}")
                 else:
                     # 这是API URL，只有在没有主页URL时才使用
                     if not profile_url:
@@ -206,16 +215,26 @@ async def resolve_short_url(url: str, page: Page) -> str:
             # 监听请求，可能能捕获到重定向信息
             nonlocal final_url, profile_url
             if 'kuaishou.com' in request.url and '/short-video/' in request.url:
-                if not final_url:
-                    final_url = request.url
-                    print(f"[resolve_short_url] 从请求中找到视频页面: {request.url}")
+                # 验证URL中是否包含有效的video_id（避免undefined等无效值）
+                video_id_from_url = extract_video_id_from_url(request.url)
+                if video_id_from_url and validate_kuaishou_id(video_id_from_url, "video"):
+                    if not final_url:
+                        final_url = request.url
+                        print(f"[resolve_short_url] 从请求中找到有效视频页面: {request.url} (video_id: {video_id_from_url})")
+                else:
+                    print(f"[resolve_short_url] 从请求中跳过无效视频页面: {request.url}")
             elif 'kuaishou.com' in request.url and '/profile/' in request.url:
                 if '/live_api/' not in request.url:
-                    # 优先选择用户主页URL，排除API接口URL
-                    if not profile_url:
-                        profile_url = request.url
-                        final_url = request.url
-                        print(f"[resolve_short_url] 从请求中找到创作者主页: {request.url}")
+                    # 验证URL中是否包含有效的creator_id
+                    creator_id_from_url = extract_creator_id_from_url(request.url)
+                    if creator_id_from_url and validate_kuaishou_id(creator_id_from_url, "user"):
+                        # 优先选择用户主页URL，排除API接口URL
+                        if not profile_url:
+                            profile_url = request.url
+                            final_url = request.url
+                            print(f"[resolve_short_url] 从请求中找到有效创作者主页: {request.url} (creator_id: {creator_id_from_url})")
+                    else:
+                        print(f"[resolve_short_url] 从请求中跳过无效创作者主页: {request.url}")
         
         page.on('response', handle_response)
         page.on('request', handle_request)
@@ -255,14 +274,33 @@ async def resolve_short_url(url: str, page: Page) -> str:
         print(f"[resolve_short_url] 当前页面URL: {current_url}")
         
         if '/short-video/' in current_url:
-            print(f"[resolve_short_url] 从当前页面URL获取视频链接: {current_url}")
-            return current_url
+            # 验证当前页面URL中的video_id
+            video_id_from_current = extract_video_id_from_url(current_url)
+            if video_id_from_current and validate_kuaishou_id(video_id_from_current, "video"):
+                print(f"[resolve_short_url] 从当前页面URL获取有效视频链接: {current_url} (video_id: {video_id_from_current})")
+                return current_url
+            else:
+                print(f"[resolve_short_url] 当前页面URL包含无效video_id，跳过: {current_url}")
         elif 'photoId=' in current_url:
-            print(f"[resolve_short_url] 从当前页面URL获取带photoId的链接: {current_url}")
-            return current_url
+            # 验证photoId参数
+            import urllib.parse
+            parsed = urllib.parse.urlparse(current_url)
+            params = urllib.parse.parse_qs(parsed.query)
+            if 'photoId' in params:
+                photo_id = params['photoId'][0]
+                if validate_kuaishou_id(photo_id, "video"):
+                    print(f"[resolve_short_url] 从当前页面URL获取带有效photoId的链接: {current_url}")
+                    return current_url
+                else:
+                    print(f"[resolve_short_url] 当前页面URL包含无效photoId，跳过: {current_url}")
         elif '/profile/' in current_url and '/live_api/' not in current_url:
-            print(f"[resolve_short_url] 从当前页面URL获取创作者主页链接: {current_url}")
-            return current_url
+            # 验证当前页面URL中的creator_id
+            creator_id_from_current = extract_creator_id_from_url(current_url)
+            if creator_id_from_current and validate_kuaishou_id(creator_id_from_current, "user"):
+                print(f"[resolve_short_url] 从当前页面URL获取有效创作者主页链接: {current_url} (creator_id: {creator_id_from_current})")
+                return current_url
+            else:
+                print(f"[resolve_short_url] 当前页面URL包含无效creator_id，跳过: {current_url}")
         
         # 尝试从页面内容中提取
         try:
@@ -294,8 +332,21 @@ async def resolve_short_url(url: str, page: Page) -> str:
         # 最后尝试：从所有重定向URL中寻找合适的用户主页URL
         for redirect_url in redirect_urls:
             if '/profile/' in redirect_url and '/live_api/' not in redirect_url and 'kuaishou.com' in redirect_url:
-                print(f"[resolve_short_url] 从重定向历史中找到用户主页: {redirect_url}")
-                return redirect_url
+                # 验证重定向URL中的creator_id
+                creator_id_from_redirect = extract_creator_id_from_url(redirect_url)
+                if creator_id_from_redirect and validate_kuaishou_id(creator_id_from_redirect, "user"):
+                    print(f"[resolve_short_url] 从重定向历史中找到有效用户主页: {redirect_url} (creator_id: {creator_id_from_redirect})")
+                    return redirect_url
+                else:
+                    print(f"[resolve_short_url] 重定向历史中的用户主页URL无效，跳过: {redirect_url}")
+            elif '/short-video/' in redirect_url and 'kuaishou.com' in redirect_url:
+                # 也检查视频URL
+                video_id_from_redirect = extract_video_id_from_url(redirect_url)
+                if video_id_from_redirect and validate_kuaishou_id(video_id_from_redirect, "video"):
+                    print(f"[resolve_short_url] 从重定向历史中找到有效视频页面: {redirect_url} (video_id: {video_id_from_redirect})")
+                    return redirect_url
+                else:
+                    print(f"[resolve_short_url] 重定向历史中的视频URL无效，跳过: {redirect_url}")
         
         # 打印调试信息
         print(f"[resolve_short_url] 重定向路径: {' -> '.join(redirect_urls)}")

@@ -40,100 +40,70 @@
 - **优势特点**：无需逆向复杂的加密算法，大幅降低技术门槛
 
 ## ✨ 功能特性
-| 平台   | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 | 智能URL解析 |
-| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ |
-| 小红书 | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| 抖音   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   |
-| 快手   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   |
-| B 站   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| 微博   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   |
-| 贴吧   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| 知乎   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| 平台   | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 | 智能URL解析 | 交互式输入 |
+| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ | ---------- |
+| 小红书 | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+| 抖音   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   | 🔥**新功能** |
+| 快手   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   | 🔥**新功能** |
+| B 站   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   | 🔥**新功能** |
+| 微博   | ✅          | 🔥**增强**      | ✅        | 🔥**增强**      | ✅          | ✅        | ✅              | 🔥**新功能**   | 🔥**新功能** |
+| 贴吧   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+| 知乎   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
 
-### 🔥 抖音爬取增强功能
+### 🔥 新增强功能亮点
 
-**支持多种输入格式，智能识别和解析**：
+#### 🎯 统一交互式输入
+- **智能输入检测**：当配置文件为空时，自动启用交互式输入模式
+- **格式化提示**：提供详细的输入格式示例和说明
+- **混合输入支持**：支持同时输入多种格式（URL、短链接、ID）
 
-#### 创作者主页爬取
+#### 🔗 智能URL解析引擎
+- **短链接重定向**：智能解析分享短链接，自动重定向获取真实URL
+- **多格式兼容**：支持完整URL、短链接、直接ID等多种输入格式
+- **验证机制**：内置ID验证，防止无效输入导致的错误
+
+#### 📱 统一命令行接口
+**新的统一命令格式**：
+```bash
+# 统一使用 --urls 参数，支持所有平台
+uv run main.py --platform [dy|ks|wb|bili] --lt qrcode --type [search|detail|creator] --urls "URL1" "URL2" "URL3"
+```
+
+### 🔥 抖音增强功能
+
 | 输入格式 | 示例 | 解析方式 |
 |---------|------|----------|
 | 完整用户主页URL | `https://www.douyin.com/user/MS4wLjABAAAA...` | 直接提取sec_user_id |
-| 分享短链接 | `https://v.douyin.com/J7v_LxD7vUQ/` | 浏览器重定向解析 |
-| 直接sec_user_id | `MS4wLjABAAAA...` | 直接使用 |
-
-#### 单个视频爬取
-| 输入格式 | 示例 | 解析方式 |
-|---------|------|----------|
 | 完整视频URL | `https://www.douyin.com/video/7525082444551310602` | 直接提取video_id |
-| 分享短链接 | `https://v.douyin.com/iXXXXXX/` | 浏览器重定向解析 |
-| 直接video_id | `7525082444551310602` | 直接使用 |
+| 分享短链接 | `https://v.douyin.com/J7v_LxD7vUQ/` | 智能重定向解析 |
+| 直接ID | `MS4wLjABAAAA...` 或 `7525082444551310602` | 直接使用 |
 
-**使用方式**：
-```bash
-# 创作者主页爬取
-uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
+### 🔥 快手增强功能
 
-# 单个视频爬取
-uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
-
-# 交互式输入（推荐）
-uv run main.py --platform dy --lt qrcode --type creator
-uv run main.py --platform dy --lt qrcode --type detail
-```
-
-### 🔥 快手爬取增强功能
-
-**支持多种输入格式，智能识别和解析**：
-
-#### 视频爬取
 | 输入格式 | 示例 | 解析方式 |
 |---------|------|----------|
 | 完整视频URL | `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig` | 直接提取video_id |
-| 分享短链接 | `https://v.kuaishou.com/2F50ZXj` | 浏览器重定向解析 |
-| 直接video_id | `3xf8enb8dbj6uig` | 直接使用 |
+| 完整用户主页URL | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | 直接提取user_id |
+| 分享短链接 | `https://v.kuaishou.com/2F50ZXj` | 智能重定向解析 |
+| 直接ID | `3xf8enb8dbj6uig` 或 `3xi4kwp2pg8tp8k` | 直接使用 |
 
-#### 创作者主页爬取
+### 🔥 B站增强功能
+
 | 输入格式 | 示例 | 解析方式 |
 |---------|------|----------|
-| 完整用户主页URL | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | 直接提取user_id |
-| 直接user_id | `3xi4kwp2pg8tp8k` | 直接使用 |
+| 完整视频URL | `https://www.bilibili.com/video/BV1Q2MXzgEgW` | 直接提取BVID/AID |
+| 完整用户空间URL | `https://space.bilibili.com/449342345` | 直接提取UID |
+| 分享短链接 | `https://b23.tv/B6gPE4M` | 智能重定向解析 |
+| 直接ID | `BV1Q2MXzgEgW` 或 `449342345` | 直接使用 |
 
-**使用方式**：
-```bash
-# 视频爬取
-uv run main.py --platform ks --lt qrcode --type detail --ks_video_urls "https://v.kuaishou.com/2F50ZXj"
+### 🔥 微博增强功能
 
-# 创作者主页爬取
-uv run main.py --platform ks --lt qrcode --type creator --ks_creator_urls "https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k"
-```
-
-### 🔥 微博爬取增强功能
-
-**支持多种输入格式，智能识别和解析**：
-
-#### 帖子爬取
 | 输入格式 | 示例 | 解析方式 |
 |---------|------|----------|
 | 桌面版分享链接 | `https://weibo.com/7643904561/5182160183232445` | 直接提取post_id |
 | 手机版URL | `https://m.weibo.cn/detail/5182160183232445` | 直接提取post_id |
-| 带参数URL | `https://weibo.com/detail?id=5182160183232445` | 从参数提取post_id |
-| 直接post_id | `5182160183232445` | 直接使用 |
-
-#### 创作者主页爬取
-| 输入格式 | 示例 | 解析方式 |
-|---------|------|----------|
-| 桌面版用户主页 | `https://weibo.com/u/5533390220` | 直接提取user_id |
-| 手机版用户主页 | `https://m.weibo.cn/u/5533390220` | 直接提取user_id |
-| 直接user_id | `5533390220` | 直接使用 |
-
-**使用方式**：
-```bash
-# 帖子爬取
-uv run main.py --platform wb --lt qrcode --type detail
-
-# 创作者主页爬取
-uv run main.py --platform wb --lt qrcode --type creator
-```
+| 用户主页URL | `https://weibo.com/u/5533390220` | 直接提取user_id |
+| 直接ID | `5182160183232445` 或 `5533390220` | 直接使用 |
 
 <details id="pro-version">
 <summary>🔗 <strong>🚀 MediaCrawlerPro 重磅发布！更多的功能，更好的架构设计！</strong></summary>
@@ -226,42 +196,46 @@ uv run main.py --platform xhs --lt qrcode --type creator
 uv run main.py --help
 ```
 
-### 🔥 抖音智能URL解析新功能
+### 🔥 统一智能URL解析功能
 
-**无需手动提取ID，支持直接粘贴分享链接**：
+**无需手动提取ID，支持直接粘贴分享链接，所有平台统一操作方式**：
 
-#### 创作者主页爬取
+#### 交互式输入模式（推荐）
 ```shell
-# 命令行直接输入（支持任意格式）
-uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
-
-# 交互式输入（推荐）
+# 抖音平台 - 清空配置文件后自动进入交互式输入
 uv run main.py --platform dy --lt qrcode --type creator
-
-# 批量爬取多个创作者
-uv run main.py --platform dy --lt qrcode --type creator --creator_urls "URL1" "URL2" "URL3"
-```
-
-#### 单个视频爬取
-```shell
-# 命令行直接输入（支持任意格式）
-uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
-
-# 交互式输入（推荐）
 uv run main.py --platform dy --lt qrcode --type detail
 
-# 批量爬取多个视频
-uv run main.py --platform dy --lt qrcode --type detail --video_urls "URL1" "URL2" "URL3"
+# 快手平台 - 支持短链接智能解析
+uv run main.py --platform ks --lt qrcode --type creator
+uv run main.py --platform ks --lt qrcode --type detail
 
-# 关闭评论爬取以提高速度
-uv run main.py --platform dy --lt qrcode --type detail --video_urls "URL" --get_comment false
+# B站平台 - 支持b23.tv短链接解析
+uv run main.py --platform bili --lt qrcode --type creator
+uv run main.py --platform bili --lt qrcode --type detail
+
+# 微博平台 - 支持多种URL格式
+uv run main.py --platform wb --lt qrcode --type creator
+uv run main.py --platform wb --lt qrcode --type detail
+```
+
+#### 命令行直接输入
+```shell
+# 统一使用 --urls 参数，支持所有平台
+uv run main.py --platform dy --lt qrcode --type creator --urls "https://v.douyin.com/J7v_LxD7vUQ/"
+uv run main.py --platform ks --lt qrcode --type detail --urls "https://v.kuaishou.com/2F50ZXj"
+uv run main.py --platform bili --lt qrcode --type detail --urls "https://b23.tv/B6gPE4M"
+uv run main.py --platform wb --lt qrcode --type creator --urls "https://weibo.com/u/5533390220"
+
+# 批量爬取多个目标
+uv run main.py --platform dy --lt qrcode --type detail --urls "URL1" "URL2" "URL3"
 ```
 
 **支持的输入格式示例**：
-- 创作者完整URL：`https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE`
-- 视频完整URL：`https://www.douyin.com/video/7525082444551310602`
-- 分享短链接：`https://v.douyin.com/J7v_LxD7vUQ/`（从APP分享获得）
-- 直接ID：`MS4wLjABAAAA...` 或 `7525082444551310602`
+- **抖音**：`https://v.douyin.com/J7v_LxD7vUQ/`、`https://www.douyin.com/video/7525082444551310602`
+- **快手**：`https://v.kuaishou.com/2F50ZXj`、`https://www.kuaishou.com/short-video/3xf8enb8dbj6uig`
+- **B站**：`https://b23.tv/B6gPE4M`、`https://www.bilibili.com/video/BV1Q2MXzgEgW`
+- **微博**：桌面版、手机版URL或直接ID
 
 <details>
 <summary>🔗 <strong>使用 Python 原生 venv 管理环境（不推荐）</strong></summary>
@@ -355,40 +329,77 @@ data/douyin/json/
 
 ## ⚙️ 配置说明
 
-### 抖音智能URL解析配置
+### 统一智能URL解析配置
 
-在 `config/base_config.py` 中可以配置URL列表：
+在 `config/base_config.py` 中可以配置各平台的URL列表，所有平台都支持智能解析：
 
-#### 创作者主页爬取配置
+#### 抖音平台配置
 ```python
-# 指定抖音创作者主页URL列表 - 支持四种格式自动识别和解析
+# 指定抖音创作者主页URL列表 - 支持三种格式自动识别和解析
 DY_CREATOR_URL_LIST = [
-    # 格式1: 完整用户主页URL
-    "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
-    
-    # 格式2: 用户名URL（通过搜索API解析）
-    "https://www.douyin.com/@username",
-    
-    # 格式3: 分享短链接（通过浏览器重定向解析）
-    "https://v.douyin.com/J7v_LxD7vUQ/",
-    
-    # 格式4: 直接的sec_user_id
-    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # "https://www.douyin.com/user/MS4wLjABAAAA...",  # 完整用户主页URL
+    # "https://v.douyin.com/J7v_LxD7vUQ/",           # 分享短链接（智能重定向解析）
+    # "MS4wLjABAAAA...",                             # 直接的sec_user_id
+]
+
+# 指定抖音视频列表 - 支持三种格式自动识别和解析
+DY_SPECIFIED_ID_LIST = [
+    # "https://www.douyin.com/video/7525082444551310602",  # 完整视频URL
+    # "https://v.douyin.com/XfjzKi_ZFLA/",                 # 分享短链接（智能重定向解析）
+    # "7525082444551310602",                               # 直接的video_id
 ]
 ```
 
-#### 单个视频爬取配置
+#### 快手平台配置
 ```python
-# 指定抖音视频列表 - 支持三种格式自动识别和解析
-DY_SPECIFIED_ID_LIST = [
-    # 格式1: 完整视频URL
-    "https://www.douyin.com/video/7525082444551310602",
-    
-    # 格式2: 分享短链接（通过浏览器重定向解析）
-    "https://v.douyin.com/iXXXXXX/",
-    
-    # 格式3: 直接的video_id（19位数字）
-    "7525082444551310602",
+# 指定快手视频列表 - 支持三种格式自动识别和解析
+KS_SPECIFIED_ID_LIST = [
+    # "https://www.kuaishou.com/short-video/3xf8enb8dbj6uig",  # 完整视频URL
+    # "https://v.kuaishou.com/2F50ZXj",                        # 分享短链接（智能重定向解析）
+    # "3xf8enb8dbj6uig",                                       # 直接的video_id
+]
+
+# 指定快手创作者列表 - 支持四种格式自动识别和解析
+KS_CREATOR_ID_LIST = [
+    # "https://www.kuaishou.com/profile/3x4sm73aye7jq7i",  # 完整用户主页URL
+    # "https://live.kuaishou.com/profile/3xqrp5h7gg392vg", # 完整直播用户主页URL
+    # "https://v.kuaishou.com/2HJ1YXC",                    # 分享短链接（智能重定向解析）
+    # "3xqrp5h7gg392vg",                                   # 直接的creator_id
+]
+```
+
+#### B站平台配置
+```python
+# 指定B站视频列表 - 支持四种格式自动识别和解析
+BILI_SPECIFIED_ID_LIST = [
+    # "https://www.bilibili.com/video/BV1Q2MXzgEgW",  # 完整视频URL（BVID格式）
+    # "https://b23.tv/B6gPE4M",                       # 分享短链接（智能重定向解析）
+    # "BV1Q2MXzgEgW",                                 # 直接的BVID
+    # "87654321",                                     # 直接的AID
+]
+
+# 指定B站创作者列表 - 支持三种格式自动识别和解析
+BILI_CREATOR_ID_LIST = [
+    # "https://space.bilibili.com/449342345",  # 完整用户空间URL
+    # "https://b23.tv/9ljhRio",                # 分享短链接（智能重定向解析）
+    # "449342345",                             # 直接的UID
+]
+```
+
+#### 微博平台配置
+```python
+# 指定微博帖子列表 - 支持三种格式自动识别和解析
+WEIBO_SPECIFIED_ID_LIST = [
+    # "https://weibo.com/7643904561/5182160183232445",  # 桌面版分享链接
+    # "https://m.weibo.cn/detail/5182160183232445",     # 手机版URL
+    # "5182160183232445",                               # 直接的post_id
+]
+
+# 指定微博创作者列表 - 支持四种格式自动识别和解析
+WEIBO_CREATOR_ID_LIST = [
+    # "https://weibo.com/u/5533390220",      # 完整用户主页URL
+    # "https://m.weibo.cn/u/5533390220",     # 手机版用户主页URL
+    # "5533390220",                          # 直接的user_id
 ]
 ```
 
@@ -396,7 +407,7 @@ DY_SPECIFIED_ID_LIST = [
 
 ```python
 # 爬取模式设置
-PLATFORM = "dy"              # 平台选择
+PLATFORM = "dy"              # 平台选择 (xhs/dy/ks/bili/wb/tieba/zhihu)
 CRAWLER_TYPE = "creator"     # 爬取类型（search/detail/creator）
 
 # 数据保存设置
@@ -409,6 +420,13 @@ CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10         # 单视频最大评论数
 
 # 并发控制
 MAX_CONCURRENCY_NUM = 1      # 并发数量控制
+
+# 交互式输入提示
+# 如果要使用交互式输入，请确保对应平台的配置列表为空：
+# - 抖音：DY_SPECIFIED_ID_LIST = [] 或 DY_CREATOR_URL_LIST = []
+# - 快手：KS_SPECIFIED_ID_LIST = [] 或 KS_CREATOR_ID_LIST = []
+# - B站：BILI_SPECIFIED_ID_LIST = [] 或 BILI_CREATOR_ID_LIST = []
+# - 微博：WEIBO_SPECIFIED_ID_LIST = [] 或 WEIBO_CREATOR_ID_LIST = []
 ```
 
 ---

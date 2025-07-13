@@ -106,6 +106,11 @@ class KuaishouCrawler(AbstractCrawler):
 
     async def search(self):
         utils.logger.info("[KuaishouCrawler.search] Begin search kuaishou keywords")
+        
+        # 检查是否有搜索关键词，如果没有则提示用户交互式输入
+        if not config.KEYWORDS or config.KEYWORDS.strip() == "":
+            await self._interactive_search_input()
+        
         ks_limit_count = 20  # kuaishou limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < ks_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = ks_limit_count
@@ -156,6 +161,11 @@ class KuaishouCrawler(AbstractCrawler):
 
     async def get_specified_videos(self):
         """Get the information and comments of the specified post"""
+        
+        # 检查是否有配置的视频信息，如果没有则提示用户交互式输入
+        if not config.KS_SPECIFIED_ID_LIST:
+            await self._interactive_detail_input()
+        
         # 智能解析视频输入
         resolved_video_ids = []
         for video_input in config.KS_SPECIFIED_ID_LIST:
@@ -363,6 +373,10 @@ class KuaishouCrawler(AbstractCrawler):
             "[KuaiShouCrawler.get_creators_and_videos] Begin get kuaishou creators"
         )
         
+        # 检查是否有配置的创作者信息，如果没有则提示用户交互式输入
+        if not config.KS_CREATOR_ID_LIST:
+            await self._interactive_creator_input()
+        
         # 智能解析创作者输入
         resolved_creator_ids = []
         for creator_input in config.KS_CREATOR_ID_LIST:
@@ -498,3 +512,75 @@ class KuaishouCrawler(AbstractCrawler):
         else:
             await self.browser_context.close()
         utils.logger.info("[KuaishouCrawler.close] Browser context closed ...")
+    
+    async def _interactive_search_input(self) -> None:
+        """
+        交互式输入搜索关键词
+        """
+        print("\n" + "="*60)
+        print("🔍 快手搜索模式")
+        print("="*60)
+        print("请输入搜索关键词：")
+        print("1. 支持单个关键词：美食")
+        print("2. 支持多个关键词（空格分隔）：美食 旅游 音乐")
+        print("-"*60)
+        
+        user_input = input("请输入搜索关键词 (回车键结束): ").strip()
+        
+        if user_input:
+            config.KEYWORDS = user_input.replace(" ", ",")
+            utils.logger.info(f"[KuaishouCrawler._interactive_search_input] 已设置搜索关键词: {config.KEYWORDS}")
+        else:
+            utils.logger.warning("[KuaishouCrawler._interactive_search_input] 未输入任何搜索关键词，将退出程序")
+            raise ValueError("未输入任何搜索关键词")
+    
+    async def _interactive_detail_input(self) -> None:
+        """
+        交互式输入视频详情信息
+        """
+        print("\n" + "="*60)
+        print("📹 快手视频详情爬取模式")
+        print("="*60)
+        print("请输入视频信息，支持以下格式：")
+        print("1. 完整URL: https://www.kuaishou.com/short-video/3xf8enb8dbj6uig")
+        print("2. 短链接: https://v.kuaishou.com/2F50ZXj")
+        print("3. video_id: 3xf8enb8dbj6uig")
+        print("4. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入视频URL或video_id (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            video_inputs = user_input.split()
+            config.KS_SPECIFIED_ID_LIST.extend(video_inputs)
+            utils.logger.info(f"[KuaishouCrawler._interactive_detail_input] 已添加 {len(video_inputs)} 个视频")
+        else:
+            utils.logger.warning("[KuaishouCrawler._interactive_detail_input] 未输入任何视频信息，将退出程序")
+            raise ValueError("未输入任何视频信息")
+    
+    async def _interactive_creator_input(self) -> None:
+        """
+        交互式输入创作者信息
+        """
+        print("\n" + "="*60)
+        print("🎯 快手创作者爬取模式")
+        print("="*60)
+        print("请输入创作者信息，支持以下格式：")
+        print("1. 完整URL: https://www.kuaishou.com/profile/3xqrp5h7gg392vg")
+        print("2. 直播URL: https://live.kuaishou.com/profile/3xqrp5h7gg392vg")
+        print("3. 短链接: https://v.kuaishou.com/2HJ1YXC")
+        print("4. creator_id: 3xqrp5h7gg392vg")
+        print("5. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入创作者URL或creator_id (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            creator_inputs = user_input.split()
+            config.KS_CREATOR_ID_LIST.extend(creator_inputs)
+            utils.logger.info(f"[KuaishouCrawler._interactive_creator_input] 已添加 {len(creator_inputs)} 个创作者")
+        else:
+            utils.logger.warning("[KuaishouCrawler._interactive_creator_input] 未输入任何创作者信息，将退出程序")
+            raise ValueError("未输入任何创作者信息")

@@ -121,47 +121,54 @@ DY_SPECIFIED_ID_LIST = [
     # 格式1: 完整视频URL
     # "https://www.douyin.com/video/7525082444551310602",
     
-    # 格式2: 分享短链接（通过浏览器重定向解析）
-     "https://v.douyin.com/XfjzKi_ZFLA/",
+    # 格式2: 分享短链接（智能重定向解析）
+    # "https://v.douyin.com/XfjzKi_ZFLA/",
     
     # 格式3: 直接的video_id（19位数字）
-     # "7525082444551310602",
+    # "7525082444551310602",
     # ........................
 ]
 
 # 指定快手视频列表 - 支持三种格式自动识别和解析
 KS_SPECIFIED_ID_LIST = [
     # 格式1: 完整视频URL
-     "https://www.kuaishou.com/short-video/3xf8enb8dbj6uig",
+    # "https://www.kuaishou.com/short-video/3xf8enb8dbj6uig",
     
-    # 格式2: 分享短链接（通过浏览器重定向解析）
+    # 格式2: 分享短链接（智能重定向解析）
     # "https://v.kuaishou.com/2F50ZXj",
     
     # 格式3: 直接的video_id（推荐使用，避免网络问题）
-    # "3xf8enb8dbj6uig", 
-    # "3x6zz972bchmvqe",
+    # "3xf8enb8dbj6uig",
     # ........................
 ]
 
-# 指定B站平台需要爬取的视频bvid列表
+# 指定B站视频列表 - 支持四种格式自动识别和解析
 BILI_SPECIFIED_ID_LIST = [
-    "BV1d54y1g7db",
-    "BV1Sz4y1U77N",
-    "BV14Q4y1n7jz",
+    # 格式1: 完整视频URL（BVID格式）
+    # "https://www.bilibili.com/video/BV1Q2MXzgEgW",
+    
+    # 格式2: 分享短链接（智能重定向解析）
+    # "https://b23.tv/B6gPE4M",
+    
+    # 格式3: 直接的BVID
+    # "BV1Q2MXzgEgW",
+    
+    # 格式4: 直接的AID
+    # "87654321",
     # ........................
 ]
 
 # 指定微博平台需要爬取的帖子列表 - 支持三种格式自动识别和解析
 WEIBO_SPECIFIED_ID_LIST = [
     # 格式1: 完整帖子URL（桌面版分享链接）
-     "https://weibo.com/7643904561/5182160183232445",
+    # "https://weibo.com/7643904561/5182160183232445",
     
     # 格式2: 手机版帖子URL
     # "https://m.weibo.cn/detail/5182160183232445",
     # "https://m.weibo.cn/status/5182160183232445",
     
     # 格式3: 直接的post_id（推荐使用，避免网络问题）
-    # "5182160183232445",
+    # "5182160183232445",  # 示例帖子ID
     # "4982041758140155",
     # ........................
 ]
@@ -175,12 +182,12 @@ WEIBO_CREATOR_ID_LIST = [
     # "https://weibo.com/5533390220",
     
     # 格式3: 手机版用户主页URL
-     # "https://m.weibo.cn/u/5533390220",
+    # "https://m.weibo.cn/u/5533390220",
     # "https://m.weibo.cn/profile/5533390220",
     
     # 格式4: 直接的user_id（推荐使用，避免网络问题）
-     "5533390220",
-
+    # "5533390220",
+    # ........................
 ]
 
 # 指定贴吧需要爬取的帖子列表
@@ -219,35 +226,42 @@ DY_CREATOR_ID_LIST = [
 # 指定抖音创作者主页URL列表 - 支持三种格式自动识别和解析
 DY_CREATOR_URL_LIST = [
     # 格式1: 完整用户主页URL
-      # "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     
-    # 格式2: 分享短链接（通过浏览器重定向解析）
-     # "https://v.douyin.com/J7v_LxD7vUQ/",
+    # 格式2: 分享短链接（智能重定向解析）
+    # "https://v.douyin.com/J7v_LxD7vUQ/",
     
     # 格式3: 直接的sec_user_id
-     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+    # "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]
 
-# 指定bili创作者ID列表(sec_id)
+# 指定B站创作者列表 - 支持三种格式自动识别和解析
 BILI_CREATOR_ID_LIST = [
-    "20813884",
+    # 格式1: 完整用户空间URL
+    # "https://space.bilibili.com/449342345",
+    
+    # 格式2: 分享短链接（智能重定向解析）
+    # "https://b23.tv/9ljhRio",
+    
+    # 格式3: 直接的UID
+    # "449342345",
     # ........................
 ]
 
 # 指定快手创作者列表 - 支持四种格式自动识别和解析
 KS_CREATOR_ID_LIST = [
     # 格式1: 完整用户主页URL
-      "https://www.kuaishou.com/profile/3x4sm73aye7jq7i",
+    # "https://www.kuaishou.com/profile/3x4sm73aye7jq7i",
     
     # 格式2: 完整直播用户主页URL  
-     # "https://live.kuaishou.com/profile/3xqrp5h7gg392vg",
+    # "https://live.kuaishou.com/profile/3xqrp5h7gg392vg",
     
-    # 格式3: 分享短链接（通过浏览器重定向解析）
-     # "https://v.kuaishou.com/2HJ1YXC",
+    # 格式3: 分享短链接（智能重定向解析）
+    # "https://v.kuaishou.com/2HJ1YXC",
     
     # 格式4: 直接的creator_id（推荐使用，避免网络问题）
-     # "3xqrp5h7gg392vg",
+    # "3xqrp5h7gg392vg",
     # ........................
 ]
 

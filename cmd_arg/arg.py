@@ -36,18 +36,8 @@ async def parse_cmd():
                         help='where to save the data (csv or db or json)', choices=['csv', 'db', 'json'], default=config.SAVE_DATA_OPTION)
     parser.add_argument('--cookies', type=str,
                         help='cookies used for cookie login type', default=config.COOKIES)
-    parser.add_argument('--creator_urls', type=str, nargs='*',
-                        help='creator urls or sec_user_ids for dy platform creator crawling (support multiple URLs separated by space)')
-    parser.add_argument('--video_urls', type=str, nargs='*',
-                        help='video urls or video_ids for dy platform detail crawling (support multiple URLs separated by space)')
-    parser.add_argument('--xhs_note_urls', type=str, nargs='*',
-                        help='note urls or note_ids for xhs platform detail crawling (support multiple URLs separated by space)')
-    parser.add_argument('--xhs_creator_urls', type=str, nargs='*',
-                        help='creator urls or creator_ids for xhs platform creator crawling (support multiple URLs separated by space)')
-    parser.add_argument('--ks_video_urls', type=str, nargs='*',
-                        help='video urls or video_ids for ks platform detail crawling (support multiple URLs separated by space)')
-    parser.add_argument('--ks_creator_urls', type=str, nargs='*',
-                        help='creator urls or creator_ids for ks platform creator crawling (support multiple URLs separated by space)')
+    parser.add_argument('--urls', type=str, nargs='*',
+                        help='URLs, IDs, or keywords for crawling (support multiple entries separated by space). For search mode: keywords; For detail mode: post/video URLs or IDs; For creator mode: creator URLs or IDs')
 
     args = parser.parse_args()
 
@@ -62,32 +52,59 @@ async def parse_cmd():
     config.SAVE_DATA_OPTION = args.save_data_option
     config.COOKIES = args.cookies
     
-    # 处理创作者URL参数（仅对抖音平台的creator类型有效）
-    if args.creator_urls and config.PLATFORM == "dy" and config.CRAWLER_TYPE == "creator":
-        config.DY_CREATOR_URL_LIST = args.creator_urls
-        print(f"[CMD] 已设置抖音创作者URL列表: {args.creator_urls}")
-        
-    # 处理视频URL参数（仅对抖音平台的detail类型有效）
-    if args.video_urls and config.PLATFORM == "dy" and config.CRAWLER_TYPE == "detail":
-        config.DY_SPECIFIED_ID_LIST = args.video_urls
-        print(f"[CMD] 已设置抖音视频URL列表: {args.video_urls}")
-        
-    # 处理小红书笔记URL参数（仅对小红书平台的detail类型有效）
-    if args.xhs_note_urls and config.PLATFORM == "xhs" and config.CRAWLER_TYPE == "detail":
-        config.XHS_SPECIFIED_NOTE_URL_LIST = args.xhs_note_urls
-        print(f"[CMD] 已设置小红书笔记URL列表: {args.xhs_note_urls}")
-        
-    # 处理小红书创作者URL参数（仅对小红书平台的creator类型有效）
-    if args.xhs_creator_urls and config.PLATFORM == "xhs" and config.CRAWLER_TYPE == "creator":
-        config.XHS_CREATOR_ID_LIST = args.xhs_creator_urls
-        print(f"[CMD] 已设置小红书创作者URL列表: {args.xhs_creator_urls}")
-        
-    # 处理快手视频URL参数（仅对快手平台的detail类型有效）
-    if args.ks_video_urls and config.PLATFORM == "ks" and config.CRAWLER_TYPE == "detail":
-        config.KS_SPECIFIED_ID_LIST = args.ks_video_urls
-        print(f"[CMD] 已设置快手视频URL列表: {args.ks_video_urls}")
-        
-    # 处理快手创作者URL参数（仅对快手平台的creator类型有效）
-    if args.ks_creator_urls and config.PLATFORM == "ks" and config.CRAWLER_TYPE == "creator":
-        config.KS_CREATOR_ID_LIST = args.ks_creator_urls
-        print(f"[CMD] 已设置快手创作者URL列表: {args.ks_creator_urls}")
+    # 统一处理URLs参数，根据平台和类型分配到对应的配置列表
+    if args.urls:
+        if config.PLATFORM == "dy":  # 抖音平台
+            if config.CRAWLER_TYPE == "creator":
+                config.DY_CREATOR_URL_LIST = args.urls
+                print(f"[CMD] 已设置抖音创作者URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "detail":
+                config.DY_SPECIFIED_ID_LIST = args.urls
+                print(f"[CMD] 已设置抖音视频URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "search":
+                config.KEYWORDS = ",".join(args.urls)
+                print(f"[CMD] 已设置抖音搜索关键词: {config.KEYWORDS}")
+                
+        elif config.PLATFORM == "ks":  # 快手平台
+            if config.CRAWLER_TYPE == "creator":
+                config.KS_CREATOR_ID_LIST = args.urls
+                print(f"[CMD] 已设置快手创作者URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "detail":
+                config.KS_SPECIFIED_ID_LIST = args.urls
+                print(f"[CMD] 已设置快手视频URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "search":
+                config.KEYWORDS = ",".join(args.urls)
+                print(f"[CMD] 已设置快手搜索关键词: {config.KEYWORDS}")
+                
+        elif config.PLATFORM == "wb":  # 微博平台
+            if config.CRAWLER_TYPE == "creator":
+                config.WEIBO_CREATOR_ID_LIST = args.urls
+                print(f"[CMD] 已设置微博创作者URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "detail":
+                config.WEIBO_SPECIFIED_ID_LIST = args.urls
+                print(f"[CMD] 已设置微博帖子URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "search":
+                config.KEYWORDS = ",".join(args.urls)
+                print(f"[CMD] 已设置微博搜索关键词: {config.KEYWORDS}")
+                
+        elif config.PLATFORM == "xhs":  # 小红书平台
+            if config.CRAWLER_TYPE == "creator":
+                config.XHS_CREATOR_ID_LIST = args.urls
+                print(f"[CMD] 已设置小红书创作者URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "detail":
+                config.XHS_SPECIFIED_NOTE_URL_LIST = args.urls
+                print(f"[CMD] 已设置小红书笔记URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "search":
+                config.KEYWORDS = ",".join(args.urls)
+                print(f"[CMD] 已设置小红书搜索关键词: {config.KEYWORDS}")
+                
+        elif config.PLATFORM == "bili":  # B站平台
+            if config.CRAWLER_TYPE == "creator":
+                config.BILI_CREATOR_ID_LIST = args.urls
+                print(f"[CMD] 已设置B站创作者URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "detail":
+                config.BILI_SPECIFIED_ID_LIST = args.urls
+                print(f"[CMD] 已设置B站视频URL列表: {args.urls}")
+            elif config.CRAWLER_TYPE == "search":
+                config.KEYWORDS = ",".join(args.urls)
+                print(f"[CMD] 已设置B站搜索关键词: {config.KEYWORDS}")

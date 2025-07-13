@@ -36,100 +36,70 @@ A powerful **multi-platform social media data collection tool** that supports cr
 - **Advantages**: No need to reverse complex encryption algorithms, significantly lowering the technical barrier
 
 ## ✨ Features
-| Platform | Keyword Search | Specific Post ID Crawling | Secondary Comments | Specific Creator Homepage | Login State Cache | IP Proxy Pool | Generate Comment Word Cloud | Smart URL Parsing |
-| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ |
-| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| Douyin   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** |
-| Kuaishou   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** |
-| Bilibili   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| Weibo   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** |
-| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Platform | Keyword Search | Specific Post ID Crawling | Secondary Comments | Specific Creator Homepage | Login State Cache | IP Proxy Pool | Generate Comment Word Cloud | Smart URL Parsing | Interactive Input |
+| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ | ---------- |
+| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+| Douyin   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** | 🔥**New Feature** |
+| Kuaishou   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** | 🔥**New Feature** |
+| Bilibili   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** | 🔥**New Feature** |
+| Weibo   | ✅          | 🔥**Enhanced**  | ✅        | 🔥**Enhanced**  | ✅          | ✅        | ✅              | 🔥**New Feature** | 🔥**New Feature** |
+| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+
+### 🔥 Enhanced Features Highlights
+
+#### 🎯 Unified Interactive Input
+- **Smart Input Detection**: Automatically enables interactive input mode when configuration files are empty
+- **Formatted Prompts**: Provides detailed input format examples and instructions
+- **Mixed Format Support**: Supports simultaneous input of multiple formats (URLs, short links, IDs)
+
+#### 🔗 Smart URL Parsing Engine
+- **Short Link Redirection**: Intelligently parses shared short links and automatically redirects to get real URLs
+- **Multi-Format Compatibility**: Supports complete URLs, short links, direct IDs and other input formats
+- **Validation Mechanism**: Built-in ID validation to prevent errors from invalid input
+
+#### 📱 Unified Command Line Interface
+**New unified command format**:
+```bash
+# Unified use of --urls parameter, supports all platforms
+uv run main.py --platform [dy|ks|wb|bili] --lt qrcode --type [search|detail|creator] --urls "URL1" "URL2" "URL3"
+```
 
 ### 🔥 Douyin Enhanced Features
 
-**Supports multiple input formats with intelligent recognition and parsing**:
-
-#### Creator Homepage Crawling
 | Input Format | Example | Parsing Method |
 |---------|------|----------|
 | Complete User Homepage URL | `https://www.douyin.com/user/MS4wLjABAAAA...` | Extract sec_user_id directly |
-| Share Short Link | `https://v.douyin.com/J7v_LxD7vUQ/` | Browser redirect parsing |
-| Direct sec_user_id | `MS4wLjABAAAA...` | Use directly |
-
-#### Single Video Crawling
-| Input Format | Example | Parsing Method |
-|---------|------|----------|
 | Complete Video URL | `https://www.douyin.com/video/7525082444551310602` | Extract video_id directly |
-| Share Short Link | `https://v.douyin.com/iXXXXXX/` | Browser redirect parsing |
-| Direct video_id | `7525082444551310602` | Use directly |
-
-**Usage**:
-```bash
-# Creator homepage crawling
-uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
-
-# Single video crawling
-uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
-
-# Interactive input (recommended)
-uv run main.py --platform dy --lt qrcode --type creator
-uv run main.py --platform dy --lt qrcode --type detail
-```
+| Share Short Link | `https://v.douyin.com/J7v_LxD7vUQ/` | Smart redirection parsing |
+| Direct ID | `MS4wLjABAAAA...` or `7525082444551310602` | Use directly |
 
 ### 🔥 Kuaishou Enhanced Features
 
-**Supports multiple input formats with intelligent recognition and parsing**:
-
-#### Video Crawling
 | Input Format | Example | Parsing Method |
 |---------|------|----------|
 | Complete Video URL | `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig` | Extract video_id directly |
-| Share Short Link | `https://v.kuaishou.com/2F50ZXj` | Browser redirect parsing |
-| Direct video_id | `3xf8enb8dbj6uig` | Use directly |
+| Complete User Homepage URL | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | Extract user_id directly |
+| Share Short Link | `https://v.kuaishou.com/2F50ZXj` | Smart redirection parsing |
+| Direct ID | `3xf8enb8dbj6uig` or `3xi4kwp2pg8tp8k` | Use directly |
 
-#### Creator Homepage Crawling
+### 🔥 Bilibili Enhanced Features
+
 | Input Format | Example | Parsing Method |
 |---------|------|----------|
-| Complete User Homepage URL | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | Extract user_id directly |
-| Direct user_id | `3xi4kwp2pg8tp8k` | Use directly |
-
-**Usage**:
-```bash
-# Video crawling
-uv run main.py --platform ks --lt qrcode --type detail --ks_video_urls "https://v.kuaishou.com/2F50ZXj"
-
-# Creator homepage crawling
-uv run main.py --platform ks --lt qrcode --type creator --ks_creator_urls "https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k"
-```
+| Complete Video URL | `https://www.bilibili.com/video/BV1Q2MXzgEgW` | Extract BVID/AID directly |
+| Complete User Space URL | `https://space.bilibili.com/449342345` | Extract UID directly |
+| Share Short Link | `https://b23.tv/B6gPE4M` | Smart redirection parsing |
+| Direct ID | `BV1Q2MXzgEgW` or `449342345` | Use directly |
 
 ### 🔥 Weibo Enhanced Features
 
-**Supports multiple input formats with intelligent recognition and parsing**:
-
-#### Post Crawling
 | Input Format | Example | Parsing Method |
 |---------|------|----------|
 | Desktop Share Link | `https://weibo.com/7643904561/5182160183232445` | Extract post_id directly |
 | Mobile URL | `https://m.weibo.cn/detail/5182160183232445` | Extract post_id directly |
-| URL with Parameters | `https://weibo.com/detail?id=5182160183232445` | Extract post_id from parameters |
-| Direct post_id | `5182160183232445` | Use directly |
-
-#### Creator Homepage Crawling
-| Input Format | Example | Parsing Method |
-|---------|------|----------|
-| Desktop User Homepage | `https://weibo.com/u/5533390220` | Extract user_id directly |
-| Mobile User Homepage | `https://m.weibo.cn/u/5533390220` | Extract user_id directly |
-| Direct user_id | `5533390220` | Use directly |
-
-**Usage**:
-```bash
-# Post crawling
-uv run main.py --platform wb --lt qrcode --type detail
-
-# Creator homepage crawling
-uv run main.py --platform wb --lt qrcode --type creator
-```
+| User Homepage URL | `https://weibo.com/u/5533390220` | Extract user_id directly |
+| Direct ID | `5182160183232445` or `5533390220` | Use directly |
 
 
 <details id="pro-version">
@@ -204,21 +174,65 @@ uv run playwright install
 
 ## 🚀 Run Crawler Program
 
+### Basic Usage
+
 ```shell
 # The project does not enable comment crawling mode by default. If you need comments, please modify the ENABLE_GET_COMMENTS variable in config/base_config.py
 # Other supported options can also be viewed in config/base_config.py with Chinese comments
 
-# Read keywords from configuration file to search related posts and crawl post information and comments
+# Keyword search crawling
 uv run main.py --platform xhs --lt qrcode --type search
 
-# Read specified post ID list from configuration file to get information and comment information of specified posts
+# Specified post ID crawling
 uv run main.py --platform xhs --lt qrcode --type detail
 
-# Open corresponding APP to scan QR code for login
+# Creator homepage crawling
+uv run main.py --platform xhs --lt qrcode --type creator
 
 # For other platform crawler usage examples, execute the following command to view
 uv run main.py --help
 ```
+
+### 🔥 Unified Smart URL Parsing Feature
+
+**No need to manually extract IDs, supports direct paste of share links, unified operation for all platforms**:
+
+#### Interactive Input Mode (Recommended)
+```shell
+# Douyin Platform - Automatically enters interactive input after clearing configuration file
+uv run main.py --platform dy --lt qrcode --type creator
+uv run main.py --platform dy --lt qrcode --type detail
+
+# Kuaishou Platform - Supports smart short link parsing
+uv run main.py --platform ks --lt qrcode --type creator
+uv run main.py --platform ks --lt qrcode --type detail
+
+# Bilibili Platform - Supports b23.tv short link parsing
+uv run main.py --platform bili --lt qrcode --type creator
+uv run main.py --platform bili --lt qrcode --type detail
+
+# Weibo Platform - Supports multiple URL formats
+uv run main.py --platform wb --lt qrcode --type creator
+uv run main.py --platform wb --lt qrcode --type detail
+```
+
+#### Command Line Direct Input
+```shell
+# Unified use of --urls parameter, supports all platforms
+uv run main.py --platform dy --lt qrcode --type creator --urls "https://v.douyin.com/J7v_LxD7vUQ/"
+uv run main.py --platform ks --lt qrcode --type detail --urls "https://v.kuaishou.com/2F50ZXj"
+uv run main.py --platform bili --lt qrcode --type detail --urls "https://b23.tv/B6gPE4M"
+uv run main.py --platform wb --lt qrcode --type creator --urls "https://weibo.com/u/5533390220"
+
+# Batch crawling multiple targets
+uv run main.py --platform dy --lt qrcode --type detail --urls "URL1" "URL2" "URL3"
+```
+
+**Supported Input Format Examples**:
+- **Douyin**: `https://v.douyin.com/J7v_LxD7vUQ/`, `https://www.douyin.com/video/7525082444551310602`
+- **Kuaishou**: `https://v.kuaishou.com/2F50ZXj`, `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig`
+- **Bilibili**: `https://b23.tv/B6gPE4M`, `https://www.bilibili.com/video/BV1Q2MXzgEgW`
+- **Weibo**: Desktop, mobile URLs or direct IDs
 
 <details>
 <summary>🔗 <strong>Using Python native venv environment management (Not recommended)</strong></summary>

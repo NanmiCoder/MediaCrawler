@@ -36,100 +36,70 @@ Una poderosa **herramienta de recolección de datos de redes sociales multiplata
 - **Ventajas**: No necesita hacer ingeniería inversa de algoritmos de encriptación complejos, reduciendo significativamente la barrera técnica
 
 ## ✨ Características
-| Plataforma | Búsqueda por Palabras Clave | Rastreo de ID de Publicación Específica | Comentarios Secundarios | Página de Inicio de Creador Específico | Caché de Estado de Login | Pool de Proxy IP | Generar Nube de Palabras de Comentarios | Análisis Inteligente de URL |
-| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ |
-| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| Douyin   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** |
-| Kuaishou   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** |
-| Bilibili   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| Weibo   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** |
-| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
-| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            |
+| Plataforma | Búsqueda por Palabras Clave | Rastreo de ID de Publicación Específica | Comentarios Secundarios | Página de Inicio de Creador Específico | Caché de Estado de Login | Pool de Proxy IP | Generar Nube de Palabras de Comentarios | Análisis Inteligente de URL | Entrada Interactiva |
+| ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- | ------------ | ---------- |
+| Xiaohongshu | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+| Douyin   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** | 🔥**Nueva Función** |
+| Kuaishou   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** | 🔥**Nueva Función** |
+| Bilibili   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** | 🔥**Nueva Función** |
+| Weibo   | ✅          | 🔥**Mejorado**  | ✅        | 🔥**Mejorado**  | ✅          | ✅        | ✅              | 🔥**Nueva Función** | 🔥**Nueva Función** |
+| Tieba   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+| Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              | ❌            | ❌          |
+
+### 🔥 Destacados de Funciones Mejoradas
+
+#### 🎯 Entrada Interactiva Unificada
+- **Detección Inteligente de Entrada**: Habilita automáticamente el modo de entrada interactiva cuando los archivos de configuración están vacíos
+- **Mensajes Formateados**: Proporciona ejemplos detallados de formato de entrada e instrucciones
+- **Soporte de Formato Mixto**: Soporta entrada simultánea de múltiples formatos (URLs, enlaces cortos, IDs)
+
+#### 🔗 Motor de Análisis Inteligente de URL
+- **Redirección de Enlaces Cortos**: Analiza inteligentemente enlaces cortos compartidos y automáticamente redirige para obtener URLs reales
+- **Compatibilidad Multi-formato**: Soporta URLs completas, enlaces cortos, IDs directos y otros formatos de entrada
+- **Mecanismo de Validación**: Validación de ID incorporada para prevenir errores de entrada inválida
+
+#### 📱 Interfaz de Línea de Comandos Unificada
+**Nuevo formato de comando unificado**:
+```bash
+# Uso unificado del parámetro --urls, soporta todas las plataformas
+uv run main.py --platform [dy|ks|wb|bili] --lt qrcode --type [search|detail|creator] --urls "URL1" "URL2" "URL3"
+```
 
 ### 🔥 Funciones Mejoradas de Douyin
 
-**Soporte para múltiples formatos de entrada con reconocimiento y análisis inteligente**:
-
-#### Rastreo de Página de Inicio de Creador
 | Formato de Entrada | Ejemplo | Método de Análisis |
 |---------|------|----------|
 | URL Completa de Página de Usuario | `https://www.douyin.com/user/MS4wLjABAAAA...` | Extraer sec_user_id directamente |
-| Enlace Corto Compartido | `https://v.douyin.com/J7v_LxD7vUQ/` | Análisis de redirección del navegador |
-| sec_user_id Directo | `MS4wLjABAAAA...` | Usar directamente |
-
-#### Rastreo de Video Individual
-| Formato de Entrada | Ejemplo | Método de Análisis |
-|---------|------|----------|
 | URL Completa de Video | `https://www.douyin.com/video/7525082444551310602` | Extraer video_id directamente |
-| Enlace Corto Compartido | `https://v.douyin.com/iXXXXXX/` | Análisis de redirección del navegador |
-| video_id Directo | `7525082444551310602` | Usar directamente |
-
-**Uso**:
-```bash
-# Rastreo de página de inicio de creador
-uv run main.py --platform dy --lt qrcode --type creator --creator_urls "https://v.douyin.com/J7v_LxD7vUQ/"
-
-# Rastreo de video individual
-uv run main.py --platform dy --lt qrcode --type detail --video_urls "https://v.douyin.com/iXXXXXX/"
-
-# Entrada interactiva (recomendada)
-uv run main.py --platform dy --lt qrcode --type creator
-uv run main.py --platform dy --lt qrcode --type detail
-```
+| Enlace Corto Compartido | `https://v.douyin.com/J7v_LxD7vUQ/` | Análisis de redirección inteligente |
+| ID Directo | `MS4wLjABAAAA...` o `7525082444551310602` | Usar directamente |
 
 ### 🔥 Funciones Mejoradas de Kuaishou
 
-**Soporte para múltiples formatos de entrada con reconocimiento y análisis inteligente**:
-
-#### Rastreo de Video
 | Formato de Entrada | Ejemplo | Método de Análisis |
 |---------|------|----------|
 | URL Completa de Video | `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig` | Extraer video_id directamente |
-| Enlace Corto Compartido | `https://v.kuaishou.com/2F50ZXj` | Análisis de redirección del navegador |
-| video_id Directo | `3xf8enb8dbj6uig` | Usar directamente |
+| URL Completa de Página de Usuario | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | Extraer user_id directamente |
+| Enlace Corto Compartido | `https://v.kuaishou.com/2F50ZXj` | Análisis de redirección inteligente |
+| ID Directo | `3xf8enb8dbj6uig` o `3xi4kwp2pg8tp8k` | Usar directamente |
 
-#### Rastreo de Página de Inicio de Creador
+### 🔥 Funciones Mejoradas de Bilibili
+
 | Formato de Entrada | Ejemplo | Método de Análisis |
 |---------|------|----------|
-| URL Completa de Página de Usuario | `https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k` | Extraer user_id directamente |
-| user_id Directo | `3xi4kwp2pg8tp8k` | Usar directamente |
-
-**Uso**:
-```bash
-# Rastreo de video
-uv run main.py --platform ks --lt qrcode --type detail --ks_video_urls "https://v.kuaishou.com/2F50ZXj"
-
-# Rastreo de página de inicio de creador
-uv run main.py --platform ks --lt qrcode --type creator --ks_creator_urls "https://www.kuaishou.com/profile/3xi4kwp2pg8tp8k"
-```
+| URL Completa de Video | `https://www.bilibili.com/video/BV1Q2MXzgEgW` | Extraer BVID/AID directamente |
+| URL Completa de Espacio de Usuario | `https://space.bilibili.com/449342345` | Extraer UID directamente |
+| Enlace Corto Compartido | `https://b23.tv/B6gPE4M` | Análisis de redirección inteligente |
+| ID Directo | `BV1Q2MXzgEgW` o `449342345` | Usar directamente |
 
 ### 🔥 Funciones Mejoradas de Weibo
 
-**Soporte para múltiples formatos de entrada con reconocimiento y análisis inteligente**:
-
-#### Rastreo de Publicación
 | Formato de Entrada | Ejemplo | Método de Análisis |
 |---------|------|----------|
 | Enlace Compartido de Escritorio | `https://weibo.com/7643904561/5182160183232445` | Extraer post_id directamente |
 | URL Móvil | `https://m.weibo.cn/detail/5182160183232445` | Extraer post_id directamente |
-| URL con Parámetros | `https://weibo.com/detail?id=5182160183232445` | Extraer post_id de parámetros |
-| post_id Directo | `5182160183232445` | Usar directamente |
-
-#### Rastreo de Página de Inicio de Creador
-| Formato de Entrada | Ejemplo | Método de Análisis |
-|---------|------|----------|
-| Página de Usuario de Escritorio | `https://weibo.com/u/5533390220` | Extraer user_id directamente |
-| Página de Usuario Móvil | `https://m.weibo.cn/u/5533390220` | Extraer user_id directamente |
-| user_id Directo | `5533390220` | Usar directamente |
-
-**Uso**:
-```bash
-# Rastreo de publicación
-uv run main.py --platform wb --lt qrcode --type detail
-
-# Rastreo de página de inicio de creador
-uv run main.py --platform wb --lt qrcode --type creator
-```
+| URL de Página de Usuario | `https://weibo.com/u/5533390220` | Extraer user_id directamente |
+| ID Directo | `5182160183232445` o `5533390220` | Usar directamente |
 
 
 <details id="pro-version">
@@ -204,21 +174,65 @@ uv run playwright install
 
 ## 🚀 Ejecutar Programa Rastreador
 
+### Uso Básico
+
 ```shell
 # El proyecto no habilita el modo de rastreo de comentarios por defecto. Si necesita comentarios, por favor modifique la variable ENABLE_GET_COMMENTS en config/base_config.py
 # Otras opciones soportadas también pueden verse en config/base_config.py con comentarios en chino
 
-# Leer palabras clave del archivo de configuración para buscar publicaciones relacionadas y rastrear información de publicaciones y comentarios
+# Rastreo de búsqueda por palabra clave
 uv run main.py --platform xhs --lt qrcode --type search
 
-# Leer lista de ID de publicaciones específicas del archivo de configuración para obtener información e información de comentarios de publicaciones específicas
+# Rastreo de ID de publicación especificada
 uv run main.py --platform xhs --lt qrcode --type detail
 
-# Abrir la APP correspondiente para escanear código QR para login
+# Rastreo de página de inicio de creador
+uv run main.py --platform xhs --lt qrcode --type creator
 
 # Para ejemplos de uso de rastreador de otras plataformas, ejecute el siguiente comando para ver
 uv run main.py --help
 ```
+
+### 🔥 Función de Análisis Inteligente de URL Unificada
+
+**No necesita extraer IDs manualmente, soporta pegar directamente enlaces compartidos, operación unificada para todas las plataformas**:
+
+#### Modo de Entrada Interactiva (Recomendado)
+```shell
+# Plataforma Douyin - Entra automáticamente a entrada interactiva después de limpiar archivo de configuración
+uv run main.py --platform dy --lt qrcode --type creator
+uv run main.py --platform dy --lt qrcode --type detail
+
+# Plataforma Kuaishou - Soporta análisis inteligente de enlaces cortos
+uv run main.py --platform ks --lt qrcode --type creator
+uv run main.py --platform ks --lt qrcode --type detail
+
+# Plataforma Bilibili - Soporta análisis de enlaces cortos b23.tv
+uv run main.py --platform bili --lt qrcode --type creator
+uv run main.py --platform bili --lt qrcode --type detail
+
+# Plataforma Weibo - Soporta múltiples formatos de URL
+uv run main.py --platform wb --lt qrcode --type creator
+uv run main.py --platform wb --lt qrcode --type detail
+```
+
+#### Entrada Directa por Línea de Comandos
+```shell
+# Uso unificado del parámetro --urls, soporta todas las plataformas
+uv run main.py --platform dy --lt qrcode --type creator --urls "https://v.douyin.com/J7v_LxD7vUQ/"
+uv run main.py --platform ks --lt qrcode --type detail --urls "https://v.kuaishou.com/2F50ZXj"
+uv run main.py --platform bili --lt qrcode --type detail --urls "https://b23.tv/B6gPE4M"
+uv run main.py --platform wb --lt qrcode --type creator --urls "https://weibo.com/u/5533390220"
+
+# Rastreo en lote de múltiples objetivos
+uv run main.py --platform dy --lt qrcode --type detail --urls "URL1" "URL2" "URL3"
+```
+
+**Ejemplos de Formatos de Entrada Soportados**:
+- **Douyin**: `https://v.douyin.com/J7v_LxD7vUQ/`, `https://www.douyin.com/video/7525082444551310602`
+- **Kuaishou**: `https://v.kuaishou.com/2F50ZXj`, `https://www.kuaishou.com/short-video/3xf8enb8dbj6uig`
+- **Bilibili**: `https://b23.tv/B6gPE4M`, `https://www.bilibili.com/video/BV1Q2MXzgEgW`
+- **Weibo**: URLs de escritorio, móvil o IDs directos
 
 <details>
 <summary>🔗 <strong>Usando gestión de entorno venv nativo de Python (No recomendado)</strong></summary>

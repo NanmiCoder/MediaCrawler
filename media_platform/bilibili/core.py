@@ -35,6 +35,7 @@ from var import crawler_type_var, source_keyword_var
 from .client import BilibiliClient
 from .exception import DataFetchError
 from .field import SearchOrderType
+from .help import resolve_any_video_url_to_id, resolve_any_user_url_to_id
 from .login import BilibiliLogin
 
 
@@ -99,13 +100,30 @@ class BilibiliCrawler(AbstractCrawler):
                 await self.search()
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
-                await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
+                await self.get_specified_videos()
             elif config.CRAWLER_TYPE == "creator":
+                # 检查是否有配置的创作者信息，如果没有则提示用户交互式输入
+                if not config.BILI_CREATOR_ID_LIST:
+                    await self._interactive_creator_input()
+                
+                # 智能解析创作者输入
+                resolved_creator_ids = []
+                for creator_input in config.BILI_CREATOR_ID_LIST:
+                    creator_id = await self._process_creator_input(creator_input)
+                    if creator_id:
+                        resolved_creator_ids.append(creator_id)
+                
+                # 去重处理
+                resolved_creator_ids = list(set(resolved_creator_ids))
+                utils.logger.info(f"[BilibiliCrawler.creator] 解析得到的创作者ID: {resolved_creator_ids}")
+                
                 if config.CREATOR_MODE:
-                    for creator_id in config.BILI_CREATOR_ID_LIST:
+                    for creator_id in resolved_creator_ids:
                         await self.get_creator_videos(int(creator_id))
                 else:
-                    await self.get_all_creator_details(config.BILI_CREATOR_ID_LIST)
+                    # 转换为int类型的列表
+                    creator_int_ids = [int(cid) for cid in resolved_creator_ids if cid.isdigit()]
+                    await self.get_all_creator_details(creator_int_ids)
             else:
                 pass
             utils.logger.info(
@@ -147,6 +165,11 @@ class BilibiliCrawler(AbstractCrawler):
         :return:
         """
         utils.logger.info("[BilibiliCrawler.search] Begin search bilibli keywords")
+        
+        # 检查是否有搜索关键词，如果没有则提示用户交互式输入
+        if not config.KEYWORDS or config.KEYWORDS.strip() == "":
+            await self._interactive_search_input()
+        
         bili_limit_count = 20  # bilibili limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < bili_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = bili_limit_count
@@ -299,11 +322,33 @@ class BilibiliCrawler(AbstractCrawler):
             await asyncio.sleep(random.random())
             pn += 1
 
-    async def get_specified_videos(self, bvids_list: List[str]):
+    async def get_specified_videos(self, bvids_list: List[str] = None):
         """
         get specified videos info
         :return:
         """
+        # 如果没有传入参数，使用配置中的列表
+        if bvids_list is None:
+            # 检查是否有配置的视频信息，如果没有则提示用户交互式输入
+            if not config.BILI_SPECIFIED_ID_LIST:
+                await self._interactive_detail_input()
+            
+            # 智能解析视频输入
+            resolved_video_ids = []
+            for video_input in config.BILI_SPECIFIED_ID_LIST:
+                video_id = await self._process_video_input(video_input)
+                if video_id:
+                    resolved_video_ids.append(video_id)
+            
+            # 去重处理
+            resolved_video_ids = list(set(resolved_video_ids))
+            utils.logger.info(f"[BilibiliCrawler.get_specified_videos] 解析得到的视频ID: {resolved_video_ids}")
+            bvids_list = resolved_video_ids
+        
+        if not bvids_list:
+            utils.logger.warning("[BilibiliCrawler.get_specified_videos] No valid video IDs resolved")
+            return
+        
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_video_info_task(aid=0, bvid=video_id, semaphore=semaphore) for video_id in
@@ -633,3 +678,159 @@ class BilibiliCrawler(AbstractCrawler):
             except Exception as e:
                 utils.logger.error(
                     f"[BilibiliCrawler.get_dynamics] may be been blocked, err:{e}")
+    
+    async def _interactive_search_input(self) -> None:
+        """
+        交互式输入搜索关键词
+        """
+        print("\n" + "="*60)
+        print("🔍 B站搜索模式")
+        print("="*60)
+        print("请输入搜索关键词：")
+        print("1. 支持单个关键词：编程")
+        print("2. 支持多个关键词（空格分隔）：编程 科技 教程")
+        print("-"*60)
+        
+        user_input = input("请输入搜索关键词 (回车键结束): ").strip()
+        
+        if user_input:
+            config.KEYWORDS = user_input.replace(" ", ",")
+            utils.logger.info(f"[BilibiliCrawler._interactive_search_input] 已设置搜索关键词: {config.KEYWORDS}")
+        else:
+            utils.logger.warning("[BilibiliCrawler._interactive_search_input] 未输入任何搜索关键词，将退出程序")
+            raise ValueError("未输入任何搜索关键词")
+    
+    async def _interactive_detail_input(self) -> None:
+        """
+        交互式输入视频详情信息
+        """
+        print("\n" + "="*60)
+        print("📹 B站视频详情爬取模式")
+        print("="*60)
+        print("请输入视频信息，支持以下格式：")
+        print("1. 完整URL: https://www.bilibili.com/video/BV1Q2MXzgEgW")
+        print("2. 短链接: https://b23.tv/B6gPE4M")
+        print("3. BVID: BV1Q2MXzgEgW")
+        print("4. AID: 12345678")
+        print("5. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入视频URL或ID (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            video_inputs = user_input.split()
+            config.BILI_SPECIFIED_ID_LIST.extend(video_inputs)
+            utils.logger.info(f"[BilibiliCrawler._interactive_detail_input] 已添加 {len(video_inputs)} 个视频")
+        else:
+            utils.logger.warning("[BilibiliCrawler._interactive_detail_input] 未输入任何视频信息，将退出程序")
+            raise ValueError("未输入任何视频信息")
+    
+    async def _interactive_creator_input(self) -> None:
+        """
+        交互式输入创作者信息
+        """
+        print("\n" + "="*60)
+        print("🎯 B站创作者爬取模式")
+        print("="*60)
+        print("请输入创作者信息，支持以下格式：")
+        print("1. 完整URL: https://space.bilibili.com/449342345")
+        print("2. 短链接: https://b23.tv/9ljhRio")
+        print("3. UID: 449342345")
+        print("4. 多个URL用空格分隔")
+        print("-"*60)
+        
+        user_input = input("请输入创作者URL或UID (回车键结束): ").strip()
+        
+        if user_input:
+            # 分割多个URL
+            creator_inputs = user_input.split()
+            config.BILI_CREATOR_ID_LIST.extend(creator_inputs)
+            utils.logger.info(f"[BilibiliCrawler._interactive_creator_input] 已添加 {len(creator_inputs)} 个创作者")
+        else:
+            utils.logger.warning("[BilibiliCrawler._interactive_creator_input] 未输入任何创作者信息，将退出程序")
+            raise ValueError("未输入任何创作者信息")
+
+    async def _process_video_input(self, video_input: str) -> str:
+        """
+        处理视频输入，支持智能URL解析
+        如果解析失败，回退到基础解析
+        """
+        try:
+            utils.logger.info(f"[BilibiliCrawler._process_video_input] 开始解析视频输入: {video_input}")
+            
+            # 智能解析
+            video_id = await resolve_any_video_url_to_id(video_input, self.context_page)
+            if video_id:
+                utils.logger.info(f"[BilibiliCrawler._process_video_input] 解析成功，video_id: {video_id}")
+                return video_id
+            else:
+                # 回退到基础解析
+                utils.logger.info(f"[BilibiliCrawler._process_video_input] 智能解析失败，尝试基础解析")
+                from .help import extract_bvid_from_url, extract_aid_from_url
+                basic_bvid = extract_bvid_from_url(video_input)
+                if basic_bvid:
+                    utils.logger.info(f"[BilibiliCrawler._process_video_input] 基础解析成功，BVID: {basic_bvid}")
+                    return basic_bvid
+                    
+                basic_aid = extract_aid_from_url(video_input)
+                if basic_aid:
+                    utils.logger.info(f"[BilibiliCrawler._process_video_input] 基础解析成功，AID: {basic_aid}")
+                    return basic_aid
+                    
+                utils.logger.warning(f"[BilibiliCrawler._process_video_input] 无法解析视频输入: {video_input}")
+                return ""
+        except Exception as e:
+            utils.logger.error(f"[BilibiliCrawler._process_video_input] 解析视频输入时发生错误: {e}")
+            # 尝试基础解析作为后备
+            try:
+                from .help import extract_bvid_from_url, extract_aid_from_url
+                basic_bvid = extract_bvid_from_url(video_input)
+                if basic_bvid:
+                    utils.logger.info(f"[BilibiliCrawler._process_video_input] 后备解析成功，BVID: {basic_bvid}")
+                    return basic_bvid
+                    
+                basic_aid = extract_aid_from_url(video_input)
+                if basic_aid:
+                    utils.logger.info(f"[BilibiliCrawler._process_video_input] 后备解析成功，AID: {basic_aid}")
+                    return basic_aid
+            except:
+                pass
+            return ""
+
+    async def _process_creator_input(self, creator_input: str) -> str:
+        """
+        处理创作者输入，支持智能URL解析
+        如果解析失败，回退到基础解析
+        """
+        try:
+            utils.logger.info(f"[BilibiliCrawler._process_creator_input] 开始解析创作者输入: {creator_input}")
+            
+            # 智能解析
+            creator_id = await resolve_any_user_url_to_id(creator_input, self.context_page)
+            if creator_id:
+                utils.logger.info(f"[BilibiliCrawler._process_creator_input] 解析成功，creator_id: {creator_id}")
+                return creator_id
+            else:
+                # 回退到基础解析
+                utils.logger.info(f"[BilibiliCrawler._process_creator_input] 智能解析失败，尝试基础解析")
+                from .help import extract_uid_from_url
+                basic_creator_id = extract_uid_from_url(creator_input)
+                if basic_creator_id:
+                    utils.logger.info(f"[BilibiliCrawler._process_creator_input] 基础解析成功，creator_id: {basic_creator_id}")
+                    return basic_creator_id
+                    
+                utils.logger.warning(f"[BilibiliCrawler._process_creator_input] 无法解析创作者输入: {creator_input}")
+                return ""
+        except Exception as e:
+            utils.logger.error(f"[BilibiliCrawler._process_creator_input] 解析创作者输入时发生错误: {e}")
+            # 尝试基础解析作为后备
+            try:
+                from .help import extract_uid_from_url
+                basic_creator_id = extract_uid_from_url(creator_input)
+                if basic_creator_id:
+                    utils.logger.info(f"[BilibiliCrawler._process_creator_input] 后备解析成功，creator_id: {basic_creator_id}")
+                    return basic_creator_id
+            except:
+                pass
+            return ""
