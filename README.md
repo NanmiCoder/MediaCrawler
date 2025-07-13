@@ -137,6 +137,32 @@ uv run main.py --platform xhs --lt qrcode --type detail
 
 # 其他平台爬虫使用示例，执行下面的命令查看
 uv run main.py --help
+<<<<<<< HEAD
+# 终端命令参数说明
+usage: main.py [-h] [--platform {xhs,dy,ks,bili,wb,tieba,zhihu}] [--lt {qrcode,phone,cookie}] [--type {search,detail,creator}] [--start START] [--keywords KEYWORDS] [--get_comment GET_COMMENT]
+               [--get_sub_comment GET_SUB_COMMENT] [--save_data_option {csv,db,json}] [--cookies COOKIES]
+
+Media crawler program.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --platform {xhs,dy,ks,bili,wb,tieba,zhihu}
+                        Media platform select (xhs | dy | ks | bili | wb | tieba | zhihu)
+  --lt {qrcode,phone,cookie}
+                        Login type (qrcode | phone | cookie)
+  --type {search,detail,creator}
+                        crawler type (search | detail | creator)
+  --start START         number of start page
+  --keywords KEYWORDS   please input keywords
+  --get_comment GET_COMMENT
+                        whether to crawl level one comment, supported values case insensitive ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')
+  --get_sub_comment GET_SUB_COMMENT
+                        'whether to crawl level two comment, supported values case insensitive ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')
+  --save_data_option {csv,db,json}
+                        where to save the data (csv or db or json)
+  --cookies COOKIES     cookies used for cookie login type
+=======
+>>>>>>> dd8a3f5db89e3d52fe7ebf51add33c92ac770b63
 ```
 
 <details>
