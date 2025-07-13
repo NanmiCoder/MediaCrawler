@@ -352,3 +352,114 @@ class BiliJsonStoreImplement(AbstractStore):
         """
 
         await self.save_data_to_json(save_item=dynamic_item, store_type="dynamics")
+
+
+class BiliSqliteStoreImplement(AbstractStore):
+    async def store_content(self, content_item: Dict):
+        """
+        Bilibili content SQLite storage implementation
+        Args:
+            content_item: content item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_content,
+                                         query_content_by_content_id,
+                                         update_content_by_content_id)
+        video_id = content_item.get("video_id")
+        video_detail: Dict = await query_content_by_content_id(content_id=video_id)
+        if not video_detail:
+            content_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_content(content_item)
+        else:
+            await update_content_by_content_id(video_id, content_item=content_item)
+
+    async def store_comment(self, comment_item: Dict):
+        """
+        Bilibili comment SQLite storage implementation
+        Args:
+            comment_item: comment item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_comment,
+                                         query_comment_by_comment_id,
+                                         update_comment_by_comment_id)
+        comment_id = comment_item.get("comment_id")
+        comment_detail: Dict = await query_comment_by_comment_id(comment_id=comment_id)
+        if not comment_detail:
+            comment_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_comment(comment_item)
+        else:
+            await update_comment_by_comment_id(comment_id, comment_item=comment_item)
+
+    async def store_creator(self, creator: Dict):
+        """
+        Bilibili creator SQLite storage implementation
+        Args:
+            creator: creator item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_creator,
+                                         query_creator_by_creator_id,
+                                         update_creator_by_creator_id)
+        creator_id = creator.get("user_id")
+        creator_detail: Dict = await query_creator_by_creator_id(creator_id=creator_id)
+        if not creator_detail:
+            creator["add_ts"] = utils.get_current_timestamp()
+            await add_new_creator(creator)
+        else:
+            await update_creator_by_creator_id(creator_id, creator_item=creator)
+
+    async def store_contact(self, contact_item: Dict):
+        """
+        Bilibili contact SQLite storage implementation
+        Args:
+            contact_item: contact item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_contact,
+                                         query_contact_by_up_and_fan,
+                                         update_contact_by_id, )
+
+        up_id = contact_item.get("up_id")
+        fan_id = contact_item.get("fan_id")
+        contact_detail: Dict = await query_contact_by_up_and_fan(up_id=up_id, fan_id=fan_id)
+        if not contact_detail:
+            contact_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_contact(contact_item)
+        else:
+            key_id = contact_detail.get("id")
+            await update_contact_by_id(id=key_id, contact_item=contact_item)
+
+    async def store_dynamic(self, dynamic_item):
+        """
+        Bilibili dynamic SQLite storage implementation
+        Args:
+            dynamic_item: dynamic item dict
+
+        Returns:
+
+        """
+
+        from .bilibili_store_sql import (add_new_dynamic,
+                                         query_dynamic_by_dynamic_id,
+                                         update_dynamic_by_dynamic_id)
+
+        dynamic_id = dynamic_item.get("dynamic_id")
+        dynamic_detail = await query_dynamic_by_dynamic_id(dynamic_id=dynamic_id)
+        if not dynamic_detail:
+            dynamic_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_dynamic(dynamic_item)
+        else:
+            await update_dynamic_by_dynamic_id(dynamic_id, dynamic_item=dynamic_item)
