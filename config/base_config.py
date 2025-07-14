@@ -90,7 +90,7 @@ CRAWLER_MAX_NOTES_COUNT = 200
 MAX_NOTES_PER_DAY = 1
 
 # 并发爬虫数量控制
-MAX_CONCURRENCY_NUM = 5
+MAX_CONCURRENCY_NUM = 1
 
 # 是否开启爬图片模式, 默认不开启爬图片
 ENABLE_GET_IMAGES = False
@@ -99,7 +99,7 @@ ENABLE_GET_IMAGES = False
 ENABLE_GET_COMMENTS = True
 
 # 爬取一级评论的数量控制(单视频/帖子)
-CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 6
+CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
 
 # 是否开启爬二级评论模式, 默认不开启爬二级评论
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
@@ -202,7 +202,7 @@ ZHIHU_SPECIFIED_ID_LIST = [
 
 # 词云相关
 # 是否开启生成评论词云图
-ENABLE_GET_WORDCLOUD = True
+ENABLE_GET_WORDCLOUD = False
 # 自定义词语及其分组
 # 添加规则：xx:yy 其中xx为自定义添加的词组，yy为将xx该词组分到的组名。
 CUSTOM_WORDS = {
@@ -220,13 +220,13 @@ FONT_PATH = "./docs/STZHONGS.TTF"
 START_DAY = "2024-01-01"
 
 # 爬取结束的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式
-END_DAY = "2025-07-12"
+END_DAY = "2024-01-01"
 
 # Bilibili 搜索模式，仅在 CRAWLER_TYPE="search" 时生效
 # "normal": 不指定时间范围进行搜索，最多返回约1000条结果。
 # "all_in_time_range": 在 START_DAY 和 END_DAY 指定的时间范围内，尽可能多地爬取数据，每日上限受 MAX_NOTES_PER_DAY 影响，但总数可能超过 CRAWLER_MAX_NOTES_COUNT。
 # "daily_limit_in_time_range": 在指定时间范围内，严格遵守 MAX_NOTES_PER_DAY 的每日上限和 CRAWLER_MAX_NOTES_COUNT 的总上限。
-BILI_SEARCH_MODE = "daily_limit_in_time_range"
+BILI_SEARCH_MODE = "normal"
 
 #!!! 下面仅支持 bilibili creator搜索
 # 爬取评论creator主页还是爬取creator动态和关系列表(True为前者)

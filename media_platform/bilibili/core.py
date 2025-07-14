@@ -329,6 +329,8 @@ class BilibiliCrawler(AbstractCrawler):
             except Exception as e:
                 utils.logger.error(
                     f"[BilibiliCrawler.get_comments] may be been blocked, err:{e}")
+                # Propagate the exception to be caught by the main loop
+                raise
 
     async def get_creator_videos(self, creator_id: int):
         """
