@@ -45,6 +45,11 @@ class CrawlerFactory:
         return crawler_class()
 
 async def main():
+    # Init crawler
+    crawler: Optional[AbstractCrawler] = None
+    try:
+        # parse cmd
+        await cmd_arg.parse_cmd()
 
     # parse cmd
     await cmd_arg.parse_cmd()
@@ -59,11 +64,11 @@ async def main():
     if config.SAVE_DATA_OPTION in ["db", "sqlite"]:
         await db.close()
 
-    
 
 if __name__ == '__main__':
     try:
         # asyncio.run(main())
         asyncio.get_event_loop().run_until_complete(main())
     except KeyboardInterrupt:
+        print("\n[main] Caught keyboard interrupt, exiting.")
         sys.exit()

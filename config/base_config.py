@@ -87,7 +87,7 @@ START_PAGE = 1
 CRAWLER_MAX_NOTES_COUNT = 200
 
 # 每天爬取视频/帖子的数量控制
-MAX_NOTES_PER_DAY = 20
+MAX_NOTES_PER_DAY = 1
 
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
@@ -216,16 +216,17 @@ STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 # 中文字体文件路径
 FONT_PATH = "./docs/STZHONGS.TTF"
 
-# 爬取开始的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
+# 爬取开始的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式
 START_DAY = "2024-01-01"
 
-# 爬取结束的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式，若为 None 则表示不设置时间范围，按照默认关键字最多返回 1000 条视频的结果处理
+# 爬取结束的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式
 END_DAY = "2024-01-01"
 
-# 是否开启按每一天进行爬取的选项，仅支持 bilibili 关键字搜索
-# 若为 False，则忽略 START_DAY 与 END_DAY 设置的值
-# 若为 True，则按照 START_DAY 至 END_DAY 按照每一天进行筛选，这样能够突破 1000 条视频的限制，最大程度爬取该关键词下的所有视频
-ALL_DAY = False
+# Bilibili 搜索模式，仅在 CRAWLER_TYPE="search" 时生效
+# "normal": 不指定时间范围进行搜索，最多返回约1000条结果。
+# "all_in_time_range": 在 START_DAY 和 END_DAY 指定的时间范围内，尽可能多地爬取数据，每日上限受 MAX_NOTES_PER_DAY 影响，但总数可能超过 CRAWLER_MAX_NOTES_COUNT。
+# "daily_limit_in_time_range": 在指定时间范围内，严格遵守 MAX_NOTES_PER_DAY 的每日上限和 CRAWLER_MAX_NOTES_COUNT 的总上限。
+BILI_SEARCH_MODE = "normal"
 
 #!!! 下面仅支持 bilibili creator搜索
 # 爬取评论creator主页还是爬取creator动态和关系列表(True为前者)
