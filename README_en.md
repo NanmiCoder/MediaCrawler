@@ -195,10 +195,22 @@ python main.py --help
 
 Supports multiple data storage methods:
 
+- **SQLite Database**: Lightweight database without server, ideal for personal use (recommended)
+  - Parameter: `--save_data_option sqlite`
+  - Database file created automatically
 - **MySQL Database**: Supports saving to relational database MySQL (need to create database in advance)
   - Execute `python db.py` to initialize database table structure (only execute on first run)
 - **CSV Files**: Supports saving to CSV (under `data/` directory)
 - **JSON Files**: Supports saving to JSON (under `data/` directory)
+
+### Usage Examples:
+```shell
+# Use SQLite (recommended for personal users)
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
+
+# Use MySQL
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
+```
 
 ---
 
