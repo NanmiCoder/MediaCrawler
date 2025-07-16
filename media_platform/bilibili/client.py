@@ -15,6 +15,7 @@
 # @Desc    : bilibili 请求客户端
 import asyncio
 import json
+import random
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
@@ -82,8 +83,12 @@ class BilibiliClient(AbstractApiClient):
         :return:
         """
         local_storage = await self.playwright_page.evaluate("() => window.localStorage")
-        wbi_img_urls = local_storage.get("wbi_img_urls", "") or local_storage.get(
-            "wbi_img_url") + "-" + local_storage.get("wbi_sub_url")
+        wbi_img_urls = local_storage.get("wbi_img_urls", "")
+        if not wbi_img_urls:
+            img_url_from_storage = local_storage.get("wbi_img_url")
+            sub_url_from_storage = local_storage.get("wbi_sub_url")
+            if img_url_from_storage and sub_url_from_storage:
+                wbi_img_urls = f"{img_url_from_storage}-{sub_url_from_storage}"
         if wbi_img_urls and "-" in wbi_img_urls:
             img_url, sub_url = wbi_img_urls.split("-")
         else:
@@ -271,8 +276,18 @@ class BilibiliClient(AbstractApiClient):
                 break
 
             comment_list: List[Dict] = comments_res.get("replies", [])
-            is_end = cursor_info.get("is_end")
-            next_page = cursor_info.get("next")
+            
+            # 检查 is_end 和 next 是否存在
+            if "is_end" not in cursor_info or "next" not in cursor_info:
+                utils.logger.warning(f"[BilibiliClient.get_video_all_comments] 'is_end' or 'next' not in cursor for video_id: {video_id}. Assuming end of comments.")
+                is_end = True
+            else:
+                is_end = cursor_info.get("is_end")
+                next_page = cursor_info.get("next")
+
+            if not isinstance(is_end, bool):
+                utils.logger.warning(f"[BilibiliClient.get_video_all_comments] 'is_end' is not a boolean for video_id: {video_id}. Assuming end of comments.")
+                is_end = True
             if is_fetch_sub_comments:
                 for comment in comment_list:
                     comment_id = comment['rpid']

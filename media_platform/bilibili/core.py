@@ -219,10 +219,14 @@ class BilibiliCrawler(AbstractCrawler):
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[BilibiliCrawler.search_by_keywords_in_time_range] Current search keyword: {keyword}")
-            total_notes_crawled = 0
+            total_notes_crawled_for_keyword = 0
 
             for day in pd.date_range(start=config.START_DAY, end=config.END_DAY, freq='D'):
-                if daily_limit and total_notes_crawled >= config.CRAWLER_MAX_NOTES_COUNT:
+                if daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT:
+                    utils.logger.info(f"[BilibiliCrawler.search] Reached CRAWLER_MAX_NOTES_COUNT limit for keyword '{keyword}', skipping remaining days.")
+                    break
+                
+                if not daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT:
                     utils.logger.info(f"[BilibiliCrawler.search] Reached CRAWLER_MAX_NOTES_COUNT limit for keyword '{keyword}', skipping remaining days.")
                     break
 
@@ -234,11 +238,10 @@ class BilibiliCrawler(AbstractCrawler):
                     if notes_count_this_day >= config.MAX_NOTES_PER_DAY:
                         utils.logger.info(f"[BilibiliCrawler.search] Reached MAX_NOTES_PER_DAY limit for {day.ctime()}.")
                         break
-                    if daily_limit and total_notes_crawled >= config.CRAWLER_MAX_NOTES_COUNT:
+                    if daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT:
                         utils.logger.info(f"[BilibiliCrawler.search] Reached CRAWLER_MAX_NOTES_COUNT limit for keyword '{keyword}'.")
                         break
-                    if not daily_limit and (page - start_page + 1) * bili_limit_count > config.CRAWLER_MAX_NOTES_COUNT:
-                        # For non-daily-limit mode, we still respect the total count in a loose way per day.
+                    if not daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT:
                         break
 
                     try:
@@ -264,12 +267,14 @@ class BilibiliCrawler(AbstractCrawler):
 
                         for video_item in video_items:
                             if video_item:
-                                if daily_limit and total_notes_crawled >= config.CRAWLER_MAX_NOTES_COUNT:
+                                if daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT:
+                                    break
+                                if not daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT:
                                     break
                                 if notes_count_this_day >= config.MAX_NOTES_PER_DAY:
                                     break
                                 notes_count_this_day += 1
-                                total_notes_crawled += 1
+                                total_notes_crawled_for_keyword += 1
                                 video_id_list.append(video_item.get("View").get("aid"))
                                 await bilibili_store.update_bilibili_video(video_item)
                                 await bilibili_store.update_up_info(video_item)
