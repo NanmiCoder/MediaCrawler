@@ -107,6 +107,25 @@ async def init_table_schema(db_type: str = None):
     
     if db_type == "sqlite":
         utils.logger.info("[init_table_schema] begin init sqlite table schema ...")
+        
+        # 检查并删除可能存在的损坏数据库文件
+        import os
+        if os.path.exists(config.SQLITE_DB_PATH):
+            try:
+                # 尝试删除现有的数据库文件
+                os.remove(config.SQLITE_DB_PATH)
+                utils.logger.info(f"[init_table_schema] removed existing sqlite db file: {config.SQLITE_DB_PATH}")
+            except Exception as e:
+                utils.logger.warning(f"[init_table_schema] failed to remove existing sqlite db file: {e}")
+                # 如果删除失败，尝试重命名文件
+                try:
+                    backup_path = f"{config.SQLITE_DB_PATH}.backup_{utils.get_current_timestamp()}"
+                    os.rename(config.SQLITE_DB_PATH, backup_path)
+                    utils.logger.info(f"[init_table_schema] renamed existing sqlite db file to: {backup_path}")
+                except Exception as rename_e:
+                    utils.logger.error(f"[init_table_schema] failed to rename existing sqlite db file: {rename_e}")
+                    raise rename_e
+        
         await init_sqlite_db()
         async_db_obj: AsyncSqliteDB = media_crawler_db_var.get()
         async with aiofiles.open("schema/sqlite_tables.sql", mode="r", encoding="utf-8") as f:
