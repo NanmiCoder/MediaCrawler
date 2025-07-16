@@ -33,7 +33,7 @@ async def parse_cmd():
     parser.add_argument('--get_sub_comment', type=str2bool,
                         help=''''whether to crawl level two comment, supported values case insensitive ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_SUB_COMMENTS)
     parser.add_argument('--save_data_option', type=str,
-                        help='where to save the data (csv or db or json)', choices=['csv', 'db', 'json'], default=config.SAVE_DATA_OPTION)
+                        help='where to save the data (csv or db or json or sqlite)', choices=['csv', 'db', 'json', 'sqlite'], default=config.SAVE_DATA_OPTION)
     parser.add_argument('--cookies', type=str,
                         help='cookies used for cookie login type', default=config.COOKIES)
 

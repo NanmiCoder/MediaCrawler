@@ -26,6 +26,7 @@ class DouyinStoreFactory:
         "csv": DouyinCsvStoreImplement,
         "db": DouyinDbStoreImplement,
         "json": DouyinJsonStoreImplement,
+        "sqlite": DouyinSqliteStoreImplement
     }
 
     @staticmethod
@@ -33,7 +34,7 @@ class DouyinStoreFactory:
         store_class = DouyinStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError(
-                "[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json ..."
+                "[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite ..."
             )
         return store_class()
 

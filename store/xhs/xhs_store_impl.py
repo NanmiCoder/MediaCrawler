@@ -255,3 +255,64 @@ class XhsJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(creator, "creator")
+
+
+class XhsSqliteStoreImplement(AbstractStore):
+    async def store_content(self, content_item: Dict):
+        """
+        Xiaohongshu content SQLite storage implementation
+        Args:
+            content_item: content item dict
+
+        Returns:
+
+        """
+        from .xhs_store_sql import (add_new_content,
+                                    query_content_by_content_id,
+                                    update_content_by_content_id)
+        note_id = content_item.get("note_id")
+        note_detail: Dict = await query_content_by_content_id(content_id=note_id)
+        if not note_detail:
+            content_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_content(content_item)
+        else:
+            await update_content_by_content_id(note_id, content_item=content_item)
+
+    async def store_comment(self, comment_item: Dict):
+        """
+        Xiaohongshu comment SQLite storage implementation
+        Args:
+            comment_item: comment item dict
+
+        Returns:
+
+        """
+        from .xhs_store_sql import (add_new_comment,
+                                    query_comment_by_comment_id,
+                                    update_comment_by_comment_id)
+        comment_id = comment_item.get("comment_id")
+        comment_detail: Dict = await query_comment_by_comment_id(comment_id=comment_id)
+        if not comment_detail:
+            comment_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_comment(comment_item)
+        else:
+            await update_comment_by_comment_id(comment_id, comment_item=comment_item)
+
+    async def store_creator(self, creator: Dict):
+        """
+        Xiaohongshu creator SQLite storage implementation
+        Args:
+            creator: creator dict
+
+        Returns:
+
+        """
+        from .xhs_store_sql import (add_new_creator, query_creator_by_user_id,
+                                    update_creator_by_user_id)
+        user_id = creator.get("user_id")
+        user_detail: Dict = await query_creator_by_user_id(user_id)
+        if not user_detail:
+            creator["add_ts"] = utils.get_current_timestamp()
+            await add_new_creator(creator)
+        else:
+            await update_creator_by_user_id(user_id, creator)

@@ -23,7 +23,8 @@ class TieBaStoreFactory:
     STORES = {
         "csv": TieBaCsvStoreImplement,
         "db": TieBaDbStoreImplement,
-        "json": TieBaJsonStoreImplement
+        "json": TieBaJsonStoreImplement,
+        "sqlite": TieBaSqliteStoreImplement
     }
 
     @staticmethod

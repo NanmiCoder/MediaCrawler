@@ -27,14 +27,15 @@ class XhsStoreFactory:
     STORES = {
         "csv": XhsCsvStoreImplement,
         "db": XhsDbStoreImplement,
-        "json": XhsJsonStoreImplement
+        "json": XhsJsonStoreImplement,
+        "sqlite": XhsSqliteStoreImplement
     }
 
     @staticmethod
     def create_store() -> AbstractStore:
         store_class = XhsStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
-            raise ValueError("[XhsStoreFactory.create_store] Invalid save option only supported csv or db or json ...")
+            raise ValueError("[XhsStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite ...")
         return store_class()
 
 
