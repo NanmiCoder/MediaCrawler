@@ -8,6 +8,7 @@ requires-python = ">=3.9"
 dependencies = [
     "aiofiles~=23.2.1",
     "aiomysql==0.2.0",
+    "aiosqlite>=0.21.0",
     "fastapi==0.110.2",
     "httpx==0.24.0",
     "jieba==0.42.1",
@@ -28,5 +29,5 @@ dependencies = [
 ]
 
 [[tool.uv.index]]
-url = "https://mirrors.aliyun.com/pypi/simple"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 default = true

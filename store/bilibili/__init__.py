@@ -28,6 +28,7 @@ class BiliStoreFactory:
         "csv": BiliCsvStoreImplement,
         "db": BiliDbStoreImplement,
         "json": BiliJsonStoreImplement,
+        "sqlite": BiliSqliteStoreImplement,
     }
 
     @staticmethod
@@ -35,7 +36,7 @@ class BiliStoreFactory:
         store_class = BiliStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError(
-                "[BiliStoreFactory.create_store] Invalid save option only supported csv or db or json ..."
+                "[BiliStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite ..."
             )
         return store_class()
 

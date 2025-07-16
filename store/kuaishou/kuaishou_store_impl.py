@@ -234,3 +234,57 @@ class KuaishouJsonStoreImplement(AbstractStore):
 
         """
         await self.save_data_to_json(creator, "creator")
+
+
+class KuaishouSqliteStoreImplement(AbstractStore):
+    async def store_content(self, content_item: Dict):
+        """
+        Kuaishou content SQLite storage implementation
+        Args:
+            content_item: content item dict
+
+        Returns:
+
+        """
+
+        from .kuaishou_store_sql import (add_new_content,
+                                         query_content_by_content_id,
+                                         update_content_by_content_id)
+        video_id = content_item.get("video_id")
+        video_detail: Dict = await query_content_by_content_id(content_id=video_id)
+        if not video_detail:
+            content_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_content(content_item)
+        else:
+            await update_content_by_content_id(video_id, content_item=content_item)
+
+    async def store_comment(self, comment_item: Dict):
+        """
+        Kuaishou comment SQLite storage implementation
+        Args:
+            comment_item: comment item dict
+
+        Returns:
+
+        """
+        from .kuaishou_store_sql import (add_new_comment,
+                                         query_comment_by_comment_id,
+                                         update_comment_by_comment_id)
+        comment_id = comment_item.get("comment_id")
+        comment_detail: Dict = await query_comment_by_comment_id(comment_id=comment_id)
+        if not comment_detail:
+            comment_item["add_ts"] = utils.get_current_timestamp()
+            await add_new_comment(comment_item)
+        else:
+            await update_comment_by_comment_id(comment_id, comment_item=comment_item)
+
+    async def store_creator(self, creator: Dict):
+        """
+        Kuaishou creator SQLite storage implementation
+        Args:
+            creator: creator dict
+
+        Returns:
+
+        """
+        pass

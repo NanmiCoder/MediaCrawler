@@ -36,7 +36,7 @@ class ProxyIpPool:
             enable_validate_ip:
             ip_provider:
         """
-        self.valid_ip_url = "https://httpbin.org/ip"  # 验证 IP 是否有效的地址
+        self.valid_ip_url = "https://echo.apifox.cn/"  # 验证 IP 是否有效的地址
         self.ip_pool_count = ip_pool_count
         self.enable_validate_ip = enable_validate_ip
         self.proxy_list: List[IpInfoModel] = []

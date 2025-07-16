@@ -199,10 +199,22 @@ python main.py --help
 
 支持多种数据存储方式：
 
+- **SQLite 数据库**：轻量级数据库，无需服务器，适合个人使用（推荐）
+  - 参数：`--save_data_option sqlite`
+  - 自动创建数据库文件
 - **MySQL 数据库**：支持关系型数据库 MySQL 中保存（需要提前创建数据库）
   - 执行 `python db.py` 初始化数据库表结构（只在首次执行）
 - **CSV 文件**：支持保存到 CSV 中（`data/` 目录下）
 - **JSON 文件**：支持保存到 JSON 中（`data/` 目录下）
+
+### 使用示例：
+```shell
+# 使用 SQLite（推荐个人用户使用）
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
+
+# 使用 MySQL
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
+```
 
 ---
 

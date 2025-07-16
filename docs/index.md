@@ -41,6 +41,12 @@
    
    # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
    python main.py --platform xhs --lt qrcode --type detail
+   
+   # 使用SQLite数据库存储数据（推荐个人用户使用）
+   python main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
+   
+   # 使用MySQL数据库存储数据
+   python main.py --platform xhs --lt qrcode --type search --save_data_option db
   
    # 打开对应APP扫二维码登录
      
@@ -51,6 +57,10 @@
 ## 数据保存
 - 支持关系型数据库Mysql中保存（需要提前创建数据库）
     - 执行 `python db.py` 初始化数据库数据库表结构（只在首次执行）
+- 支持轻量级SQLite数据库保存（无需额外安装数据库服务器）
+    - 本地文件数据库，适合个人使用和小规模数据存储
+    - 使用参数 `--save_data_option sqlite` 启用SQLite存储
+    - 数据库文件自动创建在项目目录下（schema/sqlite_tables.db）
 - 支持保存到csv中（data/目录下）
 - 支持保存到json中（data/目录下）
 
