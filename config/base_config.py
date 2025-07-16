@@ -223,9 +223,10 @@ START_DAY = "2024-01-01"
 END_DAY = "2024-01-01"
 
 # Bilibili 搜索模式，仅在 CRAWLER_TYPE="search" 时生效
-# "normal": 不指定时间范围进行搜索，最多返回约1000条结果。
-# "all_in_time_range": 在 START_DAY 和 END_DAY 指定的时间范围内，尽可能多地爬取数据，每日上限受 MAX_NOTES_PER_DAY 影响，但总数可能超过 CRAWLER_MAX_NOTES_COUNT。
-# "daily_limit_in_time_range": 在指定时间范围内，严格遵守 MAX_NOTES_PER_DAY 的每日上限和 CRAWLER_MAX_NOTES_COUNT 的总上限。
+# 1. "normal": 不指定时间范围进行搜索，最多返回约1000条结果。
+# 2. "all_in_time_range": 在 START_DAY 和 END_DAY 指定的时间范围内，尽可能多地爬取数据，每日上限受 MAX_NOTES_PER_DAY 影响，但总数可能超过 CRAWLER_MAX_NOTES_COUNT。
+# 3. "daily_limit_in_time_range": 在指定时间范围内，严格遵守 MAX_NOTES_PER_DAY 的每日上限和 CRAWLER_MAX_NOTES_COUNT 的总上限。
+# 三个选项中，2. 和 3. 需在 media_platform\bilibili\config.py 中设定 MAX_NOTES_PER_DAY
 BILI_SEARCH_MODE = "normal"
 
 #!!! 下面仅支持 bilibili creator搜索
