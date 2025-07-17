@@ -51,19 +51,19 @@ async def main():
         # parse cmd
         await cmd_arg.parse_cmd()
 
-    # parse cmd
-    await cmd_arg.parse_cmd()
+        # init db
+        if config.SAVE_DATA_OPTION in ["db", "sqlite"]:
+            await db.init_db()
 
-    # init db
-    if config.SAVE_DATA_OPTION in ["db", "sqlite"]:
-        await db.init_db()
+        crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
+        await crawler.start()
 
-    crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
-    await crawler.start()
+    finally:
+        if crawler:
+            await crawler.close()
 
-    if config.SAVE_DATA_OPTION in ["db", "sqlite"]:
-        await db.close()
-
+        if config.SAVE_DATA_OPTION in ["db", "sqlite"]:
+            await db.close()
 
 if __name__ == '__main__':
     try:
