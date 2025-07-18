@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Tuple
 from playwright.async_api import BrowserContext, BrowserType, Page, Playwright, async_playwright
 from tenacity import RetryError
 
-import config
+from . import config
 from base.base_crawler import AbstractCrawler
 from config import CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
 from model.m_xiaohongshu import NoteUrlInfo

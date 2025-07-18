@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Tuple
 from playwright.async_api import (BrowserContext, BrowserType, Page, Playwright,
                                   async_playwright)
 
-import config
+from . import config
 from base.base_crawler import AbstractCrawler
 from model.m_baidu_tieba import TiebaCreator, TiebaNote
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool

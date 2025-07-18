@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Tuple, cast
 from playwright.async_api import (BrowserContext, BrowserType, Page, Playwright,
                                   async_playwright)
 
-import config
+from . import config
 from constant import zhihu as constant
 from base.base_crawler import AbstractCrawler
 from model.m_zhihu import ZhihuContent, ZhihuCreator
