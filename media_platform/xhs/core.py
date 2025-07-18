@@ -16,10 +16,16 @@ import time
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
-from playwright.async_api import BrowserContext, BrowserType, Page, Playwright, async_playwright
+from playwright.async_api import (
+    BrowserContext,
+    BrowserType,
+    Page,
+    Playwright,
+    async_playwright,
+)
 from tenacity import RetryError
 
-from . import config
+import config
 from base.base_crawler import AbstractCrawler
 from config import CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
 from model.m_xiaohongshu import NoteUrlInfo
@@ -45,7 +51,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
     def __init__(self) -> None:
         self.index_url = "https://www.xiaohongshu.com"
         # self.user_agent = utils.get_user_agent()
-        self.user_agent = config.UA if config.UA else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        self.user_agent = (
+            config.UA
+            if config.UA
+            else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        )
         self.cdp_manager = None
 
     async def start(self) -> None:
@@ -64,15 +74,20 @@ class XiaoHongShuCrawler(AbstractCrawler):
             if config.ENABLE_CDP_MODE:
                 utils.logger.info("[XiaoHongShuCrawler] 使用CDP模式启动浏览器")
                 self.browser_context = await self.launch_browser_with_cdp(
-                    playwright, playwright_proxy_format, self.user_agent,
-                    headless=config.CDP_HEADLESS
+                    playwright,
+                    playwright_proxy_format,
+                    self.user_agent,
+                    headless=config.CDP_HEADLESS,
                 )
             else:
                 utils.logger.info("[XiaoHongShuCrawler] 使用标准模式启动浏览器")
                 # Launch a browser context.
                 chromium = playwright.chromium
                 self.browser_context = await self.launch_browser(
-                    chromium, playwright_proxy_format, self.user_agent, headless=config.HEADLESS
+                    chromium,
+                    playwright_proxy_format,
+                    self.user_agent,
+                    headless=config.HEADLESS,
                 )
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
             await self.browser_context.add_init_script(path="libs/stealth.min.js")
@@ -304,7 +319,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
             else:
                 crawl_interval = random.uniform(1, config.CRAWLER_MAX_SLEEP_SEC)
             try:
-                utils.logger.info(f"[get_note_detail_async_task] Begin get note detail, note_id: {note_id}")
+                utils.logger.info(
+                    f"[get_note_detail_async_task] Begin get note detail, note_id: {note_id}"
+                )
                 # 尝试直接获取网页版笔记详情，携带cookie
                 note_detail_from_html: Optional[Dict] = (
                     await self.xhs_client.get_note_by_id_from_html(
@@ -462,8 +479,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
             )
             return browser_context
 
-    async def launch_browser_with_cdp(self, playwright: Playwright, playwright_proxy: Optional[Dict],
-                                     user_agent: Optional[str], headless: bool = True) -> BrowserContext:
+    async def launch_browser_with_cdp(
+        self,
+        playwright: Playwright,
+        playwright_proxy: Optional[Dict],
+        user_agent: Optional[str],
+        headless: bool = True,
+    ) -> BrowserContext:
         """
         使用CDP模式启动浏览器
         """
@@ -473,7 +495,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 playwright=playwright,
                 playwright_proxy=playwright_proxy,
                 user_agent=user_agent,
-                headless=headless
+                headless=headless,
             )
 
             # 显示浏览器信息
@@ -483,10 +505,14 @@ class XiaoHongShuCrawler(AbstractCrawler):
             return browser_context
 
         except Exception as e:
-            utils.logger.error(f"[XiaoHongShuCrawler] CDP模式启动失败，回退到标准模式: {e}")
+            utils.logger.error(
+                f"[XiaoHongShuCrawler] CDP模式启动失败，回退到标准模式: {e}"
+            )
             # 回退到标准模式
             chromium = playwright.chromium
-            return await self.launch_browser(chromium, playwright_proxy, user_agent, headless)
+            return await self.launch_browser(
+                chromium, playwright_proxy, user_agent, headless
+            )
 
     async def close(self):
         """Close browser context"""

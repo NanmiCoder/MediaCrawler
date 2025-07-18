@@ -8,11 +8,18 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-from config import *
+# 抖音平台配置
+PUBLISH_TIME_TYPE = 0
 
-# 快手平台配置
-KS_SPECIFIED_ID_LIST = ["3xf8enb8dbj6uig", "3x6zz972bchmvqe"]
-KS_CREATOR_ID_LIST = [
-    "3x4sm73aye7jq7i",
+# 指定DY视频ID列表
+DY_SPECIFIED_ID_LIST = [
+    "7280854932641664319",
+    "7202432992642387233",
+    # ........................
+]
+
+# 指定DY用户ID列表
+DY_CREATOR_ID_LIST = [
+    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
     # ........................
 ]

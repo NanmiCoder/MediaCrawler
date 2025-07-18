@@ -16,9 +16,15 @@ import time
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
-from playwright.async_api import BrowserContext, BrowserType, Page, Playwright, async_playwright
+from playwright.async_api import (
+    BrowserContext,
+    BrowserType,
+    Page,
+    Playwright,
+    async_playwright,
+)
 
-from . import config
+import config
 from base.base_crawler import AbstractCrawler
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import kuaishou as kuaishou_store
@@ -58,8 +64,10 @@ class KuaishouCrawler(AbstractCrawler):
             if config.ENABLE_CDP_MODE:
                 utils.logger.info("[KuaishouCrawler] 使用CDP模式启动浏览器")
                 self.browser_context = await self.launch_browser_with_cdp(
-                    playwright, playwright_proxy_format, self.user_agent,
-                    headless=config.CDP_HEADLESS
+                    playwright,
+                    playwright_proxy_format,
+                    self.user_agent,
+                    headless=config.CDP_HEADLESS,
                 )
             else:
                 utils.logger.info("[KuaishouCrawler] 使用标准模式启动浏览器")
@@ -319,8 +327,13 @@ class KuaishouCrawler(AbstractCrawler):
             )
             return browser_context
 
-    async def launch_browser_with_cdp(self, playwright: Playwright, playwright_proxy: Optional[Dict],
-                                     user_agent: Optional[str], headless: bool = True) -> BrowserContext:
+    async def launch_browser_with_cdp(
+        self,
+        playwright: Playwright,
+        playwright_proxy: Optional[Dict],
+        user_agent: Optional[str],
+        headless: bool = True,
+    ) -> BrowserContext:
         """
         使用CDP模式启动浏览器
         """
@@ -330,7 +343,7 @@ class KuaishouCrawler(AbstractCrawler):
                 playwright=playwright,
                 playwright_proxy=playwright_proxy,
                 user_agent=user_agent,
-                headless=headless
+                headless=headless,
             )
 
             # 显示浏览器信息
@@ -340,10 +353,14 @@ class KuaishouCrawler(AbstractCrawler):
             return browser_context
 
         except Exception as e:
-            utils.logger.error(f"[KuaishouCrawler] CDP模式启动失败，回退到标准模式: {e}")
+            utils.logger.error(
+                f"[KuaishouCrawler] CDP模式启动失败，回退到标准模式: {e}"
+            )
             # 回退到标准模式
             chromium = playwright.chromium
-            return await self.launch_browser(chromium, playwright_proxy, user_agent, headless)
+            return await self.launch_browser(
+                chromium, playwright_proxy, user_agent, headless
+            )
 
     async def get_creators_and_videos(self) -> None:
         """Get creator's videos and retrieve their comment information."""

@@ -291,16 +291,16 @@ class CDPBrowserManager:
         """
         try:
             # 关闭浏览器上下文
-            if self.browser_context:
-                await self.browser_context.close()
-                self.browser_context = None
-                utils.logger.info("[CDPBrowserManager] 浏览器上下文已关闭")
+            # if self.browser_context:
+            #     await self.browser_context.close()
+            #     self.browser_context = None
+            #     utils.logger.info("[CDPBrowserManager] 浏览器上下文已关闭")
 
-            # 断开浏览器连接
-            if self.browser:
-                await self.browser.close()
-                self.browser = None
-                utils.logger.info("[CDPBrowserManager] 浏览器连接已断开")
+            # # 断开浏览器连接
+            # if self.browser:
+            #     await self.browser.close()
+            #     self.browser = None
+            #     utils.logger.info("[CDPBrowserManager] 浏览器连接已断开")
 
             # 关闭浏览器进程（如果配置为自动关闭）
             if config.AUTO_CLOSE_BROWSER:

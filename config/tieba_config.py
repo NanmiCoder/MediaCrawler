@@ -8,16 +8,18 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-from config import *
+# 贴吧平台配置
 
-# 抖音平台配置
-PUBLISH_TIME_TYPE = 0
-DY_SPECIFIED_ID_LIST = [
-    "7280854932641664319",
-    "7202432992642387233",
-    # ........................
+# 指定贴吧ID列表
+TIEBA_SPECIFIED_ID_LIST = []
+
+# 指定贴吧名称列表
+TIEBA_NAME_LIST = [
+    # "盗墓笔记"
 ]
-DY_CREATOR_ID_LIST = [
-    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
+
+# 指定贴吧用户URL列表
+TIEBA_CREATOR_URL_LIST = [
+    "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
     # ........................
 ]

@@ -8,15 +8,13 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-from config import *
+# 快手平台配置
 
-# 微博平台配置
-WEIBO_SEARCH_TYPE = "popular"
-WEIBO_SPECIFIED_ID_LIST = [
-    "4982041758140155",
-    # ........................
-]
-WEIBO_CREATOR_ID_LIST = [
-    "5533390220",
+# 指定快手视频ID列表
+KS_SPECIFIED_ID_LIST = ["3xf8enb8dbj6uig", "3x6zz972bchmvqe"]
+
+# 指定快手用户ID列表
+KS_CREATOR_ID_LIST = [
+    "3x4sm73aye7jq7i",
     # ........................
 ]

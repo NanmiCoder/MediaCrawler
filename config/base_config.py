@@ -10,7 +10,7 @@
 
 
 # 基础配置
-PLATFORM = "xhs" # 平台，xhs | dy | ks | bili | wb | tieba | zhihu
+PLATFORM = "xhs"  # 平台，xhs | dy | ks | bili | wb | tieba | zhihu
 KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
@@ -39,7 +39,7 @@ SAVE_LOGIN_STATE = True
 # 是否启用CDP模式 - 使用用户现有的Chrome/Edge浏览器进行爬取，提供更好的反检测能力
 # 启用后将自动检测并启动用户的Chrome/Edge浏览器，通过CDP协议进行控制
 # 这种方式使用真实的浏览器环境，包括用户的扩展、Cookie和设置，大大降低被检测的风险
-ENABLE_CDP_MODE = False
+ENABLE_CDP_MODE = True
 
 # CDP调试端口，用于与浏览器通信
 # 如果端口被占用，系统会自动尝试下一个可用端口
@@ -105,3 +105,14 @@ STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 
 # 中文字体文件路径
 FONT_PATH = "./docs/STZHONGS.TTF"
+
+# 爬取间隔时间
+CRAWLER_MAX_SLEEP_SEC = 2
+
+from .bilibili_config import *
+from .xhs_config import *
+from .dy_config import *
+from .ks_config import *
+from .weibo_config import *
+from .tieba_config import *
+from .zhihu_config import *
