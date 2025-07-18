@@ -207,7 +207,7 @@ class DOUYINClient(AbstractApiClient):
         headers["Referer"] = urllib.parse.quote(referer_url, safe=':/')
         return await self.get(uri, params)
 
-    async def get_sub_comments(self, comment_id: str, cursor: int = 0):
+    async def get_sub_comments(self, aweme_id: str, comment_id: str, cursor: int = 0):
         """
             获取子评论
         """
@@ -217,6 +217,7 @@ class DOUYINClient(AbstractApiClient):
             "cursor": cursor,
             "count": 20,
             "item_type": 0,
+            "item_id": aweme_id,
         }
         keywords = request_keyword_var.get()
         referer_url = "https://www.douyin.com/search/" + keywords + '?aid=3a3cec5a-9e27-4040-b6aa-ef548c2c1138&publish_time=0&sort_type=0&source=search_history&type=general'
@@ -270,7 +271,7 @@ class DOUYINClient(AbstractApiClient):
                     sub_comments_cursor = 0
 
                     while sub_comments_has_more:
-                        sub_comments_res = await self.get_sub_comments(comment_id, sub_comments_cursor)
+                        sub_comments_res = await self.get_sub_comments(aweme_id, comment_id, sub_comments_cursor)
                         sub_comments_has_more = sub_comments_res.get("has_more", 0)
                         sub_comments_cursor = sub_comments_res.get("cursor", 0)
                         sub_comments = sub_comments_res.get("comments", [])
