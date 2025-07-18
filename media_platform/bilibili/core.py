@@ -25,7 +25,7 @@ import pandas as pd
 from playwright.async_api import (BrowserContext, BrowserType, Page, Playwright, async_playwright)
 from playwright._impl._errors import TargetClosedError
 
-import config
+from . import config
 from base.base_crawler import AbstractCrawler
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import bilibili as bilibili_store

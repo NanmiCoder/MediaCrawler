@@ -10,27 +10,15 @@
 
 
 # 基础配置
-PLATFORM = "xhs"
+PLATFORM = "xhs" # 平台，xhs | dy | ks | bili | wb | tieba | zhihu
 KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
-# 具体值参见media_platform.xxx.field下的枚举值，暂时只支持小红书
-SORT_TYPE = "popularity_descending"
-# 具体值参见media_platform.xxx.field下的枚举值，暂时只支持抖音
-PUBLISH_TIME_TYPE = 0
 CRAWLER_TYPE = (
     "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)
 )
-# 微博搜索类型 default (综合) | real_time (实时) | popular (热门) | video (视频)
-WEIBO_SEARCH_TYPE = "popular"
-# 自定义User Agent（暂时仅对XHS有效）
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
-
 # 是否开启 IP 代理
 ENABLE_IP_PROXY = False
-
-# 未启用代理时的最大爬取间隔，单位秒（暂时仅对XHS有效）
-CRAWLER_MAX_SLEEP_SEC = 2
 
 # 代理IP池数量
 IP_PROXY_POOL_COUNT = 2
@@ -86,9 +74,6 @@ START_PAGE = 1
 # 爬取视频/帖子的数量控制
 CRAWLER_MAX_NOTES_COUNT = 200
 
-# 每天爬取视频/帖子的数量控制
-MAX_NOTES_PER_DAY = 1
-
 # 并发爬虫数量控制
 MAX_CONCURRENCY_NUM = 1
 
@@ -105,101 +90,6 @@ CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
 ENABLE_GET_SUB_COMMENTS = False
 
-# 已废弃⚠️⚠️⚠️指定小红书需要爬虫的笔记ID列表
-# 已废弃⚠️⚠️⚠️ 指定笔记ID笔记列表会因为缺少xsec_token和xsec_source参数导致爬取失败
-# XHS_SPECIFIED_ID_LIST = [
-#     "66fad51c000000001b0224b8",
-#     # ........................
-# ]
-
-# 指定小红书需要爬虫的笔记URL列表, 目前要携带xsec_token和xsec_source参数
-XHS_SPECIFIED_NOTE_URL_LIST = [
-    "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
-    # ........................
-]
-
-# 指定抖音需要爬取的ID列表
-DY_SPECIFIED_ID_LIST = [
-    "7280854932641664319",
-    "7202432992642387233",
-    # ........................
-]
-
-# 指定快手平台需要爬取的ID列表
-KS_SPECIFIED_ID_LIST = ["3xf8enb8dbj6uig", "3x6zz972bchmvqe"]
-
-# 指定B站平台需要爬取的视频bvid列表
-BILI_SPECIFIED_ID_LIST = [
-    "BV1d54y1g7db",
-    "BV1Sz4y1U77N",
-    "BV14Q4y1n7jz",
-    # ........................
-]
-
-# 指定微博平台需要爬取的帖子列表
-WEIBO_SPECIFIED_ID_LIST = [
-    "4982041758140155",
-    # ........................
-]
-
-# 指定weibo创作者ID列表
-WEIBO_CREATOR_ID_LIST = [
-    "5533390220",
-    # ........................
-]
-
-# 指定贴吧需要爬取的帖子列表
-TIEBA_SPECIFIED_ID_LIST = []
-
-# 指定贴吧名称列表，爬取该贴吧下的帖子
-TIEBA_NAME_LIST = [
-    # "盗墓笔记"
-]
-
-# 指定贴吧创作者URL列表
-TIEBA_CREATOR_URL_LIST = [
-    "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
-    # ........................
-]
-
-# 指定小红书创作者ID列表
-XHS_CREATOR_ID_LIST = [
-    "63e36c9a000000002703502b",
-    # ........................
-]
-
-# 指定Dy创作者ID列表(sec_id)
-DY_CREATOR_ID_LIST = [
-    "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE",
-    # ........................
-]
-
-# 指定bili创作者ID列表(sec_id)
-BILI_CREATOR_ID_LIST = [
-    "20813884",
-    # ........................
-]
-
-# 指定快手创作者ID列表
-KS_CREATOR_ID_LIST = [
-    "3x4sm73aye7jq7i",
-    # ........................
-]
-
-
-# 指定知乎创作者主页url列表
-ZHIHU_CREATOR_URL_LIST = [
-    "https://www.zhihu.com/people/yd1234567",
-    # ........................
-]
-
-# 指定知乎需要爬取的帖子ID列表
-ZHIHU_SPECIFIED_ID_LIST = [
-    "https://www.zhihu.com/question/826896610/answer/4885821440",  # 回答
-    "https://zhuanlan.zhihu.com/p/673461588",  # 文章
-    "https://www.zhihu.com/zvideo/1539542068422144000",  # 视频
-]
-
 # 词云相关
 # 是否开启生成评论词云图
 ENABLE_GET_WORDCLOUD = False
@@ -215,29 +105,3 @@ STOP_WORDS_FILE = "./docs/hit_stopwords.txt"
 
 # 中文字体文件路径
 FONT_PATH = "./docs/STZHONGS.TTF"
-
-# 爬取开始的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式
-START_DAY = "2024-01-01"
-
-# 爬取结束的天数，仅支持 bilibili 关键字搜索，YYYY-MM-DD 格式
-END_DAY = "2024-01-01"
-
-# Bilibili 搜索模式，仅在 CRAWLER_TYPE="search" 时生效
-# 1. "normal": 不指定时间范围进行搜索，最多返回约1000条结果。
-# 2. "all_in_time_range": 在 START_DAY 和 END_DAY 指定的时间范围内，尽可能多地爬取数据，每日上限受 MAX_NOTES_PER_DAY 影响，但总数可能超过 CRAWLER_MAX_NOTES_COUNT。
-# 3. "daily_limit_in_time_range": 在指定时间范围内，严格遵守 MAX_NOTES_PER_DAY 的每日上限和 CRAWLER_MAX_NOTES_COUNT 的总上限。
-# 三个选项中，2. 和 3. 需在 media_platform\bilibili\config.py 中设定 MAX_NOTES_PER_DAY
-BILI_SEARCH_MODE = "normal"
-
-#!!! 下面仅支持 bilibili creator搜索
-# 爬取评论creator主页还是爬取creator动态和关系列表(True为前者)
-CREATOR_MODE = True
-
-# 爬取creator粉丝列表时起始爬取页数
-START_CONTACTS_PAGE = 1
-
-# 爬取作者粉丝和关注列表数量控制(单作者)
-CRAWLER_MAX_CONTACTS_COUNT_SINGLENOTES = 100
-
-# 爬取作者动态数量控制(单作者)
-CRAWLER_MAX_DYNAMICS_COUNT_SINGLENOTES = 50

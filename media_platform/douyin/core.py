@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from playwright.async_api import (BrowserContext, BrowserType, Page, Playwright,
                                   async_playwright)
 
-import config
+from . import config
 from base.base_crawler import AbstractCrawler
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import douyin as douyin_store

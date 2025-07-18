@@ -8,27 +8,14 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-
 from config import *
 
-# 每天爬取视频/帖子的数量控制
-MAX_NOTES_PER_DAY = 1
-
-# Bilibili 平台配置
-BILI_SPECIFIED_ID_LIST = [
-    "BV1d54y1g7db",
-    "BV1Sz4y1U77N",
-    "BV14Q4y1n7jz",
-    # ........................
+# 贴吧平台配置
+TIEBA_SPECIFIED_ID_LIST = []
+TIEBA_NAME_LIST = [
+    # "盗墓笔记"
 ]
-START_DAY = "2024-01-01"
-END_DAY = "2024-01-01"
-BILI_SEARCH_MODE = "normal"
-CREATOR_MODE = True
-START_CONTACTS_PAGE = 1
-CRAWLER_MAX_CONTACTS_COUNT_SINGLENOTES = 100
-CRAWLER_MAX_DYNAMICS_COUNT_SINGLENOTES = 50
-BILI_CREATOR_ID_LIST = [
-    "20813884",
+TIEBA_CREATOR_URL_LIST = [
+    "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
     # ........................
 ]
