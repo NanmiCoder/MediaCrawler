@@ -67,7 +67,8 @@ async def main():
 
 def cleanup():
     if crawler:
-        asyncio.run(crawler.close())
+        # asyncio.run(crawler.close())
+        pass
     if config.SAVE_DATA_OPTION in ["db", "sqlite"]:
         asyncio.run(db.close())
 

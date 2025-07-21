@@ -15,9 +15,6 @@
 # 排序方式，具体的枚举值在media_platform/xhs/field.py中
 SORT_TYPE = "popularity_descending"
 
-# 用户代理，xhs自定义User-Agent
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
-
 # 指定笔记URL列表, 必须要携带xsec_token参数
 XHS_SPECIFIED_NOTE_URL_LIST = [
     "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"

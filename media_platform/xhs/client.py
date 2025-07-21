@@ -95,7 +95,6 @@ class XiaoHongShuClient(AbstractApiClient):
         """
         # return response.text
         return_response = kwargs.pop("return_response", False)
-
         async with httpx.AsyncClient(proxies=self.proxies) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
@@ -103,9 +102,9 @@ class XiaoHongShuClient(AbstractApiClient):
             # someday someone maybe will bypass captcha
             verify_type = response.headers["Verifytype"]
             verify_uuid = response.headers["Verifyuuid"]
-            raise Exception(
-                f"出现验证码，请求失败，Verifytype: {verify_type}，Verifyuuid: {verify_uuid}, Response: {response}"
-            )
+            msg = f"出现验证码，请求失败，Verifytype: {verify_type}，Verifyuuid: {verify_uuid}, Response: {response}"
+            utils.logger.error(msg)
+            raise Exception(msg)
 
         if return_response:
             return response.text

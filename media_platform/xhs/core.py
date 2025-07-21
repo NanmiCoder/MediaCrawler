@@ -51,11 +51,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
     def __init__(self) -> None:
         self.index_url = "https://www.xiaohongshu.com"
         # self.user_agent = utils.get_user_agent()
-        self.user_agent = (
-            config.UA
-            if config.UA
-            else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-        )
+        self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         self.cdp_manager = None
 
     async def start(self) -> None:
@@ -91,17 +87,6 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 )
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
             await self.browser_context.add_init_script(path="libs/stealth.min.js")
-            # add a cookie attribute webId to avoid the appearance of a sliding captcha on the webpage
-            await self.browser_context.add_cookies(
-                [
-                    {
-                        "name": "webId",
-                        "value": "xxx123",  # any value
-                        "domain": ".xiaohongshu.com",
-                        "path": "/",
-                    }
-                ]
-            )
             self.context_page = await self.browser_context.new_page()
             await self.context_page.goto(self.index_url)
 
@@ -152,7 +137,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
             page = 1
             search_id = get_search_id()
             while (
-                page - start_page + 1
+                    page - start_page + 1
             ) * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Skip page {page}")
@@ -294,11 +279,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
         await self.batch_get_note_comments(need_get_comment_note_ids, xsec_tokens)
 
     async def get_note_detail_async_task(
-        self,
-        note_id: str,
-        xsec_source: str,
-        xsec_token: str,
-        semaphore: asyncio.Semaphore,
+            self,
+            note_id: str,
+            xsec_source: str,
+            xsec_token: str,
+            semaphore: asyncio.Semaphore,
     ) -> Optional[Dict]:
         """Get note detail
 
@@ -311,47 +296,31 @@ class XiaoHongShuCrawler(AbstractCrawler):
         Returns:
             Dict: note detail
         """
-        note_detail_from_html, note_detail_from_api = None, None
+        note_detail = None
         async with semaphore:
-            # When proxy is not enabled, increase the crawling interval
-            if config.ENABLE_IP_PROXY:
-                crawl_interval = random.random()
-            else:
-                crawl_interval = random.uniform(1, config.CRAWLER_MAX_SLEEP_SEC)
             try:
                 utils.logger.info(
                     f"[get_note_detail_async_task] Begin get note detail, note_id: {note_id}"
                 )
-                # 尝试直接获取网页版笔记详情，携带cookie
-                note_detail_from_html: Optional[Dict] = (
-                    await self.xhs_client.get_note_by_id_from_html(
-                        note_id, xsec_source, xsec_token, enable_cookie=True
+
+                try:
+                    note_detail = await self.xhs_client.get_note_by_id(
+                        note_id, xsec_source, xsec_token
                     )
+                except RetryError as e:
+                    pass
+
+                if not note_detail:
+                    note_detail = await self.xhs_client.get_note_by_id_from_html(note_id, xsec_source, xsec_token,
+                                                                                 enable_cookie=False)
+                    if not note_detail:
+                        raise Exception(f"[get_note_detail_async_task] Failed to get note detail, Id: {note_id}")
+
+                note_detail.update(
+                    {"xsec_token": xsec_token, "xsec_source": xsec_source}
                 )
-                time.sleep(crawl_interval)
-                if not note_detail_from_html:
-                    # 如果网页版笔记详情获取失败，则尝试不使用cookie获取
-                    note_detail_from_html = (
-                        await self.xhs_client.get_note_by_id_from_html(
-                            note_id, xsec_source, xsec_token, enable_cookie=False
-                        )
-                    )
-                    utils.logger.error(
-                        f"[XiaoHongShuCrawler.get_note_detail_async_task] Get note detail error, note_id: {note_id}"
-                    )
-                if not note_detail_from_html:
-                    # 如果网页版笔记详情获取失败，则尝试API获取
-                    note_detail_from_api: Optional[Dict] = (
-                        await self.xhs_client.get_note_by_id(
-                            note_id, xsec_source, xsec_token
-                        )
-                    )
-                note_detail = note_detail_from_html or note_detail_from_api
-                if note_detail:
-                    note_detail.update(
-                        {"xsec_token": xsec_token, "xsec_source": xsec_source}
-                    )
-                    return note_detail
+                return note_detail
+
             except DataFetchError as ex:
                 utils.logger.error(
                     f"[XiaoHongShuCrawler.get_note_detail_async_task] Get note detail error: {ex}"
@@ -364,7 +333,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 return None
 
     async def batch_get_note_comments(
-        self, note_list: List[str], xsec_tokens: List[str]
+            self, note_list: List[str], xsec_tokens: List[str]
     ):
         """Batch get note comments"""
         if not config.ENABLE_GET_COMMENTS:
@@ -389,7 +358,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         await asyncio.gather(*task_list)
 
     async def get_comments(
-        self, note_id: str, xsec_token: str, semaphore: asyncio.Semaphore
+            self, note_id: str, xsec_token: str, semaphore: asyncio.Semaphore
     ):
         """Get note comments with keyword filtering and quantity limitation"""
         async with semaphore:
@@ -411,7 +380,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     @staticmethod
     def format_proxy_info(
-        ip_proxy_info: IpInfoModel,
+            ip_proxy_info: IpInfoModel,
     ) -> Tuple[Optional[Dict], Optional[Dict]]:
         """format proxy info for playwright and httpx"""
         playwright_proxy = {
@@ -447,11 +416,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
         return xhs_client_obj
 
     async def launch_browser(
-        self,
-        chromium: BrowserType,
-        playwright_proxy: Optional[Dict],
-        user_agent: Optional[str],
-        headless: bool = True,
+            self,
+            chromium: BrowserType,
+            playwright_proxy: Optional[Dict],
+            user_agent: Optional[str],
+            headless: bool = True,
     ) -> BrowserContext:
         """Launch browser and create browser context"""
         utils.logger.info(
@@ -480,11 +449,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
             return browser_context
 
     async def launch_browser_with_cdp(
-        self,
-        playwright: Playwright,
-        playwright_proxy: Optional[Dict],
-        user_agent: Optional[str],
-        headless: bool = True,
+            self,
+            playwright: Playwright,
+            playwright_proxy: Optional[Dict],
+            user_agent: Optional[str],
+            headless: bool = True,
     ) -> BrowserContext:
         """
         使用CDP模式启动浏览器
