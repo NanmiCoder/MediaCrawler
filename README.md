@@ -271,6 +271,15 @@ TK云大师,专业的TikTok矩阵系统,AI赋能自动化,单人轻松管理上�
 <br>
 <br>
 
+<a href="https://www.thordata.com/?ls=github&lk=Crawler">
+<img src="docs/static/images/img_7.png">
+<br>
+Thordata是全球代理IP解决方案提供商，支持大规模采集公共网络数据，提供 195+ 国家城市、6000 万住宅IP，价格低至 $0.65/GB，支持不限流量、不限IP、不限并发；还包括本土独享ISP静态代理和高性能数据中心代理（均为 $0.75/IP，弹性定价）。点击图片注册后联系中文客服即可免费试用，现在首充还有赠送同额金额活动。可与EasySpider工具配合使用，高效采集网络数据。
+</a>
+
+<br>
+<br>
+
 <a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">**Sider** - 全网最火的 ChatGPT 插件，体验拉满！</a>
 
 ### 🤝 成为赞助者
