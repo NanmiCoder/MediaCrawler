@@ -17,25 +17,29 @@ from tools.utils import str2bool
 
 async def parse_cmd():
     # 读取command arg
-    parser = argparse.ArgumentParser(description='Media crawler program.')
-    parser.add_argument('--platform', type=str, help='Media platform select (xhs | dy | ks | bili | wb | tieba | zhihu)',
+    parser = argparse.ArgumentParser(description='Media crawler program. / 媒体爬虫程序')
+    parser.add_argument('--platform', type=str, 
+                        help='Media platform select / 选择媒体平台 (xhs=小红书 | dy=抖音 | ks=快手 | bili=哔哩哔哩 | wb=微博 | tieba=百度贴吧 | zhihu=知乎)',
                         choices=["xhs", "dy", "ks", "bili", "wb", "tieba", "zhihu"], default=config.PLATFORM)
-    parser.add_argument('--lt', type=str, help='Login type (qrcode | phone | cookie)',
+    parser.add_argument('--lt', type=str, 
+                        help='Login type / 登录方式 (qrcode=二维码 | phone=手机号 | cookie=Cookie)',
                         choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)
-    parser.add_argument('--type', type=str, help='crawler type (search | detail | creator)',
+    parser.add_argument('--type', type=str, 
+                        help='Crawler type / 爬取类型 (search=搜索 | detail=详情 | creator=创作者)',
                         choices=["search", "detail", "creator"], default=config.CRAWLER_TYPE)
     parser.add_argument('--start', type=int,
-                        help='number of start page', default=config.START_PAGE)
+                        help='Number of start page / 起始页码', default=config.START_PAGE)
     parser.add_argument('--keywords', type=str,
-                        help='please input keywords', default=config.KEYWORDS)
+                        help='Please input keywords / 请输入关键词', default=config.KEYWORDS)
     parser.add_argument('--get_comment', type=str2bool,
-                        help='''whether to crawl level one comment, supported values case insensitive ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_COMMENTS)
+                        help='''Whether to crawl level one comment / 是否爬取一级评论, supported values case insensitive / 支持的值(不区分大小写) ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_COMMENTS)
     parser.add_argument('--get_sub_comment', type=str2bool,
-                        help=''''whether to crawl level two comment, supported values case insensitive ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_SUB_COMMENTS)
+                        help=''''Whether to crawl level two comment / 是否爬取二级评论, supported values case insensitive / 支持的值(不区分大小写) ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_SUB_COMMENTS)
     parser.add_argument('--save_data_option', type=str,
-                        help='where to save the data (csv or db or json or sqlite)', choices=['csv', 'db', 'json', 'sqlite'], default=config.SAVE_DATA_OPTION)
+                        help='Where to save the data / 数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库)', 
+                        choices=['csv', 'db', 'json', 'sqlite'], default=config.SAVE_DATA_OPTION)
     parser.add_argument('--cookies', type=str,
-                        help='cookies used for cookie login type', default=config.COOKIES)
+                        help='Cookies used for cookie login type / Cookie登录方式使用的Cookie值', default=config.COOKIES)
 
     args = parser.parse_args()
 

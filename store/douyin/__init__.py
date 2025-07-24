@@ -105,6 +105,22 @@ def _extract_video_download_url(aweme_detail: Dict) -> str:
     return actual_url_list[-1]
 
 
+def _extract_music_download_url(aweme_detail: Dict) -> str:
+    """
+    提取音乐下载地址
+
+    Args:
+        aweme_detail (Dict): 抖音视频
+
+    Returns:
+        str: 音乐下载地址
+    """
+    music_item = aweme_detail.get("music", {})
+    play_url = music_item.get("play_url", {})
+    music_url = play_url.get("uri", "")
+    return music_url
+
+
 async def update_douyin_aweme(aweme_item: Dict):
     aweme_id = aweme_item.get("aweme_id")
     user_info = aweme_item.get("author", {})
@@ -131,6 +147,7 @@ async def update_douyin_aweme(aweme_item: Dict):
         "aweme_url": f"https://www.douyin.com/video/{aweme_id}",
         "cover_url": _extract_content_cover_url(aweme_item),
         "video_download_url": _extract_video_download_url(aweme_item),
+        "music_download_url": _extract_music_download_url(aweme_item),
         "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(
