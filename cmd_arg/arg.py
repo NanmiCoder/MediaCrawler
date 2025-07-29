@@ -19,8 +19,8 @@ async def parse_cmd():
     # 读取command arg
     parser = argparse.ArgumentParser(description='Media crawler program. / 媒体爬虫程序')
     parser.add_argument('--platform', type=str, 
-                        help='Media platform select / 选择媒体平台 (xhs=小红书 | dy=抖音 | ks=快手 | bili=哔哩哔哩 | wb=微博 | tieba=百度贴吧 | zhihu=知乎)',
-                        choices=["xhs", "dy", "ks", "bili", "wb", "tieba", "zhihu"], default=config.PLATFORM)
+                        help='Media platform select / 选择媒体平台 (xhs=小红书 | dy=抖音 | ks=快手 | bili=哔哩哔哩 | wb=微博 | tieba=百度贴吧 | zhihu=知乎 | juejin=掘金)',
+                        choices=["xhs", "dy", "ks", "bili", "wb", "tieba", "zhihu", "juejin"], default=config.PLATFORM)
     parser.add_argument('--lt', type=str, 
                         help='Login type / 登录方式 (qrcode=二维码 | phone=手机号 | cookie=Cookie)',
                         choices=["qrcode", "phone", "cookie"], default=config.LOGIN_TYPE)

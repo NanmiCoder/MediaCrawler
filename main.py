@@ -24,6 +24,7 @@ from media_platform.tieba import TieBaCrawler
 from media_platform.weibo import WeiboCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 from media_platform.zhihu import ZhihuCrawler
+from media_platform.juejin import JuejinCrawler
 
 
 class CrawlerFactory:
@@ -35,6 +36,7 @@ class CrawlerFactory:
         "wb": WeiboCrawler,
         "tieba": TieBaCrawler,
         "zhihu": ZhihuCrawler,
+        "juejin": JuejinCrawler,
     }
 
     @staticmethod
@@ -42,7 +44,7 @@ class CrawlerFactory:
         crawler_class = CrawlerFactory.CRAWLERS.get(platform)
         if not crawler_class:
             raise ValueError(
-                "Invalid Media Platform Currently only supported xhs or dy or ks or bili ..."
+                "Invalid Media Platform Currently only supported xhs or dy or ks or bili or wb or tieba or zhihu or juejin ..."
             )
         return crawler_class()
 
