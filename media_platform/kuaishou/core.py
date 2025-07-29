@@ -55,7 +55,7 @@ class KuaishouCrawler(AbstractCrawler):
                 config.IP_PROXY_POOL_COUNT, enable_validate_ip=True
             )
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(
+            playwright_proxy_format, httpx_proxy_format = utils.format_proxy_info(
                 ip_proxy_info
             )
 
@@ -258,21 +258,6 @@ class KuaishouCrawler(AbstractCrawler):
                 await self.ks_client.update_cookies(
                     browser_context=self.browser_context
                 )
-
-    @staticmethod
-    def format_proxy_info(
-        ip_proxy_info: IpInfoModel,
-    ) -> Tuple[Optional[Dict], Optional[Dict]]:
-        """format proxy info for playwright and httpx"""
-        playwright_proxy = {
-            "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
-            "username": ip_proxy_info.user,
-            "password": ip_proxy_info.password,
-        }
-        httpx_proxy = {
-            f"{ip_proxy_info.protocol}": f"http://{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
-        }
-        return playwright_proxy, httpx_proxy
 
     async def create_ks_client(self, httpx_proxy: Optional[str]) -> KuaiShouClient:
         """Create ks client"""

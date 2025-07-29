@@ -30,7 +30,6 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import tieba as tieba_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
-from tools.crawler_util import format_proxy_info
 from var import crawler_type_var, source_keyword_var
 
 from .client import BaiduTieBaClient
@@ -66,7 +65,7 @@ class TieBaCrawler(AbstractCrawler):
                 config.IP_PROXY_POOL_COUNT, enable_validate_ip=True
             )
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            _, httpx_proxy_format = format_proxy_info(ip_proxy_info)
+            _, httpx_proxy_format = utils.format_proxy_info(ip_proxy_info)
             utils.logger.info(
                 f"[BaiduTieBaCrawler.start] Init default ip proxy, value: {httpx_proxy_format}"
             )

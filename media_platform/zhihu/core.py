@@ -65,7 +65,7 @@ class ZhihuCrawler(AbstractCrawler):
                 config.IP_PROXY_POOL_COUNT, enable_validate_ip=True
             )
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(
+            playwright_proxy_format, httpx_proxy_format = utils.format_proxy_info(
                 ip_proxy_info
             )
 
@@ -350,21 +350,6 @@ class ZhihuCrawler(AbstractCrawler):
             await zhihu_store.update_zhihu_content(note_detail)
 
         await self.batch_get_content_comments(need_get_comment_notes)
-
-    @staticmethod
-    def format_proxy_info(
-        ip_proxy_info: IpInfoModel,
-    ) -> Tuple[Optional[Dict], Optional[Dict]]:
-        """format proxy info for playwright and httpx"""
-        playwright_proxy = {
-            "server": f"{ip_proxy_info.protocol}{ip_proxy_info.ip}:{ip_proxy_info.port}",
-            "username": ip_proxy_info.user,
-            "password": ip_proxy_info.password,
-        }
-        httpx_proxy = {
-            f"{ip_proxy_info.protocol}": f"http://{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
-        }
-        return playwright_proxy, httpx_proxy
 
     async def create_zhihu_client(self, httpx_proxy: Optional[str]) -> ZhiHuClient:
         """Create zhihu client"""
