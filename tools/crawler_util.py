@@ -24,7 +24,7 @@ from io import BytesIO
 from typing import Dict, List, Optional, Tuple, cast
 
 import httpx
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageShow
 from playwright.async_api import Cookie, Page
 
 from . import utils
@@ -88,6 +88,7 @@ def show_qrcode(qr_code) -> None:  # type: ignore
     new_image.paste(image, (10, 10))
     draw = ImageDraw.Draw(new_image)
     draw.rectangle((0, 0, width + 19, height + 19), outline=(0, 0, 0), width=1)
+    del ImageShow.UnixViewer.options["save_all"]
     new_image.show()
 
 
