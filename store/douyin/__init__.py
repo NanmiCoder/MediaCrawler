@@ -8,7 +8,6 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/1/14 18:46
@@ -26,17 +25,39 @@ class DouyinStoreFactory:
         "csv": DouyinCsvStoreImplement,
         "db": DouyinDbStoreImplement,
         "json": DouyinJsonStoreImplement,
-        "sqlite": DouyinSqliteStoreImplement
+        "sqlite": DouyinSqliteStoreImplement,
     }
 
     @staticmethod
     def create_store() -> AbstractStore:
         store_class = DouyinStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
-            raise ValueError(
-                "[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite ..."
-            )
+            raise ValueError("[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite ...")
         return store_class()
+
+
+def _extract_note_image_list(aweme_detail: Dict) -> List[str]:
+    """
+    提取笔记图片列表
+
+    Args:
+        aweme_detail (Dict): 抖音内容详情
+
+    Returns:
+        List[str]: 笔记图片列表
+    """
+    images_res: List[str] = []
+    images: List[Dict] = aweme_detail.get("images", [])
+
+    if not images:
+        return []
+
+    for image in images:
+        image_url_list = image.get("url_list", [])  # download_url_list 为带水印的图片，url_list 为无水印的图片
+        if image_url_list:
+            images_res.append(image_url_list[-1])
+
+    return images_res
 
 
 def _extract_comment_image_list(comment_item: Dict) -> List[str]:
@@ -76,9 +97,7 @@ def _extract_content_cover_url(aweme_detail: Dict) -> str:
     res_cover_url = ""
 
     video_item = aweme_detail.get("video", {})
-    raw_cover_url_list = (
-            video_item.get("raw_cover", {}) or video_item.get("origin_cover", {})
-    ).get("url_list", [])
+    raw_cover_url_list = (video_item.get("raw_cover", {}) or video_item.get("origin_cover", {})).get("url_list", [])
     if raw_cover_url_list and len(raw_cover_url_list) > 1:
         res_cover_url = raw_cover_url_list[1]
 
@@ -148,14 +167,11 @@ async def update_douyin_aweme(aweme_item: Dict):
         "cover_url": _extract_content_cover_url(aweme_item),
         "video_download_url": _extract_video_download_url(aweme_item),
         "music_download_url": _extract_music_download_url(aweme_item),
+        "note_download_url": ",".join(_extract_note_image_list(aweme_item)),
         "source_keyword": source_keyword_var.get(),
     }
-    utils.logger.info(
-        f"[store.douyin.update_douyin_aweme] douyin aweme id:{aweme_id}, title:{save_content_item.get('title')}"
-    )
-    await DouyinStoreFactory.create_store().store_content(
-        content_item=save_content_item
-    )
+    utils.logger.info(f"[store.douyin.update_douyin_aweme] douyin aweme id:{aweme_id}, title:{save_content_item.get('title')}")
+    await DouyinStoreFactory.create_store().store_content(content_item=save_content_item)
 
 
 async def batch_update_dy_aweme_comments(aweme_id: str, comments: List[Dict]):
@@ -168,20 +184,12 @@ async def batch_update_dy_aweme_comments(aweme_id: str, comments: List[Dict]):
 async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
     comment_aweme_id = comment_item.get("aweme_id")
     if aweme_id != comment_aweme_id:
-        utils.logger.error(
-            f"[store.douyin.update_dy_aweme_comment] comment_aweme_id: {comment_aweme_id} != aweme_id: {aweme_id}"
-        )
+        utils.logger.error(f"[store.douyin.update_dy_aweme_comment] comment_aweme_id: {comment_aweme_id} != aweme_id: {aweme_id}")
         return
     user_info = comment_item.get("user", {})
     comment_id = comment_item.get("cid")
     parent_comment_id = comment_item.get("reply_id", "0")
-    avatar_info = (
-            user_info.get("avatar_medium", {})
-            or user_info.get("avatar_300x300", {})
-            or user_info.get("avatar_168x168", {})
-            or user_info.get("avatar_thumb", {})
-            or {}
-    )
+    avatar_info = (user_info.get("avatar_medium", {}) or user_info.get("avatar_300x300", {}) or user_info.get("avatar_168x168", {}) or user_info.get("avatar_thumb", {}) or {})
     save_comment_item = {
         "comment_id": comment_id,
         "create_time": comment_item.get("create_time"),
@@ -196,20 +204,14 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "nickname": user_info.get("nickname"),
         "avatar": avatar_info.get("url_list", [""])[0],
         "sub_comment_count": str(comment_item.get("reply_comment_total", 0)),
-        "like_count": (
-            comment_item.get("digg_count") if comment_item.get("digg_count") else 0
-        ),
+        "like_count": (comment_item.get("digg_count") if comment_item.get("digg_count") else 0),
         "last_modify_ts": utils.get_current_timestamp(),
         "parent_comment_id": parent_comment_id,
         "pictures": ",".join(_extract_comment_image_list(comment_item)),
     }
-    utils.logger.info(
-        f"[store.douyin.update_dy_aweme_comment] douyin aweme comment: {comment_id}, content: {save_comment_item.get('content')}"
-    )
+    utils.logger.info(f"[store.douyin.update_dy_aweme_comment] douyin aweme comment: {comment_id}, content: {save_comment_item.get('content')}")
 
-    await DouyinStoreFactory.create_store().store_comment(
-        comment_item=save_comment_item
-    )
+    await DouyinStoreFactory.create_store().store_comment(comment_item=save_comment_item)
 
 
 async def save_creator(user_id: str, creator: Dict):
@@ -220,8 +222,7 @@ async def save_creator(user_id: str, creator: Dict):
         "user_id": user_id,
         "nickname": user_info.get("nickname"),
         "gender": gender_map.get(user_info.get("gender"), "未知"),
-        "avatar": f"https://p3-pc.douyinpic.com/img/{avatar_uri}"
-                  + r"~c5_300x300.jpeg?from=2956013662",
+        "avatar": f"https://p3-pc.douyinpic.com/img/{avatar_uri}" + r"~c5_300x300.jpeg?from=2956013662",
         "desc": user_info.get("signature"),
         "ip_location": user_info.get("ip_location"),
         "follows": user_info.get("following_count", 0),
