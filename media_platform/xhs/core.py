@@ -8,7 +8,6 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-
 import asyncio
 import os
 import random
@@ -57,13 +56,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
         if config.ENABLE_IP_PROXY:
-            ip_proxy_pool = await create_ip_pool(
-                config.IP_PROXY_POOL_COUNT, enable_validate_ip=True
-            )
+            ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
-            playwright_proxy_format, httpx_proxy_format = utils.format_proxy_info(
-                ip_proxy_info
-            )
+            playwright_proxy_format, httpx_proxy_format = utils.format_proxy_info(ip_proxy_info)
 
         async with async_playwright() as playwright:
             # 根据配置选择启动模式
@@ -101,9 +96,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     cookie_str=config.COOKIES,
                 )
                 await login_obj.begin()
-                await self.xhs_client.update_cookies(
-                    browser_context=self.browser_context
-                )
+                await self.xhs_client.update_cookies(browser_context=self.browser_context)
 
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
@@ -122,47 +115,33 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def search(self) -> None:
         """Search for notes and retrieve their comment information."""
-        utils.logger.info(
-            "[XiaoHongShuCrawler.search] Begin search xiaohongshu keywords"
-        )
+        utils.logger.info("[XiaoHongShuCrawler.search] Begin search xiaohongshu keywords")
         xhs_limit_count = 20  # xhs limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = xhs_limit_count
         start_page = config.START_PAGE
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
-            utils.logger.info(
-                f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}"
-            )
+            utils.logger.info(f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
             page = 1
             search_id = get_search_id()
-            while (
-                    page - start_page + 1
-            ) * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            while (page - start_page + 1) * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Skip page {page}")
                     page += 1
                     continue
 
                 try:
-                    utils.logger.info(
-                        f"[XiaoHongShuCrawler.search] search xhs keyword: {keyword}, page: {page}"
-                    )
+                    utils.logger.info(f"[XiaoHongShuCrawler.search] search xhs keyword: {keyword}, page: {page}")
                     note_ids: List[str] = []
                     xsec_tokens: List[str] = []
                     notes_res = await self.xhs_client.get_note_by_keyword(
                         keyword=keyword,
                         search_id=search_id,
                         page=page,
-                        sort=(
-                            SearchSortType(config.SORT_TYPE)
-                            if config.SORT_TYPE != ""
-                            else SearchSortType.GENERAL
-                        ),
+                        sort=(SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != "" else SearchSortType.GENERAL),
                     )
-                    utils.logger.info(
-                        f"[XiaoHongShuCrawler.search] Search notes res:{notes_res}"
-                    )
+                    utils.logger.info(f"[XiaoHongShuCrawler.search] Search notes res:{notes_res}")
                     if not notes_res or not notes_res.get("has_more", False):
                         utils.logger.info("No more content!")
                         break
@@ -173,9 +152,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             xsec_source=post_item.get("xsec_source"),
                             xsec_token=post_item.get("xsec_token"),
                             semaphore=semaphore,
-                        )
-                        for post_item in notes_res.get("items", {})
-                        if post_item.get("model_type") not in ("rec_query", "hot_query")
+                        ) for post_item in notes_res.get("items", {}) if post_item.get("model_type") not in ("rec_query", "hot_query")
                     ]
                     note_details = await asyncio.gather(*task_list)
                     for note_detail in note_details:
@@ -185,26 +162,18 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             note_ids.append(note_detail.get("note_id"))
                             xsec_tokens.append(note_detail.get("xsec_token"))
                     page += 1
-                    utils.logger.info(
-                        f"[XiaoHongShuCrawler.search] Note details: {note_details}"
-                    )
+                    utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
                     await self.batch_get_note_comments(note_ids, xsec_tokens)
                 except DataFetchError:
-                    utils.logger.error(
-                        "[XiaoHongShuCrawler.search] Get note detail error"
-                    )
+                    utils.logger.error("[XiaoHongShuCrawler.search] Get note detail error")
                     break
 
     async def get_creators_and_notes(self) -> None:
         """Get creator's notes and retrieve their comment information."""
-        utils.logger.info(
-            "[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators"
-        )
+        utils.logger.info("[XiaoHongShuCrawler.get_creators_and_notes] Begin get xiaohongshu creators")
         for user_id in config.XHS_CREATOR_ID_LIST:
             # get creator detail info from web html content
-            createor_info: Dict = await self.xhs_client.get_creator_info(
-                user_id=user_id
-            )
+            createor_info: Dict = await self.xhs_client.get_creator_info(user_id=user_id)
             if createor_info:
                 await xhs_store.save_creator(user_id, creator=createor_info)
 
@@ -238,14 +207,14 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 xsec_source=post_item.get("xsec_source"),
                 xsec_token=post_item.get("xsec_token"),
                 semaphore=semaphore,
-            )
-            for post_item in note_list
+            ) for post_item in note_list
         ]
 
         note_details = await asyncio.gather(*task_list)
         for note_detail in note_details:
             if note_detail:
                 await xhs_store.update_xhs_note(note_detail)
+                await self.get_notice_media(note_detail)
 
     async def get_specified_notes(self):
         """
@@ -257,9 +226,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         get_note_detail_task_list = []
         for full_note_url in config.XHS_SPECIFIED_NOTE_URL_LIST:
             note_url_info: NoteUrlInfo = parse_note_info_from_note_url(full_note_url)
-            utils.logger.info(
-                f"[XiaoHongShuCrawler.get_specified_notes] Parse note url info: {note_url_info}"
-            )
+            utils.logger.info(f"[XiaoHongShuCrawler.get_specified_notes] Parse note url info: {note_url_info}")
             crawler_task = self.get_note_detail_async_task(
                 note_id=note_url_info.note_id,
                 xsec_source=note_url_info.xsec_source,
@@ -276,14 +243,15 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 need_get_comment_note_ids.append(note_detail.get("note_id", ""))
                 xsec_tokens.append(note_detail.get("xsec_token", ""))
                 await xhs_store.update_xhs_note(note_detail)
+                await self.get_notice_media(note_detail)
         await self.batch_get_note_comments(need_get_comment_note_ids, xsec_tokens)
 
     async def get_note_detail_async_task(
-            self,
-            note_id: str,
-            xsec_source: str,
-            xsec_token: str,
-            semaphore: asyncio.Semaphore,
+        self,
+        note_id: str,
+        xsec_source: str,
+        xsec_token: str,
+        semaphore: asyncio.Semaphore,
     ) -> Optional[Dict]:
         """Get note detail
 
@@ -299,72 +267,49 @@ class XiaoHongShuCrawler(AbstractCrawler):
         note_detail = None
         async with semaphore:
             try:
-                utils.logger.info(
-                    f"[get_note_detail_async_task] Begin get note detail, note_id: {note_id}"
-                )
+                utils.logger.info(f"[get_note_detail_async_task] Begin get note detail, note_id: {note_id}")
 
                 try:
-                    note_detail = await self.xhs_client.get_note_by_id(
-                        note_id, xsec_source, xsec_token
-                    )
+                    note_detail = await self.xhs_client.get_note_by_id(note_id, xsec_source, xsec_token)
                 except RetryError as e:
                     pass
 
                 if not note_detail:
-                    note_detail = await self.xhs_client.get_note_by_id_from_html(note_id, xsec_source, xsec_token,
-                                                                                 enable_cookie=False)
+                    note_detail = await self.xhs_client.get_note_by_id_from_html(note_id, xsec_source, xsec_token, enable_cookie=False)
                     if not note_detail:
                         raise Exception(f"[get_note_detail_async_task] Failed to get note detail, Id: {note_id}")
 
-                note_detail.update(
-                    {"xsec_token": xsec_token, "xsec_source": xsec_source}
-                )
+                note_detail.update({"xsec_token": xsec_token, "xsec_source": xsec_source})
                 return note_detail
 
             except DataFetchError as ex:
-                utils.logger.error(
-                    f"[XiaoHongShuCrawler.get_note_detail_async_task] Get note detail error: {ex}"
-                )
+                utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail_async_task] Get note detail error: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(
-                    f"[XiaoHongShuCrawler.get_note_detail_async_task] have not fund note detail note_id:{note_id}, err: {ex}"
-                )
+                utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail_async_task] have not fund note detail note_id:{note_id}, err: {ex}")
                 return None
 
-    async def batch_get_note_comments(
-            self, note_list: List[str], xsec_tokens: List[str]
-    ):
+    async def batch_get_note_comments(self, note_list: List[str], xsec_tokens: List[str]):
         """Batch get note comments"""
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(
-                f"[XiaoHongShuCrawler.batch_get_note_comments] Crawling comment mode is not enabled"
-            )
+            utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
             return
 
-        utils.logger.info(
-            f"[XiaoHongShuCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_list}"
-        )
+        utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for index, note_id in enumerate(note_list):
             task = asyncio.create_task(
-                self.get_comments(
-                    note_id=note_id, xsec_token=xsec_tokens[index], semaphore=semaphore
-                ),
+                self.get_comments(note_id=note_id, xsec_token=xsec_tokens[index], semaphore=semaphore),
                 name=note_id,
             )
             task_list.append(task)
         await asyncio.gather(*task_list)
 
-    async def get_comments(
-            self, note_id: str, xsec_token: str, semaphore: asyncio.Semaphore
-    ):
+    async def get_comments(self, note_id: str, xsec_token: str, semaphore: asyncio.Semaphore):
         """Get note comments with keyword filtering and quantity limitation"""
         async with semaphore:
-            utils.logger.info(
-                f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}"
-            )
+            utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
             # When proxy is not enabled, increase the crawling interval
             if config.ENABLE_IP_PROXY:
                 crawl_interval = random.random()
@@ -380,12 +325,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XiaoHongShuClient:
         """Create xhs client"""
-        utils.logger.info(
-            "[XiaoHongShuCrawler.create_xhs_client] Begin create xiaohongshu API client ..."
-        )
-        cookie_str, cookie_dict = utils.convert_cookies(
-            await self.browser_context.cookies()
-        )
+        utils.logger.info("[XiaoHongShuCrawler.create_xhs_client] Begin create xiaohongshu API client ...")
+        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         xhs_client_obj = XiaoHongShuClient(
             proxies=httpx_proxy,
             headers={
@@ -412,44 +353,41 @@ class XiaoHongShuCrawler(AbstractCrawler):
         return xhs_client_obj
 
     async def launch_browser(
-            self,
-            chromium: BrowserType,
-            playwright_proxy: Optional[Dict],
-            user_agent: Optional[str],
-            headless: bool = True,
+        self,
+        chromium: BrowserType,
+        playwright_proxy: Optional[Dict],
+        user_agent: Optional[str],
+        headless: bool = True,
     ) -> BrowserContext:
         """Launch browser and create browser context"""
-        utils.logger.info(
-            "[XiaoHongShuCrawler.launch_browser] Begin create browser context ..."
-        )
+        utils.logger.info("[XiaoHongShuCrawler.launch_browser] Begin create browser context ...")
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
-            user_data_dir = os.path.join(
-                os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM
-            )  # type: ignore
+            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,
                 headless=headless,
                 proxy=playwright_proxy,  # type: ignore
-                viewport={"width": 1920, "height": 1080},
+                viewport={
+                    "width": 1920,
+                    "height": 1080
+                },
                 user_agent=user_agent,
             )
             return browser_context
         else:
             browser = await chromium.launch(headless=headless, proxy=playwright_proxy)  # type: ignore
-            browser_context = await browser.new_context(
-                viewport={"width": 1920, "height": 1080}, user_agent=user_agent
-            )
+            browser_context = await browser.new_context(viewport={"width": 1920, "height": 1080}, user_agent=user_agent)
             return browser_context
 
     async def launch_browser_with_cdp(
-            self,
-            playwright: Playwright,
-            playwright_proxy: Optional[Dict],
-            user_agent: Optional[str],
-            headless: bool = True,
+        self,
+        playwright: Playwright,
+        playwright_proxy: Optional[Dict],
+        user_agent: Optional[str],
+        headless: bool = True,
     ) -> BrowserContext:
         """
         使用CDP模式启动浏览器
@@ -470,14 +408,10 @@ class XiaoHongShuCrawler(AbstractCrawler):
             return browser_context
 
         except Exception as e:
-            utils.logger.error(
-                f"[XiaoHongShuCrawler] CDP模式启动失败，回退到标准模式: {e}"
-            )
+            utils.logger.error(f"[XiaoHongShuCrawler] CDP模式启动失败，回退到标准模式: {e}")
             # 回退到标准模式
             chromium = playwright.chromium
-            return await self.launch_browser(
-                chromium, playwright_proxy, user_agent, headless
-            )
+            return await self.launch_browser(chromium, playwright_proxy, user_agent, headless)
 
     async def close(self):
         """Close browser context"""
@@ -490,10 +424,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
         utils.logger.info("[XiaoHongShuCrawler.close] Browser context closed ...")
 
     async def get_notice_media(self, note_detail: Dict):
-        if not config.ENABLE_GET_IMAGES:
-            utils.logger.info(
-                f"[XiaoHongShuCrawler.get_notice_media] Crawling image mode is not enabled"
-            )
+        if not config.ENABLE_GET_MEIDAS:
+            utils.logger.info(f"[XiaoHongShuCrawler.get_notice_media] Crawling image mode is not enabled")
             return
         await self.get_note_images(note_detail)
         await self.get_notice_video(note_detail)
@@ -504,7 +436,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         :param note_item:
         :return:
         """
-        if not config.ENABLE_GET_IMAGES:
+        if not config.ENABLE_GET_MEIDAS:
             return
         note_id = note_item.get("note_id")
         image_list: List[Dict] = note_item.get("image_list", [])
@@ -529,11 +461,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def get_notice_video(self, note_item: Dict):
         """
-        get note images. please use get_notice_media
+        get note videos. please use get_notice_media
         :param note_item:
         :return:
         """
-        if not config.ENABLE_GET_IMAGES:
+        if not config.ENABLE_GET_MEIDAS:
             return
         note_id = note_item.get("note_id")
 
@@ -548,4 +480,4 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 continue
             extension_file_name = f"{videoNum}.mp4"
             videoNum += 1
-            await xhs_store.update_xhs_note_image(note_id, content, extension_file_name)
+            await xhs_store.update_xhs_note_video(note_id, content, extension_file_name)
