@@ -18,6 +18,7 @@ import config
 from var import source_keyword_var
 
 from .douyin_store_impl import *
+from .douyin_store_media import *
 
 
 class DouyinStoreFactory:
@@ -233,3 +234,33 @@ async def save_creator(user_id: str, creator: Dict):
     }
     utils.logger.info(f"[store.douyin.save_creator] creator:{local_db_item}")
     await DouyinStoreFactory.create_store().store_creator(local_db_item)
+
+
+async def update_dy_aweme_image(aweme_id, pic_content, extension_file_name):
+    """
+    更新抖音笔记图片
+    Args:
+        aweme_id:
+        pic_content:
+        extension_file_name:
+
+    Returns:
+
+    """
+
+    await DouYinImage().store_image({"aweme_id": aweme_id, "pic_content": pic_content, "extension_file_name": extension_file_name})
+
+
+async def update_dy_aweme_video(aweme_id, video_content, extension_file_name):
+    """
+    更新抖音短视频
+    Args:
+        aweme_id:
+        video_content:
+        extension_file_name:
+
+    Returns:
+
+    """
+
+    await DouYinVideo().store_video({"aweme_id": aweme_id, "video_content": video_content, "extension_file_name": extension_file_name})

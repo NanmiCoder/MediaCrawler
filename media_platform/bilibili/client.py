@@ -1,13 +1,12 @@
-# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
-# 1. 不得用于任何商业用途。  
-# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
-# 3. 不得进行大规模爬取或对平台造成运营干扰。  
-# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
+# 1. 不得用于任何商业用途。
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
+# 3. 不得进行大规模爬取或对平台造成运营干扰。
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
 # 5. 不得用于任何非法或不当的用途。
-#   
-# 详细许可条款请参阅项目根目录下的LICENSE文件。  
-# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
-
+#
+# 详细许可条款请参阅项目根目录下的LICENSE文件。
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
@@ -32,14 +31,15 @@ from .help import BilibiliSign
 
 
 class BilibiliClient(AbstractApiClient):
+
     def __init__(
-            self,
-            timeout=10,
-            proxies=None,
-            *,
-            headers: Dict[str, str],
-            playwright_page: Page,
-            cookie_dict: Dict[str, str],
+        self,
+        timeout=60,  # 若开启爬取媒体选项，b 站的长视频需要更久的超时时间
+        proxies=None,
+        *,
+        headers: Dict[str, str],
+        playwright_page: Page,
+        cookie_dict: Dict[str, str],
     ):
         self.proxies = proxies
         self.timeout = timeout
@@ -50,10 +50,7 @@ class BilibiliClient(AbstractApiClient):
 
     async def request(self, method, url, **kwargs) -> Any:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
-            response = await client.request(
-                method, url, timeout=self.timeout,
-                **kwargs
-            )
+            response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:
             data: Dict = response.json()
         except json.JSONDecodeError:
@@ -111,8 +108,7 @@ class BilibiliClient(AbstractApiClient):
     async def post(self, uri: str, data: dict) -> Dict:
         data = await self.pre_request_data(data)
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
-        return await self.request(method="POST", url=f"{self._host}{uri}",
-                                  data=json_str, headers=self.headers)
+        return await self.request(method="POST", url=f"{self._host}{uri}", data=json_str, headers=self.headers)
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
@@ -122,12 +118,10 @@ class BilibiliClient(AbstractApiClient):
             check_login_uri = "/x/web-interface/nav"
             response = await self.get(check_login_uri)
             if response.get("isLogin"):
-                utils.logger.info(
-                    "[BilibiliClient.pong] Use cache login state get web interface successfull!")
+                utils.logger.info("[BilibiliClient.pong] Use cache login state get web interface successfull!")
                 ping_flag = True
         except Exception as e:
-            utils.logger.error(
-                f"[BilibiliClient.pong] Pong bilibili failed: {e}, and try to login again...")
+            utils.logger.error(f"[BilibiliClient.pong] Pong bilibili failed: {e}, and try to login again...")
             ping_flag = False
         return ping_flag
 
@@ -136,10 +130,15 @@ class BilibiliClient(AbstractApiClient):
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
 
-    async def search_video_by_keyword(self, keyword: str, page: int = 1, page_size: int = 20,
-                                      order: SearchOrderType = SearchOrderType.DEFAULT,
-                                      pubtime_begin_s: int = 0, pubtime_end_s: int = 0) -> Dict:
-
+    async def search_video_by_keyword(
+        self,
+        keyword: str,
+        page: int = 1,
+        page_size: int = 20,
+        order: SearchOrderType = SearchOrderType.DEFAULT,
+        pubtime_begin_s: int = 0,
+        pubtime_end_s: int = 0,
+    ) -> Dict:
         """
         KuaiShou web search api
         :param keyword: 搜索关键词
@@ -210,11 +209,12 @@ class BilibiliClient(AbstractApiClient):
             else:
                 return response.content
 
-    async def get_video_comments(self,
-                                 video_id: str,
-                                 order_mode: CommentOrderType = CommentOrderType.DEFAULT,
-                                 next: int = 0
-                                 ) -> Dict:
+    async def get_video_comments(
+        self,
+        video_id: str,
+        order_mode: CommentOrderType = CommentOrderType.DEFAULT,
+        next: int = 0,
+    ) -> Dict:
         """get video comments
         :param video_id: 视频 ID
         :param order_mode: 排序方式
@@ -222,18 +222,17 @@ class BilibiliClient(AbstractApiClient):
         :return:
         """
         uri = "/x/v2/reply/wbi/main"
-        post_data = {
-            "oid": video_id,
-            "mode": order_mode.value,
-            "type": 1,
-            "ps": 20,
-            "next": next
-        }
+        post_data = {"oid": video_id, "mode": order_mode.value, "type": 1, "ps": 20, "next": next}
         return await self.get(uri, post_data)
 
-    async def get_video_all_comments(self, video_id: str, crawl_interval: float = 1.0, is_fetch_sub_comments=False,
-                                     callback: Optional[Callable] = None,
-                                     max_count: int = 10,):
+    async def get_video_all_comments(
+        self,
+        video_id: str,
+        crawl_interval: float = 1.0,
+        is_fetch_sub_comments=False,
+        callback: Optional[Callable] = None,
+        max_count: int = 10,
+    ):
         """
         get video all comments include sub comments
         :param video_id:
@@ -256,15 +255,11 @@ class BilibiliClient(AbstractApiClient):
                     break  # Success
                 except DataFetchError as e:
                     if attempt < max_retries - 1:
-                        delay = 5 * (2 ** attempt) + random.uniform(0, 1)
-                        utils.logger.warning(
-                            f"[BilibiliClient.get_video_all_comments] Retrying video_id {video_id} in {delay:.2f}s... (Attempt {attempt + 1}/{max_retries})"
-                        )
+                        delay = 5 * (2**attempt) + random.uniform(0, 1)
+                        utils.logger.warning(f"[BilibiliClient.get_video_all_comments] Retrying video_id {video_id} in {delay:.2f}s... (Attempt {attempt + 1}/{max_retries})")
                         await asyncio.sleep(delay)
                     else:
-                        utils.logger.error(
-                            f"[BilibiliClient.get_video_all_comments] Max retries reached for video_id: {video_id}. Skipping comments. Error: {e}"
-                        )
+                        utils.logger.error(f"[BilibiliClient.get_video_all_comments] Max retries reached for video_id: {video_id}. Skipping comments. Error: {e}")
                         is_end = True
                         break
             if not comments_res:
@@ -276,7 +271,7 @@ class BilibiliClient(AbstractApiClient):
                 break
 
             comment_list: List[Dict] = comments_res.get("replies", [])
-            
+
             # 检查 is_end 和 next 是否存在
             if "is_end" not in cursor_info or "next" not in cursor_info:
                 utils.logger.warning(f"[BilibiliClient.get_video_all_comments] 'is_end' or 'next' not in cursor for video_id: {video_id}. Assuming end of comments.")
@@ -292,10 +287,7 @@ class BilibiliClient(AbstractApiClient):
                 for comment in comment_list:
                     comment_id = comment['rpid']
                     if (comment.get("rcount", 0) > 0):
-                        {
-                            await self.get_video_all_level_two_comments(
-                                video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval,  callback)
-                        }
+                        {await self.get_video_all_level_two_comments(video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval, callback)}
             if len(result) + len(comment_list) > max_count:
                 comment_list = comment_list[:max_count - len(result)]
             if callback:  # 如果有回调函数，就执行回调函数
@@ -306,14 +298,15 @@ class BilibiliClient(AbstractApiClient):
                 continue
         return result
 
-    async def get_video_all_level_two_comments(self,
-                                               video_id: str,
-                                               level_one_comment_id: int,
-                                               order_mode: CommentOrderType,
-                                               ps: int = 10,
-                                               crawl_interval: float = 1.0,
-                                               callback: Optional[Callable] = None,
-                                               ) -> Dict:
+    async def get_video_all_level_two_comments(
+        self,
+        video_id: str,
+        level_one_comment_id: int,
+        order_mode: CommentOrderType,
+        ps: int = 10,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+    ) -> Dict:
         """
         get video all level two comments for a level one comment
         :param video_id: 视频 ID
@@ -327,8 +320,7 @@ class BilibiliClient(AbstractApiClient):
 
         pn = 1
         while True:
-            result = await self.get_video_level_two_comments(
-                video_id, level_one_comment_id, pn, ps, order_mode)
+            result = await self.get_video_level_two_comments(video_id, level_one_comment_id, pn, ps, order_mode)
             comment_list: List[Dict] = result.get("replies", [])
             if callback:  # 如果有回调函数，就执行回调函数
                 await callback(video_id, comment_list)
@@ -338,13 +330,14 @@ class BilibiliClient(AbstractApiClient):
 
             pn += 1
 
-    async def get_video_level_two_comments(self,
-                                           video_id: str,
-                                           level_one_comment_id: int,
-                                           pn: int,
-                                           ps: int,
-                                           order_mode: CommentOrderType,
-                                           ) -> Dict:
+    async def get_video_level_two_comments(
+        self,
+        video_id: str,
+        level_one_comment_id: int,
+        pn: int,
+        ps: int,
+        order_mode: CommentOrderType,
+    ) -> Dict:
         """get video level two comments
         :param video_id: 视频 ID
         :param level_one_comment_id: 一级评论 ID
@@ -393,11 +386,12 @@ class BilibiliClient(AbstractApiClient):
         }
         return await self.get(uri, post_data)
 
-    async def get_creator_fans(self,
-                               creator_id: int,
-                               pn: int,
-                               ps: int = 24,
-                               ) -> Dict:
+    async def get_creator_fans(
+        self,
+        creator_id: int,
+        pn: int,
+        ps: int = 24,
+    ) -> Dict:
         """
         get creator fans
         :param creator_id: 创作者 ID
@@ -411,15 +405,15 @@ class BilibiliClient(AbstractApiClient):
             "pn": pn,
             "ps": ps,
             "gaia_source": "main_web",
-
         }
         return await self.get(uri, post_data)
 
-    async def get_creator_followings(self,
-                                     creator_id: int,
-                                     pn: int,
-                                     ps: int = 24,
-                                     ) -> Dict:
+    async def get_creator_followings(
+        self,
+        creator_id: int,
+        pn: int,
+        ps: int = 24,
+    ) -> Dict:
         """
         get creator followings
         :param creator_id: 创作者 ID
@@ -452,9 +446,13 @@ class BilibiliClient(AbstractApiClient):
 
         return await self.get(uri, post_data)
 
-    async def get_creator_all_fans(self, creator_info: Dict, crawl_interval: float = 1.0,
-                                   callback: Optional[Callable] = None,
-                                   max_count: int = 100) -> List:
+    async def get_creator_all_fans(
+        self,
+        creator_info: Dict,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        max_count: int = 100,
+    ) -> List:
         """
         get creator all fans
         :param creator_info:
@@ -482,9 +480,13 @@ class BilibiliClient(AbstractApiClient):
             result.extend(fans_list)
         return result
 
-    async def get_creator_all_followings(self, creator_info: Dict, crawl_interval: float = 1.0,
-                                         callback: Optional[Callable] = None,
-                                         max_count: int = 100) -> List:
+    async def get_creator_all_followings(
+        self,
+        creator_info: Dict,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        max_count: int = 100,
+    ) -> List:
         """
         get creator all followings
         :param creator_info:
@@ -512,9 +514,13 @@ class BilibiliClient(AbstractApiClient):
             result.extend(followings_list)
         return result
 
-    async def get_creator_all_dynamics(self, creator_info: Dict, crawl_interval: float = 1.0,
-                                       callback: Optional[Callable] = None,
-                                       max_count: int = 20) -> List:
+    async def get_creator_all_dynamics(
+        self,
+        creator_info: Dict,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        max_count: int = 20,
+    ) -> List:
         """
         get creator all followings
         :param creator_info:
