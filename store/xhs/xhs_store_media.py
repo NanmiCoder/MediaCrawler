@@ -11,7 +11,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : helloteemo
 # @Time    : 2024/7/11 22:35
-# @Desc    : 小红书图片保存
+# @Desc    : 小红书媒体保存
 import pathlib
 from typing import Dict
 
@@ -27,8 +27,9 @@ class XiaoHongShuImage(AbstractStoreImage):
     async def store_image(self, image_content_item: Dict):
         """
         store content
+        
         Args:
-            content_item:
+            image_content_item:
 
         Returns:
 
@@ -38,9 +39,10 @@ class XiaoHongShuImage(AbstractStoreImage):
     def make_save_file_name(self, notice_id: str, extension_file_name: str) -> str:
         """
         make save file name by store type
+        
         Args:
             notice_id: notice id
-            picid: image id
+            extension_file_name: image filename with extension
 
         Returns:
 
@@ -50,9 +52,11 @@ class XiaoHongShuImage(AbstractStoreImage):
     async def save_image(self, notice_id: str, pic_content: str, extension_file_name):
         """
         save image to local
+        
         Args:
             notice_id: notice id
             pic_content: image content
+            extension_file_name: image filename with extension
 
         Returns:
 
@@ -70,8 +74,9 @@ class XiaoHongShuVideo(AbstractStoreVideo):
     async def store_video(self, video_content_item: Dict):
         """
         store content
+        
         Args:
-            content_item:
+            video_content_item:
 
         Returns:
 
@@ -81,8 +86,10 @@ class XiaoHongShuVideo(AbstractStoreVideo):
     def make_save_file_name(self, notice_id: str, extension_file_name: str) -> str:
         """
         make save file name by store type
+        
         Args:
             notice_id: notice id
+            extension_file_name: video filename with extension
 
         Returns:
 
@@ -91,10 +98,12 @@ class XiaoHongShuVideo(AbstractStoreVideo):
 
     async def save_video(self, notice_id: str, video_content: str, extension_file_name):
         """
-        save image to local
+        save video to local
+        
         Args:
             notice_id: notice id
             video_content: video content
+            extension_file_name: video filename with extension
 
         Returns:
 

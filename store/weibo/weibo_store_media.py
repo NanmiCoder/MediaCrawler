@@ -11,7 +11,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : Erm
 # @Time    : 2024/4/9 17:35
-# @Desc    : 微博保存图片类
+# @Desc    : 微博媒体保存
 import pathlib
 from typing import Dict
 
@@ -27,8 +27,9 @@ class WeiboStoreImage(AbstractStoreImage):
     async def store_image(self, image_content_item: Dict):
         """
         store content
+        
         Args:
-            content_item:
+            image_content_item:
 
         Returns:
 
@@ -38,8 +39,10 @@ class WeiboStoreImage(AbstractStoreImage):
     def make_save_file_name(self, picid: str, extension_file_name: str) -> str:
         """
         make save file name by store type
+        
         Args:
             picid: image id
+            extension_file_name: video filename with extension
 
         Returns:
 
@@ -49,9 +52,11 @@ class WeiboStoreImage(AbstractStoreImage):
     async def save_image(self, picid: str, pic_content: str, extension_file_name="jpg"):
         """
         save image to local
+        
         Args:
             picid: image id
             pic_content: image content
+            extension_file_name: image filename with extension
 
         Returns:
 

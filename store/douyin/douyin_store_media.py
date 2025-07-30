@@ -23,8 +23,9 @@ class DouYinImage(AbstractStoreImage):
     async def store_image(self, image_content_item: Dict):
         """
         store content
+        
         Args:
-            content_item:
+            image_content_item:
 
         Returns:
 
@@ -34,9 +35,10 @@ class DouYinImage(AbstractStoreImage):
     def make_save_file_name(self, aweme_id: str, extension_file_name: str) -> str:
         """
         make save file name by store type
+        
         Args:
             aweme_id: aweme id
-            picid: image id
+            extension_file_name: image filename with extension
 
         Returns:
 
@@ -46,9 +48,11 @@ class DouYinImage(AbstractStoreImage):
     async def save_image(self, aweme_id: str, pic_content: str, extension_file_name):
         """
         save image to local
+        
         Args:
             aweme_id: aweme id
             pic_content: image content
+            extension_file_name: image filename with extension
 
         Returns:
 
@@ -66,8 +70,9 @@ class DouYinVideo(AbstractStoreVideo):
     async def store_video(self, video_content_item: Dict):
         """
         store content
+        
         Args:
-            content_item:
+            video_content_item:
 
         Returns:
 
@@ -77,9 +82,10 @@ class DouYinVideo(AbstractStoreVideo):
     def make_save_file_name(self, aweme_id: str, extension_file_name: str) -> str:
         """
         make save file name by store type
+        
         Args:
             aweme_id: aweme id
-            picid: image id
+            extension_file_name: video filename with extension
 
         Returns:
 
@@ -89,9 +95,11 @@ class DouYinVideo(AbstractStoreVideo):
     async def save_video(self, aweme_id: str, video_content: str, extension_file_name):
         """
         save video to local
+        
         Args:
             aweme_id: aweme id
-            pic_content: image content
+            video_content: video content
+            extension_file_name: video filename with extension
 
         Returns:
 

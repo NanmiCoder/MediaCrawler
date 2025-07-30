@@ -11,7 +11,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : helloteemo
 # @Time    : 2024/7/12 20:01
-# @Desc    : bilibili图片保存
+# @Desc    : bilibili 媒体保存
 import pathlib
 from typing import Dict
 
@@ -27,8 +27,9 @@ class BilibiliVideo(AbstractStoreVideo):
     async def store_video(self, video_content_item: Dict):
         """
         store content
+        
         Args:
-            content_item:
+            video_content_item:
 
         Returns:
 
@@ -38,8 +39,11 @@ class BilibiliVideo(AbstractStoreVideo):
     def make_save_file_name(self, aid: str, extension_file_name: str) -> str:
         """
         make save file name by store type
+        
         Args:
             aid: aid
+            extension_file_name: video filename with extension
+            
         Returns:
 
         """
@@ -48,9 +52,11 @@ class BilibiliVideo(AbstractStoreVideo):
     async def save_video(self, aid: int, video_content: str, extension_file_name="mp4"):
         """
         save video to local
+        
         Args:
             aid: aid
             video_content: video content
+            extension_file_name: video filename with extension
 
         Returns:
 
