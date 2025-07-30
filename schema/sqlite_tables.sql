@@ -150,6 +150,7 @@ CREATE TABLE douyin_aweme (
     cover_url TEXT DEFAULT NULL,
     video_download_url TEXT DEFAULT NULL,
     music_download_url TEXT DEFAULT NULL,
+    note_download_url TEXT DEFAULT NULL,
     source_keyword TEXT DEFAULT ''
 );
 
