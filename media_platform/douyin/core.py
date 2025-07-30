@@ -30,7 +30,7 @@ from tools import utils
 from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
 
-from .client import DOUYINClient
+from .client import DouYinClient
 from .exception import DataFetchError
 from .field import PublishTimeType
 from .login import DouYinLogin
@@ -38,7 +38,7 @@ from .login import DouYinLogin
 
 class DouYinCrawler(AbstractCrawler):
     context_page: Page
-    dy_client: DOUYINClient
+    dy_client: DouYinClient
     browser_context: BrowserContext
     cdp_manager: Optional[CDPBrowserManager]
 
@@ -233,10 +233,10 @@ class DouYinCrawler(AbstractCrawler):
                 await douyin_store.update_douyin_aweme(aweme_item=aweme_item)
                 await self.get_aweme_media(aweme_item=aweme_item)
 
-    async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DOUYINClient:
+    async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DouYinClient:
         """Create douyin client"""
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())  # type: ignore
-        douyin_client = DOUYINClient(
+        douyin_client = DouYinClient(
             proxies=httpx_proxy,
             headers={
                 "User-Agent": await self.context_page.evaluate("() => navigator.userAgent"),
@@ -385,10 +385,9 @@ class DouYinCrawler(AbstractCrawler):
         if not video_download_url:
             return
         videoNum = 0
-        for url in video_download_url:
-            content = await self.xhs_client.get_note_media(url)
-            if content is None:
-                continue
-            extension_file_name = f"{videoNum}.mp4"
-            videoNum += 1
-            await douyin_store.update_dy_aweme_image(aweme_id, content, extension_file_name)
+        content = await self.dy_client.get_aweme_media(video_download_url)
+        if content is None:
+            return
+        extension_file_name = f"{videoNum}.mp4"
+        videoNum += 1
+        await douyin_store.update_dy_aweme_video(aweme_id, content, extension_file_name)

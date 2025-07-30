@@ -26,11 +26,11 @@ from .field import *
 from .help import *
 
 
-class DOUYINClient(AbstractApiClient):
+class DouYinClient(AbstractApiClient):
 
     def __init__(
         self,
-        timeout=30,
+        timeout=30,  # 若开启爬取媒体选项，抖音的短视频需要更久的超时时间
         proxies=None,
         *,
         headers: Dict,
@@ -314,7 +314,7 @@ class DOUYINClient(AbstractApiClient):
 
     async def get_aweme_media(self, url: str) -> Union[bytes, None]:
         async with httpx.AsyncClient(proxies=self.proxies) as client:
-            response = await client.request("GET", url, timeout=self.timeout)
+            response = await client.request("GET", url, timeout=self.timeout, follow_redirects=True)
             if not response.reason_phrase == "OK":
                 utils.logger.error(f"[DouYinCrawler.get_aweme_media] request {url} err, res:{response.text}")
                 return None
