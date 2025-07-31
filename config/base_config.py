@@ -23,7 +23,7 @@ ENABLE_IP_PROXY = False
 IP_PROXY_POOL_COUNT = 2
 
 # 代理IP提供商名称
-IP_PROXY_PROVIDER_NAME = "kuaidaili"
+IP_PROXY_PROVIDER_NAME = "kuaidaili"  # kuaidaili | wandouhttp
 
 # 设置为True不会打开浏览器（无头浏览器）
 # 设置False会打开一个浏览器

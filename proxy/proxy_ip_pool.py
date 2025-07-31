@@ -19,7 +19,10 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 import config
-from proxy.providers import new_jisu_http_proxy, new_kuai_daili_proxy
+from proxy.providers import (
+    new_kuai_daili_proxy,
+    new_wandou_http_proxy,
+)
 from tools import utils
 
 from .base_proxy import ProxyProvider
@@ -28,7 +31,9 @@ from .types import IpInfoModel, ProviderNameEnum
 
 class ProxyIpPool:
 
-    def __init__(self, ip_pool_count: int, enable_validate_ip: bool, ip_provider: ProxyProvider) -> None:
+    def __init__(
+        self, ip_pool_count: int, enable_validate_ip: bool, ip_provider: ProxyProvider
+    ) -> None:
         """
 
         Args:
@@ -56,19 +61,26 @@ class ProxyIpPool:
         :param proxy:
         :return:
         """
-        utils.logger.info(f"[ProxyIpPool._is_valid_proxy] testing {proxy.ip} is it valid ")
+        utils.logger.info(
+            f"[ProxyIpPool._is_valid_proxy] testing {proxy.ip} is it valid "
+        )
         try:
-            httpx_proxy = {
-                f"{proxy.protocol}": f"http://{proxy.user}:{proxy.password}@{proxy.ip}:{proxy.port}",
-            }
-            async with httpx.AsyncClient(proxy=httpx_proxy) as client:
+            # httpx 0.28.1 需要直接传入代理URL字符串，而不是字典
+            if proxy.user and proxy.password:
+                proxy_url = f"http://{proxy.user}:{proxy.password}@{proxy.ip}:{proxy.port}"
+            else:
+                proxy_url = f"http://{proxy.ip}:{proxy.port}"
+            
+            async with httpx.AsyncClient(proxy=proxy_url) as client:
                 response = await client.get(self.valid_ip_url)
             if response.status_code == 200:
                 return True
             else:
                 return False
         except Exception as e:
-            utils.logger.info(f"[ProxyIpPool._is_valid_proxy] testing {proxy.ip} err: {e}")
+            utils.logger.info(
+                f"[ProxyIpPool._is_valid_proxy] testing {proxy.ip} err: {e}"
+            )
             raise e
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
@@ -84,7 +96,9 @@ class ProxyIpPool:
         self.proxy_list.remove(proxy)  # 取出来一个IP就应该移出掉
         if self.enable_validate_ip:
             if not await self._is_valid_proxy(proxy):
-                raise Exception("[ProxyIpPool.get_proxy] current ip invalid and again get it")
+                raise Exception(
+                    "[ProxyIpPool.get_proxy] current ip invalid and again get it"
+                )
         return proxy
 
     async def _reload_proxies(self):
@@ -97,8 +111,8 @@ class ProxyIpPool:
 
 
 IpProxyProvider: Dict[str, ProxyProvider] = {
-    ProviderNameEnum.JISHU_HTTP_PROVIDER.value: new_jisu_http_proxy(),
     ProviderNameEnum.KUAI_DAILI_PROVIDER.value: new_kuai_daili_proxy(),
+    ProviderNameEnum.WANDOU_HTTP_PROVIDER.value: new_wandou_http_proxy(),
 }
 
 
@@ -118,5 +132,5 @@ async def create_ip_pool(ip_pool_count: int, enable_validate_ip: bool) -> ProxyI
     return pool
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
