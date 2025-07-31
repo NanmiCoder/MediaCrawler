@@ -14,7 +14,7 @@ import json
 import urllib.parse
 from typing import Any, Callable, Dict, Union, Optional
 
-import requests
+import httpx
 from playwright.async_api import BrowserContext
 
 from base.base_crawler import AbstractApiClient
@@ -31,13 +31,13 @@ class DouYinClient(AbstractApiClient):
     def __init__(
         self,
         timeout=30,  # 若开启爬取媒体选项，抖音的短视频需要更久的超时时间
-        proxies=None,
+        proxy=None,
         *,
         headers: Dict,
         playwright_page: Optional[Page],
         cookie_dict: Dict,
     ):
-        self.proxies = proxies
+        self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
         self._host = "https://www.douyin.com"
@@ -95,7 +95,8 @@ class DouYinClient(AbstractApiClient):
         params["a_bogus"] = a_bogus
 
     async def request(self, method, url, **kwargs):
-        response = requests.request(method, url, timeout=self.timeout, **kwargs)
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
+            response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:
             if response.text == "" or response.text == "blocked":
                 utils.logger.error(f"request params incrr, response.text: {response.text}")
@@ -311,7 +312,7 @@ class DouYinClient(AbstractApiClient):
         return result
 
     async def get_aweme_media(self, url: str) -> Union[bytes, None]:
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request("GET", url, timeout=self.timeout, follow_redirects=True)
             if not response.reason_phrase == "OK":
                 utils.logger.error(f"[DouYinCrawler.get_aweme_media] request {url} err, res:{response.text}")

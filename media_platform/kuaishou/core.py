@@ -268,7 +268,7 @@ class KuaishouCrawler(AbstractCrawler):
             await self.browser_context.cookies()
         )
         ks_client_obj = KuaiShouClient(
-            proxies=httpx_proxy,
+            proxy=httpx_proxy,
             headers={
                 "User-Agent": self.user_agent,
                 "Cookie": cookie_str,

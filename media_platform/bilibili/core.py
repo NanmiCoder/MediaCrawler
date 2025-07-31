@@ -417,7 +417,7 @@ class BilibiliCrawler(AbstractCrawler):
         utils.logger.info("[BilibiliCrawler.create_bilibili_client] Begin create bilibili API client ...")
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
         bilibili_client_obj = BilibiliClient(
-            proxies=httpx_proxy,
+            proxy=httpx_proxy,
             headers={
                 "User-Agent": self.user_agent,
                 "Cookie": cookie_str,

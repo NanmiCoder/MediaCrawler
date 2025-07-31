@@ -30,13 +30,13 @@ class KuaiShouClient(AbstractApiClient):
     def __init__(
         self,
         timeout=10,
-        proxies=None,
+        proxy=None,
         *,
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
     ):
-        self.proxies = proxies
+        self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
         self._host = "https://www.kuaishou.com/graphql"
@@ -45,7 +45,7 @@ class KuaiShouClient(AbstractApiClient):
         self.graphql = KuaiShouGraphQL()
 
     async def request(self, method, url, **kwargs) -> Any:
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         data: Dict = response.json()
         if data.get("errors"):

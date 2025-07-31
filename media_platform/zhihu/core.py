@@ -360,7 +360,7 @@ class ZhihuCrawler(AbstractCrawler):
             await self.browser_context.cookies()
         )
         zhihu_client_obj = ZhiHuClient(
-            proxies=httpx_proxy,
+            proxy=httpx_proxy,
             headers={
                 "accept": "*/*",
                 "accept-language": "zh-CN,zh;q=0.9",
