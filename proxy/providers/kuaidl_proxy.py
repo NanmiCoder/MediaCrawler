@@ -80,7 +80,7 @@ class KuaiDaiLiProxy(ProxyProvider):
             "f_et": 1,
         }
 
-    async def get_proxies(self, num: int) -> List[IpInfoModel]:
+    async def get_proxy(self, num: int) -> List[IpInfoModel]:
         """
         快代理实现
         Args:

@@ -35,13 +35,13 @@ class BilibiliClient(AbstractApiClient):
     def __init__(
         self,
         timeout=60,  # 若开启爬取媒体选项，b 站的长视频需要更久的超时时间
-        proxies=None,
+        proxy=None,
         *,
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
     ):
-        self.proxies = proxies
+        self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
         self._host = "https://api.bilibili.com"
@@ -49,7 +49,7 @@ class BilibiliClient(AbstractApiClient):
         self.cookie_dict = cookie_dict
 
     async def request(self, method, url, **kwargs) -> Any:
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:
             data: Dict = response.json()
@@ -201,7 +201,7 @@ class BilibiliClient(AbstractApiClient):
         return await self.get(uri, params, enable_params_sign=True)
 
     async def get_video_media(self, url: str) -> Union[bytes, None]:
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
             if not response.reason_phrase == "OK":
                 utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, res:{response.text}")

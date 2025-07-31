@@ -237,7 +237,7 @@ class DouYinCrawler(AbstractCrawler):
         """Create douyin client"""
         cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())  # type: ignore
         douyin_client = DouYinClient(
-            proxies=httpx_proxy,
+            proxy=httpx_proxy,
             headers={
                 "User-Agent": await self.context_page.evaluate("() => navigator.userAgent"),
                 "Cookie": cookie_str,
@@ -364,7 +364,7 @@ class DouYinCrawler(AbstractCrawler):
             content = await self.dy_client.get_aweme_media(url)
             if content is None:
                 continue
-            extension_file_name = f"{picNum}.jpeg"
+            extension_file_name = f"{picNum:>03d}.jpeg"
             picNum += 1
             await douyin_store.update_dy_aweme_image(aweme_id, content, extension_file_name)
 
@@ -384,10 +384,8 @@ class DouYinCrawler(AbstractCrawler):
 
         if not video_download_url:
             return
-        videoNum = 0
         content = await self.dy_client.get_aweme_media(video_download_url)
         if content is None:
             return
-        extension_file_name = f"{videoNum}.mp4"
-        videoNum += 1
+        extension_file_name = f"video.mp4"
         await douyin_store.update_dy_aweme_video(aweme_id, content, extension_file_name)

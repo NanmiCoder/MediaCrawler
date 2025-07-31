@@ -1,13 +1,12 @@
-# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
-# 1. 不得用于任何商业用途。  
-# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
-# 3. 不得进行大规模爬取或对平台造成运营干扰。  
-# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
+# 1. 不得用于任何商业用途。
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
+# 3. 不得进行大规模爬取或对平台造成运营干扰。
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
 # 5. 不得用于任何非法或不当的用途。
-#   
-# 详细许可条款请参阅项目根目录下的LICENSE文件。  
-# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
-
+#
+# 详细许可条款请参阅项目根目录下的LICENSE文件。
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 import asyncio
 import json
@@ -29,11 +28,12 @@ from .help import TieBaExtractor
 
 
 class BaiduTieBaClient(AbstractApiClient):
+
     def __init__(
-            self,
-            timeout=10,
-            ip_pool=None,
-            default_ip_proxy=None,
+        self,
+        timeout=10,
+        ip_pool=None,
+        default_ip_proxy=None,
     ):
         self.ip_pool: Optional[ProxyIpPool] = ip_pool
         self.timeout = timeout
@@ -46,7 +46,7 @@ class BaiduTieBaClient(AbstractApiClient):
         self.default_ip_proxy = default_ip_proxy
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-    async def request(self, method, url, return_ori_content=False, proxies=None, **kwargs) -> Union[str, Any]:
+    async def request(self, method, url, return_ori_content=False, proxy=None, **kwargs) -> Union[str, Any]:
         """
         封装httpx的公共请求方法，对请求响应做一些处理
         Args:
@@ -59,12 +59,9 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
-        actual_proxies = proxies if proxies else self.default_ip_proxy
-        async with httpx.AsyncClient(proxies=actual_proxies) as client:
-            response = await client.request(
-                method, url, timeout=self.timeout,
-                headers=self.headers, **kwargs
-            )
+        actual_proxy = proxy if proxy else self.default_ip_proxy
+        async with httpx.AsyncClient(proxy=actual_proxy) as client:
+            response = await client.request(method, url, timeout=self.timeout, headers=self.headers, **kwargs)
 
         if response.status_code != 200:
             utils.logger.error(f"Request failed, method: {method}, url: {url}, status code: {response.status_code}")
@@ -96,19 +93,14 @@ class BaiduTieBaClient(AbstractApiClient):
             final_uri = (f"{uri}?"
                          f"{urlencode(params)}")
         try:
-            res = await self.request(method="GET", url=f"{self._host}{final_uri}",
-                                     return_ori_content=return_ori_content,
-                                     **kwargs)
+            res = await self.request(method="GET", url=f"{self._host}{final_uri}", return_ori_content=return_ori_content, **kwargs)
             return res
         except RetryError as e:
             if self.ip_pool:
                 proxie_model = await self.ip_pool.get_proxy()
-                _, proxies = utils.format_proxy_info(proxie_model)
-                res = await self.request(method="GET", url=f"{self._host}{final_uri}",
-                                         return_ori_content=return_ori_content,
-                                         proxies=proxies,
-                                         **kwargs)
-                self.default_ip_proxy = proxies
+                _, proxy = utils.format_proxy_info(proxie_model)
+                res = await self.request(method="GET", url=f"{self._host}{final_uri}", return_ori_content=return_ori_content, proxy=proxy, **kwargs)
+                self.default_ip_proxy = proxy
                 return res
 
             utils.logger.error(f"[BaiduTieBaClient.get] 达到了最大重试次数，IP已经被Block，请尝试更换新的IP代理: {e}")
@@ -125,8 +117,7 @@ class BaiduTieBaClient(AbstractApiClient):
 
         """
         json_str = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
-        return await self.request(method="POST", url=f"{self._host}{uri}",
-                                  data=json_str, **kwargs)
+        return await self.request(method="POST", url=f"{self._host}{uri}", data=json_str, **kwargs)
 
     async def pong(self) -> bool:
         """
@@ -161,11 +152,12 @@ class BaiduTieBaClient(AbstractApiClient):
         pass
 
     async def get_notes_by_keyword(
-            self, keyword: str,
-            page: int = 1,
-            page_size: int = 10,
-            sort: SearchSortType = SearchSortType.TIME_DESC,
-            note_type: SearchNoteType = SearchNoteType.FIXED_THREAD,
+        self,
+        keyword: str,
+        page: int = 1,
+        page_size: int = 10,
+        sort: SearchSortType = SearchSortType.TIME_DESC,
+        note_type: SearchNoteType = SearchNoteType.FIXED_THREAD,
     ) -> List[TiebaNote]:
         """
         根据关键词搜索贴吧帖子
@@ -185,7 +177,7 @@ class BaiduTieBaClient(AbstractApiClient):
             "rn": page_size,
             "pn": page,
             "sm": sort.value,
-            "only_thread": note_type.value
+            "only_thread": note_type.value,
         }
         page_content = await self.get(uri, params=params, return_ori_content=True)
         return self._page_extractor.extract_search_note_list(page_content)
@@ -203,10 +195,13 @@ class BaiduTieBaClient(AbstractApiClient):
         page_content = await self.get(uri, return_ori_content=True)
         return self._page_extractor.extract_note_detail(page_content)
 
-    async def get_note_all_comments(self, note_detail: TiebaNote, crawl_interval: float = 1.0,
-                                    callback: Optional[Callable] = None,
-                                    max_count: int = 10,
-                                    ) -> List[TiebaComment]:
+    async def get_note_all_comments(
+        self,
+        note_detail: TiebaNote,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        max_count: int = 10,
+    ) -> List[TiebaComment]:
         """
         获取指定帖子下的所有一级评论，该方法会一直查找一个帖子下的所有评论信息
         Args:
@@ -222,11 +217,10 @@ class BaiduTieBaClient(AbstractApiClient):
         current_page = 1
         while note_detail.total_replay_page >= current_page and len(result) < max_count:
             params = {
-                "pn": current_page
+                "pn": current_page,
             }
             page_content = await self.get(uri, params=params, return_ori_content=True)
-            comments = self._page_extractor.extract_tieba_note_parment_comments(page_content,
-                                                                                note_id=note_detail.note_id)
+            comments = self._page_extractor.extract_tieba_note_parment_comments(page_content, note_id=note_detail.note_id)
             if not comments:
                 break
             if len(result) + len(comments) > max_count:
@@ -240,8 +234,12 @@ class BaiduTieBaClient(AbstractApiClient):
             current_page += 1
         return result
 
-    async def get_comments_all_sub_comments(self, comments: List[TiebaComment], crawl_interval: float = 1.0,
-                                            callback: Optional[Callable] = None) -> List[TiebaComment]:
+    async def get_comments_all_sub_comments(
+        self,
+        comments: List[TiebaComment],
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+    ) -> List[TiebaComment]:
         """
         获取指定评论下的所有子评论
         Args:
@@ -275,8 +273,7 @@ class BaiduTieBaClient(AbstractApiClient):
                     "pn": current_page  # 页码
                 }
                 page_content = await self.get(uri, params=params, return_ori_content=True)
-                sub_comments = self._page_extractor.extract_tieba_note_sub_comments(page_content,
-                                                                                    parent_comment=parment_comment)
+                sub_comments = self._page_extractor.extract_tieba_note_sub_comments(page_content, parent_comment=parment_comment)
 
                 if not sub_comments:
                     break
@@ -328,17 +325,18 @@ class BaiduTieBaClient(AbstractApiClient):
             "un": user_name,
             "pn": page_number,
             "id": "utf-8",
-            "_": utils.get_current_timestamp()
+            "_": utils.get_current_timestamp(),
         }
         return await self.get(uri, params=params)
 
-    async def get_all_notes_by_creator_user_name(self,
-                                                 user_name: str, crawl_interval: float = 1.0,
-                                                 callback: Optional[Callable] = None,
-                                                 max_note_count: int = 0,
-                                                 creator_page_html_content: str = None,
-                                                 ) -> List[TiebaNote]:
-
+    async def get_all_notes_by_creator_user_name(
+        self,
+        user_name: str,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        max_note_count: int = 0,
+        creator_page_html_content: str = None,
+    ) -> List[TiebaNote]:
         """
         根据创作者用户名获取创作者所有帖子
         Args:
@@ -354,17 +352,9 @@ class BaiduTieBaClient(AbstractApiClient):
         # 百度贴吧比较特殊一些，前10个帖子是直接展示在主页上的，要单独处理，通过API获取不到
         result: List[TiebaNote] = []
         if creator_page_html_content:
-            thread_id_list = (
-                self._page_extractor.extract_tieba_thread_id_list_from_creator_page(
-                    creator_page_html_content
-                )
-            )
-            utils.logger.info(
-                f"[BaiduTieBaClient.get_all_notes_by_creator] got user_name:{user_name} thread_id_list len : {len(thread_id_list)}"
-            )
-            note_detail_task = [
-                self.get_note_by_id(thread_id) for thread_id in thread_id_list
-            ]
+            thread_id_list = (self._page_extractor.extract_tieba_thread_id_list_from_creator_page(creator_page_html_content))
+            utils.logger.info(f"[BaiduTieBaClient.get_all_notes_by_creator] got user_name:{user_name} thread_id_list len : {len(thread_id_list)}")
+            note_detail_task = [self.get_note_by_id(thread_id) for thread_id in thread_id_list]
             notes = await asyncio.gather(*note_detail_task)
             if callback:
                 await callback(notes)
@@ -377,14 +367,12 @@ class BaiduTieBaClient(AbstractApiClient):
         while notes_has_more == 1 and (max_note_count == 0 or total_get_count < max_note_count):
             notes_res = await self.get_notes_by_creator(user_name, page_number)
             if not notes_res or notes_res.get("no") != 0:
-                utils.logger.error(
-                    f"[WeiboClient.get_notes_by_creator] got user_name:{user_name} notes failed, notes_res: {notes_res}")
+                utils.logger.error(f"[WeiboClient.get_notes_by_creator] got user_name:{user_name} notes failed, notes_res: {notes_res}")
                 break
             notes_data = notes_res.get("data")
             notes_has_more = notes_data.get("has_more")
             notes = notes_data["thread_list"]
-            utils.logger.info(
-                f"[WeiboClient.get_all_notes_by_creator] got user_name:{user_name} notes len : {len(notes)}")
+            utils.logger.info(f"[WeiboClient.get_all_notes_by_creator] got user_name:{user_name} notes len : {len(notes)}")
 
             note_detail_task = [self.get_note_by_id(note['thread_id']) for note in notes]
             notes = await asyncio.gather(*note_detail_task)

@@ -36,13 +36,13 @@ class WeiboClient:
     def __init__(
         self,
         timeout=30,  # 若开启爬取媒体选项，weibo 的图片需要更久的超时时间
-        proxies=None,
+        proxy=None,
         *,
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
     ):
-        self.proxies = proxies
+        self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
         self._host = "https://m.weibo.cn"
@@ -52,7 +52,7 @@ class WeiboClient:
 
     async def request(self, method, url, **kwargs) -> Union[Response, Dict]:
         enable_return_response = kwargs.pop("return_response", False)
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
         if enable_return_response:
@@ -217,7 +217,7 @@ class WeiboClient:
         :return:
         """
         url = f"{self._host}/detail/{note_id}"
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
             if response.status_code != 200:
                 raise DataFetchError(f"get weibo detail err: {response.text}")
@@ -247,7 +247,7 @@ class WeiboClient:
         # 由于微博图片是通过 i1.wp.com 来访问的，所以需要拼接一下
         final_uri = (f"{self._image_agent_host}"
                      f"{image_url}")
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request("GET", final_uri, timeout=self.timeout)
             if not response.reason_phrase == "OK":
                 utils.logger.error(f"[WeiboClient.get_note_image] request {final_uri} err, res:{response.text}")

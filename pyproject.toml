@@ -10,7 +10,7 @@ dependencies = [
     "aiomysql==0.2.0",
     "aiosqlite>=0.21.0",
     "fastapi==0.110.2",
-    "httpx==0.24.0",
+    "httpx==0.28.1",
     "jieba==0.42.1",
     "matplotlib==3.9.0",
     "opencv-python>=4.11.0.86",

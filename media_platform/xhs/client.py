@@ -33,13 +33,13 @@ class XiaoHongShuClient(AbstractApiClient):
     def __init__(
         self,
         timeout=30,  # 若开启爬取媒体选项，xhs 的长视频需要更久的超时时间
-        proxies=None,
+        proxy=None,
         *,
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
     ):
-        self.proxies = proxies
+        self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
         self._host = "https://edith.xiaohongshu.com"
@@ -93,7 +93,7 @@ class XiaoHongShuClient(AbstractApiClient):
         """
         # return response.text
         return_response = kwargs.pop("return_response", False)
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
         if response.status_code == 471 or response.status_code == 461:
@@ -151,7 +151,7 @@ class XiaoHongShuClient(AbstractApiClient):
         )
 
     async def get_note_media(self, url: str) -> Union[bytes, None]:
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request("GET", url, timeout=self.timeout)
             if not response.reason_phrase == "OK":
                 utils.logger.error(f"[XiaoHongShuClient.get_note_media] request {url} err, res:{response.text}")

@@ -1,13 +1,12 @@
-# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：  
-# 1. 不得用于任何商业用途。  
-# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。  
-# 3. 不得进行大规模爬取或对平台造成运营干扰。  
-# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。   
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
+# 1. 不得用于任何商业用途。
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
+# 3. 不得进行大规模爬取或对平台造成运营干扰。
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
 # 5. 不得用于任何非法或不当的用途。
-#   
-# 详细许可条款请参阅项目根目录下的LICENSE文件。  
-# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
-
+#
+# 详细许可条款请参阅项目根目录下的LICENSE文件。
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
@@ -28,6 +27,7 @@ from .types import IpInfoModel, ProviderNameEnum
 
 
 class ProxyIpPool:
+
     def __init__(self, ip_pool_count: int, enable_validate_ip: bool, ip_provider: ProxyProvider) -> None:
         """
 
@@ -48,7 +48,7 @@ class ProxyIpPool:
         Returns:
 
         """
-        self.proxy_list = await self.ip_provider.get_proxies(self.ip_pool_count)
+        self.proxy_list = await self.ip_provider.get_proxy(self.ip_pool_count)
 
     async def _is_valid_proxy(self, proxy: IpInfoModel) -> bool:
         """
@@ -59,9 +59,9 @@ class ProxyIpPool:
         utils.logger.info(f"[ProxyIpPool._is_valid_proxy] testing {proxy.ip} is it valid ")
         try:
             httpx_proxy = {
-                f"{proxy.protocol}": f"http://{proxy.user}:{proxy.password}@{proxy.ip}:{proxy.port}"
+                f"{proxy.protocol}": f"http://{proxy.user}:{proxy.password}@{proxy.ip}:{proxy.port}",
             }
-            async with httpx.AsyncClient(proxies=httpx_proxy) as client:
+            async with httpx.AsyncClient(proxy=httpx_proxy) as client:
                 response = await client.get(self.valid_ip_url)
             if response.status_code == 200:
                 return True
@@ -81,7 +81,7 @@ class ProxyIpPool:
             await self._reload_proxies()
 
         proxy = random.choice(self.proxy_list)
-        self.proxy_list.remove(proxy) # 取出来一个IP就应该移出掉
+        self.proxy_list.remove(proxy)  # 取出来一个IP就应该移出掉
         if self.enable_validate_ip:
             if not await self._is_valid_proxy(proxy):
                 raise Exception("[ProxyIpPool.get_proxy] current ip invalid and again get it")
@@ -98,7 +98,7 @@ class ProxyIpPool:
 
 IpProxyProvider: Dict[str, ProxyProvider] = {
     ProviderNameEnum.JISHU_HTTP_PROVIDER.value: new_jisu_http_proxy(),
-    ProviderNameEnum.KUAI_DAILI_PROVIDER.value: new_kuai_daili_proxy()
+    ProviderNameEnum.KUAI_DAILI_PROVIDER.value: new_kuai_daili_proxy(),
 }
 
 
@@ -109,10 +109,11 @@ async def create_ip_pool(ip_pool_count: int, enable_validate_ip: bool) -> ProxyI
     :param enable_validate_ip: 是否开启验证IP代理
     :return:
     """
-    pool = ProxyIpPool(ip_pool_count=ip_pool_count,
-                       enable_validate_ip=enable_validate_ip,
-                       ip_provider=IpProxyProvider.get(config.IP_PROXY_PROVIDER_NAME)
-                       )
+    pool = ProxyIpPool(
+        ip_pool_count=ip_pool_count,
+        enable_validate_ip=enable_validate_ip,
+        ip_provider=IpProxyProvider.get(config.IP_PROXY_PROVIDER_NAME),
+    )
     await pool.load_proxies()
     return pool
 
