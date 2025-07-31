@@ -14,7 +14,7 @@ import json
 import urllib.parse
 from typing import Any, Callable, Dict, Union, Optional
 
-import httpx
+import requests
 from playwright.async_api import BrowserContext
 
 from base.base_crawler import AbstractApiClient
@@ -95,9 +95,7 @@ class DouYinClient(AbstractApiClient):
         params["a_bogus"] = a_bogus
 
     async def request(self, method, url, **kwargs):
-        response = None
-        async with httpx.AsyncClient(proxies=self.proxies) as client:
-            response = await client.request(method, url, timeout=self.timeout, **kwargs)
+        response = requests.request(method, url, timeout=self.timeout, **kwargs)
         try:
             if response.text == "" or response.text == "blocked":
                 utils.logger.error(f"request params incrr, response.text: {response.text}")
