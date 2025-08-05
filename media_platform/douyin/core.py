@@ -362,6 +362,7 @@ class DouYinCrawler(AbstractCrawler):
             if not url:
                 continue
             content = await self.dy_client.get_aweme_media(url)
+            await asyncio.sleep(random.random())
             if content is None:
                 continue
             extension_file_name = f"{picNum:>03d}.jpeg"
@@ -385,6 +386,7 @@ class DouYinCrawler(AbstractCrawler):
         if not video_download_url:
             return
         content = await self.dy_client.get_aweme_media(video_download_url)
+        await asyncio.sleep(random.random())
         if content is None:
             return
         extension_file_name = f"video.mp4"

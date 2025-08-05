@@ -544,6 +544,7 @@ class BilibiliCrawler(AbstractCrawler):
             return
 
         content = await self.bili_client.get_video_media(video_url)
+        await asyncio.sleep(random.random())
         if content is None:
             return
         extension_file_name = f"video.mp4"
