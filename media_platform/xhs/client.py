@@ -32,7 +32,7 @@ class XiaoHongShuClient(AbstractApiClient):
 
     def __init__(
         self,
-        timeout=30,  # 若开启爬取媒体选项，xhs 的长视频需要更久的超时时间
+        timeout=60,  # 若开启爬取媒体选项，xhs 的长视频需要更久的超时时间
         proxy=None,
         *,
         headers: Dict[str, str],
@@ -152,12 +152,17 @@ class XiaoHongShuClient(AbstractApiClient):
 
     async def get_note_media(self, url: str) -> Union[bytes, None]:
         async with httpx.AsyncClient(proxy=self.proxy) as client:
-            response = await client.request("GET", url, timeout=self.timeout)
-            if not response.reason_phrase == "OK":
-                utils.logger.error(f"[XiaoHongShuClient.get_note_media] request {url} err, res:{response.text}")
+            try:
+                response = await client.request("GET", url, timeout=self.timeout)
+                response.raise_for_status()
+                if not response.reason_phrase == "OK":
+                    utils.logger.error(f"[XiaoHongShuClient.get_note_media] request {url} err, res:{response.text}")
+                    return None
+                else:
+                    return response.content
+            except httpx.HTTPStatusError as exc:  # some wrong when call httpx.request method, such as connection error, client error or server error
+                utils.logger.error(f"[DouYinClient.get_aweme_media] {exc}")
                 return None
-            else:
-                return response.content
 
     async def pong(self) -> bool:
         """

@@ -202,12 +202,17 @@ class BilibiliClient(AbstractApiClient):
 
     async def get_video_media(self, url: str) -> Union[bytes, None]:
         async with httpx.AsyncClient(proxy=self.proxy) as client:
-            response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
-            if not response.reason_phrase == "OK":
-                utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, res:{response.text}")
+            try:
+                response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
+                response.raise_for_status()
+                if not response.reason_phrase == "OK":
+                    utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, res:{response.text}")
+                    return None
+                else:
+                    return response.content
+            except httpx.HTTPStatusError as exc:  # some wrong when call httpx.request method, such as connection error, client error or server error
+                utils.logger.error(f"[BilibiliClient.get_video_media] {exc}")
                 return None
-            else:
-                return response.content
 
     async def get_video_comments(
         self,
