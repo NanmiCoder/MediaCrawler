@@ -210,8 +210,8 @@ class BilibiliClient(AbstractApiClient):
                     return None
                 else:
                     return response.content
-            except httpx.HTTPStatusError as exc:  # some wrong when call httpx.request method, such as connection error, client error or server error
-                utils.logger.error(f"[BilibiliClient.get_video_media] {exc}")
+            except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
+                utils.logger.error(f"[BilibiliClient.get_video_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")  # 保留原始异常类型名称，以便开发者调试
                 return None
 
     async def get_video_comments(
