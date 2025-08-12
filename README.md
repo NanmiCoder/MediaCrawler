@@ -262,15 +262,6 @@ Swiftproxy - 90M+ 全球高质量纯净住宅IP，注册可领免费 500MB 测�
 <br>
 <br>
 
-<a href="https://www.tkyds.com/?=MediaCrawler">
-<img src="docs/static/images/img_6.png">
-<br>
-TK云大师,专业的TikTok矩阵系统,AI赋能自动化,单人轻松管理上万账号！
-</a>
-
-<br>
-<br>
-
 <a href="https://www.thordata.com/?ls=github&lk=Crawler">
 <img src="docs/static/images/img_7.png">
 <br>
@@ -286,10 +277,7 @@ Thordata是全球代理IP解决方案提供商，支持大规模采集公共网�
 豌豆HTTP自营千万级IP资源池，IP纯净度≥99.8%，每日保持IP高频更新，快速响应，稳定连接，满足多种业务场景，支持按需定制，注册免费提取10000ip。
 </a>
 
-<br>
-<br>
 
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">**Sider** - 全网最火的 ChatGPT 插件，体验拉满！</a>
 
 ### 🤝 成为赞助者
 

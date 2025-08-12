@@ -255,10 +255,6 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 > Código de descuento exclusivo: **GHB5** ¡Obtenga 10% de descuento instantáneamente!
 </a>
 
-<br><br>
-
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">**Sider** - ¡El plugin de ChatGPT más popular en la web, experiencia increíble!</a>
-
 ### 🤝 Conviértase en Patrocinador
 
 ¡Conviértase en patrocinador y muestre su producto aquí, obteniendo exposición masiva diariamente!

@@ -255,9 +255,6 @@ If this project helps you, please give a ⭐ Star to support and let more people
 > Exclusive discount code: **GHB5** Get 10% off instantly!
 </a>
 
-<br><br>
-
-<a href="https://sider.ai/ad-land-redirect?source=github&p1=mi&p2=kk">**Sider** - The hottest ChatGPT plugin on the web, amazing experience!</a>
 
 ### 🤝 Become a Sponsor
 
