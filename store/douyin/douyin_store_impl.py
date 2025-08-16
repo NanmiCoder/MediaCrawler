@@ -217,7 +217,7 @@ class DouyinJsonStoreImplement(AbstractStore):
 
             save_data.append(save_item)
             async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
-                await file.write(json.dumps(save_data, ensure_ascii=False))
+                await file.write(json.dumps(save_data, ensure_ascii=False, indent=4))
 
             if config.ENABLE_GET_COMMENTS and config.ENABLE_GET_WORDCLOUD:
                 try:
