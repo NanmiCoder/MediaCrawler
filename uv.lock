@@ -549,15 +549,6 @@ wheels = [
 ]
 
 [[package]]
-name = "humps"
-version = "0.2.2"
-source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
-sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/fd/e0/d7a257bfa65809cc80bf956825e57094cba2f5b70c92ef761790dd4dcffa/humps-0.2.2.tar.gz", hash = "sha256:777f7a17f6b20aa9cc078d63b56ebd66532c6b2c88b370f1d596d5205410f67c", size = 3289 }
-wheels = [
-    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/02/07/3dbbe1c94649793c39dbb24445a667d0530d25e35033217b8c15f70c1646/humps-0.2.2-py2.py3-none-any.whl", hash = "sha256:401de60fd73673b697086ba7c865966751c57b11cce57a37c9eabb3e75938417", size = 5347 },
-]
-
-[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -952,7 +943,6 @@ dependencies = [
     { name = "aiosqlite" },
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "humps" },
     { name = "jieba" },
     { name = "matplotlib" },
     { name = "opencv-python" },
@@ -962,6 +952,7 @@ dependencies = [
     { name = "playwright" },
     { name = "pydantic" },
     { name = "pyexecjs" },
+    { name = "pyhumps" },
     { name = "python-dotenv" },
     { name = "redis" },
     { name = "requests" },
@@ -977,7 +968,6 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.21.0" },
     { name = "fastapi", specifier = "==0.110.2" },
     { name = "httpx", specifier = "==0.28.1" },
-    { name = "humps", specifier = ">=0.2.2" },
     { name = "jieba", specifier = "==0.42.1" },
     { name = "matplotlib", specifier = "==3.9.0" },
     { name = "opencv-python", specifier = ">=4.11.0.86" },
@@ -987,6 +977,7 @@ requires-dist = [
     { name = "playwright", specifier = "==1.45.0" },
     { name = "pydantic", specifier = "==2.5.2" },
     { name = "pyexecjs", specifier = "==1.5.1" },
+    { name = "pyhumps", specifier = ">=3.8.0" },
     { name = "python-dotenv", specifier = "==1.0.1" },
     { name = "redis", specifier = "~=4.6.0" },
     { name = "requests", specifier = "==2.32.3" },
@@ -1464,6 +1455,15 @@ dependencies = [
     { name = "six" },
 ]
 sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/ba/8e/aedef81641c8dca6fd0fb7294de5bed9c45f3397d67fddf755c1042c2642/PyExecJS-1.5.1.tar.gz", hash = "sha256:34cc1d070976918183ff7bdc0ad71f8157a891c92708c00c5fbbff7a769f505c", size = 13344 }
+
+[[package]]
+name = "pyhumps"
+version = "3.8.0"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/c4/83/fa6f8fb7accb21f39e8f2b6a18f76f6d90626bdb0a5e5448e5cc9b8ab014/pyhumps-3.8.0.tar.gz", hash = "sha256:498026258f7ee1a8e447c2e28526c0bea9407f9a59c03260aee4bd6c04d681a3", size = 9018 }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/9e/11/a1938340ecb32d71e47ad4914843775011e6e9da59ba1229f181fef3119e/pyhumps-3.8.0-py3-none-any.whl", hash = "sha256:060e1954d9069f428232a1adda165db0b9d8dfdce1d265d36df7fbff540acfd6", size = 6095 },
+]
 
 [[package]]
 name = "pymysql"
