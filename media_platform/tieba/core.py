@@ -11,7 +11,7 @@
 
 import asyncio
 import os
-import random
+# import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
@@ -141,6 +141,11 @@ class TieBaCrawler(AbstractCrawler):
                     await self.get_specified_notes(
                         note_id_list=[note_detail.note_id for note_detail in notes_list]
                     )
+                    
+                    # Sleep after page navigation
+                    await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                    utils.logger.info(f"[TieBaCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page}")
+                    
                     page += 1
                 except Exception as ex:
                     utils.logger.error(
@@ -178,6 +183,11 @@ class TieBaCrawler(AbstractCrawler):
                     f"[BaiduTieBaCrawler.get_specified_tieba_notes] tieba name: {tieba_name} note list len: {len(note_list)}"
                 )
                 await self.get_specified_notes([note.note_id for note in note_list])
+                
+                # Sleep after processing notes
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                utils.logger.info(f"[TieBaCrawler.get_specified_tieba_notes] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after processing notes from page {page_number}")
+                
                 page_number += tieba_limit_count
 
     async def get_specified_notes(
@@ -222,6 +232,11 @@ class TieBaCrawler(AbstractCrawler):
                     f"[BaiduTieBaCrawler.get_note_detail] Begin get note detail, note_id: {note_id}"
                 )
                 note_detail: TiebaNote = await self.tieba_client.get_note_by_id(note_id)
+                
+                # Sleep after fetching note details
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                utils.logger.info(f"[TieBaCrawler.get_note_detail_async_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching note details {note_id}")
+                
                 if not note_detail:
                     utils.logger.error(
                         f"[BaiduTieBaCrawler.get_note_detail] Get note detail error, note_id: {note_id}"
@@ -277,9 +292,14 @@ class TieBaCrawler(AbstractCrawler):
             utils.logger.info(
                 f"[BaiduTieBaCrawler.get_comments] Begin get note id comments {note_detail.note_id}"
             )
+            
+            # Sleep before fetching comments
+            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+            utils.logger.info(f"[TieBaCrawler.get_comments_async_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds before fetching comments for note {note_detail.note_id}")
+            
             await self.tieba_client.get_note_all_comments(
                 note_detail=note_detail,
-                crawl_interval=random.random(),
+                crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
                 callback=tieba_store.batch_update_tieba_note_comments,
                 max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
             )

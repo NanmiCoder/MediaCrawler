@@ -15,7 +15,7 @@
 
 import asyncio
 import os
-import random
+# import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
 
@@ -160,6 +160,11 @@ class WeiboCrawler(AbstractCrawler):
                             await self.get_note_images(mblog)
 
                 page += 1
+                
+                # Sleep after page navigation
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                utils.logger.info(f"[WeiboCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
+                
                 await self.batch_get_notes_comments(note_id_list)
 
     async def get_specified_notes(self):
@@ -185,6 +190,11 @@ class WeiboCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 result = await self.wb_client.get_note_info_by_id(note_id)
+                
+                # Sleep after fetching note details
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                utils.logger.info(f"[WeiboCrawler.get_note_info_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching note details {note_id}")
+                
                 return result
             except DataFetchError as ex:
                 utils.logger.error(f"[WeiboCrawler.get_note_info_task] Get note detail error: {ex}")
@@ -221,9 +231,14 @@ class WeiboCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 utils.logger.info(f"[WeiboCrawler.get_note_comments] begin get note_id: {note_id} comments ...")
+                
+                # Sleep before fetching comments
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                utils.logger.info(f"[WeiboCrawler.get_note_comments] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds before fetching comments for note {note_id}")
+                
                 await self.wb_client.get_note_all_comments(
                     note_id=note_id,
-                    crawl_interval=random.randint(1, 3),  # 微博对API的限流比较严重，所以延时提高一些
+                    crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,  # Use fixed interval instead of random
                     callback=weibo_store.batch_update_weibo_note_comments,
                     max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
                 )
@@ -250,7 +265,8 @@ class WeiboCrawler(AbstractCrawler):
             if not url:
                 continue
             content = await self.wb_client.get_note_image(url)
-            await asyncio.sleep(random.random())
+            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+            utils.logger.info(f"[WeiboCrawler.get_note_images] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching image")
             if content != None:
                 extension_file_name = url.split(".")[-1]
                 await weibo_store.update_weibo_note_image(pic["pid"], content, extension_file_name)

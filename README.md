@@ -317,14 +317,3 @@ Thordata是全球代理IP解决方案提供商，支持大规模采集公共网�
 ## 6. 最终解释权
 关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。
 </div>
-
-
-## 🙏 致谢
-
-### JetBrains 开源许可证支持
-
-感谢 JetBrains 为本项目提供免费的开源许可证支持！
-
-<a href="https://www.jetbrains.com/?from=MediaCrawler">
-    <img src="https://www.jetbrains.com/company/brand/img/jetbrains_logo.png" width="100" alt="JetBrains" />
-</a>
