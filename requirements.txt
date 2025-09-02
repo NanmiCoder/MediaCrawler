@@ -18,3 +18,4 @@ parsel==1.9.1
 pyexecjs==1.5.1
 pandas==2.2.3
 aiosqlite==0.21.0
+humps==0.2.2

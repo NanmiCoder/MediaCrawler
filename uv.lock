@@ -549,6 +549,15 @@ wheels = [
 ]
 
 [[package]]
+name = "humps"
+version = "0.2.2"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/fd/e0/d7a257bfa65809cc80bf956825e57094cba2f5b70c92ef761790dd4dcffa/humps-0.2.2.tar.gz", hash = "sha256:777f7a17f6b20aa9cc078d63b56ebd66532c6b2c88b370f1d596d5205410f67c", size = 3289 }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/02/07/3dbbe1c94649793c39dbb24445a667d0530d25e35033217b8c15f70c1646/humps-0.2.2-py2.py3-none-any.whl", hash = "sha256:401de60fd73673b697086ba7c865966751c57b11cce57a37c9eabb3e75938417", size = 5347 },
+]
+
+[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -943,6 +952,7 @@ dependencies = [
     { name = "aiosqlite" },
     { name = "fastapi" },
     { name = "httpx" },
+    { name = "humps" },
     { name = "jieba" },
     { name = "matplotlib" },
     { name = "opencv-python" },
@@ -967,6 +977,7 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.21.0" },
     { name = "fastapi", specifier = "==0.110.2" },
     { name = "httpx", specifier = "==0.28.1" },
+    { name = "humps", specifier = ">=0.2.2" },
     { name = "jieba", specifier = "==0.42.1" },
     { name = "matplotlib", specifier = "==3.9.0" },
     { name = "opencv-python", specifier = ">=4.11.0.86" },
