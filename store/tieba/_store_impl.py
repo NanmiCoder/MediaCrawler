@@ -30,6 +30,7 @@ from database.models import TiebaNote, TiebaComment, TiebaCreator
 from tools import utils, words
 from database.db_session import get_session
 from var import crawler_type_var
+from tools.async_file_writer import AsyncFileWriter
 
 
 def calculate_number_of_files(file_store_path: str) -> int:

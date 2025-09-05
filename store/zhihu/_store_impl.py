@@ -30,7 +30,7 @@ from database.db_session import get_session
 from database.models import ZhihuContent, ZhihuComment, ZhihuCreator
 from tools import utils, words
 from var import crawler_type_var
-
+from tools.async_file_writer import AsyncFileWriter
 
 def calculate_number_of_files(file_store_path: str) -> int:
     """计算数据保存文件的前部分排序数字，支持每次运行代码不写到同一个文件中

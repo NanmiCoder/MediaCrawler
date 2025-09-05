@@ -32,14 +32,13 @@ class XhsCsvStoreImplement(AbstractStore):
         """
         await self.writer.write_to_csv(item_type="contents", item=content_item)
 
-    async def store_comments(self, comments: List[Dict]):
+    async def store_comment(self, comment_item: Dict):
         """
-        store comments data to csv file
-        :param comments:
+        store comment data to csv file
+        :param comment_item:
         :return:
         """
-        for comment in comments:
-            await self.writer.write_to_csv(item_type="comments", item=comment)
+        await self.writer.write_to_csv(item_type="comments", item=comment_item)
 
 
     async def store_creator(self, creator_item: Dict):
@@ -62,14 +61,13 @@ class XhsJsonStoreImplement(AbstractStore):
         """
         await self.writer.write_single_item_to_json(item_type="contents", item=content_item)
 
-    async def store_comments(self, comments: List[Dict]):
+    async def store_comment(self, comment_item: Dict):
         """
-        store comments data to json file
-        :param comments:
+        store comment data to json file
+        :param comment_item:
         :return:
         """
-        for comment in comments:
-            await self.writer.write_single_item_to_json(item_type="comments", item=comment)
+        await self.writer.write_single_item_to_json(item_type="comments", item=comment_item)
 
     async def store_creator(self, creator_item: Dict):
         pass
