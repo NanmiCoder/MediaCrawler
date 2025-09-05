@@ -174,3 +174,5 @@ docs/.vitepress/cache
 # other gitignore
 .venv
 .refer
+
+agent_zone

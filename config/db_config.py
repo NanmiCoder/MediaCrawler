@@ -18,6 +18,14 @@ MYSQL_DB_HOST = os.getenv("MYSQL_DB_HOST", "localhost")
 MYSQL_DB_PORT = os.getenv("MYSQL_DB_PORT", 3306)
 MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME", "media_crawler")
 
+mysql_db_config = {
+    "user": MYSQL_DB_USER,
+    "password": MYSQL_DB_PWD,
+    "host": MYSQL_DB_HOST,
+    "port": MYSQL_DB_PORT,
+    "db_name": MYSQL_DB_NAME,
+}
+
 
 # redis config
 REDIS_DB_HOST = "127.0.0.1"  # your redis host
@@ -30,4 +38,8 @@ CACHE_TYPE_REDIS = "redis"
 CACHE_TYPE_MEMORY = "memory"
 
 # sqlite config
-SQLITE_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "schema", "sqlite_tables.db")
+SQLITE_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database", "sqlite_tables.db")
+
+sqlite_db_config = {
+    "db_path": SQLITE_DB_PATH
+}

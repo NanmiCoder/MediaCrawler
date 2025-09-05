@@ -17,9 +17,8 @@ from typing import List
 import config
 from var import source_keyword_var
 
-from . import xhs_store_impl
 from .xhs_store_media import *
-from .xhs_store_impl import *
+from ._store_impl import *
 
 
 class XhsStoreFactory:

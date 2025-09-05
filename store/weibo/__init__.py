@@ -19,7 +19,7 @@ from typing import List
 from var import source_keyword_var
 
 from .weibo_store_media import *
-from .weibo_store_impl import *
+from ._store_impl import *
 
 
 class WeibostoreFactory:
