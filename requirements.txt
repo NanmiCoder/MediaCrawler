@@ -19,3 +19,7 @@ pyexecjs==1.5.1
 pandas==2.2.3
 aiosqlite==0.21.0
 pyhumps==3.8.0
+cryptography>=45.0.7
+alembic>=1.16.5
+asyncmy>=0.2.10
+sqlalchemy>=2.0.43

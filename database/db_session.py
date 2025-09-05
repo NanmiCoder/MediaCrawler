@@ -1,16 +1,28 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager
 from .models import Base
-from config import SAVE_DATA_OPTION
+import config
 from config.db_config import mysql_db_config, sqlite_db_config
 
 # Keep a cache of engines
 _engines = {}
 
+
+async def create_database_if_not_exists(db_type: str):
+    if db_type == "mysql" or db_type == "db":
+        # Connect to the server without a database
+        server_url = f"mysql+asyncmy://{mysql_db_config['user']}:{mysql_db_config['password']}@{mysql_db_config['host']}:{mysql_db_config['port']}"
+        engine = create_async_engine(server_url, echo=False)
+        async with engine.connect() as conn:
+            await conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {mysql_db_config['db_name']}"))
+        await engine.dispose()
+
+
 def get_async_engine(db_type: str = None):
     if db_type is None:
-        db_type = SAVE_DATA_OPTION
+        db_type = config.SAVE_DATA_OPTION
 
     if db_type in _engines:
         return _engines[db_type]
@@ -31,14 +43,21 @@ def get_async_engine(db_type: str = None):
 
 
 async def create_tables(db_type: str = None):
+    if db_type is None:
+        db_type = config.SAVE_DATA_OPTION
+    await create_database_if_not_exists(db_type)
     engine = get_async_engine(db_type)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    if engine:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
 
 @asynccontextmanager
 async def get_session() -> AsyncSession:
-    engine = get_async_engine(SAVE_DATA_OPTION)
+    engine = get_async_engine(config.SAVE_DATA_OPTION)
+    if not engine:
+        yield None
+        return
     AsyncSessionFactory = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     session = AsyncSessionFactory()
     try:
