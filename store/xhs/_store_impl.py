@@ -143,18 +143,17 @@ class XhsDbStoreImplement(AbstractStore):
         result = await session.execute(stmt)
         return result.first() is not None
 
-    async def store_comments(self, comments: List[Dict]):
-        if not comments:
+    async def store_comment(self, comment_item: Dict):
+        if not comment_item:
             return
         async with get_session() as session:
-            for comment_item in comments:
-                comment_id = comment_item.get("comment_id")
-                if not comment_id:
-                    continue
-                if await self.comment_is_exist(session, comment_id):
-                    await self.update_comment(session, comment_item)
-                else:
-                    await self.add_comment(session, comment_item)
+            comment_id = comment_item.get("comment_id")
+            if not comment_id:
+                return
+            if await self.comment_is_exist(session, comment_id):
+                await self.update_comment(session, comment_item)
+            else:
+                await self.add_comment(session, comment_item)
 
     async def add_comment(self, session: AsyncSession, comment_item: Dict):
         add_ts = int(get_current_timestamp())
