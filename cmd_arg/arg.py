@@ -38,10 +38,6 @@ async def parse_cmd():
     parser.add_argument('--save_data_option', type=str,
                         help='Where to save the data / 数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库)', 
                         choices=['csv', 'db', 'json', 'sqlite'], default=config.SAVE_DATA_OPTION)
-# persist-1<persist1@126.com>
-# 原因：新增 --init-db 命令行参数，用于数据库初始化。
-# 副作用：无
-# 回滚策略：还原此文件。
     parser.add_argument('--init-db', type=str,
                         help='Initialize database schema / 初始化数据库表结构 (sqlite | mysql)',
                         choices=['sqlite', 'mysql'], default=None)
