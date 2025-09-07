@@ -177,3 +177,5 @@ docs/.vitepress/cache
 
 agent_zone
 debug_tools
+
+database/*.db
