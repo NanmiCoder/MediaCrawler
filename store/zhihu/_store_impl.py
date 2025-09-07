@@ -93,9 +93,9 @@ class ZhihuDbStoreImplement(AbstractStore):
         Args:
             content_item: content item dict
         """
-        note_id = content_item.get("note_id")
-        async for session in get_session():
-            stmt = select(ZhihuContent).where(ZhihuContent.content_id == note_id)
+        content_id = content_item.get("content_id")
+        async with get_session() as session:
+            stmt = select(ZhihuContent).where(ZhihuContent.content_id == content_id)
             result = await session.execute(stmt)
             existing_content = result.scalars().first()
             if existing_content:
@@ -113,7 +113,7 @@ class ZhihuDbStoreImplement(AbstractStore):
             comment_item: comment item dict
         """
         comment_id = comment_item.get("comment_id")
-        async for session in get_session():
+        async with get_session() as session:
             stmt = select(ZhihuComment).where(ZhihuComment.comment_id == comment_id)
             result = await session.execute(stmt)
             existing_comment = result.scalars().first()
@@ -132,7 +132,7 @@ class ZhihuDbStoreImplement(AbstractStore):
             creator: creator dict
         """
         user_id = creator.get("user_id")
-        async for session in get_session():
+        async with get_session() as session:
             stmt = select(ZhihuCreator).where(ZhihuCreator.user_id == user_id)
             result = await session.execute(stmt)
             existing_creator = result.scalars().first()
