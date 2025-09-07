@@ -161,7 +161,7 @@ class DyCreator(Base):
 class KuaishouVideo(Base):
     __tablename__ = 'kuaishou_video'
     id = Column(Integer, primary_key=True)
-    user_id = Column(BigInteger)
+    user_id = Column(String(64))
     nickname = Column(Text)
     avatar = Column(Text)
     add_ts = Column(BigInteger)
