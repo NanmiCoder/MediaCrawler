@@ -194,21 +194,29 @@ python main.py --help
 ## 💾 Data Storage
 
 Supports multiple data storage methods:
-
-- **SQLite Database**: Lightweight database without server, ideal for personal use (recommended)
-  - Parameter: `--save_data_option sqlite`
-  - Database file created automatically
-- **MySQL Database**: Supports saving to relational database MySQL (need to create database in advance)
-  - Execute `python db.py` to initialize database table structure (only execute on first run)
 - **CSV Files**: Supports saving to CSV (under `data/` directory)
 - **JSON Files**: Supports saving to JSON (under `data/` directory)
+- **Database Storage**
+  - Use the `--init_db` parameter for database initialization (when using `--init_db`, no other optional arguments are needed)
+  - **SQLite Database**: Lightweight database, no server required, suitable for personal use (recommended)
+    1. Initialization: `--init_db sqlite`
+    2. Data Storage: `--save_data_option sqlite`
+  - **MySQL Database**: Supports saving to relational database MySQL (database needs to be created in advance)
+    1. Initialization: `--init_db mysql`
+    2. Data Storage: `--save_data_option db` (the db parameter is retained for compatibility with historical updates)
+
 
 ### Usage Examples:
 ```shell
-# Use SQLite (recommended for personal users)
+# Initialize SQLite database (when using '--init_db', no other optional arguments are needed)
+uv run main.py --init_db sqlite
+# Use SQLite to store data (recommended for personal users)
 uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
-
-# Use MySQL
+```
+```shell
+# Initialize MySQL database
+uv run main.py --init_db mysql
+# Use MySQL to store data (the db parameter is retained for compatibility with historical updates)
 uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 ```
 

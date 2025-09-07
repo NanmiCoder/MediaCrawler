@@ -38,7 +38,7 @@ async def parse_cmd():
     parser.add_argument('--save_data_option', type=str,
                         help='Where to save the data / 数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库)', 
                         choices=['csv', 'db', 'json', 'sqlite'], default=config.SAVE_DATA_OPTION)
-    parser.add_argument('--init-db', type=str,
+    parser.add_argument('--init_db', type=str,
                         help='Initialize database schema / 初始化数据库表结构 (sqlite | mysql)',
                         choices=['sqlite', 'mysql'], default=None)
     parser.add_argument('--cookies', type=str,

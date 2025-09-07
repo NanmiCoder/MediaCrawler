@@ -54,15 +54,19 @@
    python main.py --help    
    ```
 
-## 数据保存
-- 支持关系型数据库Mysql中保存（需要提前创建数据库）
-    - 执行 `python db.py` 初始化数据库数据库表结构（只在首次执行）
-- 支持轻量级SQLite数据库保存（无需额外安装数据库服务器）
-    - 本地文件数据库，适合个人使用和小规模数据存储
-    - 使用参数 `--save_data_option sqlite` 启用SQLite存储
-    - 数据库文件自动创建在项目目录下（schema/sqlite_tables.db）
-- 支持保存到csv中（data/目录下）
-- 支持保存到json中（data/目录下）
+## 💾 数据存储
+
+支持多种数据存储方式：
+- **CSV 文件**: 支持保存至 CSV (位于 `data/` 目录下)
+- **JSON 文件**: 支持保存至 JSON (位于 `data/` 目录下)
+- **数据库存储**
+  - 使用 `--init_db` 参数进行数据库初始化 (使用 `--init_db` 时，无需其他可选参数)
+  - **SQLite 数据库**: 轻量级数据库，无需服务器，适合个人使用 (推荐)
+    1. 初始化: `--init_db sqlite`
+    2. 数据存储: `--save_data_option sqlite`
+  - **MySQL 数据库**: 支持保存至关系型数据库 MySQL (需提前创建数据库)
+    1. 初始化: `--init_db mysql`
+    2. 数据存储: `--save_data_option db` (db 参数为兼容历史更新保留)
 
 ## 免责声明
 > **免责声明：**

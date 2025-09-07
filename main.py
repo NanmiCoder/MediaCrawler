@@ -15,7 +15,7 @@ from typing import Optional
 
 import cmd_arg
 import config
-import db
+from database import db
 from base.base_crawler import AbstractCrawler
 from media_platform.bilibili import BilibiliCrawler
 from media_platform.douyin import DouYinCrawler
@@ -51,7 +51,7 @@ crawler: Optional[AbstractCrawler] = None
 
 
 # persist-1<persist1@126.com>
-# 原因：增加 --init-db 功能，用于数据库初始化。
+# 原因：增加 --init_db 功能，用于数据库初始化。
 # 副作用：无
 # 回滚策略：还原此文件。
 async def main():
