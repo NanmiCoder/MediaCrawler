@@ -172,7 +172,7 @@ class XiaoHongShuClient(AbstractApiClient):
                 httpx.HTTPError
             ) as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
                 utils.logger.error(
-                    f"[DouYinClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}"
+                    f"[XiaoHongShuClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}"
                 )  # 保留原始异常类型名称，以便开发者调试
                 return None
 
