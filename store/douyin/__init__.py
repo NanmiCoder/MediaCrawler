@@ -17,7 +17,7 @@ from typing import List
 import config
 from var import source_keyword_var
 
-from .douyin_store_impl import *
+from ._store_impl import *
 from .douyin_store_media import *
 
 

@@ -15,8 +15,7 @@ from typing import List
 from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
 from var import source_keyword_var
 
-from . import tieba_store_impl
-from .tieba_store_impl import *
+from ._store_impl import *
 
 
 class TieBaStoreFactory:

@@ -38,6 +38,9 @@ async def parse_cmd():
     parser.add_argument('--save_data_option', type=str,
                         help='Where to save the data / 数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库)', 
                         choices=['csv', 'db', 'json', 'sqlite'], default=config.SAVE_DATA_OPTION)
+    parser.add_argument('--init_db', type=str,
+                        help='Initialize database schema / 初始化数据库表结构 (sqlite | mysql)',
+                        choices=['sqlite', 'mysql'], default=None)
     parser.add_argument('--cookies', type=str,
                         help='Cookies used for cookie login type / Cookie登录方式使用的Cookie值', default=config.COOKIES)
 
@@ -53,3 +56,5 @@ async def parse_cmd():
     config.ENABLE_GET_SUB_COMMENTS = args.get_sub_comment
     config.SAVE_DATA_OPTION = args.save_data_option
     config.COOKIES = args.cookies
+
+    return args

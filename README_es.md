@@ -194,21 +194,29 @@ python main.py --help
 ## 💾 Almacenamiento de Datos
 
 Soporta múltiples métodos de almacenamiento de datos:
-
-- **Base de Datos SQLite**: Base de datos ligera sin servidor, ideal para uso personal (recomendado)
-  - Parámetro: `--save_data_option sqlite`
-  - Se crea automáticamente el archivo de base de datos
-- **Base de Datos MySQL**: Soporta guardar en base de datos relacional MySQL (necesita crear base de datos con anticipación)
-  - Ejecute `python db.py` para inicializar la estructura de tablas de la base de datos (solo ejecutar en la primera ejecución)
 - **Archivos CSV**: Soporta guardar en CSV (bajo el directorio `data/`)
 - **Archivos JSON**: Soporta guardar en JSON (bajo el directorio `data/`)
+- **Almacenamiento en Base de Datos**
+  - Use el parámetro `--init_db` para la inicialización de la base de datos (cuando use `--init_db`, no se necesitan otros argumentos opcionales)
+  - **Base de Datos SQLite**: Base de datos ligera, no requiere servidor, adecuada para uso personal (recomendado)
+    1. Inicialización: `--init_db sqlite`
+    2. Almacenamiento de Datos: `--save_data_option sqlite`
+  - **Base de Datos MySQL**: Soporta guardar en la base de datos relacional MySQL (la base de datos debe crearse con anticipación)
+    1. Inicialización: `--init_db mysql`
+    2. Almacenamiento de Datos: `--save_data_option db` (el parámetro db se mantiene por compatibilidad con actualizaciones históricas)
+
 
 ### Ejemplos de Uso:
 ```shell
-# Usar SQLite (recomendado para usuarios personales)
+# Inicializar la base de datos SQLite (cuando use '--init_db', no se necesitan otros argumentos opcionales)
+uv run main.py --init_db sqlite
+# Usar SQLite para almacenar datos (recomendado para usuarios personales)
 uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
-
-# Usar MySQL
+```
+```shell
+# Inicializar la base de datos MySQL
+uv run main.py --init_db mysql
+# Usar MySQL para almacenar datos (el parámetro db se mantiene por compatibilidad con actualizaciones históricas)
 uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 ```
 

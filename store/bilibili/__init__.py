@@ -18,7 +18,7 @@ from typing import List
 import config
 from var import source_keyword_var
 
-from .bilibili_store_impl import *
+from ._store_impl import *
 from .bilibilli_store_media import *
 
 

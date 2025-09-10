@@ -15,7 +15,7 @@ from typing import List
 import config
 from base.base_crawler import AbstractStore
 from model.m_zhihu import ZhihuComment, ZhihuContent, ZhihuCreator
-from store.zhihu.zhihu_store_impl import (ZhihuCsvStoreImplement,
+from ._store_impl import (ZhihuCsvStoreImplement,
                                           ZhihuDbStoreImplement,
                                           ZhihuJsonStoreImplement,
                                           ZhihuSqliteStoreImplement)

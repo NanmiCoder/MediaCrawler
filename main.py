@@ -15,7 +15,7 @@ from typing import Optional
 
 import cmd_arg
 import config
-import db
+from database import db
 from base.base_crawler import AbstractCrawler
 from media_platform.bilibili import BilibiliCrawler
 from media_platform.douyin import DouYinCrawler
@@ -50,16 +50,24 @@ class CrawlerFactory:
 crawler: Optional[AbstractCrawler] = None
 
 
+# persist-1<persist1@126.com>
+# 原因：增加 --init_db 功能，用于数据库初始化。
+# 副作用：无
+# 回滚策略：还原此文件。
 async def main():
     # Init crawler
     global crawler
 
     # parse cmd
-    await cmd_arg.parse_cmd()
+    args = await cmd_arg.parse_cmd()
 
     # init db
-    if config.SAVE_DATA_OPTION in ["db", "sqlite"]:
-        await db.init_db()
+    if args.init_db:
+        await db.init_db(args.init_db)
+        print(f"Database {args.init_db} initialized successfully.")
+        return  # Exit the main function cleanly
+
+
 
     crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
     await crawler.start()
