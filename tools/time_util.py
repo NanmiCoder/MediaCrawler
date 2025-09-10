@@ -33,6 +33,12 @@ def get_current_time() -> str:
     """
     return time.strftime('%Y-%m-%d %X', time.localtime())
 
+def get_current_time_hour() -> str:
+    """
+    获取当前的时间：'2023-12-02-13'
+    :return:
+    """
+    return time.strftime('%Y-%m-%d-%H', time.localtime())
 
 def get_current_date() -> str:
     """
