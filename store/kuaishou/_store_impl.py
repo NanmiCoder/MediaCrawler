@@ -50,7 +50,7 @@ def calculate_number_of_files(file_store_path: str) -> int:
 class KuaishouCsvStoreImplement(AbstractStore):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.writer = AsyncFileWriter(platform="kuaishou", crawler_type=kwargs.get("crawler_type"))
+        self.writer = AsyncFileWriter(platform="kuaishou", crawler_type=crawler_type_var.get())
 
     async def store_content(self, content_item: Dict):
         """
@@ -127,7 +127,7 @@ class KuaishouDbStoreImplement(AbstractStore):
 class KuaishouJsonStoreImplement(AbstractStore):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.writer = AsyncFileWriter(platform="kuaishou", crawler_type=kwargs.get("crawler_type"))
+        self.writer = AsyncFileWriter(platform="kuaishou", crawler_type=crawler_type_var.get())
 
     async def store_content(self, content_item: Dict):
         """

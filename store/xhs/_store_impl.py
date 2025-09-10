@@ -17,12 +17,12 @@ from database.models import XhsNote, XhsNoteComment, XhsCreator
 
 from tools.async_file_writer import AsyncFileWriter
 from tools.time_util import get_current_timestamp
-
+from var import crawler_type_var
 
 class XhsCsvStoreImplement(AbstractStore):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.writer = AsyncFileWriter(platform="xhs", crawler_type=kwargs.get("crawler_type"))
+        self.writer = AsyncFileWriter(platform="xhs", crawler_type=crawler_type_var.get())
 
     async def store_content(self, content_item: Dict):
         """
@@ -51,7 +51,7 @@ class XhsCsvStoreImplement(AbstractStore):
 class XhsJsonStoreImplement(AbstractStore):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.writer = AsyncFileWriter(platform="xhs", crawler_type=kwargs.get("crawler_type"))
+        self.writer = AsyncFileWriter(platform="xhs", crawler_type=crawler_type_var.get())
 
     async def store_content(self, content_item: Dict):
         """
