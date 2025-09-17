@@ -11,6 +11,7 @@
 
 import argparse
 import logging
+import re
 
 from .crawler_util import *
 from .slider_util import *
@@ -40,3 +41,32 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def replaceT(text: str) -> str:
+    """Make text safe for use as a Windows folder/file name.
+
+    - Strips leading/trailing whitespace
+    - Replaces illegal characters <>:"/\|?* and control chars with underscore
+    - Collapses consecutive underscores
+    - Avoids reserved device names (CON, PRN, AUX, NUL, COM1..COM9, LPT1..LPT9)
+    - Returns 'default' if result becomes empty
+    """
+    if text is None:
+        return "default"
+    s = str(text).strip()
+    # Replace illegal characters
+    s = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '_', s)
+    # Collapse multiple underscores
+    s = re.sub(r'_+', '_', s)
+    # Remove trailing dots or spaces (invalid for Windows file/folder names)
+    s = s.rstrip(' .')
+    # Reserved device names
+    reserved = {
+        'CON', 'PRN', 'AUX', 'NUL',
+        *(f'COM{i}' for i in range(1, 10)),
+        *(f'LPT{i}' for i in range(1, 10)),
+    }
+    if s.upper() in reserved or s == '':
+        return "default"
+    return s

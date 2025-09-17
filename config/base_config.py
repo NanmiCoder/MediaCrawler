@@ -9,7 +9,7 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # 基础配置
-PLATFORM = "xhs"  # 平台，xhs | dy | ks | bili | wb | tieba | zhihu
+PLATFORM = "bili"  # 平台，xhs | dy | ks | bili | wb | tieba | zhihu
 KEYWORDS = "编程副业,编程兼职"  # 关键词搜索配置，以英文逗号分隔
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
@@ -61,8 +61,21 @@ BROWSER_LAUNCH_TIMEOUT = 30
 # 设置为False可以保持浏览器运行，便于调试
 AUTO_CLOSE_BROWSER = True
 
-# 数据保存类型选项配置,支持四种类型：csv、db、json、sqlite, 最好保存到DB，有排重的功能。
-SAVE_DATA_OPTION = "json"  # csv or db or json or sqlite
+# 数据保存类型选项配置,支持选项：csv、db、json、sqlite、folder（统一文件夹存储，按平台落地）、video_folder（B站旧选项）、note_folder（小红书旧选项）。
+SAVE_DATA_OPTION = "folder" 
+
+# 下载模式
+# keyword: 仅文本+评论，不下载任何媒体
+# preview: 文本+图片+视频前3分钟（尽量）
+# final: 文本+图片+完整视频
+DOWNLOAD_MODE = "final"  # keyword | preview | final
+
+# 预览模式相关配置
+# 预览视频最大时长（秒）
+PREVIEW_MAX_VIDEO_SECONDS = 180
+# 当无法从接口获取视频总时长时，按字节数进行兜底截断（可能无法完全保证可播放）
+# 建议范围 16-64MB，过小可能不含足够的索引元数据
+PREVIEW_FALLBACK_MAX_BYTES_MB = 32
 
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
@@ -77,7 +90,7 @@ CRAWLER_MAX_NOTES_COUNT = 15
 MAX_CONCURRENCY_NUM = 1
 
 # 是否开启爬媒体模式（包含图片或视频资源），默认不开启爬媒体
-ENABLE_GET_MEIDAS = False
+ENABLE_GET_MEIDAS = True
 
 # 是否开启爬评论模式, 默认开启爬评论
 ENABLE_GET_COMMENTS = True
@@ -88,6 +101,10 @@ CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
 # 是否开启爬二级评论模式, 默认不开启爬二级评论
 # 老版本项目使用了 db, 则需参考 schema/tables.sql line 287 增加表字段
 ENABLE_GET_SUB_COMMENTS = False
+
+# 评论保存日志开关：控制是否打印 comment.json 相关的保存日志
+# True 打印，False 关闭
+ENABLE_COMMENT_LOG = False
 
 # 词云相关
 # 是否开启生成评论词云图

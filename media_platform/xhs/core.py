@@ -29,6 +29,7 @@ from config import CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
 from model.m_xiaohongshu import NoteUrlInfo
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import xhs as xhs_store
+from store.xhs.xhs_note_folder_store import XhsNoteFolderStoreImplement
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
@@ -114,6 +115,10 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
     async def search(self) -> None:
         """Search for notes and retrieve their comment information."""
+        # If LIST_FILE provided and preview or final mode, process the list instead of doing search
+        if getattr(config, 'LIST_FILE', None) and config.DOWNLOAD_MODE in ('preview', 'final'):
+            await self.process_list_file(config.LIST_FILE, config.DOWNLOAD_MODE)
+            return
         utils.logger.info("[XiaoHongShuCrawler.search] Begin search xiaohongshu keywords")
         xhs_limit_count = 20  # xhs limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
@@ -124,6 +129,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
             utils.logger.info(f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
             page = 1
             search_id = get_search_id()
+            new_download_count = 0
+            stop_due_to_existing = False
+            folder_store = XhsNoteFolderStoreImplement()
             while (page - start_page + 1) * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Skip page {page}")
@@ -144,6 +152,17 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     if not notes_res or not notes_res.get("has_more", False):
                         utils.logger.info("No more content!")
                         break
+                    # filter valid items and apply early-stop check by folder existence
+                    raw_items = [post_item for post_item in notes_res.get("items", {}) if post_item.get("model_type") not in ("rec_query", "hot_query")]
+                    filtered_items = []
+                    for post_item in raw_items:
+                        nid = post_item.get("id")
+                        if nid and folder_store.get_existing_note_folder(nid):
+                            utils.logger.info(f"[XiaoHongShuCrawler.search] Encountered existing note id={nid} for keyword '{keyword}', stopping further downloads.")
+                            stop_due_to_existing = True
+                            break
+                        filtered_items.append(post_item)
+
                     semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                     task_list = [
                         self.get_note_detail_async_task(
@@ -151,7 +170,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             xsec_source=post_item.get("xsec_source"),
                             xsec_token=post_item.get("xsec_token"),
                             semaphore=semaphore,
-                        ) for post_item in notes_res.get("items", {}) if post_item.get("model_type") not in ("rec_query", "hot_query")
+                        ) for post_item in filtered_items
                     ]
                     note_details = await asyncio.gather(*task_list)
                     for note_detail in note_details:
@@ -160,6 +179,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             await self.get_notice_media(note_detail)
                             note_ids.append(note_detail.get("note_id"))
                             xsec_tokens.append(note_detail.get("xsec_token"))
+                            new_download_count += 1
                     page += 1
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
                     await self.batch_get_note_comments(note_ids, xsec_tokens)
@@ -167,9 +187,14 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     # Sleep after each page navigation
                     await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
+                    if stop_due_to_existing:
+                        print(f"关键词 '{keyword}' 新下载笔记数量: {new_download_count}")
+                        return
                 except DataFetchError:
                     utils.logger.error("[XiaoHongShuCrawler.search] Get note detail error")
                     break
+            # finish keyword without early stop
+            print(f"关键词 '{keyword}' 新下载笔记数量: {new_download_count}")
 
     async def get_creators_and_notes(self) -> None:
         """Get creator's notes and retrieve their comment information."""
@@ -245,6 +270,76 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 await xhs_store.update_xhs_note(note_detail)
                 await self.get_notice_media(note_detail)
         await self.batch_get_note_comments(need_get_comment_note_ids, xsec_tokens)
+
+    async def process_list_file(self, file_path: str, mode: str = 'preview'):
+        """Process a newline-separated list of XHS note URLs in preview mode."""
+        if not file_path:
+            return
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = [l.strip() for l in f.readlines() if l.strip()]
+        except Exception as e:
+            utils.logger.error(f"[XiaoHongShuCrawler.process_list_file] Failed to read list file: {e}")
+            return
+
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        new_count = 0
+        folder_store = XhsNoteFolderStoreImplement()
+        for url in lines:
+            # try to parse note id from common XHS URL formats
+            # examples: https://www.xiaohongshu.com/explore/123456? ...
+            try:
+                parts = url.split('/')
+                nid = None
+                for part in parts:
+                    if part.isdigit():
+                        nid = part
+                        break
+                if not nid:
+                    utils.logger.warning(f"[XiaoHongShuCrawler.process_list_file] Could not parse note id from URL: {url}")
+                    continue
+
+                existing_folder = folder_store.get_existing_note_folder(nid)
+                if existing_folder:
+                    try:
+                        import glob, os
+                        mp4s = glob.glob(f"{existing_folder}/**/*.mp4", recursive=True)
+                        existing_mp4s = [p for p in mp4s if os.path.isfile(p)]
+                    except Exception:
+                        existing_mp4s = []
+
+                    if existing_mp4s:
+                        if mode == 'preview':
+                            utils.logger.info(f"[XiaoHongShuCrawler.process_list_file] Note {nid} already has mp4 in {existing_folder}, skipping and stopping further processing.")
+                            break
+                        # final mode: we may want to check size; XHS may not provide size easily, so we'll always overwrite in final mode if partial
+                        # try to detect partial by file size heuristic (very small files)
+                        try:
+                            import os
+                            max_size = max(os.path.getsize(p) for p in existing_mp4s)
+                        except Exception:
+                            max_size = 0
+                        if mode == 'final' and max_size > 1024 * 10:
+                            # assume full if >10KB (heuristic); otherwise proceed to download full
+                            utils.logger.info(f"[XiaoHongShuCrawler.process_list_file] Note {nid} seems to have an existing mp4 ({max_size} bytes); will treat as full and stop.")
+                            break
+                        else:
+                            utils.logger.info(f"[XiaoHongShuCrawler.process_list_file] Note {nid} has small/partial mp4 ({max_size} bytes); will download full in final mode.")
+
+                # fetch detail
+                note_detail = await self.xhs_client.get_note_by_id(nid, "", "")
+                if not note_detail:
+                    note_detail = await self.xhs_client.get_note_by_id_from_html(nid, "", "", enable_cookie=True)
+                if not note_detail:
+                    continue
+                note_detail.update({"xsec_token": note_detail.get('xsec_token', ''), "xsec_source": note_detail.get('xsec_source', '')})
+                await xhs_store.update_xhs_note(note_detail)
+                await self.get_notice_media(note_detail)
+                new_count += 1
+            except Exception as e:
+                utils.logger.warning(f"[XiaoHongShuCrawler.process_list_file] error processing URL {url}: {e}")
+
+        print(f"通过列表处理，新增笔记数量: {new_count}")
 
     async def get_note_detail_async_task(
         self,
@@ -481,8 +576,30 @@ class XiaoHongShuCrawler(AbstractCrawler):
         if not videos:
             return
         videoNum = 0
+        # Estimate preview bytes if needed by using provided duration/size if available in note_item
+        preview_max_bytes = None
+        if config.DOWNLOAD_MODE == "preview":
+            try:
+                # Try from note_item['video']['duration'] and ['video']['media']['size'] if structure exists
+                video_info = note_item.get("video", {}) if isinstance(note_item, dict) else {}
+                duration = 0
+                total_size = 0
+                if isinstance(video_info, dict):
+                    duration = int(video_info.get("duration", 0))  # seconds
+                    media_info = video_info.get("media", {})
+                    if isinstance(media_info, dict):
+                        total_size = int(media_info.get("size", 0))
+                if duration > 0 and total_size > 0:
+                    avg_bytes_per_sec = total_size / max(duration, 1)
+                    want = int(avg_bytes_per_sec * config.PREVIEW_MAX_VIDEO_SECONDS)
+                    preview_max_bytes = min(want, config.PREVIEW_FALLBACK_MAX_BYTES_MB * 1024 * 1024)
+                else:
+                    preview_max_bytes = config.PREVIEW_FALLBACK_MAX_BYTES_MB * 1024 * 1024
+            except Exception:
+                preview_max_bytes = config.PREVIEW_FALLBACK_MAX_BYTES_MB * 1024 * 1024
+
         for url in videos:
-            content = await self.xhs_client.get_note_media(url)
+            content = await self.xhs_client.get_note_media(url, max_bytes=preview_max_bytes)
             await asyncio.sleep(random.random())
             if content is None:
                 continue

@@ -34,6 +34,7 @@ import config
 from base.base_crawler import AbstractCrawler
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import bilibili as bilibili_store
+from store.bilibili.bilibili_video_folder_store import BiliVideoFolderStoreImplement
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
@@ -115,6 +116,11 @@ class BilibiliCrawler(AbstractCrawler):
         """
         search bilibili video
         """
+        # If LIST_FILE provided and preview or final mode, process the list instead of doing search
+        if getattr(config, 'LIST_FILE', None) and config.DOWNLOAD_MODE in ('preview', 'final'):
+            await self.process_list_file(config.LIST_FILE, config.DOWNLOAD_MODE)
+            return
+
         # Search for video and retrieve their comment information.
         if config.BILI_SEARCH_MODE == "normal":
             await self.search_by_keywords()
@@ -172,6 +178,9 @@ class BilibiliCrawler(AbstractCrawler):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Current search keyword: {keyword}")
             page = 1
+            new_download_count = 0
+            stop_due_to_existing = False
+            folder_store = BiliVideoFolderStoreImplement()
             while (page - start_page + 1) * bili_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Skip page: {page}")
@@ -184,7 +193,7 @@ class BilibiliCrawler(AbstractCrawler):
                     keyword=keyword,
                     page=page,
                     page_size=bili_limit_count,
-                    order=SearchOrderType.DEFAULT,
+                    order=getattr(config, "SearchOrderType", SearchOrderType.LAST_PUBLISH),
                     pubtime_begin_s=0,  # 作品发布日期起始时间戳
                     pubtime_end_s=0,  # 作品发布日期结束日期时间戳
                 )
@@ -194,19 +203,32 @@ class BilibiliCrawler(AbstractCrawler):
                     utils.logger.info(f"[BilibiliCrawler.search_by_keywords] No more videos for '{keyword}', moving to next keyword.")
                     break
 
+                # Early-stop check: process in order until first existing video encountered
+                filtered_items: List[Dict] = []
+                for item in video_list:
+                    aid = str(item.get("aid"))
+                    if folder_store.get_existing_video_folder(aid):
+                        utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Encountered existing video aid={aid} for keyword '{keyword}', stopping further downloads.")
+                        stop_due_to_existing = True
+                        break
+                    filtered_items.append(item)
+
+                # Fetch details only for new items
                 semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                 task_list = []
                 try:
-                    task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                    task_list = [self.get_video_info_task(aid=it.get("aid"), bvid="", semaphore=semaphore) for it in filtered_items]
                 except Exception as e:
                     utils.logger.warning(f"[BilibiliCrawler.search_by_keywords] error in the task list. The video for this page will not be included. {e}")
                 video_items = await asyncio.gather(*task_list)
                 for video_item in video_items:
                     if video_item:
                         video_id_list.append(video_item.get("View").get("aid"))
+                        source_keyword_var.set(keyword)
                         await bilibili_store.update_bilibili_video(video_item)
                         await bilibili_store.update_up_info(video_item)
                         await self.get_bilibili_video(video_item, semaphore)
+                        new_download_count += 1
                 page += 1
                 
                 # Sleep after page navigation
@@ -214,6 +236,11 @@ class BilibiliCrawler(AbstractCrawler):
                 utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
                 
                 await self.batch_get_video_comments(video_id_list)
+                if stop_due_to_existing:
+                    print(f"关键词 '{keyword}' 新下载视频数量: {new_download_count}")
+                    return
+            # if loop finishes without early stop, print count for this keyword
+            print(f"关键词 '{keyword}' 新下载视频数量: {new_download_count}")
 
     async def search_by_keywords_in_time_range(self, daily_limit: bool):
         """
@@ -228,6 +255,9 @@ class BilibiliCrawler(AbstractCrawler):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[BilibiliCrawler.search_by_keywords_in_time_range] Current search keyword: {keyword}")
             total_notes_crawled_for_keyword = 0
+            new_download_count = 0
+            stop_due_to_existing = False
+            folder_store = BiliVideoFolderStoreImplement()
 
             for day in pd.date_range(start=config.START_DAY, end=config.END_DAY, freq="D"):
                 if (daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT):
@@ -251,6 +281,8 @@ class BilibiliCrawler(AbstractCrawler):
                         break
                     if (not daily_limit and total_notes_crawled_for_keyword >= config.CRAWLER_MAX_NOTES_COUNT):
                         break
+                    if stop_due_to_existing:
+                        break
 
                     try:
                         utils.logger.info(f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, date: {day.ctime()}, page: {page}")
@@ -259,7 +291,7 @@ class BilibiliCrawler(AbstractCrawler):
                             keyword=keyword,
                             page=page,
                             page_size=bili_limit_count,
-                            order=SearchOrderType.DEFAULT,
+                            order=getattr(config, "SearchOrderType", SearchOrderType.LAST_PUBLISH),
                             pubtime_begin_s=pubtime_begin_s,
                             pubtime_end_s=pubtime_end_s,
                         )
@@ -269,8 +301,18 @@ class BilibiliCrawler(AbstractCrawler):
                             utils.logger.info(f"[BilibiliCrawler.search] No more videos for '{keyword}' on {day.ctime()}, moving to next day.")
                             break
 
+                        # Early-stop check within the day
+                        filtered_items: List[Dict] = []
+                        for item in video_list:
+                            aid = str(item.get("aid"))
+                            if folder_store.get_existing_video_folder(aid):
+                                utils.logger.info(f"[BilibiliCrawler.search] Encountered existing video aid={aid} for keyword '{keyword}' on {day.ctime()}, stopping further downloads.")
+                                stop_due_to_existing = True
+                                break
+                            filtered_items.append(item)
+
                         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                        task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                        task_list = [self.get_video_info_task(aid=it.get("aid"), bvid="", semaphore=semaphore) for it in filtered_items]
                         video_items = await asyncio.gather(*task_list)
 
                         for video_item in video_items:
@@ -283,6 +325,7 @@ class BilibiliCrawler(AbstractCrawler):
                                     break
                                 notes_count_this_day += 1
                                 total_notes_crawled_for_keyword += 1
+                                new_download_count += 1
                                 video_id_list.append(video_item.get("View").get("aid"))
                                 await bilibili_store.update_bilibili_video(video_item)
                                 await bilibili_store.update_up_info(video_item)
@@ -295,10 +338,15 @@ class BilibiliCrawler(AbstractCrawler):
                         utils.logger.info(f"[BilibiliCrawler.search_by_keywords_in_time_range] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
                         
                         await self.batch_get_video_comments(video_id_list)
+                        if stop_due_to_existing:
+                            print(f"关键词 '{keyword}' 新下载视频数量: {new_download_count}")
+                            return
 
                     except Exception as e:
                         utils.logger.error(f"[BilibiliCrawler.search] Error searching on {day.ctime()}: {e}")
                         break
+            # after finishing keyword loop without early stop, print count
+            print(f"关键词 '{keyword}' 新下载视频数量: {new_download_count}")
 
     async def batch_get_video_comments(self, video_id_list: List[str]):
         """
@@ -381,6 +429,103 @@ class BilibiliCrawler(AbstractCrawler):
                 await bilibili_store.update_up_info(video_detail)
                 await self.get_bilibili_video(video_detail, semaphore)
         await self.batch_get_video_comments(video_aids_list)
+
+    async def process_list_file(self, file_path: str, mode: str = 'preview'):
+        """Process a newline-separated list of Bilibili video URLs in preview or final mode.
+
+        mode: 'preview' or 'final'
+        """
+        import re
+        if not file_path:
+            return
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = [l.strip() for l in f.readlines() if l.strip()]
+        except Exception as e:
+            utils.logger.error(f"[BilibiliCrawler.process_list_file] Failed to read list file: {e}")
+            return
+
+        # regex to extract aid or bvid
+        aid_re = re.compile(r"/(av|av)?(\d+)")
+        bvid_re = re.compile(r"/(BV[0-9A-Za-z]+)")
+
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        new_count = 0
+        for url in lines:
+            aid = None
+            bvid = None
+            m = aid_re.search(url)
+            if m:
+                aid = int(m.group(2))
+            else:
+                m2 = bvid_re.search(url)
+                if m2:
+                    bvid = m2.group(1)
+
+            if not aid and not bvid:
+                utils.logger.warning(f"[BilibiliCrawler.process_list_file] Could not parse aid/bvid from URL: {url}")
+                continue
+
+            # fetch details and then preview-download
+            info = await self.get_video_info_task(aid=aid or 0, bvid=bvid or '', semaphore=semaphore)
+            if not info:
+                continue
+            # check existing via folder store
+            video_id = str(info.get('View').get('aid'))
+            cid = int(info.get('View').get('cid') or 0)
+            folder_store = BiliVideoFolderStoreImplement()
+            existing_folder = folder_store.get_existing_video_folder(video_id)
+            if existing_folder:
+                # look for mp4 inside the folder
+                try:
+                    import glob
+                    mp4s = glob.glob(f"{existing_folder}/**/*.mp4", recursive=True)
+                    existing_mp4s = [p for p in mp4s if os.path.isfile(p)]
+                except Exception:
+                    existing_mp4s = []
+
+                if existing_mp4s:
+                    if mode == 'preview':
+                        utils.logger.info(f"[BilibiliCrawler.process_list_file] Video {video_id} already has mp4 in {existing_folder}, skipping and stopping further processing.")
+                        break
+                    # mode == 'final': check if existing mp4 is full-size; if so skip; otherwise proceed to download full and overwrite
+                    expected_size = None
+                    try:
+                        play_res = await self.get_video_play_url_task(int(video_id), cid, semaphore)
+                        if play_res:
+                            durl_list = play_res.get('durl')
+                            if durl_list:
+                                # choose the largest part size as expected
+                                expected_size = max(int(d.get('size', 0) or 0) for d in durl_list)
+                    except Exception:
+                        expected_size = None
+
+                    existing_size = 0
+                    try:
+                        import os
+                        existing_size = max(os.path.getsize(p) for p in existing_mp4s)
+                    except Exception:
+                        existing_size = 0
+
+                    if expected_size and existing_size >= max(0, expected_size - 1024):
+                        utils.logger.info(f"[BilibiliCrawler.process_list_file] Video {video_id} already has full mp4 ({existing_size} bytes >= {expected_size}), skipping and stopping.")
+                        break
+                    else:
+                        utils.logger.info(f"[BilibiliCrawler.process_list_file] Video {video_id} has partial mp4 ({existing_size} bytes); will download full video in final mode.")
+
+            # update meta and download according to mode
+            await bilibili_store.update_bilibili_video(info)
+            await bilibili_store.update_up_info(info)
+            # ensure get_bilibili_video uses the intended mode
+            old_mode = config.DOWNLOAD_MODE
+            config.DOWNLOAD_MODE = mode
+            try:
+                await self.get_bilibili_video(info, semaphore)
+            finally:
+                config.DOWNLOAD_MODE = old_mode
+            new_count += 1
+
+        print(f"通过列表处理，新增视频数量: {new_count}")
 
     async def get_video_info_task(self, aid: int, bvid: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """
@@ -551,16 +696,36 @@ class BilibiliCrawler(AbstractCrawler):
         durl_list = result.get("durl")
         max_size = -1
         video_url = ""
+        chosen = None
         for durl in durl_list:
             size = durl.get("size")
             if size > max_size:
                 max_size = size
                 video_url = durl.get("url")
+                chosen = durl
         if video_url == "":
             utils.logger.info("[BilibiliCrawler.get_bilibili_video] get video url failed")
             return
 
-        content = await self.bili_client.get_video_media(video_url)
+        # preview mode: try to estimate bytes for first PREVIEW_MAX_VIDEO_SECONDS using average bitrate
+        max_bytes = None
+        if config.DOWNLOAD_MODE == "preview":
+            try:
+                # timelength in ms if provided
+                total_ms = int(chosen.get("length", 0))
+                total_size = int(chosen.get("size", 0))
+                if total_ms > 0 and total_size > 0:
+                    avg_bytes_per_sec = total_size / (total_ms / 1000.0)
+                    want = int(avg_bytes_per_sec * config.PREVIEW_MAX_VIDEO_SECONDS)
+                    # cap by fallback max bytes to avoid over-downloading
+                    fallback_cap = config.PREVIEW_FALLBACK_MAX_BYTES_MB * 1024 * 1024
+                    max_bytes = min(want, fallback_cap)
+                else:
+                    max_bytes = config.PREVIEW_FALLBACK_MAX_BYTES_MB * 1024 * 1024
+            except Exception:
+                max_bytes = config.PREVIEW_FALLBACK_MAX_BYTES_MB * 1024 * 1024
+
+        content = await self.bili_client.get_video_media(video_url, max_bytes=max_bytes)
         await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
         utils.logger.info(f"[BilibiliCrawler.get_bilibili_video] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching video {aid}")
         if content is None:

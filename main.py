@@ -10,6 +10,7 @@
 
 
 import asyncio
+import time
 import sys
 from typing import Optional
 
@@ -24,6 +25,11 @@ from media_platform.tieba import TieBaCrawler
 from media_platform.weibo import WeiboCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 from media_platform.zhihu import ZhihuCrawler
+from tools import metrics
+from media_platform.bilibili.client import BilibiliClient
+from tools import utils
+import os
+import re
 
 
 class CrawlerFactory:
@@ -69,6 +75,7 @@ async def main():
 
 
 
+    # Normal execution: create and start the crawler for the selected platform
     crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
     await crawler.start()
 
@@ -82,7 +89,19 @@ def cleanup():
 
 
 if __name__ == "__main__":
+    _start_ts = time.perf_counter()
     try:
         asyncio.get_event_loop().run_until_complete(main())
     finally:
         cleanup()
+        _elapsed_min = (time.perf_counter() - _start_ts) / 60.0
+        # 打印总耗时（分钟）
+        print(f"程序运行总耗时: {_elapsed_min:.2f} 分钟")
+        try:
+            total_bytes = metrics.get_downloaded_bytes()
+            total_mb = total_bytes / (1024 * 1024)
+            total_secs = max((_elapsed_min * 60.0), 1e-6)
+            avg_mb_s = total_mb / total_secs
+            print(f"媒体总下载量: {total_mb:.2f} MB, 平均下载速度: {avg_mb_s:.2f} MB/s")
+        except Exception:
+            pass
