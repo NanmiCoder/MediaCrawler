@@ -35,24 +35,14 @@ async def parse_cmd():
                         help='''Whether to crawl level one comment / 是否爬取一级评论, supported values case insensitive / 支持的值(不区分大小写) ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_COMMENTS)
     parser.add_argument('--get_sub_comment', type=str2bool,
                         help=''''Whether to crawl level two comment / 是否爬取二级评论, supported values case insensitive / 支持的值(不区分大小写) ('yes', 'true', 't', 'y', '1', 'no', 'false', 'f', 'n', '0')''', default=config.ENABLE_GET_SUB_COMMENTS)
-    parser.add_argument('--get_media', type=str2bool,
-                        help='Whether to download media files (images/videos) / 是否下载媒体文件(图片/视频), supported values case insensitive / 支持的值(不区分大小写) ("yes", "true", "t", "y", "1", "no", "false", "f", "n", "0")', default=config.ENABLE_GET_MEIDAS)
-    parser.add_argument('--max_dump', type=int,
-                        help='Maximum number of notes/videos to crawl / 最大爬取笔记/视频数量', default=config.CRAWLER_MAX_NOTES_COUNT)
     parser.add_argument('--save_data_option', type=str,
-                        help='Where to save the data / 数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库 | folder=按平台的文件夹存储)', 
-                        choices=['csv', 'db', 'json', 'sqlite', 'folder'], default=config.SAVE_DATA_OPTION)
+                        help='Where to save the data / 数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库)', 
+                        choices=['csv', 'db', 'json', 'sqlite'], default=config.SAVE_DATA_OPTION)
     parser.add_argument('--init_db', type=str,
                         help='Initialize database schema / 初始化数据库表结构 (sqlite | mysql)',
                         choices=['sqlite', 'mysql'], default=None)
     parser.add_argument('--cookies', type=str,
                         help='Cookies used for cookie login type / Cookie登录方式使用的Cookie值', default=config.COOKIES)
-    parser.add_argument('--download_mode', type=str,
-                        help='Download mode / 下载模式 (keyword=仅文本+评论 | preview=文本+图片+视频前3分钟 | final=文本+图片+完整视频)',
-                        choices=['keyword', 'preview', 'final'], default=config.DOWNLOAD_MODE)
-    parser.add_argument('--list', type=str,
-                        help='Path to a text file containing one URL per line to process in preview/final mode',
-                        default=None)
 
     args = parser.parse_args()
 
@@ -64,17 +54,7 @@ async def parse_cmd():
     config.KEYWORDS = args.keywords
     config.ENABLE_GET_COMMENTS = args.get_comment
     config.ENABLE_GET_SUB_COMMENTS = args.get_sub_comment
-    config.ENABLE_GET_MEIDAS = args.get_media
-    config.CRAWLER_MAX_NOTES_COUNT = args.max_dump
     config.SAVE_DATA_OPTION = args.save_data_option
     config.COOKIES = args.cookies
-    config.DOWNLOAD_MODE = args.download_mode
-    config.LIST_FILE = args.list
-    config.SORT_TYPE = "time_descending"                  #xhs
-    # Download mode overrides media fetching behavior
-    if config.DOWNLOAD_MODE == 'keyword':
-        config.ENABLE_GET_MEIDAS = False
-    else:
-        # preview/final: make sure media is enabled regardless of legacy flag
-        config.ENABLE_GET_MEIDAS = True
+
     return args

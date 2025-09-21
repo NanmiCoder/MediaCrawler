@@ -135,7 +135,7 @@ class BilibiliClient(AbstractApiClient):
         keyword: str,
         page: int = 1,
         page_size: int = 20,
-        order: SearchOrderType = SearchOrderType.LAST_PUBLISH,
+        order: SearchOrderType = SearchOrderType.DEFAULT,
         pubtime_begin_s: int = 0,
         pubtime_end_s: int = 0,
     ) -> Dict:
@@ -200,36 +200,16 @@ class BilibiliClient(AbstractApiClient):
 
         return await self.get(uri, params, enable_params_sign=True)
 
-    async def get_video_media(self, url: str, max_bytes: Optional[int] = None) -> Union[bytes, None]:
+    async def get_video_media(self, url: str) -> Union[bytes, None]:
         async with httpx.AsyncClient(proxy=self.proxy) as client:
             try:
-                # For preview, try to request partial content via Range header; fallback to streaming cutoff
-                headers = self.headers.copy()
-                if max_bytes is not None and max_bytes > 0:
-                    headers = headers.copy()
-                    headers["Range"] = f"bytes=0-{max_bytes - 1}"
-                    async with client.stream("GET", url, timeout=self.timeout, headers=headers) as response:
-                        if response.status_code not in (200, 206):
-                            utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, status:{response.status_code}")
-                            return None
-                        buf = bytearray()
-                        async for chunk in response.aiter_bytes():
-                            if chunk:
-                                need = max_bytes - len(buf)
-                                if need <= 0:
-                                    break
-                                buf.extend(chunk[:need])
-                                if len(buf) >= max_bytes:
-                                    break
-                        return bytes(buf)
+                response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
+                response.raise_for_status()
+                if not response.reason_phrase == "OK":
+                    utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, res:{response.text}")
+                    return None
                 else:
-                    response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
-                    response.raise_for_status()
-                    if not response.reason_phrase == "OK":
-                        utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, res:{response.text}")
-                        return None
-                    else:
-                        return response.content
+                    return response.content
             except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
                 utils.logger.error(f"[BilibiliClient.get_video_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")  # 保留原始异常类型名称，以便开发者调试
                 return None

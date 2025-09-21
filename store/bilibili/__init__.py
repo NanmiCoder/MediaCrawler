@@ -17,11 +17,9 @@ from typing import List
 
 import config
 from var import source_keyword_var
-from tools import metrics
 
 from ._store_impl import *
 from .bilibilli_store_media import *
-from .bilibili_video_folder_store import BiliVideoFolderStoreImplement
 
 
 class BiliStoreFactory:
@@ -30,14 +28,13 @@ class BiliStoreFactory:
         "db": BiliDbStoreImplement,
         "json": BiliJsonStoreImplement,
         "sqlite": BiliSqliteStoreImplement,
-        "folder": BiliVideoFolderStoreImplement,  # unified folder storage
     }
 
     @staticmethod
     def create_store() -> AbstractStore:
         store_class = BiliStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
-            raise ValueError("[BiliStoreFactory.create_store] Invalid save option. Supported: csv, db, json, sqlite, folder ...")
+            raise ValueError("[BiliStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite ...")
         return store_class()
 
 
@@ -69,7 +66,6 @@ async def update_bilibili_video(video_item: Dict):
         "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(f"[store.bilibili.update_bilibili_video] bilibili video id:{video_id}, title:{save_content_item.get('title')}")
-    utils.logger.info(f"[store.bilibili.update_bilibili_video] source_keyword: {save_content_item.get('source_keyword')}")
     await BiliStoreFactory.create_store().store_content(content_item=save_content_item)
 
 
@@ -119,10 +115,8 @@ async def update_bilibili_video_comment(video_id: str, comment_item: Dict):
         "sub_comment_count": str(comment_item.get("rcount", 0)),
         "like_count": like_count,
         "last_modify_ts": utils.get_current_timestamp(),
-        "source_keyword": source_keyword_var.get(),  # 添加关键词信息
     }
-    if getattr(config, "ENABLE_COMMENT_LOG", True):
-        utils.logger.info(f"[store.bilibili.update_bilibili_video_comment] Bilibili video comment: {comment_id}, content: {save_comment_item.get('content')}")
+    utils.logger.info(f"[store.bilibili.update_bilibili_video_comment] Bilibili video comment: {comment_id}, content: {save_comment_item.get('content')}")
     await BiliStoreFactory.create_store().store_comment(comment_item=save_comment_item)
 
 
@@ -134,27 +128,11 @@ async def store_video(aid, video_content, extension_file_name):
         video_content:
         extension_file_name:
     """
-    if config.SAVE_DATA_OPTION == "folder":
-        from .bilibili_video_folder_store import BiliVideoFolderMediaStore
-        await BiliVideoFolderMediaStore().store_video({
-            "aid": aid,
-            "video_content": video_content,
-            "extension_file_name": extension_file_name,
-            "source_keyword": source_keyword_var.get(),  # 添加关键词信息
-        })
-    else:
-        # 使用原有的存储方式
-        await BilibiliVideo().store_video({
-            "aid": aid,
-            "video_content": video_content,
-            "extension_file_name": extension_file_name,
-        })
-    # 统计已下载字节数
-    try:
-        if isinstance(video_content, (bytes, bytearray)):
-            metrics.add_downloaded_bytes(len(video_content))
-    except Exception:
-        pass
+    await BilibiliVideo().store_video({
+        "aid": aid,
+        "video_content": video_content,
+        "extension_file_name": extension_file_name,
+    })
 
 
 async def batch_update_bilibili_creator_fans(creator_info: Dict, fans_list: List[Dict]):
