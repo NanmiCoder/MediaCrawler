@@ -1,3 +1,17 @@
+<div align="center" markdown="1">
+   <sup>Special thanks to:</sup>
+   <br>
+   <br>
+   <a href="https://go.warp.dev/MediaCrawler">
+      <img alt="Warp sponsorship" width="400" src="https://github.com/warpdotdev/brand-assets/blob/main/Github/Sponsor/Warp-Github-LG-02.png?raw=true">
+   </a>
+
+### [Warp is built for coding with multiple AI agents](https://go.warp.dev/MediaCrawler)
+
+
+</div>
+<hr>
+
 # 🔥 MediaCrawler - 自媒体平台爬虫 🕷️
 
 <div align="center">
