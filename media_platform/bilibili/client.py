@@ -189,10 +189,11 @@ class BilibiliClient(AbstractApiClient):
         if not aid or not cid or aid <= 0 or cid <= 0:
             raise ValueError("aid 和 cid 必须存在")
         uri = "/x/player/wbi/playurl"
+        qn_value = getattr(config, "BILI_QN", 80)
         params = {
             "avid": aid,
             "cid": cid,
-            "qn": 80,
+            "qn": qn_value,
             "fourk": 1,
             "fnval": 1,
             "platform": "pc",
@@ -201,15 +202,17 @@ class BilibiliClient(AbstractApiClient):
         return await self.get(uri, params, enable_params_sign=True)
 
     async def get_video_media(self, url: str) -> Union[bytes, None]:
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        # Follow CDN 302 redirects and treat any 2xx as success (some endpoints return 206)
+        async with httpx.AsyncClient(proxy=self.proxy, follow_redirects=True) as client:
             try:
                 response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
                 response.raise_for_status()
-                if not response.reason_phrase == "OK":
-                    utils.logger.error(f"[BilibiliClient.get_video_media] request {url} err, res:{response.text}")
-                    return None
-                else:
+                if 200 <= response.status_code < 300:
                     return response.content
+                utils.logger.error(
+                    f"[BilibiliClient.get_video_media] Unexpected status {response.status_code} for {url}"
+                )
+                return None
             except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
                 utils.logger.error(f"[BilibiliClient.get_video_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")  # 保留原始异常类型名称，以便开发者调试
                 return None
