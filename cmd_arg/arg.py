@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 
+import sys
 from enum import Enum
 from types import SimpleNamespace
 from typing import Iterable, Optional, Sequence, Type, TypeVar
@@ -96,15 +97,36 @@ def _coerce_enum(
         return default
 
 
-def _normalize_argv(argv: Optional[Sequence[str]]) -> Optional[Iterable[str]]:
+def _normalize_argv(argv: Optional[Sequence[str]]) -> Iterable[str]:
     if argv is None:
-        return None
+        return list(sys.argv[1:])
     return list(argv)
+
+
+def _inject_init_db_default(args: Sequence[str]) -> list[str]:
+    """Ensure bare --init_db defaults to sqlite for backward compatibility."""
+
+    normalized: list[str] = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        normalized.append(arg)
+
+        if arg == "--init_db":
+            next_arg = args[i + 1] if i + 1 < len(args) else None
+            if not next_arg or next_arg.startswith("-"):
+                normalized.append(InitDbOptionEnum.SQLITE.value)
+        i += 1
+
+    return normalized
 
 
 async def parse_cmd(argv: Optional[Sequence[str]] = None):
     """使用 Typer 解析命令行参数。"""
 
+    app = typer.Typer(add_completion=False)
+
+    @app.callback(invoke_without_command=True)
     def main(
         platform: Annotated[
             PlatformEnum,
@@ -221,9 +243,15 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             cookies=config.COOKIES,
         )
 
-    command = typer.main.get_command(main)
+    command = typer.main.get_command(app)
+
+    cli_args = _normalize_argv(argv)
+    cli_args = _inject_init_db_default(cli_args)
 
     try:
-        return command.main(args=_normalize_argv(argv), standalone_mode=False)
+        result = command.main(args=cli_args, standalone_mode=False)
+        if isinstance(result, int):  # help/options handled by Typer; propagate exit code
+            raise SystemExit(result)
+        return result
     except typer.Exit as exc:  # pragma: no cover - CLI exit paths
         raise SystemExit(exc.exit_code) from exc
