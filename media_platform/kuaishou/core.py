@@ -376,7 +376,7 @@ class KuaishouCrawler(AbstractCrawler):
             # Get all video information of the creator
             all_video_list = await self.ks_client.get_all_videos_by_creator(
                 user_id=user_id,
-                crawl_interval=random.random(),
+                crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
                 callback=self.fetch_creator_video_detail,
             )
 
