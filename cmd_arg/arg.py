@@ -9,6 +9,9 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 
+from __future__ import annotations
+
+
 from enum import Enum
 from types import SimpleNamespace
 from typing import Iterable, Optional, Sequence, Type, TypeVar
