@@ -256,7 +256,7 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 成为赞助者，可以将您的产品展示在这里，每天获得大量曝光！
 
 **联系方式**：
-- 微信：`yzglan`
+- 微信：`relakkes`
 - 邮箱：`relakkes@gmail.com`
 
 

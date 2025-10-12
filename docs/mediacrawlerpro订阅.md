@@ -17,7 +17,7 @@
 
 
 
-扫描下方我的个人微信，备注：pro版本（如果图片展示不出来，可以直接添加我的微信号：yzglan）
+扫描下方我的个人微信，备注：pro版本（如果图片展示不出来，可以直接添加我的微信号：relakkes）
 
 ![relakkes_weichat.JPG](static/images/relakkes_weichat.jpg)
 

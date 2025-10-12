@@ -282,7 +282,7 @@ If this project helps you, please give a ⭐ Star to support and let more people
 Become a sponsor and showcase your product here, getting massive exposure daily!
 
 **Contact Information**:
-- WeChat: `yzglan`
+- WeChat: `relakkes`
 - Email: `relakkes@gmail.com`
 
 

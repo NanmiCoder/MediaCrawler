@@ -282,7 +282,7 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 ¡Conviértase en patrocinador y muestre su producto aquí, obteniendo exposición masiva diariamente!
 
 **Información de Contacto**:
-- WeChat: `yzglan`
+- WeChat: `relakkes`
 - Email: `relakkes@gmail.com`
 
 
