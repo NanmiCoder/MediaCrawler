@@ -253,7 +253,7 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 
 <p align="center">
   <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">
-    <img style="border-radius:20px" width="700" alt="TikHub IO_Banner zh" src="docs/static/images/tikhub_banner.png">
+    <img style="border-radius:20px" width="500" alt="TikHub IO_Banner zh" src="docs/static/images/tikhub_banner_zh.png">
   </a>
 </p>
 
