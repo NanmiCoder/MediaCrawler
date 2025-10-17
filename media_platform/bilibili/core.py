@@ -41,6 +41,7 @@ from var import crawler_type_var, source_keyword_var
 from .client import BilibiliClient
 from .exception import DataFetchError
 from .field import SearchOrderType
+from .help import parse_video_info_from_url, parse_creator_info_from_url
 from .login import BilibiliLogin
 
 
@@ -103,8 +104,14 @@ class BilibiliCrawler(AbstractCrawler):
                 await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
             elif config.CRAWLER_TYPE == "creator":
                 if config.CREATOR_MODE:
-                    for creator_id in config.BILI_CREATOR_ID_LIST:
-                        await self.get_creator_videos(int(creator_id))
+                    for creator_url in config.BILI_CREATOR_ID_LIST:
+                        try:
+                            creator_info = parse_creator_info_from_url(creator_url)
+                            utils.logger.info(f"[BilibiliCrawler.start] Parsed creator ID: {creator_info.creator_id} from {creator_url}")
+                            await self.get_creator_videos(int(creator_info.creator_id))
+                        except ValueError as e:
+                            utils.logger.error(f"[BilibiliCrawler.start] Failed to parse creator URL: {e}")
+                            continue
                 else:
                     await self.get_all_creator_details(config.BILI_CREATOR_ID_LIST)
             else:
@@ -362,11 +369,23 @@ class BilibiliCrawler(AbstractCrawler):
             utils.logger.info(f"[BilibiliCrawler.get_creator_videos] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {pn}")
             pn += 1
 
-    async def get_specified_videos(self, bvids_list: List[str]):
+    async def get_specified_videos(self, video_url_list: List[str]):
         """
-        get specified videos info
+        get specified videos info from URLs or BV IDs
+        :param video_url_list: List of video URLs or BV IDs
         :return:
         """
+        utils.logger.info("[BilibiliCrawler.get_specified_videos] Parsing video URLs...")
+        bvids_list = []
+        for video_url in video_url_list:
+            try:
+                video_info = parse_video_info_from_url(video_url)
+                bvids_list.append(video_info.video_id)
+                utils.logger.info(f"[BilibiliCrawler.get_specified_videos] Parsed video ID: {video_info.video_id} from {video_url}")
+            except ValueError as e:
+                utils.logger.error(f"[BilibiliCrawler.get_specified_videos] Failed to parse video URL: {e}")
+                continue
+
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [self.get_video_info_task(aid=0, bvid=video_id, semaphore=semaphore) for video_id in bvids_list]
         video_details = await asyncio.gather(*task_list)
@@ -568,18 +587,30 @@ class BilibiliCrawler(AbstractCrawler):
         extension_file_name = f"video.mp4"
         await bilibili_store.store_video(aid, content, extension_file_name)
 
-    async def get_all_creator_details(self, creator_id_list: List[int]):
+    async def get_all_creator_details(self, creator_url_list: List[str]):
         """
-        creator_id_list: get details for creator from creator_id_list
+        creator_url_list: get details for creator from creator URL list
         """
-        utils.logger.info(f"[BilibiliCrawler.get_creator_details] Crawling the detalis of creator")
-        utils.logger.info(f"[BilibiliCrawler.get_creator_details] creator ids:{creator_id_list}")
+        utils.logger.info(f"[BilibiliCrawler.get_all_creator_details] Crawling the details of creators")
+        utils.logger.info(f"[BilibiliCrawler.get_all_creator_details] Parsing creator URLs...")
+
+        creator_id_list = []
+        for creator_url in creator_url_list:
+            try:
+                creator_info = parse_creator_info_from_url(creator_url)
+                creator_id_list.append(int(creator_info.creator_id))
+                utils.logger.info(f"[BilibiliCrawler.get_all_creator_details] Parsed creator ID: {creator_info.creator_id} from {creator_url}")
+            except ValueError as e:
+                utils.logger.error(f"[BilibiliCrawler.get_all_creator_details] Failed to parse creator URL: {e}")
+                continue
+
+        utils.logger.info(f"[BilibiliCrawler.get_all_creator_details] creator ids:{creator_id_list}")
 
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         try:
             for creator_id in creator_id_list:
-                task = asyncio.create_task(self.get_creator_details(creator_id, semaphore), name=creator_id)
+                task = asyncio.create_task(self.get_creator_details(creator_id, semaphore), name=str(creator_id))
                 task_list.append(task)
         except Exception as e:
             utils.logger.warning(f"[BilibiliCrawler.get_all_creator_details] error in the task list. The creator will not be included. {e}")

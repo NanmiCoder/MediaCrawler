@@ -9,15 +9,17 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。  
 
 
-    # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 23:26
 # @Desc    : bilibili 请求参数签名
 # 逆向实现参考：https://socialsisteryi.github.io/bilibili-API-collect/docs/misc/sign/wbi.html#wbi%E7%AD%BE%E5%90%8D%E7%AE%97%E6%B3%95
+import re
 import urllib.parse
 from hashlib import md5
 from typing import Dict
 
+from model.m_bilibili import VideoUrlInfo, CreatorUrlInfo
 from tools import utils
 
 
@@ -66,16 +68,71 @@ class BilibiliSign:
         return req_data
 
 
+def parse_video_info_from_url(url: str) -> VideoUrlInfo:
+    """
+    从B站视频URL中解析出视频ID
+    Args:
+        url: B站视频链接
+            - https://www.bilibili.com/video/BV1dwuKzmE26/?spm_id_from=333.1387.homepage.video_card.click
+            - https://www.bilibili.com/video/BV1d54y1g7db
+            - BV1d54y1g7db (直接传入BV号)
+    Returns:
+        VideoUrlInfo: 包含视频ID的对象
+    """
+    # 如果传入的已经是BV号,直接返回
+    if url.startswith("BV"):
+        return VideoUrlInfo(video_id=url)
+
+    # 使用正则表达式提取BV号
+    # 匹配 /video/BV... 或 /video/av... 格式
+    bv_pattern = r'/video/(BV[a-zA-Z0-9]+)'
+    match = re.search(bv_pattern, url)
+
+    if match:
+        video_id = match.group(1)
+        return VideoUrlInfo(video_id=video_id)
+
+    raise ValueError(f"无法从URL中解析出视频ID: {url}")
+
+
+def parse_creator_info_from_url(url: str) -> CreatorUrlInfo:
+    """
+    从B站创作者空间URL中解析出创作者ID
+    Args:
+        url: B站创作者空间链接
+            - https://space.bilibili.com/434377496?spm_id_from=333.1007.0.0
+            - https://space.bilibili.com/20813884
+            - 434377496 (直接传入UID)
+    Returns:
+        CreatorUrlInfo: 包含创作者ID的对象
+    """
+    # 如果传入的已经是纯数字ID,直接返回
+    if url.isdigit():
+        return CreatorUrlInfo(creator_id=url)
+
+    # 使用正则表达式提取UID
+    # 匹配 /space.bilibili.com/数字 格式
+    uid_pattern = r'space\.bilibili\.com/(\d+)'
+    match = re.search(uid_pattern, url)
+
+    if match:
+        creator_id = match.group(1)
+        return CreatorUrlInfo(creator_id=creator_id)
+
+    raise ValueError(f"无法从URL中解析出创作者ID: {url}")
+
+
 if __name__ == '__main__':
-    _img_key = "7cd084941338484aae1ad9425b84077c"
-    _sub_key = "4932caff0ff746eab6f01bf08b70ac45"
-    _search_url = "__refresh__=true&_extra=&ad_resource=5654&category_id=&context=&dynamic_offset=0&from_source=&from_spmid=333.337&gaia_vtoken=&highlight=1&keyword=python&order=click&page=1&page_size=20&platform=pc&qv_id=OQ8f2qtgYdBV1UoEnqXUNUl8LEDAdzsD&search_type=video&single_column=0&source_tag=3&web_location=1430654"
-    _req_data = dict()
-    for params in _search_url.split("&"):
-        kvalues = params.split("=")
-        key = kvalues[0]
-        value = kvalues[1]
-        _req_data[key] = value
-    print("pre req_data", _req_data)
-    _req_data = BilibiliSign(img_key=_img_key, sub_key=_sub_key).sign(req_data={"aid":170001})
-    print(_req_data)
+    # 测试视频URL解析
+    video_url1 = "https://www.bilibili.com/video/BV1dwuKzmE26/?spm_id_from=333.1387.homepage.video_card.click"
+    video_url2 = "BV1d54y1g7db"
+    print("视频URL解析测试:")
+    print(f"URL1: {video_url1} -> {parse_video_info_from_url(video_url1)}")
+    print(f"URL2: {video_url2} -> {parse_video_info_from_url(video_url2)}")
+
+    # 测试创作者URL解析
+    creator_url1 = "https://space.bilibili.com/434377496?spm_id_from=333.1007.0.0"
+    creator_url2 = "20813884"
+    print("\n创作者URL解析测试:")
+    print(f"URL1: {creator_url1} -> {parse_creator_info_from_url(creator_url1)}")
+    print(f"URL2: {creator_url2} -> {parse_creator_info_from_url(creator_url2)}")
