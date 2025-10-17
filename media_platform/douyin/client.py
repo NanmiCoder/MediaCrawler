@@ -324,3 +324,28 @@ class DouYinClient(AbstractApiClient):
             except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
                 utils.logger.error(f"[DouYinClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")  # 保留原始异常类型名称，以便开发者调试
                 return None
+
+    async def resolve_short_url(self, short_url: str) -> str:
+        """
+        解析抖音短链接,获取重定向后的真实URL
+        Args:
+            short_url: 短链接,如 https://v.douyin.com/iF12345ABC/
+        Returns:
+            重定向后的完整URL
+        """
+        async with httpx.AsyncClient(proxy=self.proxy, follow_redirects=False) as client:
+            try:
+                utils.logger.info(f"[DouYinClient.resolve_short_url] Resolving short URL: {short_url}")
+                response = await client.get(short_url, timeout=10)
+
+                # 短链接通常返回302重定向
+                if response.status_code in [301, 302, 303, 307, 308]:
+                    redirect_url = response.headers.get("Location", "")
+                    utils.logger.info(f"[DouYinClient.resolve_short_url] Resolved to: {redirect_url}")
+                    return redirect_url
+                else:
+                    utils.logger.warning(f"[DouYinClient.resolve_short_url] Unexpected status code: {response.status_code}")
+                    return ""
+            except Exception as e:
+                utils.logger.error(f"[DouYinClient.resolve_short_url] Failed to resolve short URL: {e}")
+                return ""
