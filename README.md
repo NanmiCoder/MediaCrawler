@@ -239,6 +239,14 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 
 [🚀 MediaCrawlerPro 重磅发布 🚀！更多的功能，更好的架构设计！](https://github.com/MediaCrawlerPro)
 
+
+### 💬 交流群组
+- **微信交流群**：[点击加入](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
+
+### 📚 其他
+- **常见问题**：[MediaCrawler 完整文档](https://nanmicoder.github.io/MediaCrawler/)
+- **爬虫入门教程**：[CrawlerTutorial 免费教程](https://github.com/NanmiCoder/CrawlerTutorial)
+- **新闻爬虫开源项目**：[NewsCrawlerCollection](https://github.com/NanmiCoder/NewsCrawlerCollection)
 ---
 
 ### 💰 赞助商展示
@@ -270,6 +278,21 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 - 💻 GitHub地址：[https://github.com/TikHubIO/](https://github.com/TikHubIO/)
 
 ---
+<p align="center">
+  <a href="https://app.nstbrowser.io/account/register?utm_source=official&utm_term=mediacrawler">
+    <img style="border-radius:20px"  alt="NstBrowser Banner " src="docs/static/images/nstbrowser.jpg">
+  </a>
+</p>
+
+Nstbrowser 指纹浏览器 — 多账号运营&自动化管理的最佳解决方案
+<br>
+多账号安全管理与会话隔离；指纹定制结合反检测浏览器环境，兼顾真实度与稳定性；覆盖店铺管理、电商监控、社媒营销、广告验证、Web3、投放监控与联盟营销等业务线；提供生产级并发与定制化企业服务；提供可一键部署的云端浏览器方案，配套全球高质量 IP 池，为您构建长期行业竞争力
+<br>
+[点击此处即刻开始免费使用](https://app.nstbrowser.io/account/register?utm_source=official&utm_term=mediacrawler)
+<br>
+使用 NSTBROWSER 可获得 10% 充值赠礼
+
+
 
 ### 🤝 成为赞助者
 
@@ -278,29 +301,6 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 **联系方式**：
 - 微信：`relakkes`
 - 邮箱：`relakkes@gmail.com`
-
-
-## 🤝 社区与支持
-
-### 💬 交流群组
-- **微信交流群**：[点击加入](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
-
-### 📚 文档与教程
-- **在线文档**：[MediaCrawler 完整文档](https://nanmicoder.github.io/MediaCrawler/)
-- **爬虫教程**：[CrawlerTutorial 免费教程](https://github.com/NanmiCoder/CrawlerTutorial)
-  
-
-# 其他常见问题可以查看在线文档
-> 
-> 在线文档包含使用方法、常见问题、加入项目交流群等。
-> [MediaCrawler在线文档](https://nanmicoder.github.io/MediaCrawler/)
-> 
-
-# 作者提供的知识服务
-> 如果想快速入门和学习该项目的使用、源码架构设计等、学习编程技术、亦或者想了解MediaCrawlerPro的源代码设计可以看下我的知识付费栏目。
-
-[作者的知识付费栏目介绍](https://nanmicoder.github.io/MediaCrawler/%E7%9F%A5%E8%AF%86%E4%BB%98%E8%B4%B9%E4%BB%8B%E7%BB%8D.html)
-
 
 ---
 
