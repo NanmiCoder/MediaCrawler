@@ -451,13 +451,26 @@ class XiaoHongShuClient(AbstractApiClient):
                 result.extend(comments)
         return result
 
-    async def get_creator_info(self, user_id: str) -> Dict:
+    async def get_creator_info(
+        self, user_id: str, xsec_token: str = "", xsec_source: str = ""
+    ) -> Dict:
         """
         通过解析网页版的用户主页HTML，获取用户个人简要信息
         PC端用户主页的网页存在window.__INITIAL_STATE__这个变量上的，解析它即可
-        eg: https://www.xiaohongshu.com/user/profile/59d8cb33de5fb4696bf17217
+
+        Args:
+            user_id: 用户ID
+            xsec_token: 验证token (可选,如果URL中包含此参数则传入)
+            xsec_source: 渠道来源 (可选,如果URL中包含此参数则传入)
+
+        Returns:
+            Dict: 创作者信息
         """
+        # 构建URI,如果有xsec参数则添加到URL中
         uri = f"/user/profile/{user_id}"
+        if xsec_token and xsec_source:
+            uri = f"{uri}?xsec_token={xsec_token}&xsec_source={xsec_source}"
+
         html_content = await self.request(
             "GET", self._domain + uri, return_response=True, headers=self.headers
         )
