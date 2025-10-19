@@ -127,23 +127,24 @@ class BrowserLauncher:
             "--disable-hang-monitor",
             "--disable-prompt-on-repost",
             "--disable-sync",
-            "--disable-web-security",  # 可能有助于某些网站的访问
-            "--disable-features=VizDisplayCompositor",
             "--disable-dev-shm-usage",  # 避免共享内存问题
             "--no-sandbox",  # 在CDP模式下关闭沙箱
+            # 🔥 关键反检测参数
+            "--disable-blink-features=AutomationControlled",  # 禁用自动化控制标记
+            "--exclude-switches=enable-automation",  # 排除自动化开关
+            "--disable-infobars",  # 禁用信息栏
         ]
-        
+
         # 无头模式
         if headless:
             args.extend([
-                "--headless",
+                "--headless=new",  # 使用新的headless模式
                 "--disable-gpu",
             ])
         else:
-            # 非无头模式下也保持一些稳定性参数
+            # 非无头模式的额外参数
             args.extend([
-                "--disable-blink-features=AutomationControlled",
-                "--disable-infobars",
+                "--start-maximized",  # 最大化窗口,更像真实用户
             ])
         
         # 用户数据目录
