@@ -27,16 +27,17 @@ def sign(a1="", b1="", x_s="", x_t=""):
         "s0": 3,  # getPlatformCode
         "s1": "",
         "x0": "1",  # localStorage.getItem("b1b1")
-        "x1": "3.7.8-2",  # version
+        "x1": "4.2.2",  # version
         "x2": "Mac OS",
         "x3": "xhs-pc-web",
-        "x4": "4.27.2",
+        "x4": "4.74.0",
         "x5": a1,  # cookie of a1
         "x6": x_t,
         "x7": x_s,
         "x8": b1,  # localStorage.getItem("b1")
         "x9": mrc(x_t + x_s + b1),
         "x10": 154,  # getSigCount
+        "x11": "normal"
     }
     encode_str = encodeUtf8(json.dumps(common, separators=(',', ':')))
     x_s_common = b64Encode(encode_str)
