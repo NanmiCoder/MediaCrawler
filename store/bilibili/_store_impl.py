@@ -37,7 +37,7 @@ class BiliCsvStoreImplement(AbstractStore):
     def __init__(self):
         self.file_writer = AsyncFileWriter(
             crawler_type=crawler_type_var.get(),
-            platform="bilibili"
+            platform="bili"
         )
 
     async def store_content(self, content_item: Dict):
@@ -220,7 +220,7 @@ class BiliJsonStoreImplement(AbstractStore):
     def __init__(self):
         self.file_writer = AsyncFileWriter(
             crawler_type=crawler_type_var.get(),
-            platform="bilibili"
+            platform="bili"
         )
 
     async def store_content(self, content_item: Dict):
