@@ -101,8 +101,14 @@ class XiaoHongShuClient(AbstractApiClient):
 
         if response.status_code == 471 or response.status_code == 461:
             # someday someone maybe will bypass captcha
-            verify_type = response.headers["Verifytype"]
-            verify_uuid = response.headers["Verifyuuid"]
+            try:
+                verify_type = response.headers["Verifytype"]
+            except KeyError:
+                verify_type = "未知"
+            try:
+                verify_uuid = response.headers["Verifyuuid"]
+            except KeyError:
+                verify_uuid = "未知"
             msg = f"出现验证码，请求失败，Verifytype: {verify_type}，Verifyuuid: {verify_uuid}, Response: {response}"
             utils.logger.error(msg)
             raise Exception(msg)
@@ -110,9 +116,9 @@ class XiaoHongShuClient(AbstractApiClient):
         if return_response:
             return response.text
         data: Dict = response.json()
-        if data["success"]:
+        if data.get("success", False):
             return data.get("data", data.get("success", {}))
-        elif data["code"] == self.IP_ERROR_CODE:
+        elif data.get("code") == self.IP_ERROR_CODE:
             raise IPBlockError(self.IP_ERROR_STR)
         else:
             raise DataFetchError(data.get("msg", None))
