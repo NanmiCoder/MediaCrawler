@@ -288,27 +288,14 @@ class WeiboClient:
 
         """
         uri = "/api/container/getIndex"
-        container_info = await self.get_creator_container_info(creator_id)
-        if container_info.get("fid_container_id") == "" or container_info.get("lfid_container_id") == "":
-            utils.logger.error(f"[WeiboClient.get_creator_info_by_id] get containerid failed")
-            raise DataFetchError("get containerid failed")
+        containerid = f"100505{creator_id}"
         params = {
             "jumpfrom": "weibocom",
             "type": "uid",
             "value": creator_id,
-            "containerid": container_info["fid_container_id"],
+            "containerid":containerid,
         }
-
         user_res = await self.get(uri, params)
-
-        if user_res.get("tabsInfo"):
-            tabs: List[Dict] = user_res.get("tabsInfo", {}).get("tabs", [])
-            for tab in tabs:
-                if tab.get("tabKey") == "weibo":
-                    container_info["lfid_container_id"] = tab.get("containerid")
-                    break
-
-        user_res.update(container_info)
         return user_res
 
     async def get_notes_by_creator(
