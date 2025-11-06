@@ -28,13 +28,14 @@ class WeibostoreFactory:
         "db": WeiboDbStoreImplement,
         "json": WeiboJsonStoreImplement,
         "sqlite": WeiboSqliteStoreImplement,
+        "mongodb": WeiboMongoStoreImplement,
     }
 
     @staticmethod
     def create_store() -> AbstractStore:
         store_class = WeibostoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
-            raise ValueError("[WeibotoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite ...")
+            raise ValueError("[WeibotoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite or mongodb ...")
         return store_class()
 
 

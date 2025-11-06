@@ -30,6 +30,7 @@ from database.db_session import get_session
 from database.models import KuaishouVideo, KuaishouVideoComment
 from tools import utils, words
 from var import crawler_type_var
+from store.mongodb_store_base import MongoDBStoreBase
 
 
 def calculate_number_of_files(file_store_path: str) -> int:
@@ -158,3 +159,61 @@ class KuaishouJsonStoreImplement(AbstractStore):
 class KuaishouSqliteStoreImplement(KuaishouDbStoreImplement):
     async def store_creator(self, creator: Dict):
         pass
+
+
+class KuaishouMongoStoreImplement(AbstractStore):
+    """快手MongoDB存储实现"""
+    
+    def __init__(self):
+        self.mongo_store = MongoDBStoreBase(collection_prefix="kuaishou")
+
+    async def store_content(self, content_item: Dict):
+        """
+        存储视频内容到MongoDB
+        Args:
+            content_item: 视频内容数据
+        """
+        video_id = content_item.get("video_id")
+        if not video_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="contents",
+            query={"video_id": video_id},
+            data=content_item
+        )
+        utils.logger.info(f"[KuaishouMongoStoreImplement.store_content] Saved video {video_id} to MongoDB")
+
+    async def store_comment(self, comment_item: Dict):
+        """
+        存储评论到MongoDB
+        Args:
+            comment_item: 评论数据
+        """
+        comment_id = comment_item.get("comment_id")
+        if not comment_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="comments",
+            query={"comment_id": comment_id},
+            data=comment_item
+        )
+        utils.logger.info(f"[KuaishouMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
+
+    async def store_creator(self, creator_item: Dict):
+        """
+        存储创作者信息到MongoDB
+        Args:
+            creator_item: 创作者数据
+        """
+        user_id = creator_item.get("user_id")
+        if not user_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="creators",
+            query={"user_id": user_id},
+            data=creator_item
+        )
+        utils.logger.info(f"[KuaishouMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")

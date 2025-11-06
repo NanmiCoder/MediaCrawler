@@ -18,6 +18,8 @@ from database.models import XhsNote, XhsNoteComment, XhsCreator
 from tools.async_file_writer import AsyncFileWriter
 from tools.time_util import get_current_timestamp
 from var import crawler_type_var
+from store.mongodb_store_base import MongoDBStoreBase
+from tools import utils
 
 class XhsCsvStoreImplement(AbstractStore):
     def __init__(self, **kwargs):
@@ -258,3 +260,62 @@ class XhsDbStoreImplement(AbstractStore):
 class XhsSqliteStoreImplement(XhsDbStoreImplement):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+
+class XhsMongoStoreImplement(AbstractStore):
+    """小红书MongoDB存储实现"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.mongo_store = MongoDBStoreBase(collection_prefix="xhs")
+
+    async def store_content(self, content_item: Dict):
+        """
+        存储笔记内容到MongoDB
+        Args:
+            content_item: 笔记内容数据
+        """
+        note_id = content_item.get("note_id")
+        if not note_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="contents",
+            query={"note_id": note_id},
+            data=content_item
+        )
+        utils.logger.info(f"[XhsMongoStoreImplement.store_content] Saved note {note_id} to MongoDB")
+
+    async def store_comment(self, comment_item: Dict):
+        """
+        存储评论到MongoDB
+        Args:
+            comment_item: 评论数据
+        """
+        comment_id = comment_item.get("comment_id")
+        if not comment_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="comments",
+            query={"comment_id": comment_id},
+            data=comment_item
+        )
+        utils.logger.info(f"[XhsMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
+
+    async def store_creator(self, creator_item: Dict):
+        """
+        存储创作者信息到MongoDB
+        Args:
+            creator_item: 创作者数据
+        """
+        user_id = creator_item.get("user_id")
+        if not user_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="creators",
+            query={"user_id": user_id},
+            data=creator_item
+        )
+        utils.logger.info(f"[XhsMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")

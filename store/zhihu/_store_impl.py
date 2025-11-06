@@ -31,6 +31,7 @@ from database.models import ZhihuContent, ZhihuComment, ZhihuCreator
 from tools import utils, words
 from var import crawler_type_var
 from tools.async_file_writer import AsyncFileWriter
+from store.mongodb_store_base import MongoDBStoreBase
 
 def calculate_number_of_files(file_store_path: str) -> int:
     """计算数据保存文件的前部分排序数字，支持每次运行代码不写到同一个文件中
@@ -189,3 +190,61 @@ class ZhihuSqliteStoreImplement(ZhihuDbStoreImplement):
     Zhihu content SQLite storage implementation
     """
     pass
+
+
+class ZhihuMongoStoreImplement(AbstractStore):
+    """知乎MongoDB存储实现"""
+    
+    def __init__(self):
+        self.mongo_store = MongoDBStoreBase(collection_prefix="zhihu")
+
+    async def store_content(self, content_item: Dict):
+        """
+        存储内容到MongoDB
+        Args:
+            content_item: 内容数据
+        """
+        note_id = content_item.get("note_id")
+        if not note_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="contents",
+            query={"note_id": note_id},
+            data=content_item
+        )
+        utils.logger.info(f"[ZhihuMongoStoreImplement.store_content] Saved note {note_id} to MongoDB")
+
+    async def store_comment(self, comment_item: Dict):
+        """
+        存储评论到MongoDB
+        Args:
+            comment_item: 评论数据
+        """
+        comment_id = comment_item.get("comment_id")
+        if not comment_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="comments",
+            query={"comment_id": comment_id},
+            data=comment_item
+        )
+        utils.logger.info(f"[ZhihuMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
+
+    async def store_creator(self, creator_item: Dict):
+        """
+        存储创作者信息到MongoDB
+        Args:
+            creator_item: 创作者数据
+        """
+        user_id = creator_item.get("user_id")
+        if not user_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="creators",
+            query={"user_id": user_id},
+            data=creator_item
+        )
+        utils.logger.info(f"[ZhihuMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")
