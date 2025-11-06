@@ -16,6 +16,7 @@ dependencies = [
     "httpx==0.28.1",
     "jieba==0.42.1",
     "matplotlib==3.9.0",
+    "motor>=3.3.0",
     "opencv-python>=4.11.0.86",
     "pandas==2.2.3",
     "parsel==1.9.1",

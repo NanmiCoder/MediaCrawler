@@ -31,6 +31,7 @@ from tools import utils, words
 from database.db_session import get_session
 from var import crawler_type_var
 from tools.async_file_writer import AsyncFileWriter
+from store.mongodb_store_base import MongoDBStoreBase
 
 
 def calculate_number_of_files(file_store_path: str) -> int:
@@ -190,3 +191,61 @@ class TieBaSqliteStoreImplement(TieBaDbStoreImplement):
     Tieba sqlite store implement
     """
     pass
+
+
+class TieBaMongoStoreImplement(AbstractStore):
+    """贴吧MongoDB存储实现"""
+    
+    def __init__(self):
+        self.mongo_store = MongoDBStoreBase(collection_prefix="tieba")
+
+    async def store_content(self, content_item: Dict):
+        """
+        存储帖子内容到MongoDB
+        Args:
+            content_item: 帖子内容数据
+        """
+        note_id = content_item.get("note_id")
+        if not note_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="contents",
+            query={"note_id": note_id},
+            data=content_item
+        )
+        utils.logger.info(f"[TieBaMongoStoreImplement.store_content] Saved note {note_id} to MongoDB")
+
+    async def store_comment(self, comment_item: Dict):
+        """
+        存储评论到MongoDB
+        Args:
+            comment_item: 评论数据
+        """
+        comment_id = comment_item.get("comment_id")
+        if not comment_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="comments",
+            query={"comment_id": comment_id},
+            data=comment_item
+        )
+        utils.logger.info(f"[TieBaMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
+
+    async def store_creator(self, creator_item: Dict):
+        """
+        存储创作者信息到MongoDB
+        Args:
+            creator_item: 创作者数据
+        """
+        user_id = creator_item.get("user_id")
+        if not user_id:
+            return
+        
+        await self.mongo_store.save_or_update(
+            collection_suffix="creators",
+            query={"user_id": user_id},
+            data=creator_item
+        )
+        utils.logger.info(f"[TieBaMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")

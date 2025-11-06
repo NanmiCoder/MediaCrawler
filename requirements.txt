@@ -24,3 +24,4 @@ cryptography>=45.0.7
 alembic>=1.16.5
 asyncmy>=0.2.10
 sqlalchemy>=2.0.43
+motor>=3.3.0

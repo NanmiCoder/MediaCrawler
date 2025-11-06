@@ -43,3 +43,18 @@ SQLITE_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "datab
 sqlite_db_config = {
     "db_path": SQLITE_DB_PATH
 }
+
+# mongodb config
+MONGODB_HOST = os.getenv("MONGODB_HOST", "localhost")
+MONGODB_PORT = os.getenv("MONGODB_PORT", 27017)
+MONGODB_USER = os.getenv("MONGODB_USER", "")
+MONGODB_PWD = os.getenv("MONGODB_PWD", "")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "media_crawler")
+
+mongodb_config = {
+    "host": MONGODB_HOST,
+    "port": int(MONGODB_PORT),
+    "user": MONGODB_USER,
+    "password": MONGODB_PWD,
+    "db_name": MONGODB_DB_NAME,
+}
