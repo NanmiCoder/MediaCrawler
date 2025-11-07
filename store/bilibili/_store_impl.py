@@ -31,7 +31,7 @@ from database.models import BilibiliVideoComment, BilibiliVideo, BilibiliUpInfo,
 from tools.async_file_writer import AsyncFileWriter
 from tools import utils, words
 from var import crawler_type_var
-from store.mongodb_store_base import MongoDBStoreBase
+from database.mongodb_store_base import MongoDBStoreBase
 
 
 class BiliCsvStoreImplement(AbstractStore):
