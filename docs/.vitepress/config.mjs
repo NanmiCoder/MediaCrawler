@@ -59,7 +59,6 @@ export default defineConfig({
                         text: 'MediaCrawler源码剖析课',
                         link: 'https://relakkes.feishu.cn/wiki/JUgBwdhIeiSbAwkFCLkciHdAnhh'
                     },
-                    {text: '知识星球文章专栏', link: '/知识星球介绍'},
                     {text: '开发者咨询服务', link: '/开发者咨询'},
                 ]
             },

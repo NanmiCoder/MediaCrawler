@@ -22,7 +22,7 @@ from tools import utils
 
 
 class BilibiliVideo(AbstractStoreVideo):
-    video_store_path: str = "data/bilibili/videos"
+    video_store_path: str = "data/bili/videos"
 
     async def store_video(self, video_content_item: Dict):
         """

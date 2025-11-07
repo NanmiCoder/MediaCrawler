@@ -91,8 +91,10 @@ class DouYinClient(AbstractApiClient):
         post_data = {}
         if request_method == "POST":
             post_data = params
-        a_bogus = await get_a_bogus(uri, query_string, post_data, headers["User-Agent"], self.playwright_page)
-        params["a_bogus"] = a_bogus
+
+        if "/v1/web/general/search" not in uri:
+            a_bogus = await get_a_bogus(uri, query_string, post_data, headers["User-Agent"], self.playwright_page)
+            params["a_bogus"] = a_bogus
 
     async def request(self, method, url, **kwargs):
         async with httpx.AsyncClient(proxy=self.proxy) as client:

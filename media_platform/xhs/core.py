@@ -282,16 +282,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 utils.logger.info(f"[get_note_detail_async_task] Begin get note detail, note_id: {note_id}")
-
-                try:
-                    note_detail = await self.xhs_client.get_note_by_id(note_id, xsec_source, xsec_token)
-                except RetryError:
-                    pass
-
+                note_detail = await self.xhs_client.get_note_by_id_from_html(note_id, xsec_source, xsec_token, enable_cookie=True)
                 if not note_detail:
-                    note_detail = await self.xhs_client.get_note_by_id_from_html(note_id, xsec_source, xsec_token, enable_cookie=True)
-                    if not note_detail:
-                        raise Exception(f"[get_note_detail_async_task] Failed to get note detail, Id: {note_id}")
+                    raise Exception(f"[get_note_detail_async_task] Failed to get note detail, Id: {note_id}")
 
                 note_detail.update({"xsec_token": xsec_token, "xsec_source": xsec_source})
                 

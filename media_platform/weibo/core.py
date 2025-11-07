@@ -293,7 +293,7 @@ class WeiboCrawler(AbstractCrawler):
                 # Get all note information of the creator
                 all_notes_list = await self.wb_client.get_all_notes_by_creator_id(
                     creator_id=user_id,
-                    container_id=createor_info_res.get("lfid_container_id"),
+                    container_id=f"107603{user_id}",
                     crawl_interval=0,
                     callback=weibo_store.batch_update_weibo_notes,
                 )
