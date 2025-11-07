@@ -30,7 +30,7 @@ from database.db_session import get_session
 from database.models import KuaishouVideo, KuaishouVideoComment
 from tools import utils, words
 from var import crawler_type_var
-from store.mongodb_store_base import MongoDBStoreBase
+from database.mongodb_store_base import MongoDBStoreBase
 
 
 def calculate_number_of_files(file_store_path: str) -> int:

@@ -18,7 +18,7 @@ from database.models import XhsNote, XhsNoteComment, XhsCreator
 from tools.async_file_writer import AsyncFileWriter
 from tools.time_util import get_current_timestamp
 from var import crawler_type_var
-from store.mongodb_store_base import MongoDBStoreBase
+from database.mongodb_store_base import MongoDBStoreBase
 from tools import utils
 
 class XhsCsvStoreImplement(AbstractStore):

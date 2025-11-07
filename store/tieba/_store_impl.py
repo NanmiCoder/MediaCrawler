@@ -31,7 +31,7 @@ from tools import utils, words
 from database.db_session import get_session
 from var import crawler_type_var
 from tools.async_file_writer import AsyncFileWriter
-from store.mongodb_store_base import MongoDBStoreBase
+from database.mongodb_store_base import MongoDBStoreBase
 
 
 def calculate_number_of_files(file_store_path: str) -> int:
