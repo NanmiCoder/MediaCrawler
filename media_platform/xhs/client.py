@@ -142,7 +142,8 @@ class XiaoHongShuClient(AbstractApiClient):
         elif data["code"] == self.IP_ERROR_CODE:
             raise IPBlockError(self.IP_ERROR_STR)
         else:
-            raise DataFetchError(data.get("msg", None))
+            err_msg = data.get("msg", None) or f"{response.text}"
+            raise DataFetchError(err_msg)
 
     async def get(self, uri: str, params=None) -> Dict:
         """
@@ -507,6 +508,8 @@ class XiaoHongShuClient(AbstractApiClient):
         creator: str,
         cursor: str,
         page_size: int = 30,
+        xsec_token: str = "",
+        xsec_source: str = "pc_feed",
     ) -> Dict:
         """
         获取博主的笔记
@@ -514,24 +517,22 @@ class XiaoHongShuClient(AbstractApiClient):
             creator: 博主ID
             cursor: 上一页最后一条笔记的ID
             page_size: 分页数据长度
+            xsec_token: 验证token
+            xsec_source: 渠道来源
 
         Returns:
 
         """
-        uri = "/api/sns/web/v1/user_posted"
-        data = {
-            "user_id": creator,
-            "cursor": cursor,
-            "num": page_size,
-            "image_formats": "jpg,webp,avif",
-        }
-        return await self.get(uri, data)
+        uri = f"/api/sns/web/v1/user_posted?num={page_size}&cursor={cursor}&user_id={creator}&xsec_token={xsec_token}&xsec_source={xsec_source}"
+        return await self.get(uri)
 
     async def get_all_notes_by_creator(
         self,
         user_id: str,
         crawl_interval: float = 1.0,
         callback: Optional[Callable] = None,
+        xsec_token: str = "",
+        xsec_source: str = "pc_feed",
     ) -> List[Dict]:
         """
         获取指定用户下的所有发过的帖子，该方法会一直查找一个用户下的所有帖子信息
@@ -539,6 +540,8 @@ class XiaoHongShuClient(AbstractApiClient):
             user_id: 用户ID
             crawl_interval: 爬取一次的延迟单位（秒）
             callback: 一次分页爬取结束后的更新回调函数
+            xsec_token: 验证token
+            xsec_source: 渠道来源
 
         Returns:
 
@@ -547,7 +550,7 @@ class XiaoHongShuClient(AbstractApiClient):
         notes_has_more = True
         notes_cursor = ""
         while notes_has_more and len(result) < config.CRAWLER_MAX_NOTES_COUNT:
-            notes_res = await self.get_notes_by_creator(user_id, notes_cursor)
+            notes_res = await self.get_notes_by_creator(user_id, notes_cursor, xsec_token=xsec_token, xsec_source=xsec_source)
             if not notes_res:
                 utils.logger.error(
                     f"[XiaoHongShuClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data."
