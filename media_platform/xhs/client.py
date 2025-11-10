@@ -17,6 +17,7 @@ from urllib.parse import urlencode
 import httpx
 from playwright.async_api import BrowserContext, Page
 from tenacity import retry, stop_after_attempt, wait_fixed
+from xhshow import Xhshow
 
 import config
 from base.base_crawler import AbstractApiClient
@@ -27,7 +28,6 @@ from .exception import DataFetchError, IPBlockError
 from .field import SearchNoteType, SearchSortType
 from .help import get_search_id, sign
 from .extractor import XiaoHongShuExtractor
-from .secsign import seccore_signv2_playwright
 
 
 class XiaoHongShuClient(AbstractApiClient):
@@ -53,24 +53,51 @@ class XiaoHongShuClient(AbstractApiClient):
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         self._extractor = XiaoHongShuExtractor()
+        # 初始化 xhshow 客户端用于签名生成
+        self._xhshow_client = Xhshow()
 
     async def _pre_headers(self, url: str, data=None) -> Dict:
         """
-        请求头参数签名
+        请求头参数签名，使用 xhshow 库生成签名
         Args:
-            url:
-            data:
+            url: 完整的 URI（GET 请求包含查询参数）
+            data: POST 请求的请求体数据
 
         Returns:
 
         """
-        x_s = await seccore_signv2_playwright(self.playwright_page, url, data)
-        local_storage = await self.playwright_page.evaluate("() => window.localStorage")
+        # 获取 a1 cookie 值
+        a1_value = self.cookie_dict.get("a1", "")
+
+        # 根据请求类型使用不同的签名方法
+        if data is None:
+            # GET 请求：从 url 中提取参数
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(url)
+            params = {k: v[0] if len(v) == 1 else v for k, v in parse_qs(parsed.query).items()}
+            # 使用完整的 URL（包含 host）
+            full_url = f"{self._host}{url}"
+            x_s = self._xhshow_client.sign_xs_get(uri=full_url, a1_value=a1_value, params=params)
+        else:
+            # POST 请求：使用 data 作为 payload
+            full_url = f"{self._host}{url}"
+            x_s = self._xhshow_client.sign_xs_post(uri=full_url, a1_value=a1_value, payload=data)
+
+        # 尝试获取 b1 值（从 localStorage），如果获取失败则使用空字符串
+        b1_value = ""
+        try:
+            if self.playwright_page:
+                local_storage = await self.playwright_page.evaluate("() => window.localStorage")
+                b1_value = local_storage.get("b1", "")
+        except Exception as e:
+            utils.logger.warning(f"[XiaoHongShuClient._pre_headers] Failed to get b1 from localStorage: {e}, using empty string")
+
+        # 使用 sign 函数生成其他签名头
         signs = sign(
-            a1=self.cookie_dict.get("a1", ""),
-            b1=local_storage.get("b1", ""),
+            a1=a1_value,
+            b1=b1_value,
             x_s=x_s,
-            x_t=str(int(time.time())),
+            x_t=str(int(time.time() * 1000)),  # x-t 使用毫秒时间戳
         )
 
         headers = {

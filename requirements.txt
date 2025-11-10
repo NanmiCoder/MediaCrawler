@@ -25,3 +25,4 @@ alembic>=1.16.5
 asyncmy>=0.2.10
 sqlalchemy>=2.0.43
 motor>=3.3.0
+xhshow>=0.1.3
