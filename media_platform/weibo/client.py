@@ -51,7 +51,7 @@ class WeiboClient:
         self.cookie_dict = cookie_dict
         self._image_agent_host = "https://i1.wp.com/"
 
-    @retry(stop=stop_after_attempt(5), wait=wait_fixed(2))
+    @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
     async def request(self, method, url, **kwargs) -> Union[Response, Dict]:
         enable_return_response = kwargs.pop("return_response", False)
         async with httpx.AsyncClient(proxy=self.proxy) as client:
@@ -63,7 +63,11 @@ class WeiboClient:
         try:
             data: Dict = response.json()
         except json.decoder.JSONDecodeError:
+            # issue: #771 搜索接口会报错432， 多次重试 + 更新 h5 cookies
             utils.logger.error(f"[WeiboClient.request] request {method}:{url} err code: {response.status_code} res:{response.text}")
+            await self.playwright_page.goto(self._host)
+            await asyncio.sleep(2)
+            await self.update_cookies(browser_context=self.playwright_page.context)
             raise DataFetchError(f"get response code error: {response.status_code}")
 
         ok_code = data.get("ok")

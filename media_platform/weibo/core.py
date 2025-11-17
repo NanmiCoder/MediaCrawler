@@ -86,6 +86,7 @@ class WeiboCrawler(AbstractCrawler):
             await self.context_page.goto(self.index_url)
             await asyncio.sleep(2)
 
+           
             # Create a client to interact with the xiaohongshu website.
             self.wb_client = await self.create_weibo_client(httpx_proxy_format)
             if not await self.wb_client.pong():
@@ -312,7 +313,7 @@ class WeiboCrawler(AbstractCrawler):
     async def create_weibo_client(self, httpx_proxy: Optional[str]) -> WeiboClient:
         """Create xhs client"""
         utils.logger.info("[WeiboCrawler.create_weibo_client] Begin create weibo API client ...")
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
+        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies(urls=[self.mobile_index_url]))
         weibo_client_obj = WeiboClient(
             proxy=httpx_proxy,
             headers={
