@@ -12,7 +12,8 @@ import asyncio
 import json
 import time
 from typing import Any, Callable, Dict, List, Optional, Union
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse, parse_qs
+
 
 import httpx
 from playwright.async_api import BrowserContext, Page
@@ -56,48 +57,49 @@ class XiaoHongShuClient(AbstractApiClient):
         # 初始化 xhshow 客户端用于签名生成
         self._xhshow_client = Xhshow()
 
-    async def _pre_headers(self, url: str, data=None) -> Dict:
-        """
-        请求头参数签名，使用 xhshow 库生成签名
+    async def _pre_headers(self, url: str, params: Optional[Dict] = None, payload: Optional[Dict] = None) -> Dict:
+        """请求头参数签名
+        
         Args:
-            url: 完整的 URI（GET 请求包含查询参数）
-            data: POST 请求的请求体数据
+            url: 请求的URL(GET请求是包含请求的参数)
+            params: GET请求的参数
+            payload: POST请求的参数
 
         Returns:
-
-        """
-        # 获取 a1 cookie 值
+            Dict: 请求头参数签名
+        """        
         a1_value = self.cookie_dict.get("a1", "")
-
-        # 根据请求类型使用不同的签名方法
-        if data is None:
-            # GET 请求：从 url 中提取参数
-            from urllib.parse import urlparse, parse_qs
-            parsed = urlparse(url)
-            params = {k: v[0] if len(v) == 1 else v for k, v in parse_qs(parsed.query).items()}
-            # 使用完整的 URL（包含 host）
-            full_url = f"{self._host}{url}"
-            x_s = self._xhshow_client.sign_xs_get(uri=full_url, a1_value=a1_value, params=params)
+        parsed = urlparse(url)
+        uri = parsed.path
+        if params is not None:                            
+            x_s = self._xhshow_client.sign_xs_get(
+                uri=uri, a1_value=a1_value, params=params
+            )
+        elif payload is not None:
+            x_s = self._xhshow_client.sign_xs_post(
+                uri=uri, a1_value=a1_value, payload=payload
+            )   
         else:
-            # POST 请求：使用 data 作为 payload
-            full_url = f"{self._host}{url}"
-            x_s = self._xhshow_client.sign_xs_post(uri=full_url, a1_value=a1_value, payload=data)
+            raise ValueError("params or payload is required")
 
-        # 尝试获取 b1 值（从 localStorage），如果获取失败则使用空字符串
+        # 获取 b1 值
         b1_value = ""
         try:
             if self.playwright_page:
-                local_storage = await self.playwright_page.evaluate("() => window.localStorage")
+                local_storage = await self.playwright_page.evaluate(
+                    "() => window.localStorage"
+                )
                 b1_value = local_storage.get("b1", "")
         except Exception as e:
-            utils.logger.warning(f"[XiaoHongShuClient._pre_headers] Failed to get b1 from localStorage: {e}, using empty string")
+            utils.logger.warning(
+                f"[XiaoHongShuClient._pre_headers] Failed to get b1 from localStorage: {e}"
+            )
 
-        # 使用 sign 函数生成其他签名头
         signs = sign(
             a1=a1_value,
             b1=b1_value,
             x_s=x_s,
-            x_t=str(int(time.time() * 1000)),  # x-t 使用毫秒时间戳
+            x_t=str(int(time.time() * 1000)),
         )
 
         headers = {
@@ -145,7 +147,7 @@ class XiaoHongShuClient(AbstractApiClient):
             err_msg = data.get("msg", None) or f"{response.text}"
             raise DataFetchError(err_msg)
 
-    async def get(self, uri: str, params=None) -> Dict:
+    async def get(self, uri: str, params: Optional[Dict] = None) -> Dict:
         """
         GET请求，对请求头签名
         Args:
@@ -155,12 +157,18 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
 
         """
-        final_uri = uri
+        headers = await self._pre_headers(uri, params)        
         if isinstance(params, dict):
-            final_uri = f"{uri}?" f"{urlencode(params)}"
-        headers = await self._pre_headers(final_uri)
+            # 使用 xhsshow build_url 构建完整的 URL
+            full_url = self._xhshow_client.build_url(
+                base_url=f"{self._host}{uri}",
+                params=params
+            )
+        else:
+            full_url = f"{self._host}{uri}"
+
         return await self.request(
-            method="GET", url=f"{self._host}{final_uri}", headers=headers
+            method="GET", url=full_url, headers=headers
         )
 
     async def post(self, uri: str, data: dict, **kwargs) -> Dict:
@@ -173,8 +181,8 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
 
         """
-        headers = await self._pre_headers(uri, data)
-        json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+        headers = await self._pre_headers(uri, payload=data)
+        json_str = self._xhshow_client.build_json_body(payload=data)
         return await self.request(
             method="POST",
             url=f"{self._host}{uri}",
@@ -523,8 +531,15 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
 
         """
-        uri = f"/api/sns/web/v1/user_posted?num={page_size}&cursor={cursor}&user_id={creator}&xsec_token={xsec_token}&xsec_source={xsec_source}"
-        return await self.get(uri)
+        uri = f"/api/sns/web/v1/user_posted"
+        params = {
+            "num": page_size,
+            "cursor": cursor,
+            "user_id": creator,
+            "xsec_token": xsec_token,
+            "xsec_source": xsec_source,
+        }
+        return await self.get(uri, params)
 
     async def get_all_notes_by_creator(
         self,
@@ -550,7 +565,9 @@ class XiaoHongShuClient(AbstractApiClient):
         notes_has_more = True
         notes_cursor = ""
         while notes_has_more and len(result) < config.CRAWLER_MAX_NOTES_COUNT:
-            notes_res = await self.get_notes_by_creator(user_id, notes_cursor, xsec_token=xsec_token, xsec_source=xsec_source)
+            notes_res = await self.get_notes_by_creator(
+                user_id, notes_cursor, xsec_token=xsec_token, xsec_source=xsec_source
+            )
             if not notes_res:
                 utils.logger.error(
                     f"[XiaoHongShuClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data."
