@@ -13,6 +13,8 @@ import os
 import asyncio
 import socket
 import httpx
+import signal
+import atexit
 from typing import Optional, Dict, Any
 from playwright.async_api import Browser, BrowserContext, Playwright
 
@@ -31,6 +33,40 @@ class CDPBrowserManager:
         self.browser: Optional[Browser] = None
         self.browser_context: Optional[BrowserContext] = None
         self.debug_port: Optional[int] = None
+        self._cleanup_registered = False
+
+    def _register_cleanup_handlers(self):
+        """
+        注册清理处理器，确保程序退出时清理浏览器进程
+        """
+        if self._cleanup_registered:
+            return
+
+        def sync_cleanup():
+            """同步清理函数，用于atexit"""
+            if self.launcher and self.launcher.browser_process:
+                utils.logger.info("[CDPBrowserManager] atexit: 清理浏览器进程")
+                self.launcher.cleanup()
+
+        # 注册atexit清理
+        atexit.register(sync_cleanup)
+
+        # 注册信号处理器
+        def signal_handler(signum, frame):
+            """信号处理器"""
+            utils.logger.info(f"[CDPBrowserManager] 收到信号 {signum}，清理浏览器进程")
+            if self.launcher and self.launcher.browser_process:
+                self.launcher.cleanup()
+            # 重新引发KeyboardInterrupt以便正常退出流程
+            if signum == signal.SIGINT:
+                raise KeyboardInterrupt
+
+        # 注册SIGINT (Ctrl+C) 和 SIGTERM
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        self._cleanup_registered = True
+        utils.logger.info("[CDPBrowserManager] 清理处理器已注册")
 
     async def launch_and_connect(
         self,
@@ -52,7 +88,10 @@ class CDPBrowserManager:
             # 3. 启动浏览器
             await self._launch_browser(browser_path, headless)
 
-            # 4. 通过CDP连接
+            # 4. 注册清理处理器（确保异常退出时也能清理）
+            self._register_cleanup_handlers()
+
+            # 5. 通过CDP连接
             await self._connect_via_cdp(playwright)
 
             # 5. 创建浏览器上下文
@@ -285,38 +324,67 @@ class CDPBrowserManager:
                 return []
         return []
 
-    async def cleanup(self):
+    async def cleanup(self, force: bool = False):
         """
         清理资源
+
+        Args:
+            force: 是否强制清理浏览器进程（忽略AUTO_CLOSE_BROWSER配置）
         """
         try:
             # 关闭浏览器上下文
             if self.browser_context:
                 try:
-                    await self.browser_context.close()
-                    utils.logger.info("[CDPBrowserManager] 浏览器上下文已关闭")
+                    # 检查上下文是否已经关闭
+                    # 尝试获取页面列表，如果失败说明已经关闭
+                    try:
+                        pages = self.browser_context.pages
+                        if pages is not None:
+                            await self.browser_context.close()
+                            utils.logger.info("[CDPBrowserManager] 浏览器上下文已关闭")
+                    except:
+                        utils.logger.debug("[CDPBrowserManager] 浏览器上下文已经被关闭")
                 except Exception as context_error:
-                    utils.logger.warning(
-                        f"[CDPBrowserManager] 关闭浏览器上下文失败: {context_error}"
-                    )
+                    # 只在错误不是因为已关闭时才记录警告
+                    error_msg = str(context_error).lower()
+                    if "closed" not in error_msg and "disconnected" not in error_msg:
+                        utils.logger.warning(
+                            f"[CDPBrowserManager] 关闭浏览器上下文失败: {context_error}"
+                        )
+                    else:
+                        utils.logger.debug(f"[CDPBrowserManager] 浏览器上下文已关闭: {context_error}")
                 finally:
                     self.browser_context = None
 
             # 断开浏览器连接
             if self.browser:
                 try:
-                    await self.browser.close()
-                    utils.logger.info("[CDPBrowserManager] 浏览器连接已断开")
+                    # 检查浏览器是否仍然连接
+                    if self.browser.is_connected():
+                        await self.browser.close()
+                        utils.logger.info("[CDPBrowserManager] 浏览器连接已断开")
+                    else:
+                        utils.logger.debug("[CDPBrowserManager] 浏览器连接已经断开")
                 except Exception as browser_error:
-                    utils.logger.warning(
-                        f"[CDPBrowserManager] 关闭浏览器连接失败: {browser_error}"
-                    )
+                    # 只在错误不是因为已关闭时才记录警告
+                    error_msg = str(browser_error).lower()
+                    if "closed" not in error_msg and "disconnected" not in error_msg:
+                        utils.logger.warning(
+                            f"[CDPBrowserManager] 关闭浏览器连接失败: {browser_error}"
+                        )
+                    else:
+                        utils.logger.debug(f"[CDPBrowserManager] 浏览器连接已关闭: {browser_error}")
                 finally:
                     self.browser = None
 
-            # 关闭浏览器进程（如果配置为自动关闭）
-            if config.AUTO_CLOSE_BROWSER:
-                self.launcher.cleanup()
+            # 关闭浏览器进程
+            # force=True 时强制关闭，忽略AUTO_CLOSE_BROWSER配置
+            # 这用于处理异常退出或手动清理的情况
+            if force or config.AUTO_CLOSE_BROWSER:
+                if self.launcher and self.launcher.browser_process:
+                    self.launcher.cleanup()
+                else:
+                    utils.logger.debug("[CDPBrowserManager] 没有需要清理的浏览器进程")
             else:
                 utils.logger.info(
                     "[CDPBrowserManager] 浏览器进程保持运行（AUTO_CLOSE_BROWSER=False）"
