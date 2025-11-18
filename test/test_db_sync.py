@@ -1,4 +1,21 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/test/test_db_sync.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
+# 1. 不得用于任何商业用途。
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
+# 3. 不得进行大规模爬取或对平台造成运营干扰。
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
+# 5. 不得用于任何非法或不当的用途。
+#
+# 详细许可条款请参阅项目根目录下的LICENSE文件。
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
+
 # @Author  : persist-1<persist1@126.com>
 # @Time    : 2025/9/8 00:02
 # @Desc    : 用于将orm映射模型（database/models.py）与两种数据库实际结构进行对比，并进行更新操作（连接数据库->结构比对->差异报告->交互式同步）
@@ -62,7 +79,7 @@ def compare_schemas(db_schema, orm_schema):
         orm_cols = set(orm_schema[table].keys())
         added_cols = orm_cols - db_cols
         deleted_cols = db_cols - orm_cols
-        
+
         modified_cols = {}
         for col in db_cols.intersection(orm_cols):
             if db_schema[table][col] != orm_schema[table][col]:
@@ -116,7 +133,7 @@ def print_diff(db_name, diff):
 def sync_database(engine, diff):
     """将ORM模型同步到数据库"""
     metadata = Base.metadata
-    
+
     # Alembic的上下文配置
     from alembic.migration import MigrationContext
     from alembic.operations import Operations

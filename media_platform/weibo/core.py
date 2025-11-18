@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/media_platform/weibo/core.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -86,7 +95,7 @@ class WeiboCrawler(AbstractCrawler):
             await self.context_page.goto(self.index_url)
             await asyncio.sleep(2)
 
-           
+
             # Create a client to interact with the xiaohongshu website.
             self.wb_client = await self.create_weibo_client(httpx_proxy_format)
             if not await self.wb_client.pong():
@@ -169,11 +178,11 @@ class WeiboCrawler(AbstractCrawler):
                             await self.get_note_images(mblog)
 
                 page += 1
-                
+
                 # Sleep after page navigation
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[WeiboCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
-                
+
                 await self.batch_get_notes_comments(note_id_list)
 
     async def get_specified_notes(self):
@@ -199,11 +208,11 @@ class WeiboCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 result = await self.wb_client.get_note_info_by_id(note_id)
-                
+
                 # Sleep after fetching note details
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[WeiboCrawler.get_note_info_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching note details {note_id}")
-                
+
                 return result
             except DataFetchError as ex:
                 utils.logger.error(f"[WeiboCrawler.get_note_info_task] Get note detail error: {ex}")
@@ -240,11 +249,11 @@ class WeiboCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 utils.logger.info(f"[WeiboCrawler.get_note_comments] begin get note_id: {note_id} comments ...")
-                
+
                 # Sleep before fetching comments
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[WeiboCrawler.get_note_comments] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds before fetching comments for note {note_id}")
-                
+
                 await self.wb_client.get_note_all_comments(
                     note_id=note_id,
                     crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,  # Use fixed interval instead of random

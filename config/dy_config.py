@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/config/dy_config.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -22,7 +31,7 @@ DY_SPECIFIED_ID_LIST = [
     "https://www.douyin.com/video/7525538910311632128",
     "https://v.douyin.com/drIPtQ_WPWY/",
     "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE?from_tab_name=main&modal_id=7525538910311632128",
-    "7202432992642387233",    
+    "7202432992642387233",
     # ........................
 ]
 

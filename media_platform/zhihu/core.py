@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/media_platform/zhihu/core.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -173,7 +182,7 @@ class ZhihuCrawler(AbstractCrawler):
                     # Sleep after page navigation
                     await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                     utils.logger.info(f"[ZhihuCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
-                    
+
                     page += 1
                     for content in content_list:
                         await zhihu_store.update_zhihu_content(content)
@@ -223,11 +232,11 @@ class ZhihuCrawler(AbstractCrawler):
             utils.logger.info(
                 f"[ZhihuCrawler.get_comments] Begin get note id comments {content_item.content_id}"
             )
-            
+
             # Sleep before fetching comments
             await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
             utils.logger.info(f"[ZhihuCrawler.get_comments] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds before fetching comments for content {content_item.content_id}")
-            
+
             await self.zhihu_client.get_note_all_comments(
                 content=content_item,
                 crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
@@ -314,11 +323,11 @@ class ZhihuCrawler(AbstractCrawler):
                     f"[ZhihuCrawler.get_specified_notes] Get answer info, question_id: {question_id}, answer_id: {answer_id}"
                 )
                 result = await self.zhihu_client.get_answer_info(question_id, answer_id)
-                
+
                 # Sleep after fetching answer details
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[ZhihuCrawler.get_note_detail] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching answer details {answer_id}")
-                
+
                 return result
 
             elif note_type == constant.ARTICLE_NAME:
@@ -327,11 +336,11 @@ class ZhihuCrawler(AbstractCrawler):
                     f"[ZhihuCrawler.get_specified_notes] Get article info, article_id: {article_id}"
                 )
                 result = await self.zhihu_client.get_article_info(article_id)
-                
+
                 # Sleep after fetching article details
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[ZhihuCrawler.get_note_detail] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching article details {article_id}")
-                
+
                 return result
 
             elif note_type == constant.VIDEO_NAME:
@@ -340,11 +349,11 @@ class ZhihuCrawler(AbstractCrawler):
                     f"[ZhihuCrawler.get_specified_notes] Get video info, video_id: {video_id}"
                 )
                 result = await self.zhihu_client.get_video_info(video_id)
-                
+
                 # Sleep after fetching video details
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[ZhihuCrawler.get_note_detail] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching video details {video_id}")
-                
+
                 return result
 
     async def get_specified_notes(self):

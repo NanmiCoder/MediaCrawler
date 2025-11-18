@@ -1,0 +1,46 @@
+# Pre-commit hooks configuration for MediaCrawler project
+# See https://pre-commit.com for more information
+
+repos:
+  # Local hooks
+  - repo: local
+    hooks:
+      # Python file header copyright check
+      - id: check-file-headers
+        name: Check Python file headers
+        entry: python tools/file_header_manager.py --check
+        language: system
+        types: [python]
+        pass_filenames: true
+        stages: [pre-commit]
+
+      # Auto-fix Python file headers
+      - id: add-file-headers
+        name: Add copyright headers to Python files
+        entry: python tools/file_header_manager.py
+        language: system
+        types: [python]
+        pass_filenames: true
+        stages: [pre-commit]
+
+  # Standard pre-commit hooks (optional, can be enabled later)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(.*\.md|.*\.txt)$
+      - id: end-of-file-fixer
+        exclude: ^(.*\.md|.*\.txt)$
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=10240']  # 10MB limit
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+
+# Global configuration
+default_language_version:
+  python: python3
+
+# Run hooks on all files during manual run
+# Usage: pre-commit run --all-files

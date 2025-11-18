@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/store/xhs/xhs_store_media.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -27,7 +36,7 @@ class XiaoHongShuImage(AbstractStoreImage):
     async def store_image(self, image_content_item: Dict):
         """
         store content
-        
+
         Args:
             image_content_item:
 
@@ -39,7 +48,7 @@ class XiaoHongShuImage(AbstractStoreImage):
     def make_save_file_name(self, notice_id: str, extension_file_name: str) -> str:
         """
         make save file name by store type
-        
+
         Args:
             notice_id: notice id
             extension_file_name: image filename with extension
@@ -52,7 +61,7 @@ class XiaoHongShuImage(AbstractStoreImage):
     async def save_image(self, notice_id: str, pic_content: str, extension_file_name):
         """
         save image to local
-        
+
         Args:
             notice_id: notice id
             pic_content: image content
@@ -74,7 +83,7 @@ class XiaoHongShuVideo(AbstractStoreVideo):
     async def store_video(self, video_content_item: Dict):
         """
         store content
-        
+
         Args:
             video_content_item:
 
@@ -86,7 +95,7 @@ class XiaoHongShuVideo(AbstractStoreVideo):
     def make_save_file_name(self, notice_id: str, extension_file_name: str) -> str:
         """
         make save file name by store type
-        
+
         Args:
             notice_id: notice id
             extension_file_name: video filename with extension
@@ -99,7 +108,7 @@ class XiaoHongShuVideo(AbstractStoreVideo):
     async def save_video(self, notice_id: str, video_content: str, extension_file_name):
         """
         save video to local
-        
+
         Args:
             notice_id: notice id
             video_content: video content

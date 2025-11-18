@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/media_platform/xhs/client.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -59,7 +68,7 @@ class XiaoHongShuClient(AbstractApiClient):
 
     async def _pre_headers(self, url: str, params: Optional[Dict] = None, payload: Optional[Dict] = None) -> Dict:
         """请求头参数签名
-        
+
         Args:
             url: 请求的URL(GET请求是包含请求的参数)
             params: GET请求的参数
@@ -67,18 +76,18 @@ class XiaoHongShuClient(AbstractApiClient):
 
         Returns:
             Dict: 请求头参数签名
-        """        
+        """
         a1_value = self.cookie_dict.get("a1", "")
         parsed = urlparse(url)
         uri = parsed.path
-        if params is not None:                            
+        if params is not None:
             x_s = self._xhshow_client.sign_xs_get(
                 uri=uri, a1_value=a1_value, params=params
             )
         elif payload is not None:
             x_s = self._xhshow_client.sign_xs_post(
                 uri=uri, a1_value=a1_value, payload=payload
-            )   
+            )
         else:
             raise ValueError("params or payload is required")
 
@@ -157,7 +166,7 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
 
         """
-        headers = await self._pre_headers(uri, params)        
+        headers = await self._pre_headers(uri, params)
         if isinstance(params, dict):
             # 使用 xhsshow build_url 构建完整的 URL
             full_url = self._xhshow_client.build_url(

@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/media_platform/xhs/core.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -164,7 +173,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     page += 1
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
                     await self.batch_get_note_comments(note_ids, xsec_tokens)
-                    
+
                     # Sleep after each page navigation
                     await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
@@ -296,11 +305,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         raise Exception(f"[get_note_detail_async_task] Failed to get note detail, Id: {note_id}")
 
                 note_detail.update({"xsec_token": xsec_token, "xsec_source": xsec_source})
-                
+
                 # Sleep after fetching note detail
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[get_note_detail_async_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching note {note_id}")
-                
+
                 return note_detail
 
             except DataFetchError as ex:
@@ -340,7 +349,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 callback=xhs_store.batch_update_xhs_note_comments,
                 max_count=CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
             )
-            
+
             # Sleep after fetching comments
             await asyncio.sleep(crawl_interval)
             utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Sleeping for {crawl_interval} seconds after fetching comments for note {note_id}")

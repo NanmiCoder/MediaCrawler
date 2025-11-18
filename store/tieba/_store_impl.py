@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/store/tieba/_store_impl.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -195,7 +204,7 @@ class TieBaSqliteStoreImplement(TieBaDbStoreImplement):
 
 class TieBaMongoStoreImplement(AbstractStore):
     """贴吧MongoDB存储实现"""
-    
+
     def __init__(self):
         self.mongo_store = MongoDBStoreBase(collection_prefix="tieba")
 
@@ -208,7 +217,7 @@ class TieBaMongoStoreImplement(AbstractStore):
         note_id = content_item.get("note_id")
         if not note_id:
             return
-        
+
         await self.mongo_store.save_or_update(
             collection_suffix="contents",
             query={"note_id": note_id},
@@ -225,7 +234,7 @@ class TieBaMongoStoreImplement(AbstractStore):
         comment_id = comment_item.get("comment_id")
         if not comment_id:
             return
-        
+
         await self.mongo_store.save_or_update(
             collection_suffix="comments",
             query={"comment_id": comment_id},
@@ -242,7 +251,7 @@ class TieBaMongoStoreImplement(AbstractStore):
         user_id = creator_item.get("user_id")
         if not user_id:
             return
-        
+
         await self.mongo_store.save_or_update(
             collection_suffix="creators",
             query={"user_id": user_id},

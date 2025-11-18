@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/store/bilibili/bilibilli_store_media.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -27,7 +36,7 @@ class BilibiliVideo(AbstractStoreVideo):
     async def store_video(self, video_content_item: Dict):
         """
         store content
-        
+
         Args:
             video_content_item:
 
@@ -39,11 +48,11 @@ class BilibiliVideo(AbstractStoreVideo):
     def make_save_file_name(self, aid: str, extension_file_name: str) -> str:
         """
         make save file name by store type
-        
+
         Args:
             aid: aid
             extension_file_name: video filename with extension
-            
+
         Returns:
 
         """
@@ -52,7 +61,7 @@ class BilibiliVideo(AbstractStoreVideo):
     async def save_video(self, aid: int, video_content: str, extension_file_name="mp4"):
         """
         save video to local
-        
+
         Args:
             aid: aid
             video_content: video content

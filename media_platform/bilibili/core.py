@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/media_platform/bilibili/core.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -216,11 +225,11 @@ class BilibiliCrawler(AbstractCrawler):
                         await bilibili_store.update_up_info(video_item)
                         await self.get_bilibili_video(video_item, semaphore)
                 page += 1
-                
+
                 # Sleep after page navigation
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
-                
+
                 await self.batch_get_video_comments(video_id_list)
 
     async def search_by_keywords_in_time_range(self, daily_limit: bool):
@@ -297,11 +306,11 @@ class BilibiliCrawler(AbstractCrawler):
                                 await self.get_bilibili_video(video_item, semaphore)
 
                         page += 1
-                        
+
                         # Sleep after page navigation
                         await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                         utils.logger.info(f"[BilibiliCrawler.search_by_keywords_in_time_range] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
-                        
+
                         await self.batch_get_video_comments(video_id_list)
 
                     except Exception as e:
@@ -413,11 +422,11 @@ class BilibiliCrawler(AbstractCrawler):
         async with semaphore:
             try:
                 result = await self.bili_client.get_video_info(aid=aid, bvid=bvid)
-                
+
                 # Sleep after fetching video details
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[BilibiliCrawler.get_video_info_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching video details {bvid or aid}")
-                
+
                 return result
             except DataFetchError as ex:
                 utils.logger.error(f"[BilibiliCrawler.get_video_info_task] Get video detail error: {ex}")

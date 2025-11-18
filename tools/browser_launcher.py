@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/tools/browser_launcher.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+
 # 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -27,19 +36,19 @@ class BrowserLauncher:
     浏览器启动器，用于检测和启动用户的Chrome/Edge浏览器
     支持Windows和macOS系统
     """
-    
+
     def __init__(self):
         self.system = platform.system()
         self.browser_process = None
         self.debug_port = None
-        
+
     def detect_browser_paths(self) -> List[str]:
         """
         检测系统中可用的浏览器路径
         返回按优先级排序的浏览器路径列表
         """
         paths = []
-        
+
         if self.system == "Windows":
             # Windows下的常见Chrome/Edge安装路径
             possible_paths = [
@@ -84,14 +93,14 @@ class BrowserLauncher:
                 "/usr/bin/microsoft-edge-beta",
                 "/usr/bin/microsoft-edge-dev",
             ]
-        
+
         # 检查路径是否存在且可执行
         for path in possible_paths:
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 paths.append(path)
-                
+
         return paths
-    
+
     def find_available_port(self, start_port: int = 9222) -> int:
         """
         查找可用的端口
@@ -104,9 +113,9 @@ class BrowserLauncher:
                     return port
             except OSError:
                 port += 1
-        
+
         raise RuntimeError(f"无法找到可用的端口，已尝试 {start_port} 到 {port-1}")
-    
+
     def launch_browser(self, browser_path: str, debug_port: int, headless: bool = False,
                       user_data_dir: Optional[str] = None) -> subprocess.Popen:
         """
@@ -146,15 +155,15 @@ class BrowserLauncher:
             args.extend([
                 "--start-maximized",  # 最大化窗口,更像真实用户
             ])
-        
+
         # 用户数据目录
         if user_data_dir:
             args.append(f"--user-data-dir={user_data_dir}")
-        
+
         utils.logger.info(f"[BrowserLauncher] 启动浏览器: {browser_path}")
         utils.logger.info(f"[BrowserLauncher] 调试端口: {debug_port}")
         utils.logger.info(f"[BrowserLauncher] 无头模式: {headless}")
-        
+
         try:
             # 在Windows上，使用CREATE_NEW_PROCESS_GROUP避免Ctrl+C影响子进程
             if self.system == "Windows":
@@ -174,17 +183,17 @@ class BrowserLauncher:
 
             self.browser_process = process
             return process
-            
+
         except Exception as e:
             utils.logger.error(f"[BrowserLauncher] 启动浏览器失败: {e}")
             raise
-    
+
     def wait_for_browser_ready(self, debug_port: int, timeout: int = 30) -> bool:
         """
         等待浏览器准备就绪
         """
         utils.logger.info(f"[BrowserLauncher] 等待浏览器在端口 {debug_port} 上准备就绪...")
-        
+
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
@@ -196,12 +205,12 @@ class BrowserLauncher:
                         return True
             except Exception:
                 pass
-            
+
             time.sleep(0.5)
-        
+
         utils.logger.error(f"[BrowserLauncher] 浏览器在 {timeout} 秒内未能准备就绪")
         return False
-    
+
     def get_browser_info(self, browser_path: str) -> Tuple[str, str]:
         """
         获取浏览器信息（名称和版本）
@@ -215,20 +224,20 @@ class BrowserLauncher:
                 name = "Chromium"
             else:
                 name = "Unknown Browser"
-            
+
             # 尝试获取版本信息
             try:
-                result = subprocess.run([browser_path, "--version"], 
+                result = subprocess.run([browser_path, "--version"],
                                       capture_output=True, text=True, timeout=5)
                 version = result.stdout.strip() if result.stdout else "Unknown Version"
             except:
                 version = "Unknown Version"
-            
+
             return name, version
-            
+
         except Exception:
             return "Unknown Browser", "Unknown Version"
-    
+
     def cleanup(self):
         """
         清理资源，关闭浏览器进程
