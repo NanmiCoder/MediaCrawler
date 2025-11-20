@@ -47,6 +47,7 @@ from .exception import DataFetchError
 from .field import SearchSortType
 from .help import parse_note_info_from_note_url, parse_creator_info_from_url, get_search_id
 from .login import XiaoHongShuLogin
+from .cookie_manager import CookieManager
 
 
 class XiaoHongShuCrawler(AbstractCrawler):
@@ -96,7 +97,34 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             # Create a client to interact with the xiaohongshu website.
             self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
-            if not await self.xhs_client.pong():
+
+            # Try to load saved cookies first if available and AUTO_SAVE_AND_USE_COOKIES is enabled
+            login_successful = False
+            cookie_manager = CookieManager()
+
+            # If LOGIN_TYPE is cookie or if AUTO_SAVE_AND_USE_COOKIES is enabled with saved cookies, try cookie login first
+            if config.LOGIN_TYPE == "cookie" or (config.AUTO_SAVE_AND_USE_COOKIES and cookie_manager.load_cookies()):
+                utils.logger.info("[XiaoHongShuCrawler] Attempting to use saved cookies for authentication ...")
+                login_obj = XiaoHongShuLogin(
+                    login_type="cookie",
+                    login_phone="",
+                    browser_context=self.browser_context,
+                    context_page=self.context_page,
+                    cookie_str=config.COOKIES,
+                )
+                await login_obj.begin()
+                await self.xhs_client.update_cookies(browser_context=self.browser_context)
+
+                # Validate if cookie login was successful
+                if await self.xhs_client.pong():
+                    utils.logger.info("[XiaoHongShuCrawler] Cookie authentication successful! No QR code scan needed.")
+                    login_successful = True
+                else:
+                    utils.logger.warning("[XiaoHongShuCrawler] Saved cookies are invalid or expired, will require new login")
+
+            # If cookie login failed or wasn't attempted, use configured login method
+            if not login_successful and not await self.xhs_client.pong():
+                utils.logger.info(f"[XiaoHongShuCrawler] Attempting login with method: {config.LOGIN_TYPE}")
                 login_obj = XiaoHongShuLogin(
                     login_type=config.LOGIN_TYPE,
                     login_phone="",  # input your phone number
