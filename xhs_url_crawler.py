@@ -54,6 +54,7 @@ import re
 import sys
 import time
 import urllib.parse
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
@@ -317,6 +318,131 @@ def sign(a1="", b1="", x_s="", x_t=""):
     }
 
 
+# ==================== Cookie Manager ====================
+
+class CookieManager:
+    """Manage Xiaohongshu cookie persistence"""
+
+    def __init__(self, cookie_dir: str = "cookies", logger: Optional[logging.Logger] = None):
+        """
+        Initialize Cookie Manager
+
+        Args:
+            cookie_dir: Directory to store cookies
+            logger: Logger instance
+        """
+        self.cookie_dir = Path(cookie_dir)
+        self.cookie_dir.mkdir(parents=True, exist_ok=True)
+        self.cookie_file = self.cookie_dir / "xhs_cookies.json"
+        self.logger = logger or logging.getLogger("CookieManager")
+
+    def save_cookies(self, cookies: List[Dict]) -> bool:
+        """
+        Save cookies to file
+
+        Args:
+            cookies: Playwright format cookie list
+
+        Returns:
+            bool: Whether save was successful
+        """
+        try:
+            # Add timestamp
+            cookie_data = {
+                "cookies": cookies,
+                "saved_at": time.time(),
+                "saved_time": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+
+            with open(self.cookie_file, 'w', encoding='utf-8') as f:
+                json.dump(cookie_data, f, ensure_ascii=False, indent=2)
+
+            self.logger.info(
+                f"Successfully saved {len(cookies)} cookies to {self.cookie_file}"
+            )
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Failed to save cookies: {e}")
+            return False
+
+    def load_cookies(self) -> Optional[List[Dict]]:
+        """
+        Load cookies from file
+
+        Returns:
+            Optional[List[Dict]]: Playwright format cookie list, or None if not found
+        """
+        if not self.cookie_file.exists():
+            self.logger.info(f"Cookie file not found: {self.cookie_file}")
+            return None
+
+        try:
+            with open(self.cookie_file, 'r', encoding='utf-8') as f:
+                cookie_data = json.load(f)
+
+            cookies = cookie_data.get("cookies", [])
+            saved_at = cookie_data.get("saved_at", 0)
+            saved_time = cookie_data.get("saved_time", "Unknown")
+
+            # Check if cookies are older than 30 days
+            if time.time() - saved_at > 30 * 24 * 3600:
+                self.logger.warning(
+                    f"Cookies are older than 30 days (saved at {saved_time}), may be expired"
+                )
+
+            self.logger.info(
+                f"Successfully loaded {len(cookies)} cookies from {self.cookie_file} (saved at {saved_time})"
+            )
+            return cookies
+
+        except Exception as e:
+            self.logger.error(f"Failed to load cookies: {e}")
+            return None
+
+    def clear_cookies(self) -> bool:
+        """
+        Clear saved cookies file
+
+        Returns:
+            bool: Whether clear was successful
+        """
+        try:
+            if self.cookie_file.exists():
+                self.cookie_file.unlink()
+                self.logger.info(f"Successfully cleared cookies file: {self.cookie_file}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Failed to clear cookies: {e}")
+            return False
+
+    def get_cookie_info(self) -> Optional[Dict]:
+        """
+        Get saved cookie information (without actual cookie data)
+
+        Returns:
+            Optional[Dict]: Cookie info dict with save time, count, etc.
+        """
+        if not self.cookie_file.exists():
+            return None
+
+        try:
+            with open(self.cookie_file, 'r', encoding='utf-8') as f:
+                cookie_data = json.load(f)
+
+            return {
+                "saved_at": cookie_data.get("saved_at", 0),
+                "saved_time": cookie_data.get("saved_time", "Unknown"),
+                "cookie_count": len(cookie_data.get("cookies", [])),
+                "file_path": str(self.cookie_file)
+            }
+
+        except Exception as e:
+            self.logger.error(f"Failed to get cookie info: {e}")
+            return None
+
+
 # ==================== HTML Extractor ====================
 
 class XiaoHongShuExtractor:
@@ -543,12 +669,14 @@ class XiaoHongShuLogin:
         browser_context: BrowserContext,
         context_page: Page,
         logger: logging.Logger,
-        cookie_str: str = ""
+        cookie_str: str = "",
+        cookie_manager: Optional[CookieManager] = None
     ):
         self.browser_context = browser_context
         self.context_page = context_page
         self.cookie_str = cookie_str
         self.logger = logger
+        self.cookie_manager = cookie_manager or CookieManager(logger=logger)
 
     @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
@@ -605,16 +733,50 @@ class XiaoHongShuLogin:
     async def login_by_cookies(self):
         """Login via cookies"""
         self.logger.info("Starting cookie login...")
-        for key, value in convert_str_cookie_to_dict(self.cookie_str).items():
-            if key != "web_session":
-                continue
-            await self.browser_context.add_cookies([{
+
+        # First try to load cookies from file if cookie_str is empty
+        if not self.cookie_str:
+            self.logger.info("Attempting to load cookies from file...")
+            saved_cookies = self.cookie_manager.load_cookies()
+            if saved_cookies:
+                await self.browser_context.add_cookies(saved_cookies)
+                self.logger.info(f"Successfully loaded {len(saved_cookies)} cookies from file")
+                return
+            else:
+                self.logger.warning("No saved cookies found, please login manually first")
+                return
+
+        # If cookie_str is provided, use it
+        cookie_dict = convert_str_cookie_to_dict(self.cookie_str)
+        cookies_to_add = []
+
+        # Add all cookies, not just web_session
+        for key, value in cookie_dict.items():
+            cookies_to_add.append({
                 'name': key,
                 'value': value,
                 'domain': ".xiaohongshu.com",
                 'path': "/"
-            }])
-        self.logger.info("Cookie login completed")
+            })
+
+        if cookies_to_add:
+            await self.browser_context.add_cookies(cookies_to_add)
+            self.logger.info(f"Successfully added {len(cookies_to_add)} cookies from cookie string")
+
+    async def save_cookies_to_file(self):
+        """Save current browser cookies to file for future use"""
+        self.logger.info("Saving cookies to file...")
+        try:
+            current_cookies = await self.browser_context.cookies()
+            if current_cookies:
+                success = self.cookie_manager.save_cookies(current_cookies)
+                if success:
+                    self.logger.info(f"Successfully saved {len(current_cookies)} cookies")
+                    return True
+            return False
+        except Exception as e:
+            self.logger.error(f"Failed to save cookies: {e}")
+            return False
 
 
 # ==================== Main Crawler Class ====================
@@ -627,16 +789,25 @@ class XhsUrlCrawler:
     Handles authentication and data fetching without database storage.
     """
 
-    def __init__(self, headless: bool = True, proxy: Optional[str] = None):
+    def __init__(
+        self,
+        headless: bool = True,
+        proxy: Optional[str] = None,
+        auto_save_cookies: bool = True,
+        cookie_dir: str = "cookies"
+    ):
         """
         Initialize the crawler
 
         Args:
             headless: Run browser in headless mode (default: True)
             proxy: HTTP proxy URL (optional)
+            auto_save_cookies: Automatically save and load cookies (default: True)
+            cookie_dir: Directory to store cookies (default: "cookies")
         """
         self.headless = headless
         self.proxy = proxy
+        self.auto_save_cookies = auto_save_cookies
         self.index_url = "https://www.xiaohongshu.com"
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
@@ -648,6 +819,9 @@ class XhsUrlCrawler:
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
             self.logger.setLevel(logging.INFO)
+
+        # Initialize cookie manager
+        self.cookie_manager = CookieManager(cookie_dir=cookie_dir, logger=self.logger)
 
         # Playwright objects (initialized in start())
         self.playwright: Optional[Playwright] = None
@@ -705,31 +879,43 @@ class XhsUrlCrawler:
         self._started = True
         self.logger.info("Browser started successfully")
 
-    async def login_by_qrcode(self):
+    async def login_by_qrcode(self, save_cookies: Optional[bool] = None):
         """
         Login to Xiaohongshu using QR code
 
         The QR code will be displayed in the browser. Scan it with your Xiaohongshu app.
+
+        Args:
+            save_cookies: Whether to save cookies after login (default: use auto_save_cookies setting)
         """
         await self._start_browser()
+
+        if save_cookies is None:
+            save_cookies = self.auto_save_cookies
 
         login_obj = XiaoHongShuLogin(
             browser_context=self.browser_context,
             context_page=self.context_page,
             logger=self.logger,
+            cookie_manager=self.cookie_manager,
         )
         await login_obj.login_by_qrcode()
         await self.xhs_client.update_cookies(browser_context=self.browser_context)
 
+        # Auto-save cookies after successful login
+        if save_cookies:
+            await login_obj.save_cookies_to_file()
+
         self.logger.info("QR code login completed successfully")
 
-    async def login_by_cookie(self, cookie_str: str):
+    async def login_by_cookie(self, cookie_str: str = ""):
         """
-        Login to Xiaohongshu using cookie string
+        Login to Xiaohongshu using cookie string or saved cookies
 
         Args:
-            cookie_str: Cookie string containing web_session value
+            cookie_str: Cookie string containing web_session value (optional)
                        Example: "web_session=xxx; other_cookie=yyy"
+                       If empty, will try to load from saved cookies file
         """
         await self._start_browser()
 
@@ -738,6 +924,7 @@ class XhsUrlCrawler:
             context_page=self.context_page,
             logger=self.logger,
             cookie_str=cookie_str,
+            cookie_manager=self.cookie_manager,
         )
         await login_obj.login_by_cookies()
         await self.xhs_client.update_cookies(browser_context=self.browser_context)
@@ -747,6 +934,39 @@ class XhsUrlCrawler:
         await asyncio.sleep(2)
 
         self.logger.info("Cookie login completed successfully")
+
+    async def auto_login(self) -> bool:
+        """
+        Attempt to login automatically using saved cookies
+
+        Returns:
+            bool: True if login successful, False otherwise
+        """
+        await self._start_browser()
+
+        # Check if saved cookies exist
+        cookie_info = self.cookie_manager.get_cookie_info()
+        if not cookie_info:
+            self.logger.info("No saved cookies found for auto-login")
+            return False
+
+        self.logger.info(f"Found saved cookies from {cookie_info['saved_time']}, attempting auto-login...")
+
+        # Try to login with saved cookies
+        try:
+            await self.login_by_cookie()
+
+            # Validate login by checking with pong
+            if await self.xhs_client.pong():
+                self.logger.info("Auto-login successful!")
+                return True
+            else:
+                self.logger.warning("Auto-login failed: cookies may be expired")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"Auto-login failed: {e}")
+            return False
 
     async def crawl_note(self, note_url: str) -> Optional[Dict]:
         """
@@ -820,17 +1040,24 @@ class XhsUrlCrawler:
 
 async def main():
     """Example usage of XhsUrlCrawler"""
-    crawler = XhsUrlCrawler(headless=False)  # Set headless=True to hide browser
+    # Enable auto-save cookies (default behavior)
+    crawler = XhsUrlCrawler(headless=False, auto_save_cookies=True)
 
     try:
-        # Login (choose one method)
+        # Try auto-login first (uses saved cookies if available)
+        login_success = await crawler.auto_login()
 
-        # Method 1: QR code login (scan with your Xiaohongshu app)
-        await crawler.login_by_qrcode()
+        if not login_success:
+            # If auto-login fails, use manual login
+            print("\nAuto-login failed. Please login manually:")
 
-        # Method 2: Cookie login (if you have cookies)
-        # cookie_str = "web_session=your_session_value_here"
-        # await crawler.login_by_cookie(cookie_str)
+            # Method 1: QR code login (scan with your Xiaohongshu app)
+            # Cookies will be automatically saved for next time
+            await crawler.login_by_qrcode()
+
+            # Method 2: Cookie login (if you have cookies)
+            # cookie_str = "web_session=your_session_value_here"
+            # await crawler.login_by_cookie(cookie_str)
 
         # Crawl a note
         note_url = "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
