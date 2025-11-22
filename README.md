@@ -163,7 +163,7 @@ uv run main.py --help
 cd MediaCrawler
 
 # 创建虚拟环境
-# 我的 python 版本是：3.9.6，requirements.txt 中的库是基于这个版本的
+# 我的 python 版本是：3.11 requirements.txt 中的库是基于这个版本的
 # 如果是其他 python 版本，可能 requirements.txt 中的库不兼容，需自行解决
 python -m venv venv
 
