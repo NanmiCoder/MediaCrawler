@@ -1,58 +1,76 @@
 # MediaCrawler使用方法
 
-## 创建并激活 python 虚拟环境
-> 如果是爬取抖音和知乎，需要提前安装nodejs环境，版本大于等于：`16`即可 <br>
-   ```shell   
-   # 进入项目根目录
-   cd MediaCrawler
-   
-   # 创建虚拟环境
-   # 我的python版本是：3.9.6，requirements.txt中的库是基于这个版本的，如果是其他python版本，可能requirements.txt中的库不兼容，自行解决一下。
-   python -m venv venv
-   
-   # macos & linux 激活虚拟环境
-   source venv/bin/activate
+## 推荐：使用 uv 管理依赖
 
-   # windows 激活虚拟环境
-   venv\Scripts\activate
+### 1. 前置依赖
+- 安装 [uv](https://docs.astral.sh/uv/getting-started/installation)，并用 `uv --version` 验证。
+- Python 版本建议使用 **3.11**（当前依赖基于该版本构建）。
+- 安装 Node.js（抖音、知乎等平台需要），版本需 `>= 16.0.0`。
 
-   ```
+### 2. 同步 Python 依赖
+```shell
+# 进入项目根目录
+cd MediaCrawler
 
-## 安装依赖库
+# 使用 uv 保证 Python 版本和依赖一致性
+uv sync
+```
 
-   ```shell
-   pip install -r requirements.txt
-   ```
+### 3. 安装 Playwright 浏览器驱动
+```shell
+uv run playwright install
+```
+> 项目已支持使用 Playwright 连接本地 Chrome。如需使用 CDP 方式，可在 `config/base_config.py` 中调整 `xhs` 和 `dy` 的相关配置。
 
-## 安装 playwright浏览器驱动
+### 4. 运行爬虫程序
+```shell
+# 项目默认未开启评论爬取，如需评论请在 config/base_config.py 中修改 ENABLE_GET_COMMENTS
+# 其他功能开关也可在 config/base_config.py 查看，均有中文注释
 
-   ```shell
-   playwright install
-   ```
+# 从配置中读取关键词搜索并爬取帖子与评论
+uv run main.py --platform xhs --lt qrcode --type search
 
-## 运行爬虫程序
+# 从配置中读取指定帖子ID列表并爬取帖子与评论
+uv run main.py --platform xhs --lt qrcode --type detail
 
-   ```shell
-   ### 项目默认是没有开启评论爬取模式，如需评论请在config/base_config.py中的 ENABLE_GET_COMMENTS 变量修改
-   ### 一些其他支持项，也可以在config/base_config.py查看功能，写的有中文注释
-   
-   # 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
-   python main.py --platform xhs --lt qrcode --type search
-   
-   # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
-   python main.py --platform xhs --lt qrcode --type detail
-   
-   # 使用SQLite数据库存储数据（推荐个人用户使用）
-   python main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
-   
-   # 使用MySQL数据库存储数据
-   python main.py --platform xhs --lt qrcode --type search --save_data_option db
-  
-   # 打开对应APP扫二维码登录
-     
-   # 其他平台爬虫使用示例，执行下面的命令查看
-   python main.py --help    
-   ```
+# 使用 SQLite 数据库存储数据（推荐个人用户使用）
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
+
+# 使用 MySQL 数据库存储数据
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
+
+# 其他平台示例
+uv run main.py --help
+```
+
+## 备选：Python 原生 venv（不推荐）
+> 如果爬取抖音或知乎，需要提前安装 Node.js，版本 `>= 16`。
+```shell
+# 进入项目根目录
+cd MediaCrawler
+
+# 创建虚拟环境（示例 Python 版本：3.11，requirements 基于该版本）
+python -m venv venv
+
+# macOS & Linux 激活虚拟环境
+source venv/bin/activate
+
+# Windows 激活虚拟环境
+venv\Scripts\activate
+```
+```shell
+# 安装依赖与驱动
+pip install -r requirements.txt
+playwright install
+```
+```shell
+# 运行爬虫程序（venv 环境）
+python main.py --platform xhs --lt qrcode --type search
+python main.py --platform xhs --lt qrcode --type detail
+python main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
+python main.py --platform xhs --lt qrcode --type search --save_data_option db
+python main.py --help
+```
 
 ## 💾 数据存储
 
@@ -74,4 +92,3 @@
 > 大家请以学习为目的使用本仓库，爬虫违法违规的案件：https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China  <br>
 >
 >本项目的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及的爬虫技术仅用于学习和研究，不得用于对其他平台进行大规模爬虫或其他非法行为。对于因使用本仓库内容而引起的任何法律责任，本仓库不承担任何责任。使用本仓库的内容即表示您同意本免责声明的所有条款和条件。
-
