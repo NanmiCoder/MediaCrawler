@@ -21,21 +21,25 @@ import asyncio
 import copy
 import json
 import urllib.parse
-from typing import Any, Callable, Dict, Union, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Union, Optional
 
 import httpx
 from playwright.async_api import BrowserContext
 
 from base.base_crawler import AbstractApiClient
+from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
 from var import request_keyword_var
+
+if TYPE_CHECKING:
+    from proxy.proxy_ip_pool import ProxyIpPool
 
 from .exception import *
 from .field import *
 from .help import *
 
 
-class DouYinClient(AbstractApiClient):
+class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
 
     def __init__(
         self,
@@ -45,6 +49,7 @@ class DouYinClient(AbstractApiClient):
         headers: Dict,
         playwright_page: Optional[Page],
         cookie_dict: Dict,
+        proxy_ip_pool: Optional["ProxyIpPool"] = None,
     ):
         self.proxy = proxy
         self.timeout = timeout
@@ -52,6 +57,8 @@ class DouYinClient(AbstractApiClient):
         self._host = "https://www.douyin.com"
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
+        # 初始化代理池（来自 ProxyRefreshMixin）
+        self.init_proxy_pool(proxy_ip_pool)
 
     async def __process_req_params(
         self,
@@ -106,6 +113,9 @@ class DouYinClient(AbstractApiClient):
             params["a_bogus"] = a_bogus
 
     async def request(self, method, url, **kwargs):
+        # 每次请求前检测代理是否过期
+        await self._refresh_proxy_if_expired()
+
         async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:

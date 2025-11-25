@@ -20,7 +20,7 @@
 import asyncio
 import json
 import time
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode, urlparse, parse_qs
 
 
@@ -31,8 +31,11 @@ from xhshow import Xhshow
 
 import config
 from base.base_crawler import AbstractApiClient
+from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
 
+if TYPE_CHECKING:
+    from proxy.proxy_ip_pool import ProxyIpPool
 
 from .exception import DataFetchError, IPBlockError
 from .field import SearchNoteType, SearchSortType
@@ -40,7 +43,7 @@ from .help import get_search_id, sign
 from .extractor import XiaoHongShuExtractor
 
 
-class XiaoHongShuClient(AbstractApiClient):
+class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
 
     def __init__(
         self,
@@ -50,6 +53,7 @@ class XiaoHongShuClient(AbstractApiClient):
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
+        proxy_ip_pool: Optional["ProxyIpPool"] = None,
     ):
         self.proxy = proxy
         self.timeout = timeout
@@ -65,6 +69,8 @@ class XiaoHongShuClient(AbstractApiClient):
         self._extractor = XiaoHongShuExtractor()
         # 初始化 xhshow 客户端用于签名生成
         self._xhshow_client = Xhshow()
+        # 初始化代理池（来自 ProxyRefreshMixin）
+        self.init_proxy_pool(proxy_ip_pool)
 
     async def _pre_headers(self, url: str, params: Optional[Dict] = None, payload: Optional[Dict] = None) -> Dict:
         """请求头参数签名
@@ -132,6 +138,9 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
 
         """
+        # 每次请求前检测代理是否过期
+        await self._refresh_proxy_if_expired()
+
         # return response.text
         return_response = kwargs.pop("return_response", False)
         async with httpx.AsyncClient(proxy=self.proxy) as client:
@@ -201,6 +210,9 @@ class XiaoHongShuClient(AbstractApiClient):
         )
 
     async def get_note_media(self, url: str) -> Union[bytes, None]:
+        # 请求前检测代理是否过期
+        await self._refresh_proxy_if_expired()
+
         async with httpx.AsyncClient(proxy=self.proxy) as client:
             try:
                 response = await client.request("GET", url, timeout=self.timeout)

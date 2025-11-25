@@ -61,6 +61,7 @@ class ZhihuCrawler(AbstractCrawler):
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
         self._extractor = ZhihuExtractor()
         self.cdp_manager = None
+        self.ip_proxy_pool = None  # 代理IP池，用于代理自动刷新
 
     async def start(self) -> None:
         """
@@ -70,10 +71,10 @@ class ZhihuCrawler(AbstractCrawler):
         """
         playwright_proxy_format, httpx_proxy_format = None, None
         if config.ENABLE_IP_PROXY:
-            ip_proxy_pool = await create_ip_pool(
+            self.ip_proxy_pool = await create_ip_pool(
                 config.IP_PROXY_POOL_COUNT, enable_validate_ip=True
             )
-            ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
+            ip_proxy_info: IpInfoModel = await self.ip_proxy_pool.get_proxy()
             playwright_proxy_format, httpx_proxy_format = utils.format_proxy_info(
                 ip_proxy_info
             )
@@ -411,6 +412,7 @@ class ZhihuCrawler(AbstractCrawler):
             },
             playwright_page=self.context_page,
             cookie_dict=cookie_dict,
+            proxy_ip_pool=self.ip_proxy_pool,  # 传递代理池用于自动刷新
         )
         return zhihu_client_obj
 

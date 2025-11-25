@@ -24,7 +24,7 @@
 import asyncio
 import json
 import random
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
 
 import httpx
@@ -32,14 +32,18 @@ from playwright.async_api import BrowserContext, Page
 
 import config
 from base.base_crawler import AbstractApiClient
+from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
+
+if TYPE_CHECKING:
+    from proxy.proxy_ip_pool import ProxyIpPool
 
 from .exception import DataFetchError
 from .field import CommentOrderType, SearchOrderType
 from .help import BilibiliSign
 
 
-class BilibiliClient(AbstractApiClient):
+class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
 
     def __init__(
         self,
@@ -49,6 +53,7 @@ class BilibiliClient(AbstractApiClient):
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
+        proxy_ip_pool: Optional["ProxyIpPool"] = None,
     ):
         self.proxy = proxy
         self.timeout = timeout
@@ -56,8 +61,13 @@ class BilibiliClient(AbstractApiClient):
         self._host = "https://api.bilibili.com"
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
+        # 初始化代理池（来自 ProxyRefreshMixin）
+        self.init_proxy_pool(proxy_ip_pool)
 
     async def request(self, method, url, **kwargs) -> Any:
+        # 每次请求前检测代理是否过期
+        await self._refresh_proxy_if_expired()
+
         async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:

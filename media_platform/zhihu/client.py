@@ -20,7 +20,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 import httpx
@@ -32,14 +32,18 @@ import config
 from base.base_crawler import AbstractApiClient
 from constant import zhihu as zhihu_constant
 from model.m_zhihu import ZhihuComment, ZhihuContent, ZhihuCreator
+from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
+
+if TYPE_CHECKING:
+    from proxy.proxy_ip_pool import ProxyIpPool
 
 from .exception import DataFetchError, ForbiddenError
 from .field import SearchSort, SearchTime, SearchType
 from .help import ZhihuExtractor, sign
 
 
-class ZhiHuClient(AbstractApiClient):
+class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
 
     def __init__(
         self,
@@ -49,12 +53,15 @@ class ZhiHuClient(AbstractApiClient):
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
+        proxy_ip_pool: Optional["ProxyIpPool"] = None,
     ):
         self.proxy = proxy
         self.timeout = timeout
         self.default_headers = headers
         self.cookie_dict = cookie_dict
         self._extractor = ZhihuExtractor()
+        # 初始化代理池（来自 ProxyRefreshMixin）
+        self.init_proxy_pool(proxy_ip_pool)
 
     async def _pre_headers(self, url: str) -> Dict:
         """
@@ -85,6 +92,9 @@ class ZhiHuClient(AbstractApiClient):
         Returns:
 
         """
+        # 每次请求前检测代理是否过期
+        await self._refresh_proxy_if_expired()
+
         # return response.text
         return_response = kwargs.pop('return_response', False)
 

@@ -26,7 +26,7 @@ import asyncio
 import copy
 import json
 import re
-from typing import Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 from urllib.parse import parse_qs, unquote, urlencode
 
 import httpx
@@ -35,13 +35,17 @@ from playwright.async_api import BrowserContext, Page
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 import config
+from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
+
+if TYPE_CHECKING:
+    from proxy.proxy_ip_pool import ProxyIpPool
 
 from .exception import DataFetchError
 from .field import SearchType
 
 
-class WeiboClient:
+class WeiboClient(ProxyRefreshMixin):
 
     def __init__(
         self,
@@ -51,6 +55,7 @@ class WeiboClient:
         headers: Dict[str, str],
         playwright_page: Page,
         cookie_dict: Dict[str, str],
+        proxy_ip_pool: Optional["ProxyIpPool"] = None,
     ):
         self.proxy = proxy
         self.timeout = timeout
@@ -59,9 +64,14 @@ class WeiboClient:
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         self._image_agent_host = "https://i1.wp.com/"
+        # 初始化代理池（来自 ProxyRefreshMixin）
+        self.init_proxy_pool(proxy_ip_pool)
 
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
     async def request(self, method, url, **kwargs) -> Union[Response, Dict]:
+        # 每次请求前检测代理是否过期
+        await self._refresh_proxy_if_expired()
+
         enable_return_response = kwargs.pop("return_response", False)
         async with httpx.AsyncClient(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
