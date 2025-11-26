@@ -89,6 +89,24 @@ class BaiduTieBaClient(AbstractApiClient):
         )
         return response
 
+    async def _refresh_proxy_if_expired(self) -> None:
+        """
+        检测代理是否过期，如果过期则自动刷新
+        """
+        if self.ip_pool is None:
+            return
+
+        if self.ip_pool.is_current_proxy_expired():
+            utils.logger.info(
+                "[BaiduTieBaClient._refresh_proxy_if_expired] Proxy expired, refreshing..."
+            )
+            new_proxy = await self.ip_pool.get_or_refresh_proxy()
+            # 更新代理URL
+            _, self.default_ip_proxy = utils.format_proxy_info(new_proxy)
+            utils.logger.info(
+                f"[BaiduTieBaClient._refresh_proxy_if_expired] New proxy: {new_proxy.ip}:{new_proxy.port}"
+            )
+
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
     async def request(self, method, url, return_ori_content=False, proxy=None, **kwargs) -> Union[str, Any]:
         """
@@ -103,6 +121,9 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
+        # 每次请求前检测代理是否过期
+        await self._refresh_proxy_if_expired()
+
         actual_proxy = proxy if proxy else self.default_ip_proxy
 
         # 在线程池中执行同步的requests请求
