@@ -109,11 +109,14 @@ class WanDouHttpProxy(ProxyProvider):
 def new_wandou_http_proxy() -> WanDouHttpProxy:
     """
     构造豌豆HTTP实例
+    支持两种环境变量命名格式：
+    1. 大写格式：WANDOU_APP_KEY
+    2. 小写格式：wandou_app_key
+    优先使用大写格式，如果不存在则使用小写格式
     Returns:
 
     """
-    return WanDouHttpProxy(
-        app_key=os.getenv(
-            "wandou_app_key", "你的豌豆HTTP app_key"
-        ),  # 通过环境变量的方式获取豌豆HTTP app_key
-    )
+    # 支持大小写两种环境变量格式，优先使用大写
+    app_key = os.getenv("WANDOU_APP_KEY") or os.getenv("wandou_app_key", "你的豌豆HTTP app_key")
+
+    return WanDouHttpProxy(app_key=app_key)

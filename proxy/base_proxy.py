@@ -53,7 +53,7 @@ class ProxyProvider(ABC):
 
 class IpCache:
     def __init__(self):
-        self.cache_client: AbstractCache = CacheFactory.create_cache(cache_type=config.CACHE_TYPE_MEMORY)
+        self.cache_client: AbstractCache = CacheFactory.create_cache(cache_type=config.CACHE_TYPE_REDIS)
 
     def set_ip(self, ip_key: str, ip_value_info: str, ex: int):
         """

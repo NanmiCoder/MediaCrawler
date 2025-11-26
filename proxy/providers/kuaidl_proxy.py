@@ -33,11 +33,14 @@ from proxy import IpCache, IpInfoModel, ProxyProvider
 from proxy.types import ProviderNameEnum
 from tools import utils
 
+# 快代理的IP代理过期时间向前推移5秒，避免临界时间使用失败
+DELTA_EXPIRED_SECOND = 5
+
 
 class KuaidailiProxyModel(BaseModel):
     ip: str = Field("ip")
     port: int = Field("端口")
-    expire_ts: int = Field("过期时间")
+    expire_ts: int = Field("过期时间，单位秒，多少秒后过期")
 
 
 def parse_kuaidaili_proxy(proxy_info: str) -> KuaidailiProxyModel:
@@ -114,7 +117,7 @@ class KuaiDaiLiProxy(ProxyProvider):
             response = await client.get(self.api_base + uri, params=self.params)
 
             if response.status_code != 200:
-                utils.logger.error(f"[KuaiDaiLiProxy.get_proxies] statuc code not 200 and response.txt:{response.text}")
+                utils.logger.error(f"[KuaiDaiLiProxy.get_proxies] statuc code not 200 and response.txt:{response.text}, status code: {response.status_code}")
                 raise Exception("get ip error from proxy provider and status code not 200 ...")
 
             ip_response: Dict = response.json()
@@ -125,16 +128,19 @@ class KuaiDaiLiProxy(ProxyProvider):
             proxy_list: List[str] = ip_response.get("data", {}).get("proxy_list")
             for proxy in proxy_list:
                 proxy_model = parse_kuaidaili_proxy(proxy)
+                # expire_ts是相对时间（秒数），需要转换为绝对时间戳
+                # 提前DELTA_EXPIRED_SECOND秒认为过期，避免临界时间使用失败
                 ip_info_model = IpInfoModel(
                     ip=proxy_model.ip,
                     port=proxy_model.port,
                     user=self.kdl_user_name,
                     password=self.kdl_user_pwd,
-                    expired_time_ts=proxy_model.expire_ts,
+                    expired_time_ts=proxy_model.expire_ts + utils.get_unix_timestamp() - DELTA_EXPIRED_SECOND,
 
                 )
                 ip_key = f"{self.proxy_brand_name}_{ip_info_model.ip}_{ip_info_model.port}"
-                self.ip_cache.set_ip(ip_key, ip_info_model.model_dump_json(), ex=ip_info_model.expired_time_ts)
+                # 缓存过期时间使用相对时间（秒数），也需要减去缓冲时间
+                self.ip_cache.set_ip(ip_key, ip_info_model.model_dump_json(), ex=proxy_model.expire_ts - DELTA_EXPIRED_SECOND)
                 ip_infos.append(ip_info_model)
 
         return ip_cache_list + ip_infos
@@ -143,12 +149,22 @@ class KuaiDaiLiProxy(ProxyProvider):
 def new_kuai_daili_proxy() -> KuaiDaiLiProxy:
     """
     构造快代理HTTP实例
+    支持两种环境变量命名格式：
+    1. 大写格式：KDL_SECERT_ID, KDL_SIGNATURE, KDL_USER_NAME, KDL_USER_PWD
+    2. 小写格式：kdl_secret_id, kdl_signature, kdl_user_name, kdl_user_pwd
+    优先使用大写格式，如果不存在则使用小写格式
     Returns:
 
     """
+    # 支持大小写两种环境变量格式，优先使用大写
+    kdl_secret_id = os.getenv("KDL_SECERT_ID") or os.getenv("kdl_secret_id", "你的快代理secert_id")
+    kdl_signature = os.getenv("KDL_SIGNATURE") or os.getenv("kdl_signature", "你的快代理签名")
+    kdl_user_name = os.getenv("KDL_USER_NAME") or os.getenv("kdl_user_name", "你的快代理用户名")
+    kdl_user_pwd = os.getenv("KDL_USER_PWD") or os.getenv("kdl_user_pwd", "你的快代理密码")
+
     return KuaiDaiLiProxy(
-        kdl_secret_id=os.getenv("kdl_secret_id", "你的快代理secert_id"),
-        kdl_signature=os.getenv("kdl_signature", "你的快代理签名"),
-        kdl_user_name=os.getenv("kdl_user_name", "你的快代理用户名"),
-        kdl_user_pwd=os.getenv("kdl_user_pwd", "你的快代理密码"),
+        kdl_secret_id=kdl_secret_id,
+        kdl_signature=kdl_signature,
+        kdl_user_name=kdl_user_name,
+        kdl_user_pwd=kdl_user_pwd,
     )
