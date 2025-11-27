@@ -19,15 +19,12 @@
 
 import asyncio
 import json
-import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
-from urllib.parse import urlencode, urlparse, parse_qs
-
+from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
 from tenacity import retry, stop_after_attempt, wait_fixed
-from xhshow import Xhshow
 
 import config
 from base.base_crawler import AbstractApiClient
@@ -39,8 +36,9 @@ if TYPE_CHECKING:
 
 from .exception import DataFetchError, IPBlockError
 from .field import SearchNoteType, SearchSortType
-from .help import get_search_id, sign
+from .help import get_search_id
 from .extractor import XiaoHongShuExtractor
+from .playwright_sign import sign_with_playwright
 
 
 class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
@@ -67,16 +65,14 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         self._extractor = XiaoHongShuExtractor()
-        # 初始化 xhshow 客户端用于签名生成
-        self._xhshow_client = Xhshow()
         # 初始化代理池（来自 ProxyRefreshMixin）
         self.init_proxy_pool(proxy_ip_pool)
 
     async def _pre_headers(self, url: str, params: Optional[Dict] = None, payload: Optional[Dict] = None) -> Dict:
-        """请求头参数签名
+        """请求头参数签名（使用 playwright 注入方式）
 
         Args:
-            url: 请求的URL(GET请求是包含请求的参数)
+            url: 请求的URL
             params: GET请求的参数
             payload: POST请求的参数
 
@@ -84,37 +80,21 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             Dict: 请求头参数签名
         """
         a1_value = self.cookie_dict.get("a1", "")
-        parsed = urlparse(url)
-        uri = parsed.path
+
+        # 确定请求数据和 URI
         if params is not None:
-            x_s = self._xhshow_client.sign_xs_get(
-                uri=uri, a1_value=a1_value, params=params
-            )
+            data = params
         elif payload is not None:
-            x_s = self._xhshow_client.sign_xs_post(
-                uri=uri, a1_value=a1_value, payload=payload
-            )
+            data = payload
         else:
             raise ValueError("params or payload is required")
 
-        # 获取 b1 值
-        b1_value = ""
-        try:
-            if self.playwright_page:
-                local_storage = await self.playwright_page.evaluate(
-                    "() => window.localStorage"
-                )
-                b1_value = local_storage.get("b1", "")
-        except Exception as e:
-            utils.logger.warning(
-                f"[XiaoHongShuClient._pre_headers] Failed to get b1 from localStorage: {e}"
-            )
-
-        signs = sign(
+        # 使用 playwright 注入方式生成签名
+        signs = await sign_with_playwright(
+            page=self.playwright_page,
+            uri=url,
+            data=data,
             a1=a1_value,
-            b1=b1_value,
-            x_s=x_s,
-            x_t=str(int(time.time() * 1000)),
         )
 
         headers = {
@@ -177,11 +157,9 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         """
         headers = await self._pre_headers(uri, params)
         if isinstance(params, dict):
-            # 使用 xhsshow build_url 构建完整的 URL
-            full_url = self._xhshow_client.build_url(
-                base_url=f"{self._host}{uri}",
-                params=params
-            )
+            # 构建带参数的完整 URL
+            query_string = urlencode(params)
+            full_url = f"{self._host}{uri}?{query_string}"
         else:
             full_url = f"{self._host}{uri}"
 
@@ -200,7 +178,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
 
         """
         headers = await self._pre_headers(uri, payload=data)
-        json_str = self._xhshow_client.build_json_body(payload=data)
+        json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
         return await self.request(
             method="POST",
             url=f"{self._host}{uri}",
