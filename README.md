@@ -228,14 +228,15 @@ python main.py --help
 
 ### 使用示例：
 ```shell
-# 使用 Excel 存储数据（推荐用于数据分析）✨ 新功能
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option excel
-
-# 初始化 SQLite 数据库（使用'--init_db'时不需要携带其他optional）
+# 初始化 SQLite 数据库
 uv run main.py --init_db sqlite
-# 使用 SQLite 存储数据（推荐个人用户使用）
+# 使用 SQLite 存储数据
 uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
+
+# 使用 Excel 存储数据（推荐用于数据分析）
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option excel
 ```
+
 ```shell
 # 初始化 MySQL 数据库
 uv run main.py --init_db mysql

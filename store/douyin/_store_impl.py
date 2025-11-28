@@ -264,3 +264,14 @@ class DouyinMongoStoreImplement(AbstractStore):
             data=creator_item
         )
         utils.logger.info(f"[DouyinMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")
+
+
+class DouyinExcelStoreImplement:
+    """抖音Excel存储实现 - 全局单例"""
+
+    def __new__(cls, *args, **kwargs):
+        from store.excel_store_base import ExcelStoreBase
+        return ExcelStoreBase.get_instance(
+            platform="douyin",
+            crawler_type=crawler_type_var.get()
+        )
