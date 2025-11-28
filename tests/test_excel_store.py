@@ -143,7 +143,8 @@ class TestExcelStoreBase:
         # Check header formatting
         header_cell = excel_store.contents_sheet.cell(row=1, column=1)
         assert header_cell.font.bold is True
-        assert header_cell.fill.start_color.rgb == "FF366092"
+        # RGB color may have different prefix (00 or FF), check the actual color part
+        assert header_cell.fill.start_color.rgb[-6:] == "366092"
     
     def test_empty_sheets_removed(self, excel_store):
         """Test that empty sheets are removed on flush"""

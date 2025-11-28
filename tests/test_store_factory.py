@@ -51,9 +51,9 @@ class TestXhsStoreFactory:
         assert isinstance(store, XhsMongoStoreImplement)
     
     @patch('config.SAVE_DATA_OPTION', 'excel')
-    @patch('var.crawler_type_var.get', return_value='search')
-    def test_create_excel_store(self, mock_crawler_type):
+    def test_create_excel_store(self):
         """Test creating Excel store"""
+        # ContextVar cannot be mocked, so we test with actual value
         store = XhsStoreFactory.create_store()
         assert isinstance(store, XhsExcelStoreImplement)
     
