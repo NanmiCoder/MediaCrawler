@@ -206,39 +206,9 @@ python main.py --help
 
 ## 💾 Data Storage
 
-Supports multiple data storage methods:
-- **CSV Files**: Supports saving to CSV (under `data/` directory)
-- **JSON Files**: Supports saving to JSON (under `data/` directory)
-- **Excel Files**: Supports saving to formatted Excel files (under `data/` directory) ✨ New Feature
-  - Multi-sheet support (Contents, Comments, Creators)
-  - Professional formatting (styled headers, auto-width columns, borders)
-  - Easy to analyze and share
-- **Database Storage**
-  - Use the `--init_db` parameter for database initialization (when using `--init_db`, no other optional arguments are needed)
-  - **SQLite Database**: Lightweight database, no server required, suitable for personal use (recommended)
-    1. Initialization: `--init_db sqlite`
-    2. Data Storage: `--save_data_option sqlite`
-  - **MySQL Database**: Supports saving to relational database MySQL (database needs to be created in advance)
-    1. Initialization: `--init_db mysql`
-    2. Data Storage: `--save_data_option db` (the db parameter is retained for compatibility with historical updates)
+MediaCrawler supports multiple data storage methods, including CSV, JSON, Excel, SQLite, and MySQL databases.
 
-
-### Usage Examples:
-```shell
-# Use Excel to store data (recommended for data analysis) ✨ New Feature
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option excel
-
-# Initialize SQLite database (when using '--init_db', no other optional arguments are needed)
-uv run main.py --init_db sqlite
-# Use SQLite to store data (recommended for personal users)
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
-```
-```shell
-# Initialize MySQL database
-uv run main.py --init_db mysql
-# Use MySQL to store data (the db parameter is retained for compatibility with historical updates)
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
-```
+📖 **For detailed usage instructions, please see: [Data Storage Guide](docs/data_storage_guide.md)**
 
 ---
 
