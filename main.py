@@ -87,14 +87,11 @@ async def main():
     # Flush Excel data if using Excel export
     if config.SAVE_DATA_OPTION == "excel":
         try:
-            # Get the store instance and flush data
-            from store.xhs import XhsStoreFactory
-            store = XhsStoreFactory.create_store()
-            if hasattr(store, 'flush'):
-                store.flush()
-                print(f"[Main] Excel file saved successfully")
+            from store.excel_store_base import ExcelStoreBase
+            ExcelStoreBase.flush_all()
+            print("[Main] Excel files saved successfully")
         except Exception as e:
-            print(f"Error flushing Excel data: {e}")
+            print(f"[Main] Error flushing Excel data: {e}")
 
     # Generate wordcloud after crawling is complete
     # Only for JSON save mode

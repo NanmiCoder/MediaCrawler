@@ -71,6 +71,8 @@ class SaveDataOptionEnum(str, Enum):
     DB = "db"
     JSON = "json"
     SQLITE = "sqlite"
+    MONGODB = "mongodb"
+    EXCEL = "excel"
 
 
 class InitDbOptionEnum(str, Enum):
@@ -199,7 +201,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             SaveDataOptionEnum,
             typer.Option(
                 "--save_data_option",
-                help="数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库)",
+                help="数据保存方式 (csv=CSV文件 | db=MySQL数据库 | json=JSON文件 | sqlite=SQLite数据库 | mongodb=MongoDB数据库 | excel=Excel文件)",
                 rich_help_panel="存储配置",
             ),
         ] = _coerce_enum(

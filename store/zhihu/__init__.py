@@ -28,7 +28,8 @@ from ._store_impl import (ZhihuCsvStoreImplement,
                                           ZhihuDbStoreImplement,
                                           ZhihuJsonStoreImplement,
                                           ZhihuSqliteStoreImplement,
-                                          ZhihuMongoStoreImplement)
+                                          ZhihuMongoStoreImplement,
+                                          ZhihuExcelStoreImplement)
 from tools import utils
 from var import source_keyword_var
 
@@ -40,13 +41,14 @@ class ZhihuStoreFactory:
         "json": ZhihuJsonStoreImplement,
         "sqlite": ZhihuSqliteStoreImplement,
         "mongodb": ZhihuMongoStoreImplement,
+        "excel": ZhihuExcelStoreImplement,
     }
 
     @staticmethod
     def create_store() -> AbstractStore:
         store_class = ZhihuStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
-            raise ValueError("[ZhihuStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite or mongodb ...")
+            raise ValueError("[ZhihuStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite or mongodb or excel ...")
         return store_class()
 
 async def batch_update_zhihu_contents(contents: List[ZhihuContent]):

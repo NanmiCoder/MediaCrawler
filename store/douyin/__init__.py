@@ -37,13 +37,14 @@ class DouyinStoreFactory:
         "json": DouyinJsonStoreImplement,
         "sqlite": DouyinSqliteStoreImplement,
         "mongodb": DouyinMongoStoreImplement,
+        "excel": DouyinExcelStoreImplement,
     }
 
     @staticmethod
     def create_store() -> AbstractStore:
         store_class = DouyinStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
         if not store_class:
-            raise ValueError("[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite or mongodb ...")
+            raise ValueError("[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite or mongodb or excel ...")
         return store_class()
 
 
