@@ -1,0 +1,18 @@
+# 默认：仓库所有文件都需要 @NanmiCoder 审核
+*                                   @NanmiCoder
+
+
+.github/workflows/**               @NanmiCoder
+
+
+requirements.txt                   @NanmiCoder
+pyproject.toml                     @NanmiCoder
+Pipfile                            @NanmiCoder
+package.json                       @NanmiCoder
+package-lock.json                  @NanmiCoder
+pnpm-lock.yaml                     @NanmiCoder
+
+
+Dockerfile                         @NanmiCoder
+docker/**                          @NanmiCoder
+scripts/deploy/**                  @NanmiCoder
