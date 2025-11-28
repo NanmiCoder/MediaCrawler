@@ -1,10 +1,5 @@
 # 数据保存指南 / Data Storage Guide
 
-[English](#english) | [中文](#中文)
-
----
-
-## 中文
 
 ### 💾 数据保存
 
@@ -60,58 +55,3 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option json
 - **数据库配置**：参考 [常见问题](常见问题.md)
 
 ---
-
-## English
-
-### 💾 Data Storage
-
-MediaCrawler supports multiple data storage methods. Choose the one that best fits your needs:
-
-#### Storage Options
-
-- **CSV Files**: Supports saving to CSV (under `data/` directory)
-- **JSON Files**: Supports saving to JSON (under `data/` directory)
-- **Excel Files**: Supports saving to formatted Excel files (under `data/` directory) ✨ New Feature
-  - Multi-sheet support (Contents, Comments, Creators)
-  - Professional formatting (styled headers, auto-width columns, borders)
-  - Easy to analyze and share
-- **Database Storage**
-  - Use the `--init_db` parameter for database initialization (when using `--init_db`, no other optional arguments are needed)
-  - **SQLite Database**: Lightweight database, no server required, suitable for personal use (recommended)
-    1. Initialization: `--init_db sqlite`
-    2. Data Storage: `--save_data_option sqlite`
-  - **MySQL Database**: Supports saving to relational database MySQL (database needs to be created in advance)
-    1. Initialization: `--init_db mysql`
-    2. Data Storage: `--save_data_option db` (the db parameter is retained for compatibility with historical updates)
-
-#### Usage Examples
-
-```shell
-# Use Excel to store data (recommended for data analysis) ✨ New Feature
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option excel
-
-# Initialize SQLite database
-uv run main.py --init_db sqlite
-# Use SQLite to store data
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlite
-```
-
-```shell
-# Initialize MySQL database
-uv run main.py --init_db mysql
-# Use MySQL to store data (the db parameter is retained for compatibility with historical updates)
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
-```
-
-```shell
-# Use CSV to store data
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option csv
-
-# Use JSON to store data
-uv run main.py --platform xhs --lt qrcode --type search --save_data_option json
-```
-
-#### Detailed Documentation
-
-- **Excel Export Guide**: See [Excel Export Guide](excel_export_guide.md)
-- **Database Configuration**: Refer to [FAQ](常见问题.md)
