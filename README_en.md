@@ -209,6 +209,10 @@ python main.py --help
 Supports multiple data storage methods:
 - **CSV Files**: Supports saving to CSV (under `data/` directory)
 - **JSON Files**: Supports saving to JSON (under `data/` directory)
+- **Excel Files**: Supports saving to formatted Excel files (under `data/` directory) ✨ New Feature
+  - Multi-sheet support (Contents, Comments, Creators)
+  - Professional formatting (styled headers, auto-width columns, borders)
+  - Easy to analyze and share
 - **Database Storage**
   - Use the `--init_db` parameter for database initialization (when using `--init_db`, no other optional arguments are needed)
   - **SQLite Database**: Lightweight database, no server required, suitable for personal use (recommended)
@@ -221,6 +225,9 @@ Supports multiple data storage methods:
 
 ### Usage Examples:
 ```shell
+# Use Excel to store data (recommended for data analysis) ✨ New Feature
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option excel
+
 # Initialize SQLite database (when using '--init_db', no other optional arguments are needed)
 uv run main.py --init_db sqlite
 # Use SQLite to store data (recommended for personal users)
