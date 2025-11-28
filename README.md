@@ -129,15 +129,10 @@ uv sync
 uv run playwright install
 ```
 
-> **💡 提示**：MediaCrawler 目前已经支持使用 playwright 连接你本地的 Chrome 浏览器了，一些因为 Webdriver 导致的问题迎刃而解了。
->
-> 目前开放了 `xhs` 和 `dy` 这两个使用 CDP 的方式连接本地浏览器，如有需要，查看 `config/base_config.py` 中的配置项。
-
 ## 🚀 运行爬虫程序
 
 ```shell
-# 项目默认是没有开启评论爬取模式，如需评论请在 config/base_config.py 中的 ENABLE_GET_COMMENTS 变量修改
-# 一些其他支持项，也可以在 config/base_config.py 查看功能，写的有中文注释
+# 在 config/base_config.py 查看配置项目功能，写的有中文注释
 
 # 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
 uv run main.py --platform xhs --lt qrcode --type search
@@ -220,11 +215,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 ### 💬 交流群组
 - **微信交流群**：[点击加入](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
 
-### 📚 其他
-- **常见问题**：[MediaCrawler 完整文档](https://nanmicoder.github.io/MediaCrawler/)
-- **爬虫入门教程**：[CrawlerTutorial 免费教程](https://github.com/NanmiCoder/CrawlerTutorial)
-- **新闻爬虫开源项目**：[NewsCrawlerCollection](https://github.com/NanmiCoder/NewsCrawlerCollection)
----
 
 ### 💰 赞助商展示
 
@@ -255,8 +245,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 - 💻 GitHub地址：[https://github.com/TikHubIO/](https://github.com/TikHubIO/)
 
 
-
-
 ### 🤝 成为赞助者
 
 成为赞助者，可以将您的产品展示在这里，每天获得大量曝光！
@@ -264,15 +252,19 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 **联系方式**：
 - 微信：`relakkes`
 - 邮箱：`relakkes@gmail.com`
-
 ---
+
+### 📚 其他
+- **常见问题**：[MediaCrawler 完整文档](https://nanmicoder.github.io/MediaCrawler/)
+- **爬虫入门教程**：[CrawlerTutorial 免费教程](https://github.com/NanmiCoder/CrawlerTutorial)
+- **新闻爬虫开源项目**：[NewsCrawlerCollection](https://github.com/NanmiCoder/NewsCrawlerCollection)
+
 
 ## ⭐ Star 趋势图
 
 如果这个项目对您有帮助，请给个 ⭐ Star 支持一下，让更多的人看到 MediaCrawler！
 
 [![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
-
 
 
 ## 📚 参考
