@@ -22,22 +22,56 @@ import hashlib
 import json
 import time
 from typing import Any, Dict, Optional, Union
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 
 from playwright.async_api import Page
 
 from .xhs_sign import b64_encode, encode_utf8, get_trace_id, mrc
 
 
-def _build_sign_string(uri: str, data: Optional[Union[Dict, str]] = None) -> str:
-    """构建待签名字符串"""
-    c = uri
-    if data is not None:
+def _build_sign_string(uri: str, data: Optional[Union[Dict, str]] = None, method: str = "POST") -> str:
+    """构建待签名字符串
+    
+    Args:
+        uri: API路径
+        data: 请求数据
+        method: 请求方法 (GET 或 POST)
+        
+    Returns:
+        待签名字符串
+    """
+    if method.upper() == "POST":
+        # POST 请求使用 JSON 格式
+        c = uri
+        if data is not None:
+            if isinstance(data, dict):
+                c += json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+            elif isinstance(data, str):
+                c += data
+        return c
+    else:
+        # GET 请求使用查询字符串格式
+        if not data or (isinstance(data, dict) and len(data) == 0):
+            return uri
+        
         if isinstance(data, dict):
-            c += json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+            params = []
+            for key in data.keys():
+                value = data[key]
+                if isinstance(value, list):
+                    value_str = ",".join(str(v) for v in value)
+                elif value is not None:
+                    value_str = str(value)
+                else:
+                    value_str = ""
+                # 使用URL编码（safe参数保留某些字符不编码）
+                # 注意：httpx会对逗号、等号等字符进行编码，我们也需要同样处理
+                value_str = quote(value_str, safe='')
+                params.append(f"{key}={value_str}")
+            return f"{uri}?{'&'.join(params)}"
         elif isinstance(data, str):
-            c += data
-    return c
+            return f"{uri}?{data}"
+        return uri
 
 
 def _md5_hex(s: str) -> str:
@@ -113,6 +147,7 @@ async def sign_xs_with_playwright(
     page: Page,
     uri: str,
     data: Optional[Union[Dict, str]] = None,
+    method: str = "POST",
 ) -> str:
     """
     通过 playwright 注入生成 x-s 签名
@@ -121,11 +156,12 @@ async def sign_xs_with_playwright(
         page: playwright Page 对象（必须已打开小红书页面）
         uri: API 路径，如 "/api/sns/web/v1/search/notes"
         data: 请求数据（GET 的 params 或 POST 的 payload）
+        method: 请求方法 (GET 或 POST)
 
     Returns:
         x-s 签名字符串
     """
-    sign_str = _build_sign_string(uri, data)
+    sign_str = _build_sign_string(uri, data, method)
     md5_str = _md5_hex(sign_str)
     x3_value = await call_mnsv2(page, sign_str, md5_str)
     data_type = "object" if isinstance(data, (dict, list)) else "string"
@@ -137,6 +173,7 @@ async def sign_with_playwright(
     uri: str,
     data: Optional[Union[Dict, str]] = None,
     a1: str = "",
+    method: str = "POST",
 ) -> Dict[str, Any]:
     """
     通过 playwright 生成完整的签名请求头
@@ -146,12 +183,13 @@ async def sign_with_playwright(
         uri: API 路径
         data: 请求数据
         a1: cookie 中的 a1 值
+        method: 请求方法 (GET 或 POST)
 
     Returns:
         包含 x-s, x-t, x-s-common, x-b3-traceid 的字典
     """
     b1 = await get_b1_from_localstorage(page)
-    x_s = await sign_xs_with_playwright(page, uri, data)
+    x_s = await sign_xs_with_playwright(page, uri, data, method)
     x_t = str(int(time.time() * 1000))
 
     return {
@@ -186,14 +224,17 @@ async def pre_headers_with_playwright(
     a1_value = cookie_dict.get("a1", "")
     uri = urlparse(url).path
 
+    # 确定请求数据和方法
     if params is not None:
         data = params
+        method = "GET"
     elif payload is not None:
         data = payload
+        method = "POST"
     else:
         raise ValueError("params or payload is required")
 
-    signs = await sign_with_playwright(page, uri, data, a1_value)
+    signs = await sign_with_playwright(page, uri, data, a1_value, method)
 
     return {
         "X-S": signs["x-s"],

@@ -81,11 +81,13 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         """
         a1_value = self.cookie_dict.get("a1", "")
 
-        # 确定请求数据和 URI
+        # 确定请求数据、方法和 URI
         if params is not None:
             data = params
+            method = "GET"
         elif payload is not None:
             data = payload
+            method = "POST"
         else:
             raise ValueError("params or payload is required")
 
@@ -95,6 +97,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             uri=url,
             data=data,
             a1=a1_value,
+            method=method,
         )
 
         headers = {
@@ -156,15 +159,10 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
 
         """
         headers = await self._pre_headers(uri, params)
-        if isinstance(params, dict):
-            # 构建带参数的完整 URL
-            query_string = urlencode(params)
-            full_url = f"{self._host}{uri}?{query_string}"
-        else:
-            full_url = f"{self._host}{uri}"
+        full_url = f"{self._host}{uri}"
 
         return await self.request(
-            method="GET", url=full_url, headers=headers
+            method="GET", url=full_url, headers=headers, params=params
         )
 
     async def post(self, uri: str, data: dict, **kwargs) -> Dict:
@@ -362,7 +360,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         params = {
             "note_id": note_id,
             "root_comment_id": root_comment_id,
-            "num": num,
+            "num": str(num),
             "cursor": cursor,
             "image_formats": "jpg,webp,avif",
             "top_comment_id": "",
