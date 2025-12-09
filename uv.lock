@@ -814,7 +814,6 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
     { name = "wordcloud" },
-    { name = "xhshow" },
 ]
 
 [package.metadata]
@@ -850,7 +849,6 @@ requires-dist = [
     { name = "typer", specifier = ">=0.12.3" },
     { name = "uvicorn", specifier = "==0.29.0" },
     { name = "wordcloud", specifier = "==1.9.3" },
-    { name = "xhshow", specifier = ">=0.1.3" },
 ]
 
 [[package]]
@@ -1623,13 +1621,4 @@ wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/4d/80/f9cafd71562e168b093ba4373917d9c1d51fa4cbbd015b2b6ee770f07357/wordcloud-1.9.3-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:64b342a79553970fa04083761d041067323219ad62b5550a496e42436d23cbb3", size = 544135 },
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/77/c0/bc14fd7fa96e5b544aac4e9e65b5dd6f753d72184da35e35eb0b24c4dde4/wordcloud-1.9.3-cp312-cp312-win32.whl", hash = "sha256:419acfe0b1d1227b9e3e14ec1bb6c40fd7fa652df4adf81f0ba3e00daca500b5", size = 291251 },
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/bf/a0/b8fa5f2d7147a7675e2cab99108f7d8d524b67481f81f289cdb2b64ed1ab/wordcloud-1.9.3-cp312-cp312-win_amd64.whl", hash = "sha256:2061a9978a6243107ce1a8a9fa24f421b03a0f7e620769b6f5075857e75aa615", size = 301393 },
-]
-
-[[package]]
-name = "xhshow"
-version = "0.1.3"
-source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
-sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/37/5b/0f80000832e91fed4c9f0baae8fcf291c61d7f624d4cff458749fd34a603/xhshow-0.1.3.tar.gz", hash = "sha256:ae1c7afd32c87aaacbc39de68db4bfc8bd4fea9a9bb2e2831e71ccac5d58b08d", size = 28965 }
-wheels = [
-    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/4a/89/dfea5736fb564c3941fe67014dac4995af8f67b9bdb315cf700647a5d645/xhshow-0.1.3-py3-none-any.whl", hash = "sha256:4705f7158dad276022af81fb9c1387dfe68338ab210a87ab6adc5235996bd70f", size = 16764 },
 ]
