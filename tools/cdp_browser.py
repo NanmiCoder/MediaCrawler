@@ -60,19 +60,36 @@ class CDPBrowserManager:
         # 注册atexit清理
         atexit.register(sync_cleanup)
 
-        # 注册信号处理器
+        # 注册信号处理器（仅在没有自定义处理器时注册，避免覆盖主入口的信号处理逻辑）
+        prev_sigint = signal.getsignal(signal.SIGINT)
+        prev_sigterm = signal.getsignal(signal.SIGTERM)
+
         def signal_handler(signum, frame):
             """信号处理器"""
             utils.logger.info(f"[CDPBrowserManager] 收到信号 {signum}，清理浏览器进程")
             if self.launcher and self.launcher.browser_process:
                 self.launcher.cleanup()
-            # 重新引发KeyboardInterrupt以便正常退出流程
+
             if signum == signal.SIGINT:
+                if prev_sigint == signal.default_int_handler:
+                    return prev_sigint(signum, frame)
                 raise KeyboardInterrupt
 
+            raise SystemExit(0)
+
+        install_sigint = prev_sigint in (signal.default_int_handler, signal.SIG_DFL)
+        install_sigterm = prev_sigterm == signal.SIG_DFL
+
         # 注册SIGINT (Ctrl+C) 和 SIGTERM
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        if install_sigint:
+            signal.signal(signal.SIGINT, signal_handler)
+        else:
+            utils.logger.info("[CDPBrowserManager] 已存在SIGINT处理器，跳过注册以避免覆盖")
+
+        if install_sigterm:
+            signal.signal(signal.SIGTERM, signal_handler)
+        else:
+            utils.logger.info("[CDPBrowserManager] 已存在SIGTERM处理器，跳过注册以避免覆盖")
 
         self._cleanup_registered = True
         utils.logger.info("[CDPBrowserManager] 清理处理器已注册")
