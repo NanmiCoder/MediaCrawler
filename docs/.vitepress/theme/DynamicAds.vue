@@ -63,7 +63,8 @@ onUnmounted(() => {
 }
 
 .ad-image {
-  max-width: 130px;
+  max-width: 100%;
+  width: 200px;
   height: auto;
   margin-bottom: 0.5rem;
 }
