@@ -229,7 +229,7 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">
 <img width="500" src="docs/static/images/tikhub_banner_zh.png">
 <br>
-TikHub：700+接口覆盖 TikTok、Douyin、XHS、YouTube、Instagram 等14+平台，每日签到领免费额度。邀请码 <code>cfzyejV9</code> 注册充值再送 $2。
+TikHub.io 提供 900+ 高稳定性数据接口，覆盖 TK、DY、XHS、Y2B、Ins、X 等 14+ 海内外主流平台，支持用户、内容、商品、评论等多维度公开数据 API，并配套 4000 万+ 已清洗结构化数据集，使用邀请码 <code>cfzyejV9</code> 注册并充值，即可额外获得 $2 赠送额度。
 </a>
 
 ---
