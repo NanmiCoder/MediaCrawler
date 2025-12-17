@@ -226,23 +226,21 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 
 ---
 
-<p align="center">
-  <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">
-    <img style="border-radius:20px" width="500" alt="TikHub IO_Banner zh" src="docs/static/images/tikhub_banner_zh.png">
-  </a>
-</p>
+<a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">
+<img width="500" src="docs/static/images/tikhub_banner_zh.png">
+<br>
+TikHub：700+接口覆盖 TikTok、Douyin、XHS、YouTube、Instagram 等14+平台，每日签到领免费额度。邀请码 <code>cfzyejV9</code> 注册充值再送 $2。
+</a>
 
-[TikHub](https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad) 提供超过 **700 个端点**，可用于从 **14+ 个社交媒体平台** 获取与分析数据 —— 包括视频、用户、评论、商店、商品与趋势等，一站式完成所有数据访问与分析。
+---
 
-通过每日签到，可以获取免费额度。可以使用我的注册链接：[https://user.tikhub.io/users/signup?referral_code=cfzyejV9](https://user.tikhub.io/users/signup?referral_code=cfzyejV9&utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad) 或使用邀请码：`cfzyejV9`，注册并充值即可获得 **$2 免费额度**。
-
-[TikHub](https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad) 提供以下服务：
-
-- 🚀 丰富的社交媒体数据接口（TikTok、Douyin、XHS、YouTube、Instagram等）
-- 💎 每日签到免费领取额度
-- ⚡ 高成功率与高并发支持
-- 🌐 官网：[https://tikhub.io/](https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad)
-- 💻 GitHub地址：[https://github.com/TikHubIO/](https://github.com/TikHubIO/)
+<a href="https://www.thordata.com/?ls=github&lk=mediacrawler">
+<img width="500" src="docs/static/images/Thordata.png">
+<br>
+Thordata：可靠且经济高效的代理服务提供商。为企业和开发者提供稳定、高效且合规的全球代理 IP 服务。立即注册，赠送1GB住宅代理免费试用和2000次serp-api调用。
+</a>
+<br>
+<a href="https://www.thordata.com/products/residential-proxies/?ls=github&lk=mediacrawler">【住宅代理】</a> | <a href="https://www.thordata.com/products/web-scraper/?ls=github&lk=mediacrawler">【serp-api】</a>
 
 
 ### 🤝 成为赞助者
