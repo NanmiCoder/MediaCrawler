@@ -6,4 +6,5 @@
 :root {
   --vp-sidebar-width: 285px;
   --vp-sidebar-bg-color: var(--vp-c-bg-alt);
+  --vp-aside-width: 300px;
 }
