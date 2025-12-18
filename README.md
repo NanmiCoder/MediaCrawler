@@ -53,6 +53,7 @@
 - **无需JS逆向**：利用保留登录态的浏览器上下文环境，通过 JS 表达式获取签名参数
 - **优势特点**：无需逆向复杂的加密算法，大幅降低技术门槛
 
+
 ## ✨ 功能特性
 | 平台   | 关键词搜索 | 指定帖子ID爬取 | 二级评论 | 指定创作者主页 | 登录态缓存 | IP代理池 | 生成评论词云图 |
 | ------ | ---------- | -------------- | -------- | -------------- | ---------- | -------- | -------------- |
@@ -66,7 +67,8 @@
 
 
 
-### 🚀 MediaCrawlerPro 重磅发布！
+<details>
+<summary>🚀 <strong>MediaCrawlerPro 重磅发布！开源不易，欢迎订阅支持</strong></summary>
 
 > 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计思路同样值得深入学习！
 
@@ -90,10 +92,12 @@
 
 点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
 
+</details>
+
 
 ## 🚀 快速开始
 
-> 💡 **开源不易，如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！**
+> 💡 **如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！**
 
 ## 📋 前置依赖
 
@@ -240,7 +244,7 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 📖 **详细使用说明请查看：[数据存储指南](docs/data_storage_guide.md)**
 
 
-[🚀 MediaCrawlerPro 重磅发布 🚀！更多的功能，更好的架构设计！](https://github.com/MediaCrawlerPro)
+[🚀 MediaCrawlerPro 重磅发布 🚀！更多的功能，更好的架构设计！开源不易，欢迎订阅支持！](https://github.com/MediaCrawlerPro)
 
 
 ### 💬 交流群组
