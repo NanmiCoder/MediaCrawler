@@ -197,6 +197,15 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 show_default=True,
             ),
         ] = str(config.ENABLE_GET_SUB_COMMENTS),
+        headless: Annotated[
+            str,
+            typer.Option(
+                "--headless",
+                help="是否启用无头模式（对 Playwright 和 CDP 均生效），支持 yes/true/t/y/1 或 no/false/f/n/0",
+                rich_help_panel="运行配置",
+                show_default=True,
+            ),
+        ] = str(config.HEADLESS),
         save_data_option: Annotated[
             SaveDataOptionEnum,
             typer.Option(
@@ -223,12 +232,33 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="账号配置",
             ),
         ] = config.COOKIES,
+        specified_id: Annotated[
+            str,
+            typer.Option(
+                "--specified_id",
+                help="详情模式下的帖子/视频ID列表，多个ID用逗号分隔（支持完整URL或ID）",
+                rich_help_panel="基础配置",
+            ),
+        ] = "",
+        creator_id: Annotated[
+            str,
+            typer.Option(
+                "--creator_id",
+                help="创作者模式下的创作者ID列表，多个ID用逗号分隔（支持完整URL或ID）",
+                rich_help_panel="基础配置",
+            ),
+        ] = "",
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
         enable_comment = _to_bool(get_comment)
         enable_sub_comment = _to_bool(get_sub_comment)
+        enable_headless = _to_bool(headless)
         init_db_value = init_db.value if init_db else None
+
+        # Parse specified_id and creator_id into lists
+        specified_id_list = [id.strip() for id in specified_id.split(",") if id.strip()] if specified_id else []
+        creator_id_list = [id.strip() for id in creator_id.split(",") if id.strip()] if creator_id else []
 
         # override global config
         config.PLATFORM = platform.value
@@ -238,8 +268,35 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.KEYWORDS = keywords
         config.ENABLE_GET_COMMENTS = enable_comment
         config.ENABLE_GET_SUB_COMMENTS = enable_sub_comment
+        config.HEADLESS = enable_headless
+        config.CDP_HEADLESS = enable_headless
         config.SAVE_DATA_OPTION = save_data_option.value
         config.COOKIES = cookies
+
+        # Set platform-specific ID lists for detail/creator mode
+        if specified_id_list:
+            if platform == PlatformEnum.XHS:
+                config.XHS_SPECIFIED_NOTE_URL_LIST = specified_id_list
+            elif platform == PlatformEnum.BILIBILI:
+                config.BILI_SPECIFIED_ID_LIST = specified_id_list
+            elif platform == PlatformEnum.DOUYIN:
+                config.DY_SPECIFIED_ID_LIST = specified_id_list
+            elif platform == PlatformEnum.WEIBO:
+                config.WEIBO_SPECIFIED_ID_LIST = specified_id_list
+            elif platform == PlatformEnum.KUAISHOU:
+                config.KS_SPECIFIED_ID_LIST = specified_id_list
+
+        if creator_id_list:
+            if platform == PlatformEnum.XHS:
+                config.XHS_CREATOR_ID_LIST = creator_id_list
+            elif platform == PlatformEnum.BILIBILI:
+                config.BILI_CREATOR_ID_LIST = creator_id_list
+            elif platform == PlatformEnum.DOUYIN:
+                config.DY_CREATOR_ID_LIST = creator_id_list
+            elif platform == PlatformEnum.WEIBO:
+                config.WEIBO_CREATOR_ID_LIST = creator_id_list
+            elif platform == PlatformEnum.KUAISHOU:
+                config.KS_CREATOR_ID_LIST = creator_id_list
 
         return SimpleNamespace(
             platform=config.PLATFORM,
@@ -249,9 +306,12 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             keywords=config.KEYWORDS,
             get_comment=config.ENABLE_GET_COMMENTS,
             get_sub_comment=config.ENABLE_GET_SUB_COMMENTS,
+            headless=config.HEADLESS,
             save_data_option=config.SAVE_DATA_OPTION,
             init_db=init_db_value,
             cookies=config.COOKIES,
+            specified_id=specified_id,
+            creator_id=creator_id,
         )
 
     command = typer.main.get_command(app)
