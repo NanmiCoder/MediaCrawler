@@ -1,7 +1,8 @@
 import {defineConfig} from 'vitepress'
+import {withMermaid} from 'vitepress-plugin-mermaid'
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default withMermaid(defineConfig({
     title: "MediaCrawler自媒体爬虫",
     description: "小红书爬虫，抖音爬虫， 快手爬虫， B站爬虫， 微博爬虫，百度贴吧爬虫，知乎爬虫...。  ",
     lastUpdated: true,
@@ -43,6 +44,7 @@ export default defineConfig({
                 text: 'MediaCrawler使用文档',
                 items: [
                     {text: '基本使用', link: '/'},
+                    {text: '项目架构文档', link: '/项目架构文档'},
                     {text: '常见问题汇总', link: '/常见问题'},
                     {text: 'IP代理使用', link: '/代理使用'},
                     {text: '词云图使用', link: '/词云图使用配置'},
@@ -85,4 +87,4 @@ export default defineConfig({
             {icon: 'github', link: 'https://github.com/NanmiCoder/MediaCrawler'}
         ]
     }
-})
+}))
