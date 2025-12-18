@@ -146,6 +146,37 @@ uv run main.py --platform xhs --lt qrcode --type detail
 uv run main.py --help
 ```
 
+## WebUI支持
+
+<details>
+<summary>🖥️ <strong>WebUI 可视化操作界面</strong></summary>
+
+MediaCrawler 提供了基于 Web 的可视化操作界面，无需命令行也能轻松使用爬虫功能。
+
+#### 启动 WebUI 服务
+
+```shell
+# 启动 API 服务器（默认端口 8080）
+uv run uvicorn api.main:app --port 8080 --reload
+
+# 或者使用模块方式启动
+uv run python -m api.main
+```
+
+启动成功后，访问 `http://localhost:8080` 即可打开 WebUI 界面。
+
+#### WebUI 功能特性
+
+- 可视化配置爬虫参数（平台、登录方式、爬取类型等）
+- 实时查看爬虫运行状态和日志
+- 数据预览和导出
+
+#### 界面预览
+
+<img src="docs/static/images/img_8.png" alt="WebUI 界面预览">
+
+</details>
+
 <details>
 <summary>🔗 <strong>使用 Python 原生 venv 管理环境（不推荐）</strong></summary>
 
