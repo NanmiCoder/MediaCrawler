@@ -37,6 +37,7 @@ dependencies = [
     "openpyxl>=3.1.2",
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
+    "websockets>=15.0.1",
 ]
 
 [[tool.uv.index]]
