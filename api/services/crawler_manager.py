@@ -203,7 +203,7 @@ class CrawlerManager:
 
     def _build_command(self, config: CrawlerStartRequest) -> list:
         """构建 main.py 命令行参数"""
-        cmd = ["python", "main.py"]
+        cmd = ["uv", "run", "python", "main.py"]
 
         cmd.extend(["--platform", config.platform.value])
         cmd.extend(["--lt", config.login_type.value])
