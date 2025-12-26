@@ -31,6 +31,7 @@ import config
 from base.base_crawler import AbstractLogin
 from cache.cache_factory import CacheFactory
 from tools import utils
+from .cookie_manager import CookieManager
 
 
 class XiaoHongShuLogin(AbstractLogin):
@@ -47,6 +48,7 @@ class XiaoHongShuLogin(AbstractLogin):
         self.context_page = context_page
         self.login_phone = login_phone
         self.cookie_str = cookie_str
+        self.cookie_manager = CookieManager()
 
     @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
@@ -71,8 +73,14 @@ class XiaoHongShuLogin(AbstractLogin):
         utils.logger.info("[XiaoHongShuLogin.begin] Begin login xiaohongshu ...")
         if config.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
+            # Auto-save cookies after successful QR code login if enabled
+            if config.AUTO_SAVE_AND_USE_COOKIES:
+                await self.save_cookies_to_file()
         elif config.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
+            # Auto-save cookies after successful phone login if enabled
+            if config.AUTO_SAVE_AND_USE_COOKIES:
+                await self.save_cookies_to_file()
         elif config.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
@@ -195,12 +203,49 @@ class XiaoHongShuLogin(AbstractLogin):
     async def login_by_cookies(self):
         """login xiaohongshu website by cookies"""
         utils.logger.info("[XiaoHongShuLogin.login_by_cookies] Begin login xiaohongshu by cookie ...")
-        for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
-            if key != "web_session":  # only set web_session cookie attr
-                continue
-            await self.browser_context.add_cookies([{
+
+        # First try to load cookies from file if cookie_str is empty
+        if not self.cookie_str:
+            utils.logger.info("[XiaoHongShuLogin.login_by_cookies] Attempting to load cookies from file ...")
+            saved_cookies = self.cookie_manager.load_cookies()
+            if saved_cookies:
+                await self.browser_context.add_cookies(saved_cookies)
+                utils.logger.info(f"[XiaoHongShuLogin.login_by_cookies] Successfully loaded {len(saved_cookies)} cookies from file")
+                return
+            else:
+                utils.logger.warning("[XiaoHongShuLogin.login_by_cookies] No saved cookies found, please login manually first")
+                return
+
+        # If cookie_str is provided, use it
+        cookie_dict = utils.convert_str_cookie_to_dict(self.cookie_str)
+        cookies_to_add = []
+
+        # Add all cookies, not just web_session
+        for key, value in cookie_dict.items():
+            cookies_to_add.append({
                 'name': key,
                 'value': value,
                 'domain': ".xiaohongshu.com",
                 'path': "/"
-            }])
+            })
+
+        if cookies_to_add:
+            await self.browser_context.add_cookies(cookies_to_add)
+            utils.logger.info(f"[XiaoHongShuLogin.login_by_cookies] Successfully added {len(cookies_to_add)} cookies from cookie string")
+
+    async def save_cookies_to_file(self):
+        """Save current browser cookies to file for future use"""
+        utils.logger.info("[XiaoHongShuLogin.save_cookies_to_file] Saving cookies to file ...")
+        try:
+            current_cookies = await self.browser_context.cookies()
+            if current_cookies:
+                success = self.cookie_manager.save_cookies(current_cookies)
+                if success:
+                    utils.logger.info(
+                        f"[XiaoHongShuLogin.save_cookies_to_file] Successfully saved {len(current_cookies)} cookies"
+                    )
+                    return True
+            return False
+        except Exception as e:
+            utils.logger.error(f"[XiaoHongShuLogin.save_cookies_to_file] Failed to save cookies: {e}")
+            return False

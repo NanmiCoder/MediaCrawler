@@ -43,6 +43,11 @@ HEADLESS = False
 # 是否保存登录状态
 SAVE_LOGIN_STATE = True
 
+# 是否自动保存和使用Cookie（优先使用保存的Cookie，避免重复扫码登录）
+# 设置为True后，成功登录会自动保存Cookie到cookies/目录
+# 下次启动时会先尝试使用保存的Cookie，失败后才会要求重新登录
+AUTO_SAVE_AND_USE_COOKIES = True
+
 # ==================== CDP (Chrome DevTools Protocol) 配置 ====================
 # 是否启用CDP模式 - 使用用户现有的Chrome/Edge浏览器进行爬取，提供更好的反检测能力
 # 启用后将自动检测并启动用户的Chrome/Edge浏览器，通过CDP协议进行控制
