@@ -249,6 +249,7 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 
 ### 💬 交流群组
 - **微信交流群**：[点击加入](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
+- **B站账号**：[关注我](https://space.bilibili.com/434377496)，分享AI与爬虫技术知识
 
 
 ### 💰 赞助商展示
