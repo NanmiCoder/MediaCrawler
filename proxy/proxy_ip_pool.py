@@ -20,7 +20,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 13:45
-# @Desc    : ip代理池实现
+# @Desc    : IP proxy pool implementation
 import random
 from typing import Dict, List
 
@@ -50,16 +50,16 @@ class ProxyIpPool:
             enable_validate_ip:
             ip_provider:
         """
-        self.valid_ip_url = "https://echo.apifox.cn/"  # 验证 IP 是否有效的地址
+        self.valid_ip_url = "https://echo.apifox.cn/"  # URL to validate if IP is valid
         self.ip_pool_count = ip_pool_count
         self.enable_validate_ip = enable_validate_ip
         self.proxy_list: List[IpInfoModel] = []
         self.ip_provider: ProxyProvider = ip_provider
-        self.current_proxy: IpInfoModel | None = None  # 当前正在使用的代理
+        self.current_proxy: IpInfoModel | None = None  # Currently used proxy
 
     async def load_proxies(self) -> None:
         """
-        加载IP代理
+        Load IP proxies
         Returns:
 
         """
@@ -67,7 +67,7 @@ class ProxyIpPool:
 
     async def _is_valid_proxy(self, proxy: IpInfoModel) -> bool:
         """
-        验证代理IP是否有效
+        Validate if proxy IP is valid
         :param proxy:
         :return:
         """
@@ -75,7 +75,7 @@ class ProxyIpPool:
             f"[ProxyIpPool._is_valid_proxy] testing {proxy.ip} is it valid "
         )
         try:
-            # httpx 0.28.1 需要直接传入代理URL字符串，而不是字典
+            # httpx 0.28.1 requires passing proxy URL string directly, not a dictionary
             if proxy.user and proxy.password:
                 proxy_url = f"http://{proxy.user}:{proxy.password}@{proxy.ip}:{proxy.port}"
             else:
@@ -96,29 +96,29 @@ class ProxyIpPool:
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
     async def get_proxy(self) -> IpInfoModel:
         """
-        从代理池中随机提取一个代理IP
+        Randomly extract a proxy IP from the proxy pool
         :return:
         """
         if len(self.proxy_list) == 0:
             await self._reload_proxies()
 
         proxy = random.choice(self.proxy_list)
-        self.proxy_list.remove(proxy)  # 取出来一个IP就应该移出掉
+        self.proxy_list.remove(proxy)  # Remove an IP once extracted
         if self.enable_validate_ip:
             if not await self._is_valid_proxy(proxy):
                 raise Exception(
                     "[ProxyIpPool.get_proxy] current ip invalid and again get it"
                 )
-        self.current_proxy = proxy  # 保存当前使用的代理
+        self.current_proxy = proxy  # Save currently used proxy
         return proxy
 
     def is_current_proxy_expired(self, buffer_seconds: int = 30) -> bool:
         """
-        检测当前代理是否已过期
+        Check if current proxy has expired
         Args:
-            buffer_seconds: 缓冲时间（秒），提前多少秒认为已过期
+            buffer_seconds: Buffer time (seconds), how many seconds ahead to consider expired
         Returns:
-            bool: True表示已过期或没有当前代理，False表示仍然有效
+            bool: True means expired or no current proxy, False means still valid
         """
         if self.current_proxy is None:
             return True
@@ -126,12 +126,12 @@ class ProxyIpPool:
 
     async def get_or_refresh_proxy(self, buffer_seconds: int = 30) -> IpInfoModel:
         """
-        获取当前代理，如果已过期则自动刷新
-        每次发起请求前调用此方法来确保代理有效
+        Get current proxy, automatically refresh if expired
+        Call this method before each request to ensure proxy is valid
         Args:
-            buffer_seconds: 缓冲时间（秒），提前多少秒认为已过期
+            buffer_seconds: Buffer time (seconds), how many seconds ahead to consider expired
         Returns:
-            IpInfoModel: 有效的代理IP信息
+            IpInfoModel: Valid proxy IP information
         """
         if self.is_current_proxy_expired(buffer_seconds):
             utils.logger.info(
@@ -142,7 +142,7 @@ class ProxyIpPool:
 
     async def _reload_proxies(self):
         """
-        # 重新加载代理池
+        Reload proxy pool
         :return:
         """
         self.proxy_list = []
@@ -157,9 +157,9 @@ IpProxyProvider: Dict[str, ProxyProvider] = {
 
 async def create_ip_pool(ip_pool_count: int, enable_validate_ip: bool) -> ProxyIpPool:
     """
-     创建 IP 代理池
-    :param ip_pool_count: ip池子的数量
-    :param enable_validate_ip: 是否开启验证IP代理
+    Create IP proxy pool
+    :param ip_pool_count: Number of IPs in the pool
+    :param enable_validate_ip: Whether to enable IP proxy validation
     :return:
     """
     pool = ProxyIpPool(

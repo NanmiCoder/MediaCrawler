@@ -37,109 +37,109 @@ class TestIpPool(IsolatedAsyncioTestCase):
         for _ in range(3):
             ip_proxy_info: IpInfoModel = await pool.get_proxy()
             print(ip_proxy_info)
-            self.assertIsNotNone(ip_proxy_info.ip, msg="验证 ip 是否获取成功")
+            self.assertIsNotNone(ip_proxy_info.ip, msg="Verify if IP is obtained successfully")
 
     async def test_ip_expiration(self):
-        """测试IP代理过期检测功能"""
-        print("\n=== 开始测试IP代理过期检测 ===")
+        """Test IP proxy expiration detection functionality"""
+        print("\n=== Starting IP proxy expiration detection test ===")
 
-        # 1. 创建IP池并获取一个代理
+        # 1. Create IP pool and get a proxy
         pool = await create_ip_pool(ip_pool_count=2, enable_validate_ip=True)
         ip_proxy_info: IpInfoModel = await pool.get_proxy()
-        print(f"获取到的代理: {ip_proxy_info.ip}:{ip_proxy_info.port}")
+        print(f"Obtained proxy: {ip_proxy_info.ip}:{ip_proxy_info.port}")
 
-        # 2. 测试未过期的情况
+        # 2. Test non-expired case
         if ip_proxy_info.expired_time_ts:
-            print(f"代理过期时间戳: {ip_proxy_info.expired_time_ts}")
-            print(f"当前时间戳: {int(time.time())}")
-            print(f"剩余有效时间: {ip_proxy_info.expired_time_ts - int(time.time())} 秒")
+            print(f"Proxy expiration timestamp: {ip_proxy_info.expired_time_ts}")
+            print(f"Current timestamp: {int(time.time())}")
+            print(f"Remaining valid time: {ip_proxy_info.expired_time_ts - int(time.time())} seconds")
 
             is_expired = ip_proxy_info.is_expired(buffer_seconds=30)
-            print(f"代理是否过期(缓冲30秒): {is_expired}")
-            self.assertFalse(is_expired, msg="新获取的IP应该未过期")
+            print(f"Is proxy expired (30s buffer): {is_expired}")
+            self.assertFalse(is_expired, msg="Newly obtained IP should not be expired")
         else:
-            print("当前代理未设置过期时间，跳过过期检测")
+            print("Current proxy does not have expiration time set, skipping expiration detection")
 
-        # 3. 测试即将过期的情况（设置为5分钟后过期）
+        # 3. Test about to expire case (set to expire in 5 minutes)
         current_ts = int(time.time())
-        five_minutes_later = current_ts + 300  # 5分钟 = 300秒
+        five_minutes_later = current_ts + 300  # 5 minutes = 300 seconds
         ip_proxy_info.expired_time_ts = five_minutes_later
-        print(f"\n设置代理过期时间为5分钟后: {five_minutes_later}")
+        print(f"\nSet proxy expiration time to 5 minutes later: {five_minutes_later}")
 
-        # 不应该过期（缓冲30秒）
+        # Should not be expired (30s buffer)
         is_expired_30s = ip_proxy_info.is_expired(buffer_seconds=30)
-        print(f"代理是否过期(缓冲30秒): {is_expired_30s}")
-        self.assertFalse(is_expired_30s, msg="5分钟后过期的IP，缓冲30秒不应该过期")
+        print(f"Is proxy expired (30s buffer): {is_expired_30s}")
+        self.assertFalse(is_expired_30s, msg="IP expiring in 5 minutes should not be expired with 30s buffer")
 
-        # 4. 测试已过期的情况（设置为已经过期）
-        expired_ts = current_ts - 60  # 1分钟前已过期
+        # 4. Test already expired case (set to already expired)
+        expired_ts = current_ts - 60  # Expired 1 minute ago
         ip_proxy_info.expired_time_ts = expired_ts
-        print(f"\n设置代理过期时间为1分钟前: {expired_ts}")
+        print(f"\nSet proxy expiration time to 1 minute ago: {expired_ts}")
 
         is_expired = ip_proxy_info.is_expired(buffer_seconds=30)
-        print(f"代理是否过期(缓冲30秒): {is_expired}")
-        self.assertTrue(is_expired, msg="已过期的IP应该被检测为过期")
+        print(f"Is proxy expired (30s buffer): {is_expired}")
+        self.assertTrue(is_expired, msg="Expired IP should be detected as expired")
 
-        # 5. 测试临界过期情况（29秒后过期，缓冲30秒应该认为已过期）
+        # 5. Test critical expiration case (expires in 29s, should be considered expired with 30s buffer)
         almost_expired_ts = current_ts + 29
         ip_proxy_info.expired_time_ts = almost_expired_ts
-        print(f"\n设置代理过期时间为29秒后: {almost_expired_ts}")
+        print(f"\nSet proxy expiration time to 29 seconds later: {almost_expired_ts}")
 
         is_expired_critical = ip_proxy_info.is_expired(buffer_seconds=30)
-        print(f"代理是否过期(缓冲30秒): {is_expired_critical}")
-        self.assertTrue(is_expired_critical, msg="29秒后过期的IP，缓冲30秒应该被认为已过期")
+        print(f"Is proxy expired (30s buffer): {is_expired_critical}")
+        self.assertTrue(is_expired_critical, msg="IP expiring in 29s should be considered expired with 30s buffer")
 
-        print("\n=== IP代理过期检测测试完成 ===")
+        print("\n=== IP proxy expiration detection test completed ===")
 
     async def test_proxy_pool_auto_refresh(self):
-        """测试代理池自动刷新过期代理的功能"""
-        print("\n=== 开始测试代理池自动刷新功能 ===")
+        """Test proxy pool auto-refresh expired proxy functionality"""
+        print("\n=== Starting proxy pool auto-refresh test ===")
 
-        # 1. 创建IP池
+        # 1. Create IP pool
         pool = await create_ip_pool(ip_pool_count=2, enable_validate_ip=True)
 
-        # 2. 获取一个代理
+        # 2. Get a proxy
         first_proxy = await pool.get_proxy()
-        print(f"首次获取代理: {first_proxy.ip}:{first_proxy.port}")
+        print(f"First proxy obtained: {first_proxy.ip}:{first_proxy.port}")
 
-        # 验证当前代理未过期
+        # Verify current proxy is not expired
         is_expired = pool.is_current_proxy_expired(buffer_seconds=30)
-        print(f"当前代理是否过期: {is_expired}")
+        print(f"Is current proxy expired: {is_expired}")
 
         if first_proxy.expired_time_ts:
-            print(f"当前代理过期时间戳: {first_proxy.expired_time_ts}")
+            print(f"Current proxy expiration timestamp: {first_proxy.expired_time_ts}")
 
-            # 3. 手动设置当前代理为已过期
+            # 3. Manually set current proxy as expired
             current_ts = int(time.time())
             pool.current_proxy.expired_time_ts = current_ts - 60
-            print(f"\n手动设置代理为已过期（1分钟前）")
+            print(f"\nManually set proxy as expired (1 minute ago)")
 
-            # 4. 检测是否过期
+            # 4. Check if expired
             is_expired_after = pool.is_current_proxy_expired(buffer_seconds=30)
-            print(f"设置后代理是否过期: {is_expired_after}")
-            self.assertTrue(is_expired_after, msg="手动设置过期后应该被检测为过期")
+            print(f"Is proxy expired after setting: {is_expired_after}")
+            self.assertTrue(is_expired_after, msg="Should be detected as expired after manual setting")
 
-            # 5. 使用 get_or_refresh_proxy 自动刷新
-            print("\n调用 get_or_refresh_proxy 自动刷新过期代理...")
+            # 5. Use get_or_refresh_proxy to auto-refresh
+            print("\nCalling get_or_refresh_proxy to auto-refresh expired proxy...")
             refreshed_proxy = await pool.get_or_refresh_proxy(buffer_seconds=30)
-            print(f"刷新后的代理: {refreshed_proxy.ip}:{refreshed_proxy.port}")
+            print(f"Refreshed proxy: {refreshed_proxy.ip}:{refreshed_proxy.port}")
 
-            # 6. 验证新代理未过期
+            # 6. Verify new proxy is not expired
             is_new_expired = pool.is_current_proxy_expired(buffer_seconds=30)
-            print(f"新代理是否过期: {is_new_expired}")
-            self.assertFalse(is_new_expired, msg="刷新后的新代理应该未过期")
+            print(f"Is new proxy expired: {is_new_expired}")
+            self.assertFalse(is_new_expired, msg="Refreshed new proxy should not be expired")
 
-            print("\n=== 代理池自动刷新测试完成 ===")
+            print("\n=== Proxy pool auto-refresh test completed ===")
         else:
-            print("当前代理未设置过期时间，跳过自动刷新测试")
+            print("Current proxy does not have expiration time set, skipping auto-refresh test")
 
     async def test_ip_expiration_standalone(self):
-        """独立测试IP过期检测功能（不依赖真实代理提供商）"""
-        print("\n=== 开始独立测试IP代理过期检测功能 ===")
+        """Standalone test for IP expiration detection (does not depend on real proxy provider)"""
+        print("\n=== Starting standalone IP proxy expiration detection test ===")
 
         current_ts = int(time.time())
 
-        # 1. 测试未设置过期时间的IP（永不过期）
+        # 1. Test IP without expiration time set (never expires)
         ip_no_expire = IpInfoModel(
             ip="192.168.1.1",
             port=8080,
@@ -147,14 +147,14 @@ class TestIpPool(IsolatedAsyncioTestCase):
             password="test_pwd",
             expired_time_ts=None
         )
-        print(f"\n测试1: IP未设置过期时间")
+        print(f"\nTest 1: IP without expiration time set")
         is_expired = ip_no_expire.is_expired(buffer_seconds=30)
-        print(f"  代理: {ip_no_expire.ip}:{ip_no_expire.port}")
-        print(f"  过期时间: {ip_no_expire.expired_time_ts}")
-        print(f"  是否过期: {is_expired}")
-        self.assertFalse(is_expired, msg="未设置过期时间的IP应该永不过期")
+        print(f"  Proxy: {ip_no_expire.ip}:{ip_no_expire.port}")
+        print(f"  Expiration time: {ip_no_expire.expired_time_ts}")
+        print(f"  Is expired: {is_expired}")
+        self.assertFalse(is_expired, msg="IP without expiration time should never expire")
 
-        # 2. 测试5分钟后过期的IP（应该未过期）
+        # 2. Test IP expiring in 5 minutes (should not be expired)
         five_minutes_later = current_ts + 300
         ip_valid = IpInfoModel(
             ip="192.168.1.2",
@@ -163,16 +163,16 @@ class TestIpPool(IsolatedAsyncioTestCase):
             password="test_pwd",
             expired_time_ts=five_minutes_later
         )
-        print(f"\n测试2: IP将在5分钟后过期")
+        print(f"\nTest 2: IP will expire in 5 minutes")
         is_expired = ip_valid.is_expired(buffer_seconds=30)
-        print(f"  代理: {ip_valid.ip}:{ip_valid.port}")
-        print(f"  当前时间戳: {current_ts}")
-        print(f"  过期时间戳: {ip_valid.expired_time_ts}")
-        print(f"  剩余时间: {ip_valid.expired_time_ts - current_ts} 秒")
-        print(f"  是否过期(缓冲30秒): {is_expired}")
-        self.assertFalse(is_expired, msg="5分钟后过期的IP，缓冲30秒不应该过期")
+        print(f"  Proxy: {ip_valid.ip}:{ip_valid.port}")
+        print(f"  Current timestamp: {current_ts}")
+        print(f"  Expiration timestamp: {ip_valid.expired_time_ts}")
+        print(f"  Remaining time: {ip_valid.expired_time_ts - current_ts} seconds")
+        print(f"  Is expired (30s buffer): {is_expired}")
+        self.assertFalse(is_expired, msg="IP expiring in 5 minutes should not be expired with 30s buffer")
 
-        # 3. 测试已过期的IP
+        # 3. Test already expired IP
         already_expired = current_ts - 60
         ip_expired = IpInfoModel(
             ip="192.168.1.3",
@@ -181,16 +181,16 @@ class TestIpPool(IsolatedAsyncioTestCase):
             password="test_pwd",
             expired_time_ts=already_expired
         )
-        print(f"\n测试3: IP已经过期（1分钟前）")
+        print(f"\nTest 3: IP already expired (1 minute ago)")
         is_expired = ip_expired.is_expired(buffer_seconds=30)
-        print(f"  代理: {ip_expired.ip}:{ip_expired.port}")
-        print(f"  当前时间戳: {current_ts}")
-        print(f"  过期时间戳: {ip_expired.expired_time_ts}")
-        print(f"  已过期: {current_ts - ip_expired.expired_time_ts} 秒")
-        print(f"  是否过期(缓冲30秒): {is_expired}")
-        self.assertTrue(is_expired, msg="已过期的IP应该被检测为过期")
+        print(f"  Proxy: {ip_expired.ip}:{ip_expired.port}")
+        print(f"  Current timestamp: {current_ts}")
+        print(f"  Expiration timestamp: {ip_expired.expired_time_ts}")
+        print(f"  Expired for: {current_ts - ip_expired.expired_time_ts} seconds")
+        print(f"  Is expired (30s buffer): {is_expired}")
+        self.assertTrue(is_expired, msg="Expired IP should be detected as expired")
 
-        # 4. 测试临界过期（29秒后过期，缓冲30秒应该认为已过期）
+        # 4. Test critical expiration (expires in 29s, should be considered expired with 30s buffer)
         almost_expired = current_ts + 29
         ip_critical = IpInfoModel(
             ip="192.168.1.4",
@@ -199,16 +199,16 @@ class TestIpPool(IsolatedAsyncioTestCase):
             password="test_pwd",
             expired_time_ts=almost_expired
         )
-        print(f"\n测试4: IP即将过期（29秒后）")
+        print(f"\nTest 4: IP about to expire (in 29 seconds)")
         is_expired = ip_critical.is_expired(buffer_seconds=30)
-        print(f"  代理: {ip_critical.ip}:{ip_critical.port}")
-        print(f"  当前时间戳: {current_ts}")
-        print(f"  过期时间戳: {ip_critical.expired_time_ts}")
-        print(f"  剩余时间: {ip_critical.expired_time_ts - current_ts} 秒")
-        print(f"  是否过期(缓冲30秒): {is_expired}")
-        self.assertTrue(is_expired, msg="29秒后过期的IP，缓冲30秒应该被认为已过期")
+        print(f"  Proxy: {ip_critical.ip}:{ip_critical.port}")
+        print(f"  Current timestamp: {current_ts}")
+        print(f"  Expiration timestamp: {ip_critical.expired_time_ts}")
+        print(f"  Remaining time: {ip_critical.expired_time_ts - current_ts} seconds")
+        print(f"  Is expired (30s buffer): {is_expired}")
+        self.assertTrue(is_expired, msg="IP expiring in 29s should be considered expired with 30s buffer")
 
-        # 5. 测试31秒后过期（缓冲30秒应该未过期）
+        # 5. Test expires in 31s (should not be expired with 30s buffer)
         just_safe = current_ts + 31
         ip_just_safe = IpInfoModel(
             ip="192.168.1.5",
@@ -217,17 +217,17 @@ class TestIpPool(IsolatedAsyncioTestCase):
             password="test_pwd",
             expired_time_ts=just_safe
         )
-        print(f"\n测试5: IP在安全范围内（31秒后过期）")
+        print(f"\nTest 5: IP within safe range (expires in 31 seconds)")
         is_expired = ip_just_safe.is_expired(buffer_seconds=30)
-        print(f"  代理: {ip_just_safe.ip}:{ip_just_safe.port}")
-        print(f"  当前时间戳: {current_ts}")
-        print(f"  过期时间戳: {ip_just_safe.expired_time_ts}")
-        print(f"  剩余时间: {ip_just_safe.expired_time_ts - current_ts} 秒")
-        print(f"  是否过期(缓冲30秒): {is_expired}")
-        self.assertFalse(is_expired, msg="31秒后过期的IP，缓冲30秒应该未过期")
+        print(f"  Proxy: {ip_just_safe.ip}:{ip_just_safe.port}")
+        print(f"  Current timestamp: {current_ts}")
+        print(f"  Expiration timestamp: {ip_just_safe.expired_time_ts}")
+        print(f"  Remaining time: {ip_just_safe.expired_time_ts - current_ts} seconds")
+        print(f"  Is expired (30s buffer): {is_expired}")
+        self.assertFalse(is_expired, msg="IP expiring in 31s should not be expired with 30s buffer")
 
-        # 6. 测试ProxyIpPool的过期检测
-        print(f"\n测试6: ProxyIpPool的过期检测功能")
+        # 6. Test ProxyIpPool expiration detection
+        print(f"\nTest 6: ProxyIpPool expiration detection functionality")
         mock_provider = MagicMock()
         mock_provider.get_proxy = AsyncMock(return_value=[])
 
@@ -237,35 +237,35 @@ class TestIpPool(IsolatedAsyncioTestCase):
             ip_provider=mock_provider
         )
 
-        # 6.1 测试无当前代理时
+        # 6.1 Test when there is no current proxy
         is_expired = pool.is_current_proxy_expired(buffer_seconds=30)
-        print(f"  无当前代理时是否过期: {is_expired}")
-        self.assertTrue(is_expired, msg="无当前代理时应该返回True")
+        print(f"  Is expired when no current proxy: {is_expired}")
+        self.assertTrue(is_expired, msg="Should return True when there is no current proxy")
 
-        # 6.2 设置一个有效的代理
+        # 6.2 Set a valid proxy
         valid_proxy = IpInfoModel(
             ip="192.168.1.6",
             port=8080,
             user="test_user",
             password="test_pwd",
-            expired_time_ts=current_ts + 300  # 5分钟后过期
+            expired_time_ts=current_ts + 300  # Expires in 5 minutes
         )
         pool.current_proxy = valid_proxy
         is_expired = pool.is_current_proxy_expired(buffer_seconds=30)
-        print(f"  设置有效代理后是否过期: {is_expired}")
-        self.assertFalse(is_expired, msg="有效的代理应该返回False")
+        print(f"  Is expired after setting valid proxy: {is_expired}")
+        self.assertFalse(is_expired, msg="Valid proxy should return False")
 
-        # 6.3 设置一个已过期的代理
+        # 6.3 Set an expired proxy
         expired_proxy = IpInfoModel(
             ip="192.168.1.7",
             port=8080,
             user="test_user",
             password="test_pwd",
-            expired_time_ts=current_ts - 60  # 1分钟前已过期
+            expired_time_ts=current_ts - 60  # Expired 1 minute ago
         )
         pool.current_proxy = expired_proxy
         is_expired = pool.is_current_proxy_expired(buffer_seconds=30)
-        print(f"  设置已过期代理后是否过期: {is_expired}")
-        self.assertTrue(is_expired, msg="已过期的代理应该返回True")
+        print(f"  Is expired after setting expired proxy: {is_expired}")
+        self.assertTrue(is_expired, msg="Expired proxy should return True")
 
-        print("\n=== 独立IP代理过期检测测试完成 ===\n")
+        print("\n=== Standalone IP proxy expiration detection test completed ===\n")

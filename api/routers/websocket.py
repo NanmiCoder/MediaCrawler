@@ -27,7 +27,7 @@ router = APIRouter(tags=["websocket"])
 
 
 class ConnectionManager:
-    """WebSocket 连接管理器"""
+    """WebSocket connection manager"""
 
     def __init__(self):
         self.active_connections: Set[WebSocket] = set()
@@ -40,7 +40,7 @@ class ConnectionManager:
         self.active_connections.discard(websocket)
 
     async def broadcast(self, message: dict):
-        """广播消息到所有连接"""
+        """Broadcast message to all connections"""
         if not self.active_connections:
             return
 
@@ -51,7 +51,7 @@ class ConnectionManager:
             except Exception:
                 disconnected.append(connection)
 
-        # 清理断开的连接
+        # Clean up disconnected connections
         for conn in disconnected:
             self.disconnect(conn)
 
@@ -60,13 +60,13 @@ manager = ConnectionManager()
 
 
 async def log_broadcaster():
-    """后台任务：从队列读取日志并广播"""
+    """Background task: read logs from queue and broadcast"""
     queue = crawler_manager.get_log_queue()
     while True:
         try:
-            # 从队列获取日志条目
+            # Get log entry from queue
             entry = await queue.get()
-            # 广播到所有 WebSocket 连接
+            # Broadcast to all WebSocket connections
             await manager.broadcast(entry.model_dump())
         except asyncio.CancelledError:
             break
@@ -75,12 +75,12 @@ async def log_broadcaster():
             await asyncio.sleep(0.1)
 
 
-# 全局广播任务
+# Global broadcast task
 _broadcaster_task: Optional[asyncio.Task] = None
 
 
 def start_broadcaster():
-    """启动广播任务"""
+    """Start broadcast task"""
     global _broadcaster_task
     if _broadcaster_task is None or _broadcaster_task.done():
         _broadcaster_task = asyncio.create_task(log_broadcaster())
@@ -88,17 +88,17 @@ def start_broadcaster():
 
 @router.websocket("/ws/logs")
 async def websocket_logs(websocket: WebSocket):
-    """WebSocket 日志流"""
+    """WebSocket log stream"""
     print("[WS] New connection attempt")
 
     try:
-        # 确保广播任务在运行
+        # Ensure broadcast task is running
         start_broadcaster()
 
         await manager.connect(websocket)
         print(f"[WS] Connected, active connections: {len(manager.active_connections)}")
 
-        # 发送现有日志
+        # Send existing logs
         for log in crawler_manager.logs:
             try:
                 await websocket.send_json(log.model_dump())
@@ -109,7 +109,7 @@ async def websocket_logs(websocket: WebSocket):
         print(f"[WS] Sent {len(crawler_manager.logs)} existing logs, entering main loop")
 
         while True:
-            # 保持连接活跃，接收心跳或任意消息
+            # Keep connection alive, receive heartbeat or any message
             try:
                 data = await asyncio.wait_for(
                     websocket.receive_text(),
@@ -118,7 +118,7 @@ async def websocket_logs(websocket: WebSocket):
                 if data == "ping":
                     await websocket.send_text("pong")
             except asyncio.TimeoutError:
-                # 发送 ping 保持连接
+                # Send ping to keep connection alive
                 try:
                     await websocket.send_text("ping")
                 except Exception as e:
@@ -136,12 +136,12 @@ async def websocket_logs(websocket: WebSocket):
 
 @router.websocket("/ws/status")
 async def websocket_status(websocket: WebSocket):
-    """WebSocket 状态流"""
+    """WebSocket status stream"""
     await websocket.accept()
 
     try:
         while True:
-            # 每秒发送一次状态
+            # Send status every second
             status = crawler_manager.get_status()
             await websocket.send_json(status)
             await asyncio.sleep(1)

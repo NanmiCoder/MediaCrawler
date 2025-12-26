@@ -109,7 +109,7 @@ async def save_creator(user_id: str, creator: Dict):
     local_db_item = {
         'user_id': user_id,
         'nickname': profile.get('user_name'),
-        'gender': '女' if profile.get('gender') == "F" else '男',
+        'gender': 'Female' if profile.get('gender') == "F" else 'Male',
         'avatar': profile.get('headurl'),
         'desc': profile.get('user_text'),
         'ip_location': "",

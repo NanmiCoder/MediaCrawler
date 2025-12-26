@@ -21,7 +21,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : persist1@126.com
 # @Time    : 2025/9/5 19:34
-# @Desc    : 贴吧存储实现类
+# @Desc    : Tieba storage implementation class
 import asyncio
 import csv
 import json
@@ -44,7 +44,7 @@ from database.mongodb_store_base import MongoDBStoreBase
 
 
 def calculate_number_of_files(file_store_path: str) -> int:
-    """计算数据保存文件的前部分排序数字，支持每次运行代码不写到同一个文件中
+    """Calculate the prefix sorting number for data save files, supporting writing to different files for each run
     Args:
         file_store_path;
     Returns:
@@ -203,16 +203,16 @@ class TieBaSqliteStoreImplement(TieBaDbStoreImplement):
 
 
 class TieBaMongoStoreImplement(AbstractStore):
-    """贴吧MongoDB存储实现"""
+    """Tieba MongoDB storage implementation"""
 
     def __init__(self):
         self.mongo_store = MongoDBStoreBase(collection_prefix="tieba")
 
     async def store_content(self, content_item: Dict):
         """
-        存储帖子内容到MongoDB
+        Store post content to MongoDB
         Args:
-            content_item: 帖子内容数据
+            content_item: Post content data
         """
         note_id = content_item.get("note_id")
         if not note_id:
@@ -227,9 +227,9 @@ class TieBaMongoStoreImplement(AbstractStore):
 
     async def store_comment(self, comment_item: Dict):
         """
-        存储评论到MongoDB
+        Store comment to MongoDB
         Args:
-            comment_item: 评论数据
+            comment_item: Comment data
         """
         comment_id = comment_item.get("comment_id")
         if not comment_id:
@@ -244,9 +244,9 @@ class TieBaMongoStoreImplement(AbstractStore):
 
     async def store_creator(self, creator_item: Dict):
         """
-        存储创作者信息到MongoDB
+        Store creator information to MongoDB
         Args:
-            creator_item: 创作者数据
+            creator_item: Creator data
         """
         user_id = creator_item.get("user_id")
         if not user_id:
@@ -261,7 +261,7 @@ class TieBaMongoStoreImplement(AbstractStore):
 
 
 class TieBaExcelStoreImplement:
-    """贴吧Excel存储实现 - 全局单例"""
+    """Tieba Excel storage implementation - Global singleton"""
 
     def __new__(cls, *args, **kwargs):
         from store.excel_store_base import ExcelStoreBase

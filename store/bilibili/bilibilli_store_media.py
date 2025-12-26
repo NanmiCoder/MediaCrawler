@@ -20,7 +20,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : helloteemo
 # @Time    : 2024/7/12 20:01
-# @Desc    : bilibili 媒体保存
+# @Desc    : Bilibili media storage
 import pathlib
 from typing import Dict
 

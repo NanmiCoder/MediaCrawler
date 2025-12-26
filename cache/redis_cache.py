@@ -20,9 +20,9 @@
 
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
-# @Name    : 程序员阿江-Relakkes
+# @Name    : Programmer AJiang-Relakkes
 # @Time    : 2024/5/29 22:57
-# @Desc    : RedisCache实现
+# @Desc    : RedisCache implementation
 import pickle
 import time
 from typing import Any, List
@@ -36,13 +36,13 @@ from config import db_config
 class RedisCache(AbstractCache):
 
     def __init__(self) -> None:
-        # 连接redis, 返回redis客户端
+        # Connect to redis, return redis client
         self._redis_client = self._connet_redis()
 
     @staticmethod
     def _connet_redis() -> Redis:
         """
-        连接redis, 返回redis客户端, 这里按需配置redis连接信息
+        Connect to redis, return redis client, configure redis connection information as needed
         :return:
         """
         return Redis(
@@ -54,7 +54,7 @@ class RedisCache(AbstractCache):
 
     def get(self, key: str) -> Any:
         """
-        从缓存中获取键的值, 并且反序列化
+        Get the value of a key from the cache and deserialize it
         :param key:
         :return:
         """
@@ -65,7 +65,7 @@ class RedisCache(AbstractCache):
 
     def set(self, key: str, value: Any, expire_time: int) -> None:
         """
-        将键的值设置到缓存中, 并且序列化
+        Set the value of a key in the cache and serialize it
         :param key:
         :param value:
         :param expire_time:
@@ -75,7 +75,7 @@ class RedisCache(AbstractCache):
 
     def keys(self, pattern: str) -> List[str]:
         """
-        获取所有符合pattern的key
+        Get all keys matching the pattern
         """
         return [key.decode() for key in self._redis_client.keys(pattern)]
 
@@ -83,7 +83,7 @@ class RedisCache(AbstractCache):
 if __name__ == '__main__':
     redis_cache = RedisCache()
     # basic usage
-    redis_cache.set("name", "程序员阿江-Relakkes", 1)
+    redis_cache.set("name", "Programmer AJiang-Relakkes", 1)
     print(redis_cache.get("name"))  # Relakkes
     print(redis_cache.keys("*"))  # ['name']
     time.sleep(2)

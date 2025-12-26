@@ -297,13 +297,13 @@ def get_img_urls_by_trace_id(trace_id: str, format_type: str = "png"):
 
 
 def get_trace_id(img_url: str):
-    # 浏览器端上传的图片多了 /spectrum/ 这个路径
+    # Browser-uploaded images have an additional /spectrum/ path
     return f"spectrum/{img_url.split('/')[-1]}" if img_url.find("spectrum") != -1 else img_url.split("/")[-1]
 
 
 def parse_note_info_from_note_url(url: str) -> NoteUrlInfo:
     """
-    从小红书笔记url中解析出笔记信息
+    Parse note information from Xiaohongshu note URL
     Args:
         url: "https://www.xiaohongshu.com/explore/66fad51c000000001b0224b8?xsec_token=AB3rO-QopW5sgrJ41GwN01WCXh6yWPxjSoFI9D5JIMgKw=&xsec_source=pc_search"
     Returns:
@@ -318,44 +318,44 @@ def parse_note_info_from_note_url(url: str) -> NoteUrlInfo:
 
 def parse_creator_info_from_url(url: str) -> CreatorUrlInfo:
     """
-    从小红书创作者主页URL中解析出创作者信息
-    支持以下格式:
-    1. 完整URL: "https://www.xiaohongshu.com/user/profile/5eb8e1d400000000010075ae?xsec_token=AB1nWBKCo1vE2HEkfoJUOi5B6BE5n7wVrbdpHoWIj5xHw=&xsec_source=pc_feed"
-    2. 纯ID: "5eb8e1d400000000010075ae"
+    Parse creator information from Xiaohongshu creator homepage URL
+    Supports the following formats:
+    1. Full URL: "https://www.xiaohongshu.com/user/profile/5eb8e1d400000000010075ae?xsec_token=AB1nWBKCo1vE2HEkfoJUOi5B6BE5n7wVrbdpHoWIj5xHw=&xsec_source=pc_feed"
+    2. Pure ID: "5eb8e1d400000000010075ae"
 
     Args:
-        url: 创作者主页URL或user_id
+        url: Creator homepage URL or user_id
     Returns:
-        CreatorUrlInfo: 包含user_id, xsec_token, xsec_source的对象
+        CreatorUrlInfo: Object containing user_id, xsec_token, xsec_source
     """
-    # 如果是纯ID格式(24位十六进制字符),直接返回
+    # If it's a pure ID format (24 hexadecimal characters), return directly
     if len(url) == 24 and all(c in "0123456789abcdef" for c in url):
         return CreatorUrlInfo(user_id=url, xsec_token="", xsec_source="")
 
-    # 从URL中提取user_id: /user/profile/xxx
+    # Extract user_id from URL: /user/profile/xxx
     import re
     user_pattern = r'/user/profile/([^/?]+)'
     match = re.search(user_pattern, url)
     if match:
         user_id = match.group(1)
-        # 提取xsec_token和xsec_source参数
+        # Extract xsec_token and xsec_source parameters
         params = extract_url_params_to_dict(url)
         xsec_token = params.get("xsec_token", "")
         xsec_source = params.get("xsec_source", "")
         return CreatorUrlInfo(user_id=user_id, xsec_token=xsec_token, xsec_source=xsec_source)
 
-    raise ValueError(f"无法从URL中解析出创作者信息: {url}")
+    raise ValueError(f"Unable to parse creator info from URL: {url}")
 
 
 if __name__ == '__main__':
     _img_url = "https://sns-img-bd.xhscdn.com/7a3abfaf-90c1-a828-5de7-022c80b92aa3"
-    # 获取一个图片地址在多个cdn下的url地址
+    # Get image URL addresses under multiple CDNs for a single image
     # final_img_urls = get_img_urls_by_trace_id(get_trace_id(_img_url))
     final_img_url = get_img_url_by_trace_id(get_trace_id(_img_url))
     print(final_img_url)
 
-    # 测试创作者URL解析
-    print("\n=== 创作者URL解析测试 ===")
+    # Test creator URL parsing
+    print("\n=== Creator URL Parsing Test ===")
     test_creator_urls = [
         "https://www.xiaohongshu.com/user/profile/5eb8e1d400000000010075ae?xsec_token=AB1nWBKCo1vE2HEkfoJUOi5B6BE5n7wVrbdpHoWIj5xHw=&xsec_source=pc_feed",
         "5eb8e1d400000000010075ae",
@@ -364,7 +364,7 @@ if __name__ == '__main__':
         try:
             result = parse_creator_info_from_url(url)
             print(f"✓ URL: {url[:80]}...")
-            print(f"  结果: {result}\n")
+            print(f"  Result: {result}\n")
         except Exception as e:
             print(f"✗ URL: {url}")
-            print(f"  错误: {e}\n")
+            print(f"  Error: {e}\n")

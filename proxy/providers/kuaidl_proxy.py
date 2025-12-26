@@ -21,7 +21,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/4/5 09:43
-# @Desc    : 快代理HTTP实现，官方文档：https://www.kuaidaili.com/?ref=ldwkjqipvz6c
+# @Desc    : KuaiDaili HTTP implementation, official documentation: https://www.kuaidaili.com/?ref=ldwkjqipvz6c
 import os
 import re
 from typing import Dict, List
@@ -33,19 +33,19 @@ from proxy import IpCache, IpInfoModel, ProxyProvider
 from proxy.types import ProviderNameEnum
 from tools import utils
 
-# 快代理的IP代理过期时间向前推移5秒，避免临界时间使用失败
+# KuaiDaili IP proxy expiration time is moved forward by 5 seconds to avoid critical time usage failure
 DELTA_EXPIRED_SECOND = 5
 
 
 class KuaidailiProxyModel(BaseModel):
     ip: str = Field("ip")
-    port: int = Field("端口")
-    expire_ts: int = Field("过期时间，单位秒，多少秒后过期")
+    port: int = Field("port")
+    expire_ts: int = Field("Expiration time, in seconds, how many seconds until expiration")
 
 
 def parse_kuaidaili_proxy(proxy_info: str) -> KuaidailiProxyModel:
     """
-    解析快代理的IP信息
+    Parse KuaiDaili IP information
     Args:
         proxy_info:
 
@@ -94,7 +94,7 @@ class KuaiDaiLiProxy(ProxyProvider):
 
     async def get_proxy(self, num: int) -> List[IpInfoModel]:
         """
-        快代理实现
+        KuaiDaili implementation
         Args:
             num:
 
@@ -103,12 +103,12 @@ class KuaiDaiLiProxy(ProxyProvider):
         """
         uri = "/api/getdps/"
 
-        # 优先从缓存中拿 IP
+        # Prioritize getting IP from cache
         ip_cache_list = self.ip_cache.load_all_ip(proxy_brand_name=self.proxy_brand_name)
         if len(ip_cache_list) >= num:
             return ip_cache_list[:num]
 
-        # 如果缓存中的数量不够，从IP代理商获取补上，再存入缓存中
+        # If the quantity in cache is insufficient, get from IP provider to supplement, then store in cache
         need_get_count = num - len(ip_cache_list)
         self.params.update({"num": need_get_count})
 
@@ -128,8 +128,8 @@ class KuaiDaiLiProxy(ProxyProvider):
             proxy_list: List[str] = ip_response.get("data", {}).get("proxy_list")
             for proxy in proxy_list:
                 proxy_model = parse_kuaidaili_proxy(proxy)
-                # expire_ts是相对时间（秒数），需要转换为绝对时间戳
-                # 提前DELTA_EXPIRED_SECOND秒认为过期，避免临界时间使用失败
+                # expire_ts is relative time (seconds), needs to be converted to absolute timestamp
+                # Consider expired DELTA_EXPIRED_SECOND seconds in advance to avoid critical time usage failure
                 ip_info_model = IpInfoModel(
                     ip=proxy_model.ip,
                     port=proxy_model.port,
@@ -139,7 +139,7 @@ class KuaiDaiLiProxy(ProxyProvider):
 
                 )
                 ip_key = f"{self.proxy_brand_name}_{ip_info_model.ip}_{ip_info_model.port}"
-                # 缓存过期时间使用相对时间（秒数），也需要减去缓冲时间
+                # Cache expiration time uses relative time (seconds), also needs to subtract buffer time
                 self.ip_cache.set_ip(ip_key, ip_info_model.model_dump_json(), ex=proxy_model.expire_ts - DELTA_EXPIRED_SECOND)
                 ip_infos.append(ip_info_model)
 
@@ -148,19 +148,19 @@ class KuaiDaiLiProxy(ProxyProvider):
 
 def new_kuai_daili_proxy() -> KuaiDaiLiProxy:
     """
-    构造快代理HTTP实例
-    支持两种环境变量命名格式：
-    1. 大写格式：KDL_SECERT_ID, KDL_SIGNATURE, KDL_USER_NAME, KDL_USER_PWD
-    2. 小写格式：kdl_secret_id, kdl_signature, kdl_user_name, kdl_user_pwd
-    优先使用大写格式，如果不存在则使用小写格式
+    Construct KuaiDaili HTTP instance
+    Supports two environment variable naming formats:
+    1. Uppercase format: KDL_SECERT_ID, KDL_SIGNATURE, KDL_USER_NAME, KDL_USER_PWD
+    2. Lowercase format: kdl_secret_id, kdl_signature, kdl_user_name, kdl_user_pwd
+    Prioritize uppercase format, use lowercase format if not exists
     Returns:
 
     """
-    # 支持大小写两种环境变量格式，优先使用大写
-    kdl_secret_id = os.getenv("KDL_SECERT_ID") or os.getenv("kdl_secret_id", "你的快代理secert_id")
-    kdl_signature = os.getenv("KDL_SIGNATURE") or os.getenv("kdl_signature", "你的快代理签名")
-    kdl_user_name = os.getenv("KDL_USER_NAME") or os.getenv("kdl_user_name", "你的快代理用户名")
-    kdl_user_pwd = os.getenv("KDL_USER_PWD") or os.getenv("kdl_user_pwd", "你的快代理密码")
+    # Support both uppercase and lowercase environment variable formats, prioritize uppercase
+    kdl_secret_id = os.getenv("KDL_SECERT_ID") or os.getenv("kdl_secret_id", "your_kuaidaili_secret_id")
+    kdl_signature = os.getenv("KDL_SIGNATURE") or os.getenv("kdl_signature", "your_kuaidaili_signature")
+    kdl_user_name = os.getenv("KDL_USER_NAME") or os.getenv("kdl_user_name", "your_kuaidaili_username")
+    kdl_user_pwd = os.getenv("KDL_USER_PWD") or os.getenv("kdl_user_pwd", "your_kuaidaili_password")
 
     return KuaiDaiLiProxy(
         kdl_secret_id=kdl_secret_id,

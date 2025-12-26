@@ -50,7 +50,7 @@ class BaiduTieBaLogin(AbstractLogin):
     @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self) -> bool:
         """
-        轮训检查登录状态是否成功，成功返回True否则返回False
+        Poll to check if login status is successful, return True if successful, otherwise return False
 
         Returns:
 

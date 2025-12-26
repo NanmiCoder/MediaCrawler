@@ -26,14 +26,14 @@ from enum import Enum
 
 
 class SearchType(Enum):
-    # 综合
+    # Comprehensive
     DEFAULT = "1"
 
-    # 实时
+    # Real-time
     REAL_TIME = "61"
 
-    # 热门
+    # Popular
     POPULAR = "60"
 
-    # 视频
+    # Video
     VIDEO = "64"

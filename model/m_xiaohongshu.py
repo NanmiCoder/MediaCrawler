@@ -31,7 +31,7 @@ class NoteUrlInfo(BaseModel):
 
 
 class CreatorUrlInfo(BaseModel):
-    """小红书创作者URL信息"""
+    """Xiaohongshu creator URL information"""
     user_id: str = Field(title="user id (creator id)")
     xsec_token: str = Field(default="", title="xsec token")
     xsec_source: str = Field(default="", title="xsec source")

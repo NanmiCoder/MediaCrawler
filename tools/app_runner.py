@@ -41,7 +41,7 @@ def run(
         try:
             await asyncio.wait_for(asyncio.shield(app_cleanup()), timeout=cleanup_timeout_seconds)
         except asyncio.TimeoutError:
-            print(f"[Main] 清理超时({cleanup_timeout_seconds}s)，跳过剩余清理。")
+            print(f"[Main] Cleanup timeout ({cleanup_timeout_seconds}s), skipping remaining cleanup.")
 
     async def _cancel_remaining_tasks(timeout_seconds: float = 2.0) -> None:
         current = asyncio.current_task()
@@ -70,11 +70,11 @@ def run(
             nonlocal shutdown_requested
 
             if shutdown_requested:
-                print("[Main] 再次收到中断信号，强制退出。")
+                print("[Main] Received interrupt signal again, force exit.")
                 os._exit(force_exit_code)
 
             shutdown_requested = True
-            print(f"\n[Main] 收到中断信号 {signum}，正在退出(清理最多{cleanup_timeout_seconds}s)...")
+            print(f"\n[Main] Received interrupt signal {signum}, exiting (cleanup max {cleanup_timeout_seconds}s)...")
 
             if on_first_interrupt is not None:
                 try:
@@ -100,7 +100,7 @@ def run(
             try:
                 await _cleanup_with_timeout()
             except Exception as e:
-                print(f"[Main] 清理时出错: {e}")
+                print(f"[Main] Error during cleanup: {e}")
             await _cancel_remaining_tasks()
 
         if cancelled:

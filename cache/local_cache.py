@@ -20,9 +20,9 @@
 
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
-# @Name    : 程序员阿江-Relakkes
+# @Name    : Programmer AJiang-Relakkes
 # @Time    : 2024/6/2 11:05
-# @Desc    : 本地缓存
+# @Desc    : Local cache
 
 import asyncio
 import time
@@ -35,19 +35,19 @@ class ExpiringLocalCache(AbstractCache):
 
     def __init__(self, cron_interval: int = 10):
         """
-        初始化本地缓存
-        :param cron_interval: 定时清楚cache的时间间隔
+        Initialize local cache
+        :param cron_interval: Time interval for scheduled cache cleanup
         :return:
         """
         self._cron_interval = cron_interval
         self._cache_container: Dict[str, Tuple[Any, float]] = {}
         self._cron_task: Optional[asyncio.Task] = None
-        # 开启定时清理任务
+        # Start scheduled cleanup task
         self._schedule_clear()
 
     def __del__(self):
         """
-        析构函数，清理定时任务
+        Destructor function, cleanup scheduled task
         :return:
         """
         if self._cron_task is not None:
@@ -55,7 +55,7 @@ class ExpiringLocalCache(AbstractCache):
 
     def get(self, key: str) -> Optional[Any]:
         """
-        从缓存中获取键的值
+        Get the value of a key from the cache
         :param key:
         :return:
         """
@@ -63,7 +63,7 @@ class ExpiringLocalCache(AbstractCache):
         if value is None:
             return None
 
-        # 如果键已过期，则删除键并返回None
+        # If the key has expired, delete it and return None
         if expire_time < time.time():
             del self._cache_container[key]
             return None
@@ -72,7 +72,7 @@ class ExpiringLocalCache(AbstractCache):
 
     def set(self, key: str, value: Any, expire_time: int) -> None:
         """
-        将键的值设置到缓存中
+        Set the value of a key in the cache
         :param key:
         :param value:
         :param expire_time:
@@ -82,14 +82,14 @@ class ExpiringLocalCache(AbstractCache):
 
     def keys(self, pattern: str) -> List[str]:
         """
-        获取所有符合pattern的key
-        :param pattern: 匹配模式
+        Get all keys matching the pattern
+        :param pattern: Matching pattern
         :return:
         """
         if pattern == '*':
             return list(self._cache_container.keys())
 
-        # 本地缓存通配符暂时将*替换为空
+        # For local cache wildcard, temporarily replace * with empty string
         if '*' in pattern:
             pattern = pattern.replace('*', '')
 
@@ -97,7 +97,7 @@ class ExpiringLocalCache(AbstractCache):
 
     def _schedule_clear(self):
         """
-        开启定时清理任务,
+        Start scheduled cleanup task
         :return:
         """
 
@@ -111,7 +111,7 @@ class ExpiringLocalCache(AbstractCache):
 
     def _clear(self):
         """
-        根据过期时间清理缓存
+        Clean up cache based on expiration time
         :return:
         """
         for key, (value, expire_time) in self._cache_container.items():
@@ -120,7 +120,7 @@ class ExpiringLocalCache(AbstractCache):
 
     async def _start_clear_cron(self):
         """
-        开启定时清理任务
+        Start scheduled cleanup task
         :return:
         """
         while True:
@@ -130,7 +130,7 @@ class ExpiringLocalCache(AbstractCache):
 
 if __name__ == '__main__':
     cache = ExpiringLocalCache(cron_interval=2)
-    cache.set('name', '程序员阿江-Relakkes', 3)
+    cache.set('name', 'Programmer AJiang-Relakkes', 3)
     print(cache.get('key'))
     print(cache.keys("*"))
     time.sleep(4)

@@ -27,28 +27,28 @@ from enum import Enum
 
 
 class SearchOrderType(Enum):
-    # 综合排序
+    # Comprehensive sorting
     DEFAULT = ""
 
-    # 最多点击
+    # Most clicks
     MOST_CLICK = "click"
 
-    # 最新发布
+    # Latest published
     LAST_PUBLISH = "pubdate"
 
-    # 最多弹幕
+    # Most danmu (comments)
     MOST_DANMU = "dm"
 
-    # 最多收藏
+    # Most bookmarks
     MOST_MARK = "stow"
 
 
 class CommentOrderType(Enum):
-    # 仅按热度
+    # By popularity only
     DEFAULT = 0
 
-    # 按热度+按时间
+    # By popularity + time
     MIXED = 1
 
-    # 按时间
+    # By time
     TIME = 2

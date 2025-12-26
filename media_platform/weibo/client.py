@@ -20,7 +20,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/23 15:40
-# @Desc    : 微博爬虫 API 请求 client
+# @Desc    : Weibo crawler API request client
 
 import asyncio
 import copy
@@ -49,7 +49,7 @@ class WeiboClient(ProxyRefreshMixin):
 
     def __init__(
         self,
-        timeout=60,  # 若开启爬取媒体选项，weibo 的图片需要更久的超时时间
+        timeout=60,  # If media crawling is enabled, Weibo images need a longer timeout
         proxy=None,
         *,
         headers: Dict[str, str],
@@ -64,12 +64,12 @@ class WeiboClient(ProxyRefreshMixin):
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         self._image_agent_host = "https://i1.wp.com/"
-        # 初始化代理池（来自 ProxyRefreshMixin）
+        # Initialize proxy pool (from ProxyRefreshMixin)
         self.init_proxy_pool(proxy_ip_pool)
 
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
     async def request(self, method, url, **kwargs) -> Union[Response, Dict]:
-        # 每次请求前检测代理是否过期
+        # Check if proxy is expired before each request
         await self._refresh_proxy_if_expired()
 
         enable_return_response = kwargs.pop("return_response", False)
@@ -82,7 +82,7 @@ class WeiboClient(ProxyRefreshMixin):
         try:
             data: Dict = response.json()
         except json.decoder.JSONDecodeError:
-            # issue: #771 搜索接口会报错432， 多次重试 + 更新 h5 cookies
+            # issue: #771 Search API returns error 432, retry multiple times + update h5 cookies
             utils.logger.error(f"[WeiboClient.request] request {method}:{url} err code: {response.status_code} res:{response.text}")
             await self.playwright_page.goto(self._host)
             await asyncio.sleep(2)
@@ -156,9 +156,9 @@ class WeiboClient(ProxyRefreshMixin):
     ) -> Dict:
         """
         search note by keyword
-        :param keyword: 微博搜搜的关键词
-        :param page: 分页参数 -当前页码
-        :param search_type: 搜索的类型，见 weibo/filed.py 中的枚举SearchType
+        :param keyword: Search keyword for Weibo
+        :param page: Pagination parameter - current page number
+        :param search_type: Search type, see SearchType enum in weibo/field.py
         :return:
         """
         uri = "/api/container/getIndex"
@@ -172,9 +172,9 @@ class WeiboClient(ProxyRefreshMixin):
 
     async def get_note_comments(self, mid_id: str, max_id: int, max_id_type: int = 0) -> Dict:
         """get notes comments
-        :param mid_id: 微博ID
-        :param max_id: 分页参数ID
-        :param max_id_type: 分页参数ID类型
+        :param mid_id: Weibo ID
+        :param max_id: Pagination parameter ID
+        :param max_id_type: Pagination parameter ID type
         :return:
         """
         uri = "/comments/hotflow"
@@ -218,7 +218,7 @@ class WeiboClient(ProxyRefreshMixin):
             is_end = max_id == 0
             if len(result) + len(comment_list) > max_count:
                 comment_list = comment_list[:max_count - len(result)]
-            if callback:  # 如果有回调函数，就执行回调函数
+            if callback:  # If callback function exists, execute it
                 await callback(note_id, comment_list)
             await asyncio.sleep(crawl_interval)
             result.extend(comment_list)
@@ -233,7 +233,7 @@ class WeiboClient(ProxyRefreshMixin):
         callback: Optional[Callable] = None,
     ) -> List[Dict]:
         """
-        获取评论的所有子评论
+        Get all sub-comments of comments
         Args:
             note_id:
             comment_list:
@@ -256,7 +256,7 @@ class WeiboClient(ProxyRefreshMixin):
 
     async def get_note_info_by_id(self, note_id: str) -> Dict:
         """
-        根据帖子ID获取详情
+        Get note details by note ID
         :param note_id:
         :return:
         """
@@ -273,22 +273,22 @@ class WeiboClient(ProxyRefreshMixin):
                 note_item = {"mblog": note_detail}
                 return note_item
             else:
-                utils.logger.info(f"[WeiboClient.get_note_info_by_id] 未找到$render_data的值")
+                utils.logger.info(f"[WeiboClient.get_note_info_by_id] $render_data value not found")
                 return dict()
 
     async def get_note_image(self, image_url: str) -> bytes:
-        image_url = image_url[8:]  # 去掉 https://
+        image_url = image_url[8:]  # Remove https://
         sub_url = image_url.split("/")
         image_url = ""
         for i in range(len(sub_url)):
             if i == 1:
-                image_url += "large/"  # 都获取高清大图
+                image_url += "large/"  # Get high-resolution images
             elif i == len(sub_url) - 1:
                 image_url += sub_url[i]
             else:
                 image_url += sub_url[i] + "/"
-        # 微博图床对外存在防盗链，所以需要代理访问
-        # 由于微博图片是通过 i1.wp.com 来访问的，所以需要拼接一下
+        # Weibo image hosting has anti-hotlinking, so proxy access is needed
+        # Since Weibo images are accessed through i1.wp.com, we need to concatenate the URL
         final_uri = (f"{self._image_agent_host}"
                      f"{image_url}")
         async with httpx.AsyncClient(proxy=self.proxy) as client:
@@ -301,18 +301,18 @@ class WeiboClient(ProxyRefreshMixin):
                 else:
                     return response.content
             except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
-                utils.logger.error(f"[DouYinClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")    # 保留原始异常类型名称，以便开发者调试
+                utils.logger.error(f"[DouYinClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")    # Keep original exception type name for developer debugging
                 return None
 
     async def get_creator_container_info(self, creator_id: str) -> Dict:
         """
-        获取用户的容器ID, 容器信息代表着真实请求的API路径
-            fid_container_id：用户的微博详情API的容器ID
-            lfid_container_id：用户的微博列表API的容器ID
+        Get user's container ID, container information represents the real API request path
+            fid_container_id: Container ID for user's Weibo detail API
+            lfid_container_id: Container ID for user's Weibo list API
         Args:
-            creator_id:
+            creator_id: User ID
 
-        Returns: {
+        Returns: Dictionary with container IDs
 
         """
         response = await self.get(f"/u/{creator_id}", return_response=True)
@@ -324,7 +324,7 @@ class WeiboClient(ProxyRefreshMixin):
 
     async def get_creator_info_by_id(self, creator_id: str) -> Dict:
         """
-        根据用户ID获取用户详情
+        Get user details by user ID
         Args:
             creator_id:
 
@@ -349,11 +349,11 @@ class WeiboClient(ProxyRefreshMixin):
         since_id: str = "0",
     ) -> Dict:
         """
-        获取博主的笔记
+        Get creator's notes
         Args:
-            creator: 博主ID
-            container_id: 容器ID
-            since_id: 上一页最后一条笔记的ID
+            creator: Creator ID
+            container_id: Container ID
+            since_id: ID of the last note from previous page
         Returns:
 
         """
@@ -376,14 +376,14 @@ class WeiboClient(ProxyRefreshMixin):
         callback: Optional[Callable] = None,
     ) -> List[Dict]:
         """
-        获取指定用户下的所有发过的帖子，该方法会一直查找一个用户下的所有帖子信息
+        Get all posts published by a specified user, this method will continuously fetch all posts from a user
         Args:
-            creator_id:
-            container_id:
-            crawl_interval:
-            callback:
+            creator_id: Creator user ID
+            container_id: Container ID for the user
+            crawl_interval: Interval between requests in seconds
+            callback: Optional callback function to process notes
 
-        Returns:
+        Returns: List of all notes
 
         """
         result = []
@@ -393,7 +393,7 @@ class WeiboClient(ProxyRefreshMixin):
         while notes_has_more:
             notes_res = await self.get_notes_by_creator(creator_id, container_id, since_id)
             if not notes_res:
-                utils.logger.error(f"[WeiboClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data.")
+                utils.logger.error(f"[WeiboClient.get_notes_by_creator] The current creator may have been banned by Weibo, so they cannot access the data.")
                 break
             since_id = notes_res.get("cardlistInfo", {}).get("since_id", "0")
             if "cards" not in notes_res:

@@ -21,7 +21,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : persist1@126.com
 # @Time    : 2025/9/5 19:34
-# @Desc    : 抖音存储实现类
+# @Desc    : Douyin storage implementation class
 import asyncio
 import json
 import os
@@ -209,16 +209,16 @@ class DouyinSqliteStoreImplement(DouyinDbStoreImplement):
 
 
 class DouyinMongoStoreImplement(AbstractStore):
-    """抖音MongoDB存储实现"""
+    """Douyin MongoDB storage implementation"""
 
     def __init__(self):
         self.mongo_store = MongoDBStoreBase(collection_prefix="douyin")
 
     async def store_content(self, content_item: Dict):
         """
-        存储视频内容到MongoDB
+        Store video content to MongoDB
         Args:
-            content_item: 视频内容数据
+            content_item: Video content data
         """
         aweme_id = content_item.get("aweme_id")
         if not aweme_id:
@@ -233,9 +233,9 @@ class DouyinMongoStoreImplement(AbstractStore):
 
     async def store_comment(self, comment_item: Dict):
         """
-        存储评论到MongoDB
+        Store comment to MongoDB
         Args:
-            comment_item: 评论数据
+            comment_item: Comment data
         """
         comment_id = comment_item.get("comment_id")
         if not comment_id:
@@ -250,9 +250,9 @@ class DouyinMongoStoreImplement(AbstractStore):
 
     async def store_creator(self, creator_item: Dict):
         """
-        存储创作者信息到MongoDB
+        Store creator information to MongoDB
         Args:
-            creator_item: 创作者数据
+            creator_item: Creator data
         """
         user_id = creator_item.get("user_id")
         if not user_id:
@@ -267,7 +267,7 @@ class DouyinMongoStoreImplement(AbstractStore):
 
 
 class DouyinExcelStoreImplement:
-    """抖音Excel存储实现 - 全局单例"""
+    """Douyin Excel storage implementation - Global singleton"""
 
     def __new__(cls, *args, **kwargs):
         from store.excel_store_base import ExcelStoreBase

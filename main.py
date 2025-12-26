@@ -114,7 +114,7 @@ async def async_cleanup() -> None:
             except Exception as e:
                 error_msg = str(e).lower()
                 if "closed" not in error_msg and "disconnected" not in error_msg:
-                    print(f"[Main] 清理CDP浏览器时出错: {e}")
+                    print(f"[Main] Error cleaning up CDP browser: {e}")
 
         elif getattr(crawler, "browser_context", None):
             try:
@@ -122,7 +122,7 @@ async def async_cleanup() -> None:
             except Exception as e:
                 error_msg = str(e).lower()
                 if "closed" not in error_msg and "disconnected" not in error_msg:
-                    print(f"[Main] 关闭浏览器上下文时出错: {e}")
+                    print(f"[Main] Error closing browser context: {e}")
 
     if config.SAVE_DATA_OPTION in ("db", "sqlite"):
         await db.close()

@@ -57,11 +57,11 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         self.graphql = KuaiShouGraphQL()
-        # 初始化代理池（来自 ProxyRefreshMixin）
+        # Initialize proxy pool (from ProxyRefreshMixin)
         self.init_proxy_pool(proxy_ip_pool)
 
     async def request(self, method, url, **kwargs) -> Any:
-        # 每次请求前检测代理是否过期
+        # Check if proxy is expired before each request
         await self._refresh_proxy_if_expired()
 
         async with httpx.AsyncClient(proxy=self.proxy) as client:
@@ -222,7 +222,7 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
             comments = vision_commen_list.get("rootComments", [])
             if len(result) + len(comments) > max_count:
                 comments = comments[: max_count - len(result)]
-            if callback:  # 如果有回调函数，就执行回调函数
+            if callback:  # If there is a callback function, execute the callback function
                 await callback(photo_id, comments)
             result.extend(comments)
             await asyncio.sleep(crawl_interval)
@@ -240,12 +240,12 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         callback: Optional[Callable] = None,
     ) -> List[Dict]:
         """
-        获取指定一级评论下的所有二级评论, 该方法会一直查找一级评论下的所有二级评论信息
+        Get all second-level comments under specified first-level comments, this method will continue to find all second-level comment information under first-level comments
         Args:
-            comments: 评论列表
-            photo_id: 视频id
-            crawl_interval: 爬取一次评论的延迟单位（秒）
-            callback: 一次评论爬取结束后
+            comments: Comment list
+            photo_id: Video ID
+            crawl_interval: Delay unit for crawling comments once (seconds)
+            callback: Callback after one comment crawl ends
         Returns:
 
         """
@@ -285,7 +285,7 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
     async def get_creator_info(self, user_id: str) -> Dict:
         """
         eg: https://www.kuaishou.com/profile/3x4jtnbfter525a
-        快手用户主页
+        Kuaishou user homepage
         """
 
         visionProfile = await self.get_creator_profile(user_id)
@@ -298,11 +298,11 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         callback: Optional[Callable] = None,
     ) -> List[Dict]:
         """
-        获取指定用户下的所有发过的帖子，该方法会一直查找一个用户下的所有帖子信息
+        Get all posts published by the specified user, this method will continue to find all post information under a user
         Args:
-            user_id: 用户ID
-            crawl_interval: 爬取一次的延迟单位（秒）
-            callback: 一次分页爬取结束后的更新回调函数
+            user_id: User ID
+            crawl_interval: Delay unit for crawling once (seconds)
+            callback: Update callback function after one page crawl ends
         Returns:
 
         """

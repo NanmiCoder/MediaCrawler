@@ -18,8 +18,8 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 
-# 快手的数据传输是基于GraphQL实现的
-# 这个类负责获取一些GraphQL的schema
+# Kuaishou's data transmission is based on GraphQL
+# This class is responsible for obtaining some GraphQL schemas
 from typing import Dict
 
 

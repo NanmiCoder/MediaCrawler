@@ -23,27 +23,27 @@ from typing import NamedTuple
 
 
 class FeedType(Enum):
-    # 推荐
+    # Recommend
     RECOMMEND = "homefeed_recommend"
-    # 穿搭
+    # Fashion
     FASION = "homefeed.fashion_v3"
-    # 美食
+    # Food
     FOOD = "homefeed.food_v3"
-    # 彩妆
+    # Cosmetics
     COSMETICS = "homefeed.cosmetics_v3"
-    # 影视
+    # Movie and TV
     MOVIE = "homefeed.movie_and_tv_v3"
-    # 职场
+    # Career
     CAREER = "homefeed.career_v3"
-    # 情感
+    # Emotion
     EMOTION = "homefeed.love_v3"
-    # 家居
+    # Home
     HOURSE = "homefeed.household_product_v3"
-    # 游戏
+    # Gaming
     GAME = "homefeed.gaming_v3"
-    # 旅行
+    # Travel
     TRAVEL = "homefeed.travel_v3"
-    # 健身
+    # Fitness
     FITNESS = "homefeed.fitness_v3"
 
 
@@ -53,28 +53,27 @@ class NoteType(Enum):
 
 
 class SearchSortType(Enum):
-    """search sort type"""
-    # default
+    """Search sort type"""
+    # Default
     GENERAL = "general"
-    # most popular
+    # Most popular
     MOST_POPULAR = "popularity_descending"
     # Latest
     LATEST = "time_descending"
 
 
 class SearchNoteType(Enum):
-    """search note type
-    """
-    # default
+    """Search note type"""
+    # Default
     ALL = 0
-    # only video
+    # Only video
     VIDEO = 1
-    # only image
+    # Only image
     IMAGE = 2
 
 
 class Note(NamedTuple):
-    """note tuple"""
+    """Note tuple"""
     note_id: str
     title: str
     desc: str

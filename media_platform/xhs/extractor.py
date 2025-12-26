@@ -29,16 +29,16 @@ class XiaoHongShuExtractor:
         pass
 
     def extract_note_detail_from_html(self, note_id: str, html: str) -> Optional[Dict]:
-        """从html中提取笔记详情
+        """Extract note details from HTML
 
         Args:
-            html (str): html字符串
+            html (str): HTML string
 
         Returns:
-            Dict: 笔记详情字典
+            Dict: Note details dictionary
         """
         if "noteDetailMap" not in html:
-            # 这种情况要么是出了验证码了，要么是笔记不存在
+            # Either a CAPTCHA appeared or the note doesn't exist
             return None
 
         state = re.findall(r"window.__INITIAL_STATE__=({.*})</script>", html)[
@@ -50,13 +50,13 @@ class XiaoHongShuExtractor:
         return None
 
     def extract_creator_info_from_html(self, html: str) -> Optional[Dict]:
-        """从html中提取用户信息
+        """Extract user information from HTML
 
         Args:
-            html (str): html字符串
+            html (str): HTML string
 
         Returns:
-            Dict: 用户信息字典
+            Dict: User information dictionary
         """
         match = re.search(
             r"<script>window.__INITIAL_STATE__=(.+)<\/script>", html, re.M

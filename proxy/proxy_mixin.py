@@ -21,7 +21,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2025/11/25
-# @Desc    : 代理自动刷新 Mixin 类，供各平台 client 使用
+# @Desc    : Auto-refresh proxy Mixin class for use by various platform clients
 
 from typing import TYPE_CHECKING, Optional
 
@@ -33,31 +33,31 @@ if TYPE_CHECKING:
 
 class ProxyRefreshMixin:
     """
-    代理自动刷新 Mixin 类
+    Auto-refresh proxy Mixin class
 
-    使用方法：
-    1. 让 client 类继承此 Mixin
-    2. 在 client 的 __init__ 中调用 init_proxy_pool(proxy_ip_pool)
-    3. 在每次 request 方法调用前调用 await _refresh_proxy_if_expired()
+    Usage:
+    1. Let client class inherit this Mixin
+    2. Call init_proxy_pool(proxy_ip_pool) in client's __init__
+    3. Call await _refresh_proxy_if_expired() before each request method call
 
-    要求：
-    - client 类必须有 self.proxy 属性来存储当前代理URL
+    Requirements:
+    - client class must have self.proxy attribute to store current proxy URL
     """
 
     _proxy_ip_pool: Optional["ProxyIpPool"] = None
 
     def init_proxy_pool(self, proxy_ip_pool: Optional["ProxyIpPool"]) -> None:
         """
-        初始化代理池引用
+        Initialize proxy pool reference
         Args:
-            proxy_ip_pool: 代理IP池实例
+            proxy_ip_pool: Proxy IP pool instance
         """
         self._proxy_ip_pool = proxy_ip_pool
 
     async def _refresh_proxy_if_expired(self) -> None:
         """
-        检测代理是否过期，如果过期则自动刷新
-        每次发起请求前调用此方法来确保代理有效
+        Check if proxy has expired, automatically refresh if so
+        Call this method before each request to ensure proxy is valid
         """
         if self._proxy_ip_pool is None:
             return
@@ -67,7 +67,7 @@ class ProxyRefreshMixin:
                 f"[{self.__class__.__name__}._refresh_proxy_if_expired] Proxy expired, refreshing..."
             )
             new_proxy = await self._proxy_ip_pool.get_or_refresh_proxy()
-            # 更新 httpx 代理URL
+            # Update httpx proxy URL
             if new_proxy.user and new_proxy.password:
                 self.proxy = f"http://{new_proxy.user}:{new_proxy.password}@{new_proxy.ip}:{new_proxy.port}"
             else:

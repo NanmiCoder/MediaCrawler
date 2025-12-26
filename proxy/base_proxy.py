@@ -21,8 +21,8 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 11:18
-# @Desc    : 爬虫 IP 获取实现
-# @Url     : 快代理HTTP实现，官方文档：https://www.kuaidaili.com/?ref=ldwkjqipvz6c
+# @Desc    : Crawler IP acquisition implementation
+# @Url     : KuaiDaili HTTP implementation, official documentation: https://www.kuaidaili.com/?ref=ldwkjqipvz6c
 import json
 from abc import ABC, abstractmethod
 from typing import List
@@ -43,8 +43,8 @@ class ProxyProvider(ABC):
     @abstractmethod
     async def get_proxy(self, num: int) -> List[IpInfoModel]:
         """
-        获取 IP 的抽象方法，不同的 HTTP 代理商需要实现该方法
-        :param num: 提取的 IP 数量
+        Abstract method to get IP, different HTTP proxy providers need to implement this method
+        :param num: Number of IPs to extract
         :return:
         """
         raise NotImplementedError
@@ -57,7 +57,7 @@ class IpCache:
 
     def set_ip(self, ip_key: str, ip_value_info: str, ex: int):
         """
-        设置IP并带有过期时间，到期之后由 redis 负责删除
+        Set IP with expiration time, Redis is responsible for deletion after expiration
         :param ip_key:
         :param ip_value_info:
         :param ex:
@@ -67,8 +67,8 @@ class IpCache:
 
     def load_all_ip(self, proxy_brand_name: str) -> List[IpInfoModel]:
         """
-        从 redis 中加载所有还未过期的 IP 信息
-        :param proxy_brand_name: 代理商名称
+        Load all unexpired IP information from Redis
+        :param proxy_brand_name: Proxy provider name
         :return:
         """
         all_ip_list: List[IpInfoModel] = []

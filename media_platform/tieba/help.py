@@ -42,12 +42,12 @@ class TieBaExtractor:
     @staticmethod
     def extract_search_note_list(page_content: str) -> List[TiebaNote]:
         """
-        提取贴吧帖子列表，这里提取的关键词搜索结果页的数据，还缺少帖子的回复数和回复页等数据
+        Extract Tieba post list from keyword search result pages, still missing reply count and reply page data
         Args:
-            page_content: 页面内容的HTML字符串
+            page_content: HTML string of page content
 
         Returns:
-            包含帖子信息的字典列表
+            List of Tieba post objects
         """
         xpath_selector = "//div[@class='s_post']"
         post_list = Selector(text=page_content).xpath(xpath_selector)
@@ -71,12 +71,12 @@ class TieBaExtractor:
 
     def extract_tieba_note_list(self, page_content: str) -> List[TiebaNote]:
         """
-        提取贴吧帖子列表
+        Extract Tieba post list from Tieba page
         Args:
-            page_content:
+            page_content: HTML string of page content
 
         Returns:
-
+            List of Tieba post objects
         """
         page_content = page_content.replace('<!--', "")
         content_selector = Selector(text=page_content)
@@ -106,21 +106,21 @@ class TieBaExtractor:
 
     def extract_note_detail(self, page_content: str) -> TiebaNote:
         """
-        提取贴吧帖子详情
+        Extract Tieba post details from post detail page
         Args:
-            page_content:
+            page_content: HTML string of page content
 
         Returns:
-
+            Tieba post detail object
         """
         content_selector = Selector(text=page_content)
         first_floor_selector = content_selector.xpath("//div[@class='p_postlist'][1]")
         only_view_author_link = content_selector.xpath("//*[@id='lzonly_cntn']/@href").get(default='').strip()
         note_id = only_view_author_link.split("?")[0].split("/")[-1]
-        # 帖子回复数、回复页数
+        # Post reply count and reply page count
         thread_num_infos = content_selector.xpath(
             "//div[@id='thread_theme_5']//li[@class='l_reply_num']//span[@class='red']")
-        # IP地理位置、发表时间
+        # IP location and publish time
         other_info_content = content_selector.xpath(".//div[@class='post-tail-wrap']").get(default="").strip()
         ip_location, publish_time = self.extract_ip_and_pub_time(other_info_content)
         note = TiebaNote(note_id=note_id, title=content_selector.xpath("//title/text()").get(default='').strip(),
@@ -138,18 +138,18 @@ class TieBaExtractor:
                          publish_time=publish_time,
                          total_replay_num=thread_num_infos[0].xpath("./text()").get(default='').strip(),
                          total_replay_page=thread_num_infos[1].xpath("./text()").get(default='').strip(), )
-        note.title = note.title.replace(f"【{note.tieba_name}】_百度贴吧", "")
+        note.title = note.title.replace(f"【{note.tieba_name}】_Baidu Tieba", "")
         return note
 
     def extract_tieba_note_parment_comments(self, page_content: str, note_id: str) -> List[TiebaComment]:
         """
-        提取贴吧帖子一级评论
+        Extract Tieba post first-level comments from comment page
         Args:
-            page_content:
-            note_id:
+            page_content: HTML string of page content
+            note_id: Post ID
 
         Returns:
-
+            List of first-level comment objects
         """
         xpath_selector = "//div[@class='l_post l_post_bright j_l_post clearfix  ']"
         comment_list = Selector(text=page_content).xpath(xpath_selector)
@@ -180,13 +180,13 @@ class TieBaExtractor:
 
     def extract_tieba_note_sub_comments(self, page_content: str, parent_comment: TiebaComment) -> List[TiebaComment]:
         """
-        提取贴吧帖子二级评论
+        Extract Tieba post second-level comments from sub-comment page
         Args:
-            page_content:
-            parent_comment:
+            page_content: HTML string of page content
+            parent_comment: Parent comment object
 
         Returns:
-
+            List of second-level comment objects
         """
         selector = Selector(page_content)
         comments = []
@@ -215,12 +215,12 @@ class TieBaExtractor:
 
     def extract_creator_info(self, html_content: str) -> TiebaCreator:
         """
-        提取贴吧创作者信息
+        Extract Tieba creator information from creator homepage
         Args:
-            html_content:
+            html_content: HTML string of creator homepage
 
         Returns:
-
+            Tieba creator object
         """
         selector = Selector(text=html_content)
         user_link_selector = selector.xpath("//p[@class='space']/a")
@@ -251,12 +251,12 @@ class TieBaExtractor:
         html_content: str
     ) -> List[str]:
         """
-        提取贴吧创作者主页的帖子列表
+        Extract post ID list from Tieba creator's homepage
         Args:
-            html_content:
+            html_content: HTML string of creator homepage
 
         Returns:
-
+            List of post IDs
         """
         selector = Selector(text=html_content)
         thread_id_list = []
@@ -271,12 +271,12 @@ class TieBaExtractor:
 
     def extract_ip_and_pub_time(self, html_content: str) -> Tuple[str, str]:
         """
-        提取IP位置和发布时间
+        Extract IP location and publish time from HTML content
         Args:
-            html_content:
+            html_content: HTML string
 
         Returns:
-
+            Tuple of (IP location, publish time)
         """
         pattern_pub_time = re.compile(r'<span class="tail-info">(\d{4}-\d{2}-\d{2} \d{2}:\d{2})</span>')
         time_match = pattern_pub_time.search(html_content)
@@ -286,12 +286,12 @@ class TieBaExtractor:
     @staticmethod
     def extract_ip(html_content: str) -> str:
         """
-        提取IP
+        Extract IP location from HTML content
         Args:
-            html_content:
+            html_content: HTML string
 
         Returns:
-
+            IP location string
         """
         pattern_ip = re.compile(r'IP属地:(\S+)</span>')
         ip_match = pattern_ip.search(html_content)
@@ -301,28 +301,28 @@ class TieBaExtractor:
     @staticmethod
     def extract_gender(html_content: str) -> str:
         """
-        提取性别
+        Extract gender from HTML content
         Args:
-            html_content:
+            html_content: HTML string
 
         Returns:
-
+            Gender string ('Male', 'Female', or 'Unknown')
         """
         if GENDER_MALE in html_content:
-            return '男'
+            return 'Male'
         elif GENDER_FEMALE in html_content:
-            return '女'
-        return '未知'
+            return 'Female'
+        return 'Unknown'
 
     @staticmethod
     def extract_follow_and_fans(selectors: List[Selector]) -> Tuple[str, str]:
         """
-        提取关注数和粉丝数
+        Extract follow count and fan count from selectors
         Args:
-            selectors:
+            selectors: List of selector objects
 
         Returns:
-
+            Tuple of (follow count, fan count)
         """
         pattern = re.compile(r'<span class="concern_num">\(<a[^>]*>(\d+)</a>\)</span>')
         follow_match = pattern.findall(selectors[0].get())
@@ -334,9 +334,15 @@ class TieBaExtractor:
     @staticmethod
     def extract_registration_duration(html_content: str) -> str:
         """
-        "<span>吧龄:1.9年</span>"
-        Returns: 1.9年
+        Extract Tieba age from HTML content
+        Example: "<span>吧龄:1.9年</span>"
+        Returns: "1.9年"
 
+        Args:
+            html_content: HTML string
+
+        Returns:
+            Tieba age string
         """
         pattern = re.compile(r'<span>吧龄:(\S+)</span>')
         match = pattern.search(html_content)
@@ -345,22 +351,22 @@ class TieBaExtractor:
     @staticmethod
     def extract_data_field_value(selector: Selector) -> Dict:
         """
-        提取data-field的值
+        Extract data-field value from selector
         Args:
-            selector:
+            selector: Selector object
 
         Returns:
-
+            Dictionary containing data-field value
         """
         data_field_value = selector.xpath("./@data-field").get(default='').strip()
         if not data_field_value or data_field_value == "{}":
             return {}
         try:
-            # 先使用 html.unescape 处理转义字符 再json.loads 将 JSON 字符串转换为 Python 字典
+            # First use html.unescape to handle escape characters, then json.loads to convert JSON string to Python dictionary
             unescaped_json_str = html.unescape(data_field_value)
             data_field_dict_value = json.loads(unescaped_json_str)
         except Exception as ex:
-            print(f"extract_data_field_value，错误信息：{ex}, 尝试使用其他方式解析")
+            print(f"extract_data_field_value, error: {ex}, trying alternative parsing method")
             data_field_dict_value = {}
         return data_field_dict_value
 

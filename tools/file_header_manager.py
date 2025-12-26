@@ -17,13 +17,13 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 """
-文件头版权声明管理工具
+File header copyright declaration management tool
 
-功能：
-- 自动为Python文件添加标准化的版权声明和免责声明
-- 智能检测现有文件头（编码声明、作者信息、免责声明等）
-- 在合适位置插入版权信息，不破坏现有内容
-- 支持批量处理和单文件检查模式
+Features:
+- Automatically add standardized copyright declaration and disclaimer to Python files
+- Intelligently detect existing file headers (encoding declaration, author info, disclaimer, etc.)
+- Insert copyright info at appropriate position without breaking existing content
+- Support batch processing and single file check mode
 """
 
 import os
@@ -31,14 +31,14 @@ import re
 import sys
 from typing import List, Tuple
 
-# 项目配置
+# Project configuration
 REPO_URL = "https://github.com/NanmiCoder/MediaCrawler"
 GITHUB_PROFILE = "https://github.com/NanmiCoder"
 EMAIL = "relakkes@gmail.com"
 COPYRIGHT_YEAR = "2025"
 LICENSE_TYPE = "NON-COMMERCIAL LEARNING LICENSE 1.1"
 
-# 免责声明标准文本
+# Disclaimer standard text
 DISCLAIMER = """# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
 # 1. 不得用于任何商业用途。
 # 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
@@ -52,27 +52,27 @@ DISCLAIMER = """# 声明：本代码仅供学习和研究目的使用。使用�
 
 def get_file_relative_path(file_path: str, project_root: str) -> str:
     """
-    获取文件相对于项目根目录的路径
+    Get file path relative to project root
 
     Args:
-        file_path: 文件绝对路径
-        project_root: 项目根目录
+        file_path: File absolute path
+        project_root: Project root directory
 
     Returns:
-        相对路径字符串
+        Relative path string
     """
     return os.path.relpath(file_path, project_root)
 
 
 def generate_copyright_header(relative_path: str) -> str:
     """
-    生成版权声明头部
+    Generate copyright declaration header
 
     Args:
-        relative_path: 文件相对于项目根目录的路径
+        relative_path: File path relative to project root
 
     Returns:
-        格式化的版权声明字符串
+        Formatted copyright declaration string
     """
     file_url = f"{REPO_URL}/blob/main/{relative_path}"
 
@@ -89,53 +89,53 @@ def generate_copyright_header(relative_path: str) -> str:
 
 def has_copyright_header(content: str) -> bool:
     """
-    检查文件是否已包含版权声明
+    Check if file already contains copyright declaration
 
     Args:
-        content: 文件内容
+        content: File content
 
     Returns:
-        True如果已包含版权声明
+        True if already contains copyright declaration
     """
-    # 检查是否包含Copyright关键字
+    # Check if contains Copyright keyword
     return "Copyright (c)" in content and "MediaCrawler project" in content
 
 
 def has_disclaimer(content: str) -> bool:
     """
-    检查文件是否已包含免责声明
+    Check if file already contains disclaimer
 
     Args:
-        content: 文件内容
+        content: File content
 
     Returns:
-        True如果已包含免责声明
+        True if already contains disclaimer
     """
     return "声明：本代码仅供学习和研究目的使用" in content
 
 
 def find_insert_position(lines: List[str]) -> Tuple[int, bool]:
     """
-    找到插入版权声明的位置
+    Find position to insert copyright declaration
 
     Args:
-        lines: 文件内容行列表
+        lines: List of file content lines
 
     Returns:
-        (插入行号, 是否需要在前面添加编码声明)
+        (insert line number, whether encoding declaration needs to be added)
     """
     insert_pos = 0
     has_encoding = False
 
-    # 检查第一行是否是shebang
+    # Check if first line is shebang
     if lines and lines[0].startswith('#!'):
         insert_pos = 1
 
-    # 检查编码声明（通常在第1或2行）
+    # Check encoding declaration (usually on line 1 or 2)
     for i in range(insert_pos, min(insert_pos + 2, len(lines))):
         if i < len(lines):
             line = lines[i].strip()
-            # 匹配 # -*- coding: utf-8 -*- 或 # coding: utf-8 等格式
+            # Match # -*- coding: utf-8 -*- or # coding: utf-8 etc.
             if re.match(r'#.*coding[:=]\s*([-\w.]+)', line):
                 has_encoding = True
                 insert_pos = i + 1
@@ -146,59 +146,59 @@ def find_insert_position(lines: List[str]) -> Tuple[int, bool]:
 
 def process_file(file_path: str, project_root: str, dry_run: bool = False) -> Tuple[bool, str]:
     """
-    处理单个Python文件
+    Process single Python file
 
     Args:
-        file_path: 文件路径
-        project_root: 项目根目录
-        dry_run: 仅检查不修改
+        file_path: File path
+        project_root: Project root directory
+        dry_run: Check only without modification
 
     Returns:
-        (是否需要修改, 状态消息)
+        (whether modification needed, status message)
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
             lines = content.splitlines(keepends=True)
 
-        # 如果已经有版权声明，跳过
+        # Skip if already has copyright header
         if has_copyright_header(content):
             return False, f"✓ Already has copyright header: {file_path}"
 
-        # 获取相对路径
+        # Get relative path
         relative_path = get_file_relative_path(file_path, project_root)
 
-        # 生成版权声明
+        # Generate copyright header
         copyright_header = generate_copyright_header(relative_path)
 
-        # 查找插入位置
+        # Find insert position
         insert_pos, has_encoding = find_insert_position(lines)
 
-        # 构建新的文件内容
+        # Build new file content
         new_lines = []
 
-        # 如果没有编码声明，添加一个
+        # Add encoding declaration if not present
         if not has_encoding:
             new_lines.append("# -*- coding: utf-8 -*-\n")
 
-        # 添加前面的部分（shebang和编码声明）
+        # Add front part (shebang and encoding declaration)
         new_lines.extend(lines[:insert_pos])
 
-        # 添加版权声明
+        # Add copyright header
         new_lines.append(copyright_header + "\n")
 
-        # 如果文件没有免责声明，添加免责声明
+        # Add disclaimer if file doesn't have one
         if not has_disclaimer(content):
             new_lines.append(DISCLAIMER + "\n")
 
-        # 添加一个空行（如果下一行不是空行）
+        # Add empty line (if next line is not empty)
         if insert_pos < len(lines) and lines[insert_pos].strip():
             new_lines.append("\n")
 
-        # 添加剩余的内容
+        # Add remaining content
         new_lines.extend(lines[insert_pos:])
 
-        # 如果不是dry run，写入文件
+        # Write to file if not dry run
         if not dry_run:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.writelines(new_lines)
@@ -212,14 +212,14 @@ def process_file(file_path: str, project_root: str, dry_run: bool = False) -> Tu
 
 def find_python_files(root_dir: str, exclude_patterns: List[str] = None) -> List[str]:
     """
-    查找所有Python文件
+    Find all Python files
 
     Args:
-        root_dir: 根目录
-        exclude_patterns: 排除的目录模式
+        root_dir: Root directory
+        exclude_patterns: Directory patterns to exclude
 
     Returns:
-        Python文件路径列表
+        List of Python file paths
     """
     if exclude_patterns is None:
         exclude_patterns = ['venv', '.venv', 'node_modules', '__pycache__', '.git', 'build', 'dist', '.eggs']
@@ -227,7 +227,7 @@ def find_python_files(root_dir: str, exclude_patterns: List[str] = None) -> List
     python_files = []
 
     for root, dirs, files in os.walk(root_dir):
-        # 排除特定目录
+        # Exclude specific directories
         dirs[:] = [d for d in dirs if d not in exclude_patterns and not d.startswith('.')]
 
         for file in files:
@@ -238,39 +238,39 @@ def find_python_files(root_dir: str, exclude_patterns: List[str] = None) -> List
 
 
 def main():
-    """主函数"""
+    """Main function"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Python文件头版权声明管理工具')
-    parser.add_argument('files', nargs='*', help='要处理的文件路径（可选，默认处理所有.py文件）')
-    parser.add_argument('--dry-run', action='store_true', help='仅检查不修改文件')
-    parser.add_argument('--project-root', default=None, help='项目根目录（默认为当前目录）')
-    parser.add_argument('--check', action='store_true', help='检查模式，如果有文件缺少版权声明则返回非零退出码')
+    parser = argparse.ArgumentParser(description='Python file header copyright declaration management tool')
+    parser.add_argument('files', nargs='*', help='File paths to process (optional, defaults to all .py files)')
+    parser.add_argument('--dry-run', action='store_true', help='Check only without modifying files')
+    parser.add_argument('--project-root', default=None, help='Project root directory (defaults to current directory)')
+    parser.add_argument('--check', action='store_true', help='Check mode, return non-zero exit code if files missing copyright declaration')
 
     args = parser.parse_args()
 
-    # 确定项目根目录
+    # Determine project root directory
     if args.project_root:
         project_root = os.path.abspath(args.project_root)
     else:
-        # 假设此脚本在 tools/ 目录下
+        # Assume this script is in tools/ directory
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     print(f"Project root: {project_root}")
     print(f"Mode: {'DRY RUN' if args.dry_run else 'UPDATE'}")
     print("-" * 60)
 
-    # 获取要处理的文件列表
+    # Get list of files to process
     if args.files:
-        # 处理指定的文件
+        # Process specified files
         files_to_process = [os.path.abspath(f) for f in args.files if f.endswith('.py')]
     else:
-        # 处理所有Python文件
+        # Process all Python files
         files_to_process = find_python_files(project_root)
 
     print(f"Found {len(files_to_process)} Python files to process\n")
 
-    # 处理文件
+    # Process files
     updated_count = 0
     skipped_count = 0
     error_count = 0
@@ -286,7 +286,7 @@ def main():
         else:
             skipped_count += 1
 
-    # 打印汇总
+    # Print summary
     print("\n" + "=" * 60)
     print(f"Summary:")
     print(f"  Total files: {len(files_to_process)}")
@@ -295,7 +295,7 @@ def main():
     print(f"  Errors: {error_count}")
     print("=" * 60)
 
-    # 如果是check模式且有文件需要更新，返回非零退出码
+    # Return non-zero exit code in check mode if files need update
     if args.check and updated_count > 0:
         sys.exit(1)
     elif error_count > 0:

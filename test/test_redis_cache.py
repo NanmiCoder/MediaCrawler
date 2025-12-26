@@ -52,7 +52,7 @@ class TestRedisCache(unittest.TestCase):
         self.assertIn('key2', keys)
 
     def tearDown(self):
-        # self.redis_cache._redis_client.flushdb()  # 清空redis数据库
+        # self.redis_cache._redis_client.flushdb()  # Clear redis database
         pass
 
 

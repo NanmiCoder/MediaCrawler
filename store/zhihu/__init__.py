@@ -53,7 +53,7 @@ class ZhihuStoreFactory:
 
 async def batch_update_zhihu_contents(contents: List[ZhihuContent]):
     """
-    批量更新知乎内容
+    Batch update Zhihu contents
     Args:
         contents:
 
@@ -68,7 +68,7 @@ async def batch_update_zhihu_contents(contents: List[ZhihuContent]):
 
 async def update_zhihu_content(content_item: ZhihuContent):
     """
-    更新知乎内容
+    Update Zhihu content
     Args:
         content_item:
 
@@ -85,7 +85,7 @@ async def update_zhihu_content(content_item: ZhihuContent):
 
 async def batch_update_zhihu_note_comments(comments: List[ZhihuComment]):
     """
-    批量更新知乎内容评论
+    Batch update Zhihu content comments
     Args:
         comments:
 
@@ -101,7 +101,7 @@ async def batch_update_zhihu_note_comments(comments: List[ZhihuComment]):
 
 async def update_zhihu_content_comment(comment_item: ZhihuComment):
     """
-    更新知乎内容评论
+    Update Zhihu content comment
     Args:
         comment_item:
 
@@ -116,7 +116,7 @@ async def update_zhihu_content_comment(comment_item: ZhihuComment):
 
 async def save_creator(creator: ZhihuCreator):
     """
-    保存知乎创作者信息
+    Save Zhihu creator information
     Args:
         creator:
 

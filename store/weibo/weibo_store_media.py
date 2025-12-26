@@ -20,7 +20,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : Erm
 # @Time    : 2024/4/9 17:35
-# @Desc    : 微博媒体保存
+# @Desc    : Weibo media storage
 import pathlib
 from typing import Dict
 

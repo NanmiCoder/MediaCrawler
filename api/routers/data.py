@@ -26,16 +26,16 @@ from fastapi.responses import FileResponse
 
 router = APIRouter(prefix="/data", tags=["data"])
 
-# 数据目录
+# Data directory
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
 def get_file_info(file_path: Path) -> dict:
-    """获取文件信息"""
+    """Get file information"""
     stat = file_path.stat()
     record_count = None
 
-    # 尝试获取记录数
+    # Try to get record count
     try:
         if file_path.suffix == ".json":
             with open(file_path, "r", encoding="utf-8") as f:
@@ -44,7 +44,7 @@ def get_file_info(file_path: Path) -> dict:
                     record_count = len(data)
         elif file_path.suffix == ".csv":
             with open(file_path, "r", encoding="utf-8") as f:
-                record_count = sum(1 for _ in f) - 1  # 减去标题行
+                record_count = sum(1 for _ in f) - 1  # Subtract header row
     except Exception:
         pass
 
@@ -60,7 +60,7 @@ def get_file_info(file_path: Path) -> dict:
 
 @router.get("/files")
 async def list_data_files(platform: Optional[str] = None, file_type: Optional[str] = None):
-    """获取数据文件列表"""
+    """Get data file list"""
     if not DATA_DIR.exists():
         return {"files": []}
 
@@ -74,13 +74,13 @@ async def list_data_files(platform: Optional[str] = None, file_type: Optional[st
             if file_path.suffix.lower() not in supported_extensions:
                 continue
 
-            # 平台过滤
+            # Platform filter
             if platform:
                 rel_path = str(file_path.relative_to(DATA_DIR))
                 if platform.lower() not in rel_path.lower():
                     continue
 
-            # 类型过滤
+            # Type filter
             if file_type and file_path.suffix[1:].lower() != file_type.lower():
                 continue
 
@@ -89,7 +89,7 @@ async def list_data_files(platform: Optional[str] = None, file_type: Optional[st
             except Exception:
                 continue
 
-    # 按修改时间排序（最新的在前）
+    # Sort by modification time (newest first)
     files.sort(key=lambda x: x["modified_at"], reverse=True)
 
     return {"files": files}
@@ -97,7 +97,7 @@ async def list_data_files(platform: Optional[str] = None, file_type: Optional[st
 
 @router.get("/files/{file_path:path}")
 async def get_file_content(file_path: str, preview: bool = True, limit: int = 100):
-    """获取文件内容或预览"""
+    """Get file content or preview"""
     full_path = DATA_DIR / file_path
 
     if not full_path.exists():
@@ -106,14 +106,14 @@ async def get_file_content(file_path: str, preview: bool = True, limit: int = 10
     if not full_path.is_file():
         raise HTTPException(status_code=400, detail="Not a file")
 
-    # 安全检查：确保在 DATA_DIR 内
+    # Security check: ensure within DATA_DIR
     try:
         full_path.resolve().relative_to(DATA_DIR.resolve())
     except ValueError:
         raise HTTPException(status_code=403, detail="Access denied")
 
     if preview:
-        # 返回预览数据
+        # Return preview data
         try:
             if full_path.suffix == ".json":
                 with open(full_path, "r", encoding="utf-8") as f:
@@ -130,18 +130,18 @@ async def get_file_content(file_path: str, preview: bool = True, limit: int = 10
                         if i >= limit:
                             break
                         rows.append(row)
-                    # 重新读取获取总数
+                    # Re-read to get total count
                     f.seek(0)
                     total = sum(1 for _ in f) - 1
                     return {"data": rows, "total": total}
             elif full_path.suffix.lower() in (".xlsx", ".xls"):
                 import pandas as pd
-                # 读取前 limit 行
+                # Read first limit rows
                 df = pd.read_excel(full_path, nrows=limit)
-                # 获取总行数（只读取第一列来节省内存）
+                # Get total row count (only read first column to save memory)
                 df_count = pd.read_excel(full_path, usecols=[0])
                 total = len(df_count)
-                # 转换为字典列表，处理 NaN 值
+                # Convert to list of dictionaries, handle NaN values
                 rows = df.where(pd.notnull(df), None).to_dict(orient='records')
                 return {
                     "data": rows,
@@ -155,7 +155,7 @@ async def get_file_content(file_path: str, preview: bool = True, limit: int = 10
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     else:
-        # 返回文件下载
+        # Return file download
         return FileResponse(
             path=full_path,
             filename=full_path.name,
@@ -165,7 +165,7 @@ async def get_file_content(file_path: str, preview: bool = True, limit: int = 10
 
 @router.get("/download/{file_path:path}")
 async def download_file(file_path: str):
-    """下载文件"""
+    """Download file"""
     full_path = DATA_DIR / file_path
 
     if not full_path.exists():
@@ -174,7 +174,7 @@ async def download_file(file_path: str):
     if not full_path.is_file():
         raise HTTPException(status_code=400, detail="Not a file")
 
-    # 安全检查
+    # Security check
     try:
         full_path.resolve().relative_to(DATA_DIR.resolve())
     except ValueError:
@@ -189,7 +189,7 @@ async def download_file(file_path: str):
 
 @router.get("/stats")
 async def get_data_stats():
-    """获取数据统计"""
+    """Get data statistics"""
     if not DATA_DIR.exists():
         return {"total_files": 0, "total_size": 0, "by_platform": {}, "by_type": {}}
 
@@ -214,11 +214,11 @@ async def get_data_stats():
                 stats["total_files"] += 1
                 stats["total_size"] += stat.st_size
 
-                # 按类型统计
+                # Statistics by type
                 file_type = file_path.suffix[1:].lower()
                 stats["by_type"][file_type] = stats["by_type"].get(file_type, 0) + 1
 
-                # 按平台统计（从路径推断）
+                # Statistics by platform (inferred from path)
                 rel_path = str(file_path.relative_to(DATA_DIR))
                 for platform in ["xhs", "dy", "ks", "bili", "wb", "tieba", "zhihu"]:
                     if platform in rel_path.lower():

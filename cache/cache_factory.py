@@ -20,23 +20,23 @@
 
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
-# @Name    : 程序员阿江-Relakkes
+# @Name    : Programmer AJiang-Relakkes
 # @Time    : 2024/6/2 11:23
 # @Desc    :
 
 
 class CacheFactory:
     """
-    缓存工厂类
+    Cache factory class
     """
 
     @staticmethod
     def create_cache(cache_type: str, *args, **kwargs):
         """
-        创建缓存对象
-        :param cache_type: 缓存类型
-        :param args: 参数
-        :param kwargs: 关键字参数
+        Create cache object
+        :param cache_type: Cache type
+        :param args: Arguments
+        :param kwargs: Keyword arguments
         :return:
         """
         if cache_type == 'memory':

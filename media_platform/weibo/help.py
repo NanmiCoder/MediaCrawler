@@ -28,9 +28,9 @@ from typing import Dict, List
 
 def filter_search_result_card(card_list: List[Dict]) -> List[Dict]:
     """
-    过滤微博搜索的结果，只保留card_type为9类型的数据
-    :param card_list:
-    :return:
+    Filter Weibo search results, only keep data with card_type of 9
+    :param card_list: List of card items from search results
+    :return: Filtered list of note items
     """
     note_list: List[Dict] = []
     for card_item in card_list:

@@ -168,7 +168,7 @@ class ZhihuExtractor:
         """
         res = ZhihuContent()
 
-        if "video" in zvideo and isinstance(zvideo.get("video"), dict): # 说明是从创作者主页的视频列表接口来的
+        if "video" in zvideo and isinstance(zvideo.get("video"), dict): # This indicates data from the creator's homepage video list API
             res.content_url = f"{zhihu_constant.ZHIHU_URL}/zvideo/{res.content_id}"
             res.created_time = zvideo.get("published_at")
             res.updated_time = zvideo.get("updated_at")
@@ -318,11 +318,11 @@ class ZhihuExtractor:
 
         """
         if gender == 1:
-            return "男"
+            return "Male"
         elif gender == 0:
-            return "女"
+            return "Female"
         else:
-            return "未知"
+            return "Unknown"
 
 
     def extract_creator(self, user_url_token: str, html_content: str) -> Optional[ZhihuCreator]:

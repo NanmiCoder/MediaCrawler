@@ -36,7 +36,7 @@ def init_loging_config():
     _logger = logging.getLogger("MediaCrawler")
     _logger.setLevel(level)
 
-    # 关闭 httpx 的 INFO 日志
+    # Disable httpx INFO level logs
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     return _logger

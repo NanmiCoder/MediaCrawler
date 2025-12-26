@@ -18,7 +18,7 @@
 
 # @Author  : persist1@126.com
 # @Time    : 2025/9/5 19:34
-# @Desc    : 小红书存储实现类
+# @Desc    : Xiaohongshu storage implementation class
 import json
 import os
 from datetime import datetime
@@ -281,7 +281,7 @@ class XhsSqliteStoreImplement(XhsDbStoreImplement):
 
 
 class XhsMongoStoreImplement(AbstractStore):
-    """小红书MongoDB存储实现"""
+    """Xiaohongshu MongoDB storage implementation"""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -289,9 +289,9 @@ class XhsMongoStoreImplement(AbstractStore):
 
     async def store_content(self, content_item: Dict):
         """
-        存储笔记内容到MongoDB
+        Store note content to MongoDB
         Args:
-            content_item: 笔记内容数据
+            content_item: Note content data
         """
         note_id = content_item.get("note_id")
         if not note_id:
@@ -306,9 +306,9 @@ class XhsMongoStoreImplement(AbstractStore):
 
     async def store_comment(self, comment_item: Dict):
         """
-        存储评论到MongoDB
+        Store comment to MongoDB
         Args:
-            comment_item: 评论数据
+            comment_item: Comment data
         """
         comment_id = comment_item.get("comment_id")
         if not comment_id:
@@ -323,9 +323,9 @@ class XhsMongoStoreImplement(AbstractStore):
 
     async def store_creator(self, creator_item: Dict):
         """
-        存储创作者信息到MongoDB
+        Store creator information to MongoDB
         Args:
-            creator_item: 创作者数据
+            creator_item: Creator data
         """
         user_id = creator_item.get("user_id")
         if not user_id:
@@ -340,7 +340,7 @@ class XhsMongoStoreImplement(AbstractStore):
 
 
 class XhsExcelStoreImplement:
-    """小红书Excel存储实现 - 全局单例"""
+    """Xiaohongshu Excel storage implementation - Global singleton"""
 
     def __new__(cls, *args, **kwargs):
         from store.excel_store_base import ExcelStoreBase

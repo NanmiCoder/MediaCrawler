@@ -26,31 +26,31 @@ from constant import zhihu as zhihu_constant
 
 class SearchTime(Enum):
     """
-    搜索时间范围
+    Search time range
     """
-    DEFAULT = ""  # 不限时间
-    ONE_DAY = "a_day"  # 一天内
-    ONE_WEEK = "a_week"  # 一周内
-    ONE_MONTH = "a_month"  # 一个月内
-    THREE_MONTH = "three_months"  # 三个月内
-    HALF_YEAR = "half_a_year"  # 半年内
-    ONE_YEAR = "a_year"  # 一年内
+    DEFAULT = ""  # No time limit
+    ONE_DAY = "a_day"  # Within one day
+    ONE_WEEK = "a_week"  # Within one week
+    ONE_MONTH = "a_month"  # Within one month
+    THREE_MONTH = "three_months"  # Within three months
+    HALF_YEAR = "half_a_year"  # Within half a year
+    ONE_YEAR = "a_year"  # Within one year
 
 
 class SearchType(Enum):
     """
-    搜索结果类型
+    Search result type
     """
-    DEFAULT = ""  # 不限类型
-    ANSWER = zhihu_constant.ANSWER_NAME  # 只看回答
-    ARTICLE = zhihu_constant.ARTICLE_NAME  # 只看文章
-    VIDEO = zhihu_constant.VIDEO_NAME  # 只看视频
+    DEFAULT = ""  # No type limit
+    ANSWER = zhihu_constant.ANSWER_NAME  # Answers only
+    ARTICLE = zhihu_constant.ARTICLE_NAME  # Articles only
+    VIDEO = zhihu_constant.VIDEO_NAME  # Videos only
 
 
 class SearchSort(Enum):
     """
-    搜索结果排序
+    Search result sorting
     """
-    DEFAULT = ""  # 综合排序
-    UPVOTED_COUNT = "upvoted_count"  # 最多赞同
-    CREATE_TIME = "created_time"  # 最新发布
+    DEFAULT = ""  # Default sorting
+    UPVOTED_COUNT = "upvoted_count"  # Most upvoted
+    CREATE_TIME = "created_time"  # Latest published

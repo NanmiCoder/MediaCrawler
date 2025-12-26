@@ -406,9 +406,9 @@ class ZhihuContent(Base):
     last_modify_ts = Column(BigInteger)
 
     # persist-1<persist1@126.com>
-    # 原因：修复 ORM 模型定义错误，确保与数据库表结构一致。
-    # 副作用：无
-    # 回滚策略：还原此行
+    # Reason: Fixed ORM model definition error, ensuring consistency with database table structure.
+    # Side effects: None
+    # Rollback strategy: Restore this line
 
 class ZhihuComment(Base):
     __tablename__ = 'zhihu_comment'

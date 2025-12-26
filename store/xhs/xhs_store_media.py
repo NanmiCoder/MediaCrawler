@@ -20,7 +20,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : helloteemo
 # @Time    : 2024/7/11 22:35
-# @Desc    : 小红书媒体保存
+# @Desc    : Xiaohongshu media storage
 import pathlib
 from typing import Dict
 

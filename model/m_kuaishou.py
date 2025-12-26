@@ -24,11 +24,11 @@ from pydantic import BaseModel, Field
 
 
 class VideoUrlInfo(BaseModel):
-    """快手视频URL信息"""
+    """Kuaishou video URL information"""
     video_id: str = Field(title="video id (photo id)")
     url_type: str = Field(default="normal", title="url type: normal")
 
 
 class CreatorUrlInfo(BaseModel):
-    """快手创作者URL信息"""
+    """Kuaishou creator URL information"""
     user_id: str = Field(title="user id (creator id)")

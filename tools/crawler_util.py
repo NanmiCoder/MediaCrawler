@@ -21,7 +21,7 @@
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
 # @Time    : 2023/12/2 12:53
-# @Desc    : 爬虫相关的工具函数
+# @Desc    : Crawler utility functions
 
 import base64
 import json
@@ -73,13 +73,13 @@ async def find_qrcode_img_from_canvas(page: Page, canvas_selector: str) -> str:
 
     """
 
-    # 等待Canvas元素加载完成
+    # Wait for Canvas element to load
     canvas = await page.wait_for_selector(canvas_selector)
 
-    # 截取Canvas元素的截图
+    # Take screenshot of Canvas element
     screenshot = await canvas.screenshot()
 
-    # 将截图转换为base64格式
+    # Convert screenshot to base64 format
     base64_image = base64.b64encode(screenshot).decode('utf-8')
     return base64_image
 
@@ -185,7 +185,7 @@ def format_proxy_info(ip_proxy_info) -> Tuple[Optional[Dict], Optional[str]]:
         "username": ip_proxy_info.user,
         "password": ip_proxy_info.password,
     }
-    # httpx 0.28.1 需要直接传入代理URL字符串，而不是字典
+    # httpx 0.28.1 requires passing proxy URL string directly, not a dictionary
     if ip_proxy_info.user and ip_proxy_info.password:
         httpx_proxy = f"http://{ip_proxy_info.user}:{ip_proxy_info.password}@{ip_proxy_info.ip}:{ip_proxy_info.port}"
     else:

@@ -18,8 +18,8 @@
 
 """
 MediaCrawler WebUI API Server
-启动命令: uvicorn api.main:app --port 8080 --reload
-或者: python -m api.main
+Start command: uvicorn api.main:app --port 8080 --reload
+Or: python -m api.main
 """
 import asyncio
 import os
@@ -38,15 +38,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# 获取 webui 静态文件目录
+# Get webui static files directory
 WEBUI_DIR = os.path.join(os.path.dirname(__file__), "webui")
 
-# CORS 配置 - 允许前端开发服务器访问
+# CORS configuration - allow frontend dev server access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",  # 备用端口
+        "http://localhost:3000",  # Backup port
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
     ],
@@ -55,7 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 注册路由
+# Register routers
 app.include_router(crawler_router, prefix="/api")
 app.include_router(data_router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
@@ -63,7 +63,7 @@ app.include_router(websocket_router, prefix="/api")
 
 @app.get("/")
 async def serve_frontend():
-    """返回前端页面"""
+    """Return frontend page"""
     index_path = os.path.join(WEBUI_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
@@ -82,103 +82,103 @@ async def health_check():
 
 @app.get("/api/env/check")
 async def check_environment():
-    """检测 MediaCrawler 环境是否配置正确"""
+    """Check if MediaCrawler environment is configured correctly"""
     try:
-        # 运行 uv run main.py --help 命令检测环境
+        # Run uv run main.py --help command to check environment
         process = await asyncio.create_subprocess_exec(
             "uv", "run", "main.py", "--help",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd="."  # 项目根目录
+            cwd="."  # Project root directory
         )
         stdout, stderr = await asyncio.wait_for(
             process.communicate(),
-            timeout=30.0  # 30秒超时
+            timeout=30.0  # 30 seconds timeout
         )
 
         if process.returncode == 0:
             return {
                 "success": True,
-                "message": "MediaCrawler 环境配置正确",
-                "output": stdout.decode("utf-8", errors="ignore")[:500]  # 截取前500字符
+                "message": "MediaCrawler environment configured correctly",
+                "output": stdout.decode("utf-8", errors="ignore")[:500]  # Truncate to first 500 characters
             }
         else:
             error_msg = stderr.decode("utf-8", errors="ignore") or stdout.decode("utf-8", errors="ignore")
             return {
                 "success": False,
-                "message": "环境检测失败",
+                "message": "Environment check failed",
                 "error": error_msg[:500]
             }
     except asyncio.TimeoutError:
         return {
             "success": False,
-            "message": "环境检测超时",
-            "error": "命令执行超过30秒"
+            "message": "Environment check timeout",
+            "error": "Command execution exceeded 30 seconds"
         }
     except FileNotFoundError:
         return {
             "success": False,
-            "message": "未找到 uv 命令",
-            "error": "请确保已安装 uv 并配置到系统 PATH"
+            "message": "uv command not found",
+            "error": "Please ensure uv is installed and configured in system PATH"
         }
     except Exception as e:
         return {
             "success": False,
-            "message": "环境检测出错",
+            "message": "Environment check error",
             "error": str(e)
         }
 
 
 @app.get("/api/config/platforms")
 async def get_platforms():
-    """获取支持的平台列表"""
+    """Get list of supported platforms"""
     return {
         "platforms": [
-            {"value": "xhs", "label": "小红书", "icon": "book-open"},
-            {"value": "dy", "label": "抖音", "icon": "music"},
-            {"value": "ks", "label": "快手", "icon": "video"},
-            {"value": "bili", "label": "哔哩哔哩", "icon": "tv"},
-            {"value": "wb", "label": "微博", "icon": "message-circle"},
-            {"value": "tieba", "label": "百度贴吧", "icon": "messages-square"},
-            {"value": "zhihu", "label": "知乎", "icon": "help-circle"},
+            {"value": "xhs", "label": "Xiaohongshu", "icon": "book-open"},
+            {"value": "dy", "label": "Douyin", "icon": "music"},
+            {"value": "ks", "label": "Kuaishou", "icon": "video"},
+            {"value": "bili", "label": "Bilibili", "icon": "tv"},
+            {"value": "wb", "label": "Weibo", "icon": "message-circle"},
+            {"value": "tieba", "label": "Baidu Tieba", "icon": "messages-square"},
+            {"value": "zhihu", "label": "Zhihu", "icon": "help-circle"},
         ]
     }
 
 
 @app.get("/api/config/options")
 async def get_config_options():
-    """获取所有配置选项"""
+    """Get all configuration options"""
     return {
         "login_types": [
-            {"value": "qrcode", "label": "二维码登录"},
-            {"value": "cookie", "label": "Cookie登录"},
+            {"value": "qrcode", "label": "QR Code Login"},
+            {"value": "cookie", "label": "Cookie Login"},
         ],
         "crawler_types": [
-            {"value": "search", "label": "搜索模式"},
-            {"value": "detail", "label": "详情模式"},
-            {"value": "creator", "label": "创作者模式"},
+            {"value": "search", "label": "Search Mode"},
+            {"value": "detail", "label": "Detail Mode"},
+            {"value": "creator", "label": "Creator Mode"},
         ],
         "save_options": [
-            {"value": "json", "label": "JSON 文件"},
-            {"value": "csv", "label": "CSV 文件"},
-            {"value": "excel", "label": "Excel 文件"},
-            {"value": "sqlite", "label": "SQLite 数据库"},
-            {"value": "db", "label": "MySQL 数据库"},
-            {"value": "mongodb", "label": "MongoDB 数据库"},
+            {"value": "json", "label": "JSON File"},
+            {"value": "csv", "label": "CSV File"},
+            {"value": "excel", "label": "Excel File"},
+            {"value": "sqlite", "label": "SQLite Database"},
+            {"value": "db", "label": "MySQL Database"},
+            {"value": "mongodb", "label": "MongoDB Database"},
         ],
     }
 
 
-# 挂载静态资源 - 必须放在所有路由之后
+# Mount static resources - must be placed after all routes
 if os.path.exists(WEBUI_DIR):
     assets_dir = os.path.join(WEBUI_DIR, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-    # 挂载 logos 目录
+    # Mount logos directory
     logos_dir = os.path.join(WEBUI_DIR, "logos")
     if os.path.exists(logos_dir):
         app.mount("/logos", StaticFiles(directory=logos_dir), name="logos")
-    # 挂载其他静态文件（如 vite.svg）
+    # Mount other static files (e.g., vite.svg)
     app.mount("/static", StaticFiles(directory=WEBUI_DIR), name="webui-static")
 
 

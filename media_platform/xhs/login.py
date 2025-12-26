@@ -57,7 +57,7 @@ class XiaoHongShuLogin(AbstractLogin):
         """
 
         if "请通过验证" in await self.context_page.content():
-            utils.logger.info("[XiaoHongShuLogin.check_login_state] 登录过程中出现验证码，请手动验证")
+            utils.logger.info("[XiaoHongShuLogin.check_login_state] CAPTCHA appeared during login, please verify manually")
 
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
@@ -83,14 +83,14 @@ class XiaoHongShuLogin(AbstractLogin):
         utils.logger.info("[XiaoHongShuLogin.login_by_mobile] Begin login xiaohongshu by mobile ...")
         await asyncio.sleep(1)
         try:
-            # 小红书进入首页后，有可能不会自动弹出登录框，需要手动点击登录按钮
+            # After entering Xiaohongshu homepage, the login dialog may not pop up automatically, need to manually click login button
             login_button_ele = await self.context_page.wait_for_selector(
                 selector="xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button",
                 timeout=5000
             )
             await login_button_ele.click()
-            # 弹窗的登录对话框也有两种形态，一种是直接可以看到手机号和验证码的
-            # 另一种是需要点击切换到手机登录的
+            # The login dialog has two forms: one shows phone number and verification code directly
+            # The other requires clicking to switch to phone login
             element = await self.context_page.wait_for_selector(
                 selector='xpath=//div[@class="login-container"]//div[@class="other-method"]/div[1]',
                 timeout=5000
@@ -106,11 +106,11 @@ class XiaoHongShuLogin(AbstractLogin):
         await asyncio.sleep(0.5)
 
         send_btn_ele = await login_container_ele.query_selector("label.auth-code > span")
-        await send_btn_ele.click()  # 点击发送验证码
+        await send_btn_ele.click()  # Click to send verification code
         sms_code_input_ele = await login_container_ele.query_selector("label.auth-code > input")
         submit_btn_ele = await login_container_ele.query_selector("div.input-container > button")
         cache_client = CacheFactory.create_cache(config.CACHE_TYPE_MEMORY)
-        max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
+        max_get_sms_code_time = 60 * 2  # Maximum time to get verification code is 2 minutes
         no_logged_in_session = ""
         while max_get_sms_code_time > 0:
             utils.logger.info(f"[XiaoHongShuLogin.login_by_mobile] get sms code from redis remaining time {max_get_sms_code_time}s ...")
@@ -125,15 +125,15 @@ class XiaoHongShuLogin(AbstractLogin):
             _, cookie_dict = utils.convert_cookies(current_cookie)
             no_logged_in_session = cookie_dict.get("web_session")
 
-            await sms_code_input_ele.fill(value=sms_code_value.decode())  # 输入短信验证码
+            await sms_code_input_ele.fill(value=sms_code_value.decode())  # Enter SMS verification code
             await asyncio.sleep(0.5)
             agree_privacy_ele = self.context_page.locator("xpath=//div[@class='agreements']//*[local-name()='svg']")
-            await agree_privacy_ele.click()  # 点击同意隐私协议
+            await agree_privacy_ele.click()  # Click to agree to privacy policy
             await asyncio.sleep(0.5)
 
-            await submit_btn_ele.click()  # 点击登录
+            await submit_btn_ele.click()  # Click login
 
-            # todo ... 应该还需要检查验证码的正确性有可能输入的验证码不正确
+            # TODO: Should also check if the verification code is correct, as it may be incorrect
             break
 
         try:
@@ -196,7 +196,7 @@ class XiaoHongShuLogin(AbstractLogin):
         """login xiaohongshu website by cookies"""
         utils.logger.info("[XiaoHongShuLogin.login_by_cookies] Begin login xiaohongshu by cookie ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
-            if key != "web_session":  # only set web_session cookie attr
+            if key != "web_session":  # Only set web_session cookie attribute
                 continue
             await self.browser_context.add_cookies([{
                 'name': key,

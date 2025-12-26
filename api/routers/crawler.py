@@ -26,10 +26,10 @@ router = APIRouter(prefix="/crawler", tags=["crawler"])
 
 @router.post("/start")
 async def start_crawler(request: CrawlerStartRequest):
-    """启动爬虫任务"""
+    """Start crawler task"""
     success = await crawler_manager.start(request)
     if not success:
-        # 处理并发/重复请求：如果进程已经在跑，返回 400 而不是 500
+        # Handle concurrent/duplicate requests: if process is already running, return 400 instead of 500
         if crawler_manager.process and crawler_manager.process.poll() is None:
             raise HTTPException(status_code=400, detail="Crawler is already running")
         raise HTTPException(status_code=500, detail="Failed to start crawler")
@@ -39,10 +39,10 @@ async def start_crawler(request: CrawlerStartRequest):
 
 @router.post("/stop")
 async def stop_crawler():
-    """停止爬虫任务"""
+    """Stop crawler task"""
     success = await crawler_manager.stop()
     if not success:
-        # 处理并发/重复请求：如果进程已退出/不存在，返回 400 而不是 500
+        # Handle concurrent/duplicate requests: if process already exited/doesn't exist, return 400 instead of 500
         if not crawler_manager.process or crawler_manager.process.poll() is not None:
             raise HTTPException(status_code=400, detail="No crawler is running")
         raise HTTPException(status_code=500, detail="Failed to stop crawler")
@@ -52,12 +52,12 @@ async def stop_crawler():
 
 @router.get("/status", response_model=CrawlerStatusResponse)
 async def get_crawler_status():
-    """获取爬虫状态"""
+    """Get crawler status"""
     return crawler_manager.get_status()
 
 
 @router.get("/logs")
 async def get_logs(limit: int = 100):
-    """获取最近的日志"""
+    """Get recent logs"""
     logs = crawler_manager.logs[-limit:] if limit > 0 else crawler_manager.logs
     return {"logs": [log.model_dump() for log in logs]}

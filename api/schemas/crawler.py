@@ -22,7 +22,7 @@ from pydantic import BaseModel
 
 
 class PlatformEnum(str, Enum):
-    """支持的媒体平台"""
+    """Supported media platforms"""
     XHS = "xhs"
     DOUYIN = "dy"
     KUAISHOU = "ks"
@@ -33,21 +33,21 @@ class PlatformEnum(str, Enum):
 
 
 class LoginTypeEnum(str, Enum):
-    """登录方式"""
+    """Login method"""
     QRCODE = "qrcode"
     PHONE = "phone"
     COOKIE = "cookie"
 
 
 class CrawlerTypeEnum(str, Enum):
-    """爬虫类型"""
+    """Crawler type"""
     SEARCH = "search"
     DETAIL = "detail"
     CREATOR = "creator"
 
 
 class SaveDataOptionEnum(str, Enum):
-    """数据保存方式"""
+    """Data save option"""
     CSV = "csv"
     DB = "db"
     JSON = "json"
@@ -57,13 +57,13 @@ class SaveDataOptionEnum(str, Enum):
 
 
 class CrawlerStartRequest(BaseModel):
-    """启动爬虫请求"""
+    """Crawler start request"""
     platform: PlatformEnum
     login_type: LoginTypeEnum = LoginTypeEnum.QRCODE
     crawler_type: CrawlerTypeEnum = CrawlerTypeEnum.SEARCH
-    keywords: str = ""  # 搜索模式下的关键词
-    specified_ids: str = ""  # 详情模式下的帖子/视频ID列表，逗号分隔
-    creator_ids: str = ""  # 创作者模式下的创作者ID列表，逗号分隔
+    keywords: str = ""  # Keywords for search mode
+    specified_ids: str = ""  # Post/video ID list for detail mode, comma-separated
+    creator_ids: str = ""  # Creator ID list for creator mode, comma-separated
     start_page: int = 1
     enable_comments: bool = True
     enable_sub_comments: bool = False
@@ -73,7 +73,7 @@ class CrawlerStartRequest(BaseModel):
 
 
 class CrawlerStatusResponse(BaseModel):
-    """爬虫状态响应"""
+    """Crawler status response"""
     status: Literal["idle", "running", "stopping", "error"]
     platform: Optional[str] = None
     crawler_type: Optional[str] = None
@@ -82,7 +82,7 @@ class CrawlerStatusResponse(BaseModel):
 
 
 class LogEntry(BaseModel):
-    """日志条目"""
+    """Log entry"""
     id: int
     timestamp: str
     level: Literal["info", "warning", "error", "success", "debug"]
@@ -90,7 +90,7 @@ class LogEntry(BaseModel):
 
 
 class DataFileInfo(BaseModel):
-    """数据文件信息"""
+    """Data file information"""
     name: str
     path: str
     size: int
