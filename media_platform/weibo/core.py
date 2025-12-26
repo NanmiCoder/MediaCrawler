@@ -170,6 +170,8 @@ class WeiboCrawler(AbstractCrawler):
                 search_res = await self.wb_client.get_note_by_keyword(keyword=keyword, page=page, search_type=search_type)
                 note_id_list: List[str] = []
                 note_list = filter_search_result_card(search_res.get("cards"))
+                # 如果开启了全文获取功能，则批量获取帖子全文
+                note_list = await self.batch_get_notes_full_text(note_list)
                 for note_item in note_list:
                     if note_item:
                         mblog: Dict = note_item.get("mblog")
@@ -313,12 +315,18 @@ class WeiboCrawler(AbstractCrawler):
                     raise DataFetchError("Get creator info error")
                 await weibo_store.save_creator(user_id, user_info=createor_info)
 
+                # 创建一个包装 callback，在保存数据前获取全文
+                async def save_notes_with_full_text(note_list: List[Dict]):
+                    # 如果开启了全文获取功能，先批量获取全文
+                    updated_note_list = await self.batch_get_notes_full_text(note_list)
+                    await weibo_store.batch_update_weibo_notes(updated_note_list)
+
                 # Get all note information of the creator
                 all_notes_list = await self.wb_client.get_all_notes_by_creator_id(
                     creator_id=user_id,
                     container_id=f"107603{user_id}",
                     crawl_interval=0,
-                    callback=weibo_store.batch_update_weibo_notes,
+                    callback=save_notes_with_full_text,
                 )
 
                 note_ids = [note_item.get("mblog", {}).get("id") for note_item in all_notes_list if note_item.get("mblog", {}).get("id")]
@@ -405,6 +413,61 @@ class WeiboCrawler(AbstractCrawler):
             # 回退到标准模式
             chromium = playwright.chromium
             return await self.launch_browser(chromium, playwright_proxy, user_agent, headless)
+
+    async def get_note_full_text(self, note_item: Dict) -> Dict:
+        """
+        获取帖子全文内容
+        如果帖子内容被截断（isLongText=True），则请求详情接口获取完整内容
+        :param note_item: 帖子数据，包含 mblog 字段
+        :return: 更新后的帖子数据
+        """
+        if not config.ENABLE_WEIBO_FULL_TEXT:
+            return note_item
+
+        mblog = note_item.get("mblog", {})
+        if not mblog:
+            return note_item
+
+        # 检查是否是长文本
+        is_long_text = mblog.get("isLongText", False)
+        if not is_long_text:
+            return note_item
+
+        note_id = mblog.get("id")
+        if not note_id:
+            return note_item
+
+        try:
+            utils.logger.info(f"[WeiboCrawler.get_note_full_text] Fetching full text for note: {note_id}")
+            full_note = await self.wb_client.get_note_info_by_id(note_id)
+            if full_note and full_note.get("mblog"):
+                # 用完整内容替换原始内容
+                note_item["mblog"] = full_note["mblog"]
+                utils.logger.info(f"[WeiboCrawler.get_note_full_text] Successfully fetched full text for note: {note_id}")
+
+            # 请求后休眠，避免风控
+            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+        except DataFetchError as ex:
+            utils.logger.error(f"[WeiboCrawler.get_note_full_text] Failed to fetch full text for note {note_id}: {ex}")
+        except Exception as ex:
+            utils.logger.error(f"[WeiboCrawler.get_note_full_text] Unexpected error for note {note_id}: {ex}")
+
+        return note_item
+
+    async def batch_get_notes_full_text(self, note_list: List[Dict]) -> List[Dict]:
+        """
+        批量获取帖子全文内容
+        :param note_list: 帖子列表
+        :return: 更新后的帖子列表
+        """
+        if not config.ENABLE_WEIBO_FULL_TEXT:
+            return note_list
+
+        result = []
+        for note_item in note_list:
+            updated_note = await self.get_note_full_text(note_item)
+            result.append(updated_note)
+        return result
 
     async def close(self):
         """Close browser context"""
