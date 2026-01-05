@@ -60,13 +60,20 @@ def get_video_url_arr(note_item: Dict) -> List:
     if note_item.get('type') != 'video':
         return []
 
+    video_dict = note_item.get('video')
+    if not video_dict:
+        return []
+
     videoArr = []
-    originVideoKey = note_item.get('video').get('consumer').get('origin_video_key')
+    consumer = video_dict.get('consumer', {})
+    originVideoKey = consumer.get('origin_video_key', '')
     if originVideoKey == '':
-        originVideoKey = note_item.get('video').get('consumer').get('originVideoKey')
+        originVideoKey = consumer.get('originVideoKey', '')
     # Fallback with watermark
     if originVideoKey == '':
-        videos = note_item.get('video').get('media').get('stream').get('h264')
+        media = video_dict.get('media', {})
+        stream = media.get('stream', {})
+        videos = stream.get('h264')
         if type(videos).__name__ == 'list':
             videoArr = [v.get('master_url') for v in videos]
     else:
