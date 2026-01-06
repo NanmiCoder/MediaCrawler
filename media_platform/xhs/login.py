@@ -51,19 +51,37 @@ class XiaoHongShuLogin(AbstractLogin):
     @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self, no_logged_in_session: str) -> bool:
         """
-            Check if the current login status is successful and return True otherwise return False
-            retry decorator will retry 20 times if the return value is False, and the retry interval is 1 second
-            if max retry times reached, raise RetryError
+        Verify login status using dual-check: UI elements and Cookies.
         """
+        # 1. Priority check: Check if the "Me" (Profile) node appears in the sidebar
+        try:
+            # Selector for elements containing "Me" text with a link pointing to the profile
+            # XPath Explanation: Find a span with text "Me" inside an anchor tag (<a>) 
+            # whose href attribute contains "/user/profile/"
+            user_profile_selector = "xpath=//a[contains(@href, '/user/profile/')]//span[text()='我']"
+            
+            # Set a short timeout since this is called within a retry loop
+            is_visible = await self.context_page.is_visible(user_profile_selector, timeout=500)
+            if is_visible:
+                utils.logger.info("[XiaoHongShuLogin.check_login_state] Login status confirmed by UI element ('Me' button).")
+                return True
+        except Exception:
+            pass
 
+        # 2. Alternative: Check for CAPTCHA prompt
         if "请通过验证" in await self.context_page.content():
-            utils.logger.info("[XiaoHongShuLogin.check_login_state] CAPTCHA appeared during login, please verify manually")
+            utils.logger.info("[XiaoHongShuLogin.check_login_state] CAPTCHA appeared, please verify manually.")
 
+        # 3. Compatibility fallback: Original Cookie-based change detection
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
         current_web_session = cookie_dict.get("web_session")
-        if current_web_session != no_logged_in_session:
+        
+        # If web_session has changed, consider the login successful
+        if current_web_session and current_web_session != no_logged_in_session:
+            utils.logger.info("[XiaoHongShuLogin.check_login_state] Login status confirmed by Cookie (web_session changed).")
             return True
+
         return False
 
     async def begin(self):
