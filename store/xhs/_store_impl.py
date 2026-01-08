@@ -189,9 +189,9 @@ class XhsDbStoreImplement(AbstractStore):
             create_time=comment_item.get("create_time"),
             note_id=comment_item.get("note_id"),
             content=comment_item.get("content"),
-            sub_comment_count=comment_item.get("sub_comment_count"),
+            sub_comment_count=int(comment_item.get("sub_comment_count", 0) or 0),
             pictures=json.dumps(comment_item.get("pictures")),
-            parent_comment_id=comment_item.get("parent_comment_id"),
+            parent_comment_id=str(comment_item.get("parent_comment_id", "")),
             like_count=str(comment_item.get("like_count"))
         )
         session.add(comment)
@@ -202,7 +202,7 @@ class XhsDbStoreImplement(AbstractStore):
         update_data = {
             "last_modify_ts": last_modify_ts,
             "like_count": str(comment_item.get("like_count")),
-            "sub_comment_count": comment_item.get("sub_comment_count"),
+            "sub_comment_count": int(comment_item.get("sub_comment_count", 0) or 0),
         }
         stmt = update(XhsNoteComment).where(XhsNoteComment.comment_id == comment_id).values(**update_data)
         await session.execute(stmt)

@@ -108,7 +108,8 @@ class WeiboDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        note_id = content_item.get("note_id")
+        note_id = int(content_item.get("note_id"))
+        content_item["note_id"] = note_id
         async with get_session() as session:
             stmt = select(WeiboNote).where(WeiboNote.note_id == note_id)
             res = await session.execute(stmt)
@@ -134,7 +135,14 @@ class WeiboDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        comment_id = comment_item.get("comment_id")
+        comment_id = int(comment_item.get("comment_id"))
+        comment_item["comment_id"] = comment_id
+        comment_item["note_id"] = int(comment_item.get("note_id", 0) or 0)
+        comment_item["create_time"] = int(comment_item.get("create_time", 0) or 0)
+        comment_item["comment_like_count"] = str(comment_item.get("comment_like_count", "0"))
+        comment_item["sub_comment_count"] = str(comment_item.get("sub_comment_count", "0"))
+        comment_item["parent_comment_id"] = str(comment_item.get("parent_comment_id", "0"))
+
         async with get_session() as session:
             stmt = select(WeiboNoteComment).where(WeiboNoteComment.comment_id == comment_id)
             res = await session.execute(stmt)
@@ -160,7 +168,8 @@ class WeiboDbStoreImplement(AbstractStore):
         Returns:
 
         """
-        user_id = creator.get("user_id")
+        user_id = int(creator.get("user_id"))
+        creator["user_id"] = user_id
         async with get_session() as session:
             stmt = select(WeiboCreator).where(WeiboCreator.user_id == user_id)
             res = await session.execute(stmt)

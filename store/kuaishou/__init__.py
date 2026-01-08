@@ -34,6 +34,7 @@ class KuaishouStoreFactory:
     STORES = {
         "csv": KuaishouCsvStoreImplement,
         "db": KuaishouDbStoreImplement,
+        "postgres": KuaishouDbStoreImplement,
         "json": KuaishouJsonStoreImplement,
         "sqlite": KuaishouSqliteStoreImplement,
         "mongodb": KuaishouMongoStoreImplement,

@@ -31,6 +31,7 @@ class TieBaStoreFactory:
     STORES = {
         "csv": TieBaCsvStoreImplement,
         "db": TieBaDbStoreImplement,
+        "postgres": TieBaDbStoreImplement,
         "json": TieBaJsonStoreImplement,
         "sqlite": TieBaSqliteStoreImplement,
         "mongodb": TieBaMongoStoreImplement,

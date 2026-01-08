@@ -35,6 +35,7 @@ class BiliStoreFactory:
     STORES = {
         "csv": BiliCsvStoreImplement,
         "db": BiliDbStoreImplement,
+        "postgres": BiliDbStoreImplement,
         "json": BiliJsonStoreImplement,
         "sqlite": BiliSqliteStoreImplement,
         "mongodb": BiliMongoStoreImplement,

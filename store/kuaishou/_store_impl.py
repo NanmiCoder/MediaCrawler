@@ -109,7 +109,8 @@ class KuaishouDbStoreImplement(AbstractStore):
                 session.add(new_content)
             else:
                 for key, value in content_item.items():
-                    setattr(video_detail, key, value)
+                    if hasattr(video_detail, key):
+                        setattr(video_detail, key, value)
             await session.commit()
 
     async def store_comment(self, comment_item: Dict):
@@ -130,7 +131,8 @@ class KuaishouDbStoreImplement(AbstractStore):
                 session.add(new_comment)
             else:
                 for key, value in comment_item.items():
-                    setattr(comment_detail, key, value)
+                    if hasattr(comment_detail, key):
+                        setattr(comment_detail, key, value)
             await session.commit()
 
 
