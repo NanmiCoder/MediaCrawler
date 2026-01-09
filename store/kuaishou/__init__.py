@@ -87,16 +87,22 @@ async def batch_update_ks_video_comments(video_id: str, comments: List[Dict]):
 
 
 async def update_ks_video_comment(video_id: str, comment_item: Dict):
-    comment_id = comment_item.get("commentId")
+    # V2 API uses snake_case field names and comment_id is int type
+    # Old GraphQL API used camelCase field names
+    # Support both formats for backward compatibility
+    comment_id = comment_item.get("comment_id") or comment_item.get("commentId")
     save_comment_item = {
-        "comment_id": comment_id,
+        "comment_id": str(comment_id) if comment_id else None,  # Convert to string for storage
         "create_time": comment_item.get("timestamp"),
         "video_id": video_id,
         "content": comment_item.get("content"),
-        "user_id": comment_item.get("authorId"),
-        "nickname": comment_item.get("authorName"),
+        # V2: author_id, Old: authorId
+        "user_id": comment_item.get("author_id") or comment_item.get("authorId"),
+        # V2: author_name, Old: authorName
+        "nickname": comment_item.get("author_name") or comment_item.get("authorName"),
         "avatar": comment_item.get("headurl"),
-        "sub_comment_count": str(comment_item.get("subCommentCount", 0)),
+        # V2: commentCount, Old: subCommentCount
+        "sub_comment_count": str(comment_item.get("commentCount") or comment_item.get("subCommentCount", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
     }
     utils.logger.info(
