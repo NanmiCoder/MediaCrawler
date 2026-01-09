@@ -110,7 +110,8 @@ class ZhihuDbStoreImplement(AbstractStore):
             existing_content = result.scalars().first()
             if existing_content:
                 for key, value in content_item.items():
-                    setattr(existing_content, key, value)
+                    if hasattr(existing_content, key):
+                        setattr(existing_content, key, value)
             else:
                 new_content = ZhihuContent(**content_item)
                 session.add(new_content)
@@ -129,7 +130,8 @@ class ZhihuDbStoreImplement(AbstractStore):
             existing_comment = result.scalars().first()
             if existing_comment:
                 for key, value in comment_item.items():
-                    setattr(existing_comment, key, value)
+                    if hasattr(existing_comment, key):
+                        setattr(existing_comment, key, value)
             else:
                 new_comment = ZhihuComment(**comment_item)
                 session.add(new_comment)
@@ -148,7 +150,8 @@ class ZhihuDbStoreImplement(AbstractStore):
             existing_creator = result.scalars().first()
             if existing_creator:
                 for key, value in creator.items():
-                    setattr(existing_creator, key, value)
+                    if hasattr(existing_creator, key):
+                        setattr(existing_creator, key, value)
             else:
                 new_creator = ZhihuCreator(**creator)
                 session.add(new_creator)

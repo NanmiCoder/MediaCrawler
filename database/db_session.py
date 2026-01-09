@@ -22,7 +22,7 @@ from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager
 from .models import Base
 import config
-from config.db_config import mysql_db_config, sqlite_db_config
+from config.db_config import mysql_db_config, sqlite_db_config, postgres_db_config
 
 # Keep a cache of engines
 _engines = {}
@@ -35,6 +35,18 @@ async def create_database_if_not_exists(db_type: str):
         engine = create_async_engine(server_url, echo=False)
         async with engine.connect() as conn:
             await conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {mysql_db_config['db_name']}"))
+        await engine.dispose()
+    elif db_type == "postgres":
+        # Connect to the default 'postgres' database
+        server_url = f"postgresql+asyncpg://{postgres_db_config['user']}:{postgres_db_config['password']}@{postgres_db_config['host']}:{postgres_db_config['port']}/postgres"
+        print(f"[init_db] Connecting to Postgres: host={postgres_db_config['host']}, port={postgres_db_config['port']}, user={postgres_db_config['user']}, dbname=postgres")
+        # Isolation level AUTOCOMMIT is required for CREATE DATABASE
+        engine = create_async_engine(server_url, echo=False, isolation_level="AUTOCOMMIT")
+        async with engine.connect() as conn:
+            # Check if database exists
+            result = await conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{postgres_db_config['db_name']}'"))
+            if not result.scalar():
+                await conn.execute(text(f"CREATE DATABASE {postgres_db_config['db_name']}"))
         await engine.dispose()
 
 
@@ -52,6 +64,8 @@ def get_async_engine(db_type: str = None):
         db_url = f"sqlite+aiosqlite:///{sqlite_db_config['db_path']}"
     elif db_type == "mysql" or db_type == "db":
         db_url = f"mysql+asyncmy://{mysql_db_config['user']}:{mysql_db_config['password']}@{mysql_db_config['host']}:{mysql_db_config['port']}/{mysql_db_config['db_name']}"
+    elif db_type == "postgres":
+        db_url = f"postgresql+asyncpg://{postgres_db_config['user']}:{postgres_db_config['password']}@{postgres_db_config['host']}:{postgres_db_config['port']}/{postgres_db_config['db_name']}"
     else:
         raise ValueError(f"Unsupported database type: {db_type}")
 

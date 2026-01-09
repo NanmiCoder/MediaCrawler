@@ -38,6 +38,7 @@ dependencies = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "websockets>=15.0.1",
+    "asyncpg>=0.31.0",
 ]
 
 [[tool.uv.index]]

@@ -21,6 +21,9 @@ MediaCrawler 支持多种数据存储方式，您可以根据需求选择最适�
   - **MySQL 数据库**：支持关系型数据库 MySQL 中保存（需要提前创建数据库）
     1. 初始化：`--init_db mysql`
     2. 数据存储：`--save_data_option db`（db 参数为兼容历史更新保留）
+  - **PostgreSQL 数据库**：支持高级关系型数据库 PostgreSQL 中保存（推荐生产环境使用）
+    1. 初始化：`--init_db postgres`
+    2. 数据存储：`--save_data_option postgres`
 
 #### 使用示例
 
@@ -39,6 +42,13 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option sqlit
 uv run main.py --init_db mysql
 # 使用 MySQL 存储数据（为适配历史更新，db参数进行沿用）
 uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
+```
+
+```shell
+# 初始化 PostgreSQL 数据库
+uv run main.py --init_db postgres
+# 使用 PostgreSQL 存储数据
+uv run main.py --platform xhs --lt qrcode --type search --save_data_option postgres
 ```
 
 ```shell

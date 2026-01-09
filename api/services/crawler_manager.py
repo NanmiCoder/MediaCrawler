@@ -124,6 +124,7 @@ class CrawlerManager:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
+                    encoding='utf-8',
                     bufsize=1,
                     cwd=str(self._project_root),
                     env={**os.environ, "PYTHONUNBUFFERED": "1"}

@@ -34,6 +34,7 @@ class DouyinStoreFactory:
     STORES = {
         "csv": DouyinCsvStoreImplement,
         "db": DouyinDbStoreImplement,
+        "postgres": DouyinDbStoreImplement,
         "json": DouyinJsonStoreImplement,
         "sqlite": DouyinSqliteStoreImplement,
         "mongodb": DouyinMongoStoreImplement,

@@ -35,6 +35,7 @@ class WeibostoreFactory:
     STORES = {
         "csv": WeiboCsvStoreImplement,
         "db": WeiboDbStoreImplement,
+        "postgres": WeiboDbStoreImplement,
         "json": WeiboJsonStoreImplement,
         "sqlite": WeiboSqliteStoreImplement,
         "mongodb": WeiboMongoStoreImplement,

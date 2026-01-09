@@ -73,6 +73,7 @@ class SaveDataOptionEnum(str, Enum):
     SQLITE = "sqlite"
     MONGODB = "mongodb"
     EXCEL = "excel"
+    POSTGRES = "postgres"
 
 
 class InitDbOptionEnum(str, Enum):
@@ -80,6 +81,7 @@ class InitDbOptionEnum(str, Enum):
 
     SQLITE = "sqlite"
     MYSQL = "mysql"
+    POSTGRES = "postgres"
 
 
 def _to_bool(value: bool | str) -> bool:
@@ -210,7 +212,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             SaveDataOptionEnum,
             typer.Option(
                 "--save_data_option",
-                help="Data save option (csv=CSV file | db=MySQL database | json=JSON file | sqlite=SQLite database | mongodb=MongoDB database | excel=Excel file)",
+                help="Data save option (csv=CSV file | db=MySQL database | json=JSON file | sqlite=SQLite database | mongodb=MongoDB database | excel=Excel file | postgres=PostgreSQL database)",
                 rich_help_panel="Storage Configuration",
             ),
         ] = _coerce_enum(
@@ -220,7 +222,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             Optional[InitDbOptionEnum],
             typer.Option(
                 "--init_db",
-                help="Initialize database table structure (sqlite | mysql)",
+                help="Initialize database table structure (sqlite | mysql | postgres)",
                 rich_help_panel="Storage Configuration",
             ),
         ] = None,

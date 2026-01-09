@@ -228,7 +228,7 @@ class BrowserLauncher:
             # Try to get version info
             try:
                 result = subprocess.run([browser_path, "--version"],
-                                      capture_output=True, text=True, timeout=5)
+                                      capture_output=True, text=True, encoding='utf-8', errors='ignore', timeout=5)
                 version = result.stdout.strip() if result.stdout else "Unknown Version"
             except:
                 version = "Unknown Version"
@@ -266,6 +266,8 @@ class BrowserLauncher:
                         ["taskkill", "/F", "/T", "/PID", str(process.pid)],
                         capture_output=True,
                         check=False,
+                        encoding='utf-8',
+                        errors='ignore'
                     )
                     process.wait(timeout=5)
             else:
