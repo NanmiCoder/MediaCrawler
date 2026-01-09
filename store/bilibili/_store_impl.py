@@ -128,16 +128,23 @@ class BiliDbStoreImplement(AbstractStore):
         Args:
             content_item: content item dict
         """
-        video_id = content_item.get("video_id")
+        video_id = int(content_item.get("video_id"))
+        content_item["video_id"] = video_id
+        content_item["user_id"] = int(content_item.get("user_id", 0) or 0)
+        content_item["liked_count"] = int(content_item.get("liked_count", 0) or 0)
+        content_item["create_time"] = int(content_item.get("create_time", 0) or 0)
+        
         async with get_session() as session:
             result = await session.execute(select(BilibiliVideo).where(BilibiliVideo.video_id == video_id))
             video_detail = result.scalar_one_or_none()
 
             if not video_detail:
                 content_item["add_ts"] = utils.get_current_timestamp()
+                content_item["last_modify_ts"] = utils.get_current_timestamp()
                 new_content = BilibiliVideo(**content_item)
                 session.add(new_content)
             else:
+                content_item["last_modify_ts"] = utils.get_current_timestamp()
                 for key, value in content_item.items():
                     setattr(video_detail, key, value)
             await session.commit()
@@ -148,16 +155,25 @@ class BiliDbStoreImplement(AbstractStore):
         Args:
             comment_item: comment item dict
         """
-        comment_id = comment_item.get("comment_id")
+        comment_id = int(comment_item.get("comment_id"))
+        comment_item["comment_id"] = comment_id
+        comment_item["video_id"] = int(comment_item.get("video_id", 0) or 0)
+        comment_item["create_time"] = int(comment_item.get("create_time", 0) or 0)
+        comment_item["like_count"] = str(comment_item.get("like_count", "0"))
+        comment_item["sub_comment_count"] = str(comment_item.get("sub_comment_count", "0"))
+        comment_item["parent_comment_id"] = str(comment_item.get("parent_comment_id", "0"))
+        
         async with get_session() as session:
             result = await session.execute(select(BilibiliVideoComment).where(BilibiliVideoComment.comment_id == comment_id))
             comment_detail = result.scalar_one_or_none()
 
             if not comment_detail:
                 comment_item["add_ts"] = utils.get_current_timestamp()
+                comment_item["last_modify_ts"] = utils.get_current_timestamp()
                 new_comment = BilibiliVideoComment(**comment_item)
                 session.add(new_comment)
             else:
+                comment_item["last_modify_ts"] = utils.get_current_timestamp()
                 for key, value in comment_item.items():
                     setattr(comment_detail, key, value)
             await session.commit()
@@ -168,16 +184,24 @@ class BiliDbStoreImplement(AbstractStore):
         Args:
             creator: creator item dict
         """
-        creator_id = creator.get("user_id")
+        creator_id = int(creator.get("user_id"))
+        creator["user_id"] = creator_id
+        creator["total_fans"] = int(creator.get("total_fans", 0) or 0)
+        creator["total_liked"] = int(creator.get("total_liked", 0) or 0)
+        creator["user_rank"] = int(creator.get("user_rank", 0) or 0)
+        creator["is_official"] = int(creator.get("is_official", 0) or 0)
+
         async with get_session() as session:
             result = await session.execute(select(BilibiliUpInfo).where(BilibiliUpInfo.user_id == creator_id))
             creator_detail = result.scalar_one_or_none()
 
             if not creator_detail:
                 creator["add_ts"] = utils.get_current_timestamp()
+                creator["last_modify_ts"] = utils.get_current_timestamp()
                 new_creator = BilibiliUpInfo(**creator)
                 session.add(new_creator)
             else:
+                creator["last_modify_ts"] = utils.get_current_timestamp()
                 for key, value in creator.items():
                     setattr(creator_detail, key, value)
             await session.commit()
@@ -188,8 +212,11 @@ class BiliDbStoreImplement(AbstractStore):
         Args:
             contact_item: contact item dict
         """
-        up_id = contact_item.get("up_id")
-        fan_id = contact_item.get("fan_id")
+        up_id = int(contact_item.get("up_id"))
+        fan_id = int(contact_item.get("fan_id"))
+        contact_item["up_id"] = up_id
+        contact_item["fan_id"] = fan_id
+
         async with get_session() as session:
             result = await session.execute(
                 select(BilibiliContactInfo).where(BilibiliContactInfo.up_id == up_id, BilibiliContactInfo.fan_id == fan_id)
@@ -198,9 +225,11 @@ class BiliDbStoreImplement(AbstractStore):
 
             if not contact_detail:
                 contact_item["add_ts"] = utils.get_current_timestamp()
+                contact_item["last_modify_ts"] = utils.get_current_timestamp()
                 new_contact = BilibiliContactInfo(**contact_item)
                 session.add(new_contact)
             else:
+                contact_item["last_modify_ts"] = utils.get_current_timestamp()
                 for key, value in contact_item.items():
                     setattr(contact_detail, key, value)
             await session.commit()
@@ -211,16 +240,20 @@ class BiliDbStoreImplement(AbstractStore):
         Args:
             dynamic_item: dynamic item dict
         """
-        dynamic_id = dynamic_item.get("dynamic_id")
+        dynamic_id = int(dynamic_item.get("dynamic_id"))
+        dynamic_item["dynamic_id"] = dynamic_id
+        
         async with get_session() as session:
             result = await session.execute(select(BilibiliUpDynamic).where(BilibiliUpDynamic.dynamic_id == dynamic_id))
             dynamic_detail = result.scalar_one_or_none()
 
             if not dynamic_detail:
                 dynamic_item["add_ts"] = utils.get_current_timestamp()
+                dynamic_item["last_modify_ts"] = utils.get_current_timestamp()
                 new_dynamic = BilibiliUpDynamic(**dynamic_item)
                 session.add(new_dynamic)
             else:
+                dynamic_item["last_modify_ts"] = utils.get_current_timestamp()
                 for key, value in dynamic_item.items():
                     setattr(dynamic_detail, key, value)
             await session.commit()

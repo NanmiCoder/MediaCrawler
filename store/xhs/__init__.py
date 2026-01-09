@@ -34,6 +34,7 @@ class XhsStoreFactory:
     STORES = {
         "csv": XhsCsvStoreImplement,
         "db": XhsDbStoreImplement,
+        "postgres": XhsDbStoreImplement,
         "json": XhsJsonStoreImplement,
         "sqlite": XhsSqliteStoreImplement,
         "mongodb": XhsMongoStoreImplement,

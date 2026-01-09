@@ -97,7 +97,7 @@ class DouyinDbStoreImplement(AbstractStore):
         Args:
             content_item: content item dict
         """
-        aweme_id = content_item.get("aweme_id")
+        aweme_id = int(content_item.get("aweme_id"))
         async with get_session() as session:
             result = await session.execute(select(DouyinAweme).where(DouyinAweme.aweme_id == aweme_id))
             aweme_detail = result.scalar_one_or_none()
@@ -118,7 +118,7 @@ class DouyinDbStoreImplement(AbstractStore):
         Args:
             comment_item: comment item dict
         """
-        comment_id = comment_item.get("comment_id")
+        comment_id = int(comment_item.get("comment_id"))
         async with get_session() as session:
             result = await session.execute(select(DouyinAwemeComment).where(DouyinAwemeComment.comment_id == comment_id))
             comment_detail = result.scalar_one_or_none()

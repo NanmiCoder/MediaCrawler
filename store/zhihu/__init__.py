@@ -38,6 +38,7 @@ class ZhihuStoreFactory:
     STORES = {
         "csv": ZhihuCsvStoreImplement,
         "db": ZhihuDbStoreImplement,
+        "postgres": ZhihuDbStoreImplement,
         "json": ZhihuJsonStoreImplement,
         "sqlite": ZhihuSqliteStoreImplement,
         "mongodb": ZhihuMongoStoreImplement,
