@@ -1,5 +1,5 @@
 httpx==0.28.1
-Pillow==9.5.0
+Pillow==12.1.0
 playwright==1.45.0
 tenacity==8.2.2
 typer>=0.12.3
