@@ -133,6 +133,15 @@ class MongoDBStoreBase:
             utils.logger.error(f"[MongoDBStoreBase] Find many failed ({self.collection_prefix}_{collection_suffix}): {e}")
             return []
 
+    async def count(self, collection_suffix: str, query: Dict) -> int:
+        """Count documents matching query"""
+        try:
+            collection = await self.get_collection(collection_suffix)
+            return await collection.count_documents(query)
+        except Exception as e:
+            utils.logger.error(f"[MongoDBStoreBase] Count failed ({self.collection_prefix}_{collection_suffix}): {e}")
+            return 0
+
     async def create_index(self, collection_suffix: str, keys: List[tuple], unique: bool = False):
         """Create index: keys=[("field", 1)]"""
         try:
