@@ -88,7 +88,11 @@ class DouYinCrawler(AbstractCrawler):
                 await self.browser_context.add_init_script(path="libs/stealth.min.js")
 
             self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+            await self.context_page.goto(self.index_url, wait_until="load", timeout=60000)
+
+            # Wait for page to fully load and render before checking login status
+            utils.logger.info("[DouYinCrawler.start] Waiting for page to fully load and render (15 seconds)...")
+            await asyncio.sleep(15)
 
             self.dy_client = await self.create_douyin_client(httpx_proxy_format)
             if not await self.dy_client.pong(browser_context=self.browser_context):
@@ -142,8 +146,15 @@ class DouYinCrawler(AbstractCrawler):
                     if posts_res.get("data") is None or posts_res.get("data") == []:
                         utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page} is empty,{posts_res.get('data')}`")
                         break
-                except DataFetchError:
-                    utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
+                except DataFetchError as e:
+                    utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed, error: {e}")
+                    import traceback
+                    utils.logger.error(f"[DouYinCrawler.search] traceback: {traceback.format_exc()}")
+                    break
+                except Exception as e:
+                    utils.logger.error(f"[DouYinCrawler.search] unexpected error: {e}")
+                    import traceback
+                    utils.logger.error(f"[DouYinCrawler.search] traceback: {traceback.format_exc()}")
                     break
 
                 page += 1

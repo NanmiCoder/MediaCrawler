@@ -179,3 +179,6 @@ agent_zone
 debug_tools
 
 database/*.db
+
+# Sensitive configuration files with user cookies
+test_platform_cookies.py

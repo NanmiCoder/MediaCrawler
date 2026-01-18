@@ -44,6 +44,7 @@ async def find_login_qrcode(page: Page, selector: str) -> str:
     try:
         elements = await page.wait_for_selector(
             selector=selector,
+            timeout=180000,  # 等待 3 分钟
         )
         login_qrcode_img = str(await elements.get_property("src"))  # type: ignore
         if "http://" in login_qrcode_img or "https://" in login_qrcode_img:

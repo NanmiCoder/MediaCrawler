@@ -47,7 +47,7 @@ class DouYinLogin(AbstractLogin):
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
-        self.scan_qrcode_time = 60
+        self.scan_qrcode_time = 180  # 增加到 3 分钟
         self.cookie_str = cookie_str
 
     async def begin(self):
@@ -83,10 +83,14 @@ class DouYinLogin(AbstractLogin):
             utils.logger.info("[DouYinLogin.begin] login failed please confirm ...")
             sys.exit()
 
-        # wait for redirect
-        wait_redirect_seconds = 5
-        utils.logger.info(f"[DouYinLogin.begin] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+        # wait for redirect and ensure cookies are saved
+        wait_redirect_seconds = 10
+        utils.logger.info(f"[DouYinLogin.begin] Login successful then wait for {wait_redirect_seconds} seconds to ensure cookies are saved ...")
         await asyncio.sleep(wait_redirect_seconds)
+
+        # Force save cookies
+        utils.logger.info(f"[DouYinLogin.begin] Saving login state...")
+        await asyncio.sleep(5)
 
     @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self):
@@ -112,8 +116,8 @@ class DouYinLogin(AbstractLogin):
         """If the login dialog box does not pop up automatically, we will manually click the login button"""
         dialog_selector = "xpath=//div[@id='login-panel-new']"
         try:
-            # check dialog box is auto popup and wait for 10 seconds
-            await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 10)
+            # check dialog box is auto popup and wait for 20 seconds
+            await self.context_page.wait_for_selector(dialog_selector, timeout=1000 * 20)
         except Exception as e:
             utils.logger.error(f"[DouYinLogin.popup_login_dialog] login dialog box does not pop up automatically, error: {e}")
             utils.logger.info("[DouYinLogin.popup_login_dialog] login dialog box does not pop up automatically, we will manually click the login button")

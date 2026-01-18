@@ -1,0 +1,100 @@
+"""
+平台Cookie配置和测试工具
+用于配置和测试小红书、知乎的Cookie
+
+使用说明：
+1. 复制此文件为 test_platform_cookies.py
+2. 填入您从浏览器获取的Cookie
+3. 运行 python test_platform_cookies.py 验证配置
+"""
+
+# ==================== Cookie 配置区 ====================
+# 请将获取到的Cookie粘贴到下方对应位置
+
+# 小红书 Cookie（从 https://www.xiaohongshu.com 获取）
+# 获取方式：登录小红书 → 按F12 → Console → 执行 document.cookie → 复制结果
+XHS_COOKIES = """
+在这里粘贴小红书的Cookie
+"""
+
+# 知乎 Cookie（从 https://www.zhihu.com 获取）
+# 获取方式：登录知乎 → 按F12 → Console → 执行 document.cookie → 复制结果
+ZHIHU_COOKIES = """
+在这里粘贴知乎的Cookie
+"""
+
+# 抖音 Cookie（从 https://www.douyin.com 获取）
+# 获取方式：登录抖音 → 按F12 → Console → 执行 document.cookie → 复制结果
+DY_COOKIES = """
+在这里粘贴抖音的Cookie
+"""
+
+# ==================== Cookie 字典映射 ====================
+PLATFORM_COOKIES = {
+    "dy": DY_COOKIES,
+    "xhs": XHS_COOKIES,
+    "zhihu": ZHIHU_COOKIES
+}
+
+# ==================== 测试函数 ====================
+def validate_cookie(platform: str, cookie: str) -> bool:
+    """验证Cookie是否有效（简单检查）"""
+    if not cookie or cookie.strip() == "" or "在这里粘贴" in cookie:
+        return False
+    # Cookie应该包含键值对
+    if "=" not in cookie:
+        return False
+    return True
+
+def print_status():
+    """打印当前配置状态"""
+    print("\n" + "="*80)
+    print("平台Cookie配置状态")
+    print("="*80)
+
+    for platform, cookie in PLATFORM_COOKIES.items():
+        platform_names = {
+            "dy": "抖音",
+            "xhs": "小红书",
+            "zhihu": "知乎"
+        }
+
+        is_valid = validate_cookie(platform, cookie)
+        status = "✅ 已配置" if is_valid else "❌ 未配置"
+
+        print(f"\n【{platform_names[platform]} ({platform})】")
+        print(f"  状态: {status}")
+        if is_valid:
+            # 只显示Cookie的前50个字符
+            preview = cookie[:50] + "..." if len(cookie) > 50 else cookie
+            print(f"  预览: {preview}")
+
+    print("\n" + "="*80)
+
+def get_cookie_for_platform(platform: str) -> str:
+    """获取指定平台的Cookie"""
+    return PLATFORM_COOKIES.get(platform, "")
+
+if __name__ == "__main__":
+    print("""
+╔════════════════════════════════════════════════════════════════╗
+║              MediaCrawler Cookie 配置工具                      ║
+╚════════════════════════════════════════════════════════════════╝
+    """)
+
+    print_status()
+
+    print("\n【配置说明】")
+    print("1. 复制此文件为 test_platform_cookies.py")
+    print("2. 在浏览器中访问对应平台并登录")
+    print("3. 按F12打开开发者工具，在Console中执行: document.cookie")
+    print("4. 复制输出的Cookie字符串")
+    print("5. 粘贴到 test_platform_cookies.py 文件中对应的变量")
+    print("6. 再次运行 python test_platform_cookies.py 验证配置")
+
+    print("\n【平台链接】")
+    print("小红书: https://www.xiaohongshu.com")
+    print("知乎:   https://www.zhihu.com")
+    print("抖音:   https://www.douyin.com")
+
+    print("\n" + "="*80)
