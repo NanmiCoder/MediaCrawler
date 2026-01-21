@@ -34,7 +34,6 @@ from tenacity import RetryError
 
 import config
 from base.base_crawler import AbstractCrawler
-from config import CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
 from model.m_xiaohongshu import NoteUrlInfo, CreatorUrlInfo
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import xhs as xhs_store
@@ -344,7 +343,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 xsec_token=xsec_token,
                 crawl_interval=crawl_interval,
                 callback=xhs_store.batch_update_xhs_note_comments,
-                max_count=CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
+                max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
             )
 
             # Sleep after fetching comments

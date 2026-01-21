@@ -250,6 +250,14 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Basic Configuration",
             ),
         ] = "",
+        max_comments_count_singlenotes: Annotated[
+            int,
+            typer.Option(
+                "--max_comments_count_singlenotes",
+                help="Maximum number of first-level comments to crawl per post/video",
+                rich_help_panel="Comment Configuration",
+            ),
+        ] = config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
@@ -274,6 +282,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.CDP_HEADLESS = enable_headless
         config.SAVE_DATA_OPTION = save_data_option.value
         config.COOKIES = cookies
+        config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = max_comments_count_singlenotes
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:
