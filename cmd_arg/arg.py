@@ -250,6 +250,22 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Basic Configuration",
             ),
         ] = "",
+        max_comments_per_post: Annotated[
+            int,
+            typer.Option(
+                "--max_comments_per_post",
+                help="Maximum number of first-level comments to crawl per post/video",
+                rich_help_panel="Comment Configuration",
+            ),
+        ] = config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
+        xhs_sort_type: Annotated[
+            str,
+            typer.Option(
+                "--xhs_sort_type",
+                help="XiaoHongShu sort type (e.g., popularity_descending, time_descending)",
+                rich_help_panel="Platform Specific Configuration",
+            ),
+        ] = "",
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
@@ -274,6 +290,11 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.CDP_HEADLESS = enable_headless
         config.SAVE_DATA_OPTION = save_data_option.value
         config.COOKIES = cookies
+        config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = max_comments_per_post
+
+        # Set XiaoHongShu sort type if specified
+        if xhs_sort_type and platform == PlatformEnum.XHS:
+            config.SORT_TYPE = xhs_sort_type
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:
