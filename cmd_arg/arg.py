@@ -258,10 +258,10 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Comment Configuration",
             ),
         ] = config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
-        max_concurrency: Annotated[
+        max_concurrency_num: Annotated[
             int,
             typer.Option(
-                "--max_concurrency",
+                "--max_concurrency_num",
                 help="Maximum number of concurrent crawlers",
                 rich_help_panel="Performance Configuration",
             ),
@@ -291,7 +291,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.SAVE_DATA_OPTION = save_data_option.value
         config.COOKIES = cookies
         config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = max_comments_count_singlenotes
-        config.MAX_CONCURRENCY_NUM = max_concurrency
+        config.MAX_CONCURRENCY_NUM = max_concurrency_num
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:
