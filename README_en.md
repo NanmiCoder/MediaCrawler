@@ -60,16 +60,14 @@ A powerful **multi-platform social media data collection tool** that supports cr
 | Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
 
 
-<details id="pro-version">
-<summary>🔗 <strong>🚀 MediaCrawlerPro Major Release! More features, better architectural design!</strong></summary>
-
-### 🚀 MediaCrawlerPro Major Release!
+<strong>MediaCrawlerPro Major Release! Open source is not easy, welcome to subscribe and support!</strong>
 
 > Focus on learning mature project architectural design, not just crawling technology. The code design philosophy of the Pro version is equally worth in-depth study!
 
 [MediaCrawlerPro](https://github.com/MediaCrawlerPro) core advantages over the open-source version:
 
 #### 🎯 Core Feature Upgrades
+- ✅ **Content Deconstruction Agent** (New feature)
 - ✅ **Resume crawling functionality** (Key feature)
 - ✅ **Multi-account + IP proxy pool support** (Key feature)
 - ✅ **Remove Playwright dependency**, easier to use
@@ -83,10 +81,9 @@ A powerful **multi-platform social media data collection tool** that supports cr
 #### 🎁 Additional Features
 - ✅ **Social media video downloader desktop app** (suitable for learning full-stack development)
 - ✅ **Multi-platform homepage feed recommendations** (HomeFeed)
-- [ ] **AI Agent based on social media platforms is under development 🚀🚀**
+- [ ] **AI Agent based on comment analysis is under development 🚀🚀**
 
 Click to view: [MediaCrawlerPro Project Homepage](https://github.com/MediaCrawlerPro) for more information
-</details>
 
 ## 🚀 Quick Start
 
@@ -251,14 +248,6 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, Excel,
 
 
 ### 💰 Sponsor Display
-
-<a href="https://h.wandouip.com">
-<img src="docs/static/images/img_8.jpg">
-<br>
-WandouHTTP - Self-operated tens of millions IP resource pool, IP purity ≥99.8%, daily high-frequency IP updates, fast response, stable connection, supports multiple business scenarios, customizable on demand, register to get 10000 free IPs.
-</a>
-
----
 
 <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">
 <img width="500" src="docs/static/images/tikhub_banner_zh.png">
