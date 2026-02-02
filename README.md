@@ -67,14 +67,14 @@
 
 
 
-<details>
-<summary>🚀 <strong>MediaCrawlerPro 重磅发布！开源不易，欢迎订阅支持</strong></summary>
+<strong>MediaCrawlerPro 重磅发布！开源不易，欢迎订阅支持</strong>
 
 > 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计思路同样值得深入学习！
 
 [MediaCrawlerPro](https://github.com/MediaCrawlerPro) 相较于开源版本的核心优势：
 
 #### 🎯 核心功能升级
+- ✅ **自媒体内容拆解Agent**（新增功能）
 - ✅ **断点续爬功能**（重点特性）
 - ✅ **多账号 + IP代理池支持**（重点特性）
 - ✅ **去除 Playwright 依赖**，使用更简单
@@ -88,11 +88,10 @@
 #### 🎁 额外功能
 - ✅ **自媒体视频下载器桌面端**（适合学习全栈开发）
 - ✅ **多平台首页信息流推荐**（HomeFeed）
-- [ ] **基于自媒体平台的AI Agent正在开发中 🚀🚀**
+- [ ] **基于评论分析AI Agent正在开发中 🚀🚀**
 
 点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
 
-</details>
 
 
 ## 🚀 快速开始
@@ -253,14 +252,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite
 
 
 ### 💰 赞助商展示
-
-<a href="https://h.wandouip.com">
-<img src="docs/static/images/img_8.jpg">
-<br>
-豌豆HTTP自营千万级IP资源池，IP纯净度≥99.8%，每日保持IP高频更新，快速响应，稳定连接,满足多种业务场景，支持按需定制，注册免费提取10000ip。
-</a>
-
----
 
 <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">
 <img width="500" src="docs/static/images/tikhub_banner_zh.png">
