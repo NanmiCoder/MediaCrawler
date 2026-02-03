@@ -24,7 +24,7 @@ from urllib.parse import urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_not_exception_type
 
 import config
 from base.base_crawler import AbstractApiClient
@@ -34,7 +34,7 @@ from tools import utils
 if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
 
-from .exception import DataFetchError, IPBlockError
+from .exception import DataFetchError, IPBlockError, NoteNotFoundError
 from .field import SearchNoteType, SearchSortType
 from .help import get_search_id
 from .extractor import XiaoHongShuExtractor
@@ -60,6 +60,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self._domain = "https://www.xiaohongshu.com"
         self.IP_ERROR_STR = "Network connection error, please check network settings or restart"
         self.IP_ERROR_CODE = 300012
+        self.NOTE_NOT_FOUND_CODE = -510000
         self.NOTE_ABNORMAL_STR = "Note status abnormal, please check later"
         self.NOTE_ABNORMAL_CODE = -510001
         self.playwright_page = playwright_page
@@ -109,7 +110,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.headers.update(headers)
         return self.headers
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1), retry=retry_if_not_exception_type(NoteNotFoundError))
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
         """
         Wrapper for httpx common request method, processes request response
@@ -144,6 +145,8 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             return data.get("data", data.get("success", {}))
         elif data["code"] == self.IP_ERROR_CODE:
             raise IPBlockError(self.IP_ERROR_STR)
+        elif data["code"] in (self.NOTE_NOT_FOUND_CODE, self.NOTE_ABNORMAL_CODE):
+            raise NoteNotFoundError(f"Note not found or abnormal, code: {data['code']}")
         else:
             err_msg = data.get("msg", None) or f"{response.text}"
             raise DataFetchError(err_msg)
