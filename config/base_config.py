@@ -73,6 +73,9 @@ AUTO_CLOSE_BROWSER = True
 # 数据保存类型选项配置,支持六种类型：csv、db、json、sqlite、excel、postgres, 最好保存到DB，有排重的功能。
 SAVE_DATA_OPTION = "json"  # csv or db or json or sqlite or excel or postgres
 
+# 数据保存路径,默认不指定,则保存到data文件夹下
+SAVE_DATA_PATH = ""
+
 # 用户浏览器缓存的浏览器文件配置
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
