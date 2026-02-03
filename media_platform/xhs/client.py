@@ -211,24 +211,38 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 )  # Keep original exception type name for developer debugging
                 return None
 
+    async def query_self(self) -> Optional[Dict]:
+        """
+        Query self user info to check login state
+        Returns:
+            Dict: User info if logged in, None otherwise
+        """
+        uri = "/api/sns/web/v1/user/selfinfo"
+        headers = await self._pre_headers(uri, params={})
+        async with httpx.AsyncClient(proxy=self.proxy) as client:
+            response = await client.get(f"{self._host}{uri}", headers=headers)
+            if response.status_code == 200:
+                return response.json()
+        return None
+
     async def pong(self) -> bool:
         """
-        Check if login state is still valid
+        Check if login state is still valid by querying self user info
         Returns:
-
+            bool: True if logged in, False otherwise
         """
-        """get a note to check if login state is ok"""
-        utils.logger.info("[XiaoHongShuClient.pong] Begin to pong xhs...")
+        utils.logger.info("[XiaoHongShuClient.pong] Begin to check login state...")
         ping_flag = False
         try:
-            note_card: Dict = await self.get_note_by_keyword(keyword="Xiaohongshu")
-            if note_card.get("items"):
+            self_info: Dict = await self.query_self()
+            if self_info and self_info.get("data", {}).get("result", {}).get("success"):
                 ping_flag = True
         except Exception as e:
             utils.logger.error(
-                f"[XiaoHongShuClient.pong] Ping xhs failed: {e}, and try to login again..."
+                f"[XiaoHongShuClient.pong] Check login state failed: {e}, and try to login again..."
             )
             ping_flag = False
+        utils.logger.info(f"[XiaoHongShuClient.pong] Login state result: {ping_flag}")
         return ping_flag
 
     async def update_cookies(self, browser_context: BrowserContext):
