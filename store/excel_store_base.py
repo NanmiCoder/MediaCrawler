@@ -46,6 +46,7 @@ except ImportError:
 
 from base.base_crawler import AbstractStore
 from tools import utils
+import config
 
 
 class ExcelStoreBase(AbstractStore):
@@ -111,7 +112,10 @@ class ExcelStoreBase(AbstractStore):
         self.crawler_type = crawler_type
 
         # Create data directory
-        self.data_dir = Path("data") / platform
+        if config.SAVE_DATA_PATH:
+            self.data_dir = Path(config.SAVE_DATA_PATH) / platform
+        else:
+            self.data_dir = Path("data") / platform
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize workbook

@@ -266,6 +266,14 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Performance Configuration",
             ),
         ] = config.MAX_CONCURRENCY_NUM,
+        save_data_path: Annotated[
+            str,
+            typer.Option(
+                "--save_data_path",
+                help="Data save path, default is empty and will save to data folder",
+                rich_help_panel="Storage Configuration",
+            ),
+        ] = config.SAVE_DATA_PATH,
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
@@ -292,6 +300,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.COOKIES = cookies
         config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = max_comments_count_singlenotes
         config.MAX_CONCURRENCY_NUM = max_concurrency_num
+        config.SAVE_DATA_PATH = save_data_path
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:

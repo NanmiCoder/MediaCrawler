@@ -35,7 +35,10 @@ class AsyncFileWriter:
         self.wordcloud_generator = AsyncWordCloudGenerator() if config.ENABLE_GET_WORDCLOUD else None
 
     def _get_file_path(self, file_type: str, item_type: str) -> str:
-        base_path = f"data/{self.platform}/{file_type}"
+        if config.SAVE_DATA_PATH:
+            base_path = f"{config.SAVE_DATA_PATH}/{self.platform}/{file_type}"
+        else:
+            base_path = f"data/{self.platform}/{file_type}"
         pathlib.Path(base_path).mkdir(parents=True, exist_ok=True)
         file_name = f"{self.crawler_type}_{item_type}_{utils.get_current_date()}.{file_type}"
         return f"{base_path}/{file_name}"
@@ -113,7 +116,10 @@ class AsyncFileWriter:
                 return
 
             # Generate wordcloud
-            words_base_path = f"data/{self.platform}/words"
+            if config.SAVE_DATA_PATH:
+                words_base_path = f"{config.SAVE_DATA_PATH}/{self.platform}/words"
+            else:
+                words_base_path = f"data/{self.platform}/words"
             pathlib.Path(words_base_path).mkdir(parents=True, exist_ok=True)
             words_file_prefix = f"{words_base_path}/{self.crawler_type}_comments_{utils.get_current_date()}"
 
