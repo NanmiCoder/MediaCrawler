@@ -28,10 +28,15 @@ import aiofiles
 
 from base.base_crawler import AbstractStoreImage, AbstractStoreVideo
 from tools import utils
+import config
 
 
 class WeiboStoreImage(AbstractStoreImage):
-    image_store_path: str = "data/weibo/images"
+    def __init__(self):
+        if config.SAVE_DATA_PATH:
+            self.image_store_path = f"{config.SAVE_DATA_PATH}/weibo/images"
+        else:
+            self.image_store_path = "data/weibo/images"
 
     async def store_image(self, image_content_item: Dict):
         """

@@ -24,10 +24,15 @@ import aiofiles
 
 from base.base_crawler import AbstractStoreImage, AbstractStoreVideo
 from tools import utils
+import config
 
 
 class DouYinImage(AbstractStoreImage):
-    image_store_path: str = "data/douyin/images"
+    def __init__(self):
+        if config.SAVE_DATA_PATH:
+            self.image_store_path = f"{config.SAVE_DATA_PATH}/douyin/images"
+        else:
+            self.image_store_path = "data/douyin/images"
 
     async def store_image(self, image_content_item: Dict):
         """
@@ -74,7 +79,11 @@ class DouYinImage(AbstractStoreImage):
 
 
 class DouYinVideo(AbstractStoreVideo):
-    video_store_path: str = "data/douyin/videos"
+    def __init__(self):
+        if config.SAVE_DATA_PATH:
+            self.video_store_path = f"{config.SAVE_DATA_PATH}/douyin/videos"
+        else:
+            self.video_store_path = "data/douyin/videos"
 
     async def store_video(self, video_content_item: Dict):
         """
