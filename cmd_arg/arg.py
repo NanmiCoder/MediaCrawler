@@ -84,6 +84,16 @@ class InitDbOptionEnum(str, Enum):
     POSTGRES = "postgres"
 
 
+class LogLevelEnum(str, Enum):
+    """Log level enumeration"""
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+
 def _to_bool(value: bool | str) -> bool:
     if isinstance(value, bool):
         return value
@@ -274,12 +284,64 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Storage Configuration",
             ),
         ] = config.SAVE_DATA_PATH,
+        enable_ip_proxy: Annotated[
+            str,
+            typer.Option(
+                "--enable_ip_proxy",
+                help="Whether to enable IP proxy, supports yes/true/t/y/1 or no/false/f/n/0",
+                rich_help_panel="Proxy Configuration",
+                show_default=True,
+            ),
+        ] = str(config.ENABLE_IP_PROXY),
+        ip_proxy_pool_count: Annotated[
+            int,
+            typer.Option(
+                "--ip_proxy_pool_count",
+                help="IP proxy pool count",
+                rich_help_panel="Proxy Configuration",
+            ),
+        ] = config.IP_PROXY_POOL_COUNT,
+        ip_proxy_provider_name: Annotated[
+            str,
+            typer.Option(
+                "--ip_proxy_provider_name",
+                help="IP proxy provider name (kuaidaili | wandouhttp)",
+                rich_help_panel="Proxy Configuration",
+            ),
+        ] = config.IP_PROXY_PROVIDER_NAME,
+        log_save_enable: Annotated[
+            str,
+            typer.Option(
+                "--log_save_enable",
+                help="Whether to save logs to file, supports yes/true/t/y/1 or no/false/f/n/0",
+                rich_help_panel="Log Configuration",
+                show_default=True,
+            ),
+        ] = str(config.LOG_SAVE_ENABLE),
+        log_save_path: Annotated[
+            str,
+            typer.Option(
+                "--log_save_path",
+                help="Log file save path, default is ./logs",
+                rich_help_panel="Log Configuration",
+            ),
+        ] = config.LOG_SAVE_PATH,
+        log_save_level: Annotated[
+            LogLevelEnum,
+            typer.Option(
+                "--log_save_level",
+                help="Log save level (DEBUG | INFO | WARNING | ERROR | CRITICAL)",
+                rich_help_panel="Log Configuration",
+            ),
+        ] = _coerce_enum(LogLevelEnum, config.LOG_SAVE_LEVEL, LogLevelEnum.INFO),
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
         enable_comment = _to_bool(get_comment)
         enable_sub_comment = _to_bool(get_sub_comment)
         enable_headless = _to_bool(headless)
+        enable_ip_proxy_value = _to_bool(enable_ip_proxy)
+        enable_log_save = _to_bool(log_save_enable)
         init_db_value = init_db.value if init_db else None
 
         # Parse specified_id and creator_id into lists
@@ -301,6 +363,12 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = max_comments_count_singlenotes
         config.MAX_CONCURRENCY_NUM = max_concurrency_num
         config.SAVE_DATA_PATH = save_data_path
+        config.ENABLE_IP_PROXY = enable_ip_proxy_value
+        config.IP_PROXY_POOL_COUNT = ip_proxy_pool_count
+        config.IP_PROXY_PROVIDER_NAME = ip_proxy_provider_name
+        config.LOG_SAVE_ENABLE = enable_log_save
+        config.LOG_SAVE_PATH = log_save_path
+        config.LOG_SAVE_LEVEL = log_save_level.value
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:
