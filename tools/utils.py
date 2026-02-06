@@ -20,6 +20,9 @@
 
 import argparse
 import logging
+import os
+from logging.handlers import RotatingFileHandler
+from datetime import datetime
 
 from .crawler_util import *
 from .slider_util import *
@@ -27,14 +30,54 @@ from .time_util import *
 
 
 def init_loging_config():
+    # 导入配置
+    try:
+        from config.base_config import LOG_SAVE_ENABLE, LOG_SAVE_PATH, LOG_SAVE_LEVEL
+    except ImportError:
+        LOG_SAVE_ENABLE = False
+        LOG_SAVE_PATH = "./logs"
+        LOG_SAVE_LEVEL = "INFO"
+    
     level = logging.INFO
+    log_format = "%(asctime)s %(name)s %(levelname)s (%(filename)s:%(lineno)d) - %(message)s"
+    date_format = '%Y-%m-%d %H:%M:%S'
+    
+    # 配置基础日志
     logging.basicConfig(
         level=level,
-        format="%(asctime)s %(name)s %(levelname)s (%(filename)s:%(lineno)d) - %(message)s",
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format=log_format,
+        datefmt=date_format
     )
     _logger = logging.getLogger("MediaCrawler")
     _logger.setLevel(level)
+
+    # 如果启用日志保存，添加文件处理器
+    if LOG_SAVE_ENABLE and LOG_SAVE_PATH:
+        try:
+            # 确保日志目录存在
+            log_dir = os.path.abspath(LOG_SAVE_PATH)
+            os.makedirs(log_dir, exist_ok=True)
+            
+            # 日志文件名：按日期命名
+            log_filename = os.path.join(log_dir, f"mediacrawler-{datetime.now().strftime('%Y-%m-%d')}.log")
+            
+            # 转换日志级别字符串为logging级别
+            file_level = getattr(logging, LOG_SAVE_LEVEL.upper(), logging.INFO)
+            
+            # 创建文件处理器
+            file_handler = RotatingFileHandler(
+                log_filename,
+                encoding='utf-8'
+            )
+            file_handler.setLevel(file_level)
+            file_handler.setFormatter(logging.Formatter(log_format, date_format))
+            
+            # 添加到logger
+            _logger.addHandler(file_handler)
+            
+        except Exception as e:
+            # 如果文件日志配置失败，不影响控制台日志
+            _logger.warning(f"日志文件保存配置失败: {e}")
 
     # Disable httpx INFO level logs
     logging.getLogger("httpx").setLevel(logging.WARNING)
