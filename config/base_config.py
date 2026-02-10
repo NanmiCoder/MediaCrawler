@@ -120,14 +120,6 @@ FONT_PATH = "./docs/STZHONGS.TTF"
 # 爬取间隔时间
 CRAWLER_MAX_SLEEP_SEC = 2
 
-# 日志配置
-# 是否保存日志
-LOG_SAVE_ENABLE = False
-# 日志保存路径
-LOG_SAVE_PATH = "./logs"
-# 日志保存级别
-LOG_SAVE_LEVEL = "INFO"
-
 from .bilibili_config import *
 from .xhs_config import *
 from .dy_config import *
