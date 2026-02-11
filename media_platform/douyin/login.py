@@ -191,7 +191,7 @@ class DouYinLogin(AbstractLogin):
                 await self.move_slider(back_selector, gap_selector, move_step, slider_level)
                 await asyncio.sleep(1)
 
-                # If the slider is too slow or verification failed, it will prompt "操作过慢", click the refresh button here
+                # If the slider is too slow or verification failed, it will prompt "The operation is too slow", click the refresh button here
                 page_content = await self.context_page.content()
                 if "操作过慢" in page_content or "提示重新操作" in page_content:
                     utils.logger.info("[DouYinLogin.check_page_display_slider] slider verify failed, retry ...")

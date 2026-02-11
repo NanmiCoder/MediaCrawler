@@ -504,7 +504,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                         utils.logger.warning(
                             f"[XiaoHongShuClient.get_comments_all_sub_comments] Failed to get sub-comments for note_id: {note_id}, root_comment_id: {root_comment_id}, error: {e}. Skipping this comment's sub-comments."
                         )
-                        break  # 跳出当前评论的子评论获取循环，继续处理下一个评论
+                        break  # Break out of the sub-comment acquisition loop of the current comment and continue processing the next comment
                     except Exception as e:
                         utils.logger.error(
                             f"[XiaoHongShuClient.get_comments_all_sub_comments] Unexpected error when getting sub-comments for note_id: {note_id}, root_comment_id: {root_comment_id}, error: {e}"
@@ -514,7 +514,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 utils.logger.error(
                     f"[XiaoHongShuClient.get_comments_all_sub_comments] Error processing comment: {comment.get('id', 'unknown')}, error: {e}. Continuing with next comment."
                 )
-                continue  # 继续处理下一个评论
+                continue  # Continue to next comment
         return result
 
     async def get_creator_info(

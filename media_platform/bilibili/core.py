@@ -474,7 +474,7 @@ class BilibiliCrawler(AbstractCrawler):
             },
             playwright_page=self.context_page,
             cookie_dict=cookie_dict,
-            proxy_ip_pool=self.ip_proxy_pool,  # 传递代理池用于自动刷新
+            proxy_ip_pool=self.ip_proxy_pool,  # Pass proxy pool for automatic refresh
         )
         return bilibili_client_obj
 

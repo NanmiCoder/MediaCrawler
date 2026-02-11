@@ -18,23 +18,23 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 
-# 微博平台配置
+# Weibo platform configuration
 
-# 搜索类型，具体的枚举值在media_platform/weibo/field.py中
+# Search type, the specific enumeration value is in media_platform/weibo/field.py
 WEIBO_SEARCH_TYPE = "default"
 
-# 指定微博ID列表
+# Specify Weibo ID list
 WEIBO_SPECIFIED_ID_LIST = [
     "4982041758140155",
     # ........................
 ]
 
-# 指定微博用户ID列表
+# Specify Weibo user ID list
 WEIBO_CREATOR_ID_LIST = [
     "5756404150",
     # ........................
 ]
 
-# 是否开启微博爬取全文的功能，默认开启
-# 如果开启的话会增加被风控的概率，相当于一个关键词搜索请求会再遍历所有帖子的时候，再请求一次帖子详情
+# Whether to enable the function of crawling the full text of Weibo. It is enabled by default.
+# If turned on, it will increase the probability of being risk controlled, which is equivalent to a keyword search request that will traverse all posts and request the post details again.
 ENABLE_WEIBO_FULL_TEXT = True

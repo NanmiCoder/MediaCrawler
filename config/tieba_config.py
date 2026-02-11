@@ -17,17 +17,17 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-# 贴吧平台配置
+# Tieba platform configuration
 
-# 指定贴吧ID列表
+# Specify Tieba ID list
 TIEBA_SPECIFIED_ID_LIST = []
 
-# 指定贴吧名称列表
+# Specify a list of Tieba names
 TIEBA_NAME_LIST = [
-    # "盗墓笔记"
+    # "Tomb Robbery Notes"
 ]
 
-# 指定贴吧用户URL列表
+# Specify Tieba user URL list
 TIEBA_CREATOR_URL_LIST = [
     "https://tieba.baidu.com/home/main/?id=tb.1.7f139e2e.6CyEwxu3VJruH_-QqpCi6g&fr=frs",
     # ........................

@@ -17,16 +17,16 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
-# 抖音平台配置
+# Douyin platform configuration
 PUBLISH_TIME_TYPE = 0
 
-# 指定DY视频URL列表 (支持多种格式)
-# 支持格式:
-# 1. 完整视频URL: "https://www.douyin.com/video/7525538910311632128"
-# 2. 带modal_id的URL: "https://www.douyin.com/user/xxx?modal_id=7525538910311632128"
-# 3. 搜索页带modal_id: "https://www.douyin.com/root/search/python?modal_id=7525538910311632128"
-# 4. 短链接: "https://v.douyin.com/drIPtQ_WPWY/"
-# 5. 纯视频ID: "7280854932641664319"
+# Specify DY video URL list (supports multiple formats)
+# Supported formats:
+# 1. Full video URL: "https://www.douyin.com/video/7525538910311632128"
+# 2. URL with modal_id: "https://www.douyin.com/user/xxx?modal_id=7525538910311632128"
+# 3. The search page has modal_id: "https://www.douyin.com/root/search/python?modal_id=7525538910311632128"
+# 4. Short link: "https://v.douyin.com/drIPtQ_WPWY/"
+# 5. Pure video ID: "7280854932641664319"
 DY_SPECIFIED_ID_LIST = [
     "https://www.douyin.com/video/7525538910311632128",
     "https://v.douyin.com/drIPtQ_WPWY/",
@@ -35,9 +35,9 @@ DY_SPECIFIED_ID_LIST = [
     # ........................
 ]
 
-# 指定DY创作者URL列表 (支持完整URL或sec_user_id)
-# 支持格式:
-# 1. 完整创作者主页URL: "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE?from_tab_name=main"
+# Specify DY creator URL list (supports full URL or sec_user_id)
+# Supported formats:
+# 1. Complete creator homepage URL: "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE?from_tab_name=main"
 # 2. sec_user_id: "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE"
 DY_CREATOR_ID_LIST = [
     "https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE?from_tab_name=main",

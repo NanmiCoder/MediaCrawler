@@ -20,7 +20,7 @@
 
 # -*- coding: utf-8 -*-
 # @Author  : relakkes@gmail.com
-# @Name    : 程序员阿江-Relakkes
+# @Name: Programmer Ajiang-Relakkes
 # @Time    : 2024/6/10 02:24
 # @Desc    : Get a_bogus parameter, for learning and communication only, do not use for commercial purposes, contact author to delete if infringement
 
