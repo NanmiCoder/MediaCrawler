@@ -181,7 +181,6 @@ def format_proxy_info(ip_proxy_info) -> Tuple[Optional[Dict], Optional[str]]:
     ip_proxy_info = cast(IpInfoModel, ip_proxy_info)
 
     # Playwright proxy server should be in format "host:port" without protocol prefix
-    # Remove protocol prefix if present (http:// or https://)
     server = f"{ip_proxy_info.ip}:{ip_proxy_info.port}"
     
     playwright_proxy = {
