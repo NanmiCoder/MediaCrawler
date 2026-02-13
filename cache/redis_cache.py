@@ -28,6 +28,7 @@ import time
 from typing import Any, List
 
 from redis import Redis
+from redis.exceptions import ResponseError
 
 from cache.abs_cache import AbstractCache
 from config import db_config
@@ -76,8 +77,25 @@ class RedisCache(AbstractCache):
     def keys(self, pattern: str) -> List[str]:
         """
         Get all keys matching the pattern
+        First try KEYS command, if not supported fallback to SCAN
         """
-        return [key.decode() for key in self._redis_client.keys(pattern)]
+        try:
+            # Try KEYS command first (faster for standard Redis)
+            return [key.decode() if isinstance(key, bytes) else key for key in self._redis_client.keys(pattern)]
+        except ResponseError as e:
+            # If KEYS is not supported (e.g., Redis Cluster or cloud Redis), use SCAN
+            if "unknown command" in str(e).lower() or "keys" in str(e).lower():
+                keys_list: List[str] = []
+                cursor = 0
+                while True:
+                    cursor, keys = self._redis_client.scan(cursor=cursor, match=pattern, count=100)
+                    keys_list.extend([key.decode() if isinstance(key, bytes) else key for key in keys])
+                    if cursor == 0:
+                        break
+                return keys_list
+            else:
+                # Re-raise if it's a different error
+                raise
 
 
 if __name__ == '__main__':
