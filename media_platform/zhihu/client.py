@@ -299,8 +299,10 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         result: List[ZhihuComment] = []
         is_end: bool = False
         offset: str = ""
+        prev_offset: str = ""
         limit: int = 10
         while not is_end:
+            prev_offset = offset
             root_comment_res = await self.get_root_comments(content.content_id, content.content_type, offset, limit)
             if not root_comment_res:
                 break
@@ -310,6 +312,9 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
             comments = self._extractor.extract_comments(content, root_comment_res.get("data"))
 
             if not comments:
+                break
+
+            if prev_offset == offset:
                 break
 
             if callback:
@@ -348,8 +353,10 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
 
             is_end: bool = False
             offset: str = ""
+            prev_offset: str = ""
             limit: int = 10
             while not is_end:
+                prev_offset = offset
                 child_comment_res = await self.get_child_comments(parment_comment.comment_id, offset, limit)
                 if not child_comment_res:
                     break
@@ -359,6 +366,9 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
                 sub_comments = self._extractor.extract_comments(content, child_comment_res.get("data"))
 
                 if not sub_comments:
+                    break
+
+                if prev_offset == offset:
                     break
 
                 if callback:
