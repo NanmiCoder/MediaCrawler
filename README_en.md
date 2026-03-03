@@ -221,7 +221,7 @@ python main.py --help
 
 ## 💾 Data Storage
 
-MediaCrawler supports multiple data storage methods, including CSV, JSON, Excel, SQLite, and MySQL databases.
+MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL, Excel, SQLite, and MySQL databases.
 
 📖 **For detailed usage instructions, please see: [Data Storage Guide](docs/data_storage_guide.md)**
 

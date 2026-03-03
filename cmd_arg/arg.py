@@ -70,6 +70,7 @@ class SaveDataOptionEnum(str, Enum):
     CSV = "csv"
     DB = "db"
     JSON = "json"
+    JSONL = "jsonl"
     SQLITE = "sqlite"
     MONGODB = "mongodb"
     EXCEL = "excel"
@@ -212,11 +213,11 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             SaveDataOptionEnum,
             typer.Option(
                 "--save_data_option",
-                help="Data save option (csv=CSV file | db=MySQL database | json=JSON file | sqlite=SQLite database | mongodb=MongoDB database | excel=Excel file | postgres=PostgreSQL database)",
+                help="Data save option (csv=CSV file | db=MySQL database | json=JSON file | jsonl=JSONL file | sqlite=SQLite database | mongodb=MongoDB database | excel=Excel file | postgres=PostgreSQL database)",
                 rich_help_panel="Storage Configuration",
             ),
         ] = _coerce_enum(
-            SaveDataOptionEnum, config.SAVE_DATA_OPTION, SaveDataOptionEnum.JSON
+            SaveDataOptionEnum, config.SAVE_DATA_OPTION, SaveDataOptionEnum.JSONL
         ),
         init_db: Annotated[
             Optional[InitDbOptionEnum],

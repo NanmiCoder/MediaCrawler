@@ -36,6 +36,7 @@ class XhsStoreFactory:
         "db": XhsDbStoreImplement,
         "postgres": XhsDbStoreImplement,
         "json": XhsJsonStoreImplement,
+        "jsonl": XhsJsonlStoreImplement,
         "sqlite": XhsSqliteStoreImplement,
         "mongodb": XhsMongoStoreImplement,
         "excel": XhsExcelStoreImplement,

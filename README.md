@@ -222,7 +222,7 @@ python main.py --help
 
 ## 💾 数据保存
 
-MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、Excel、SQLite 和 MySQL 数据库。
+MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel、SQLite 和 MySQL 数据库。
 
 📖 **详细使用说明请查看：[数据存储指南](docs/data_storage_guide.md)**
 

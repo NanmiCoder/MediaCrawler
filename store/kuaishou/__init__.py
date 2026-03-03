@@ -36,6 +36,7 @@ class KuaishouStoreFactory:
         "db": KuaishouDbStoreImplement,
         "postgres": KuaishouDbStoreImplement,
         "json": KuaishouJsonStoreImplement,
+        "jsonl": KuaishouJsonlStoreImplement,
         "sqlite": KuaishouSqliteStoreImplement,
         "mongodb": KuaishouMongoStoreImplement,
         "excel": KuaishouExcelStoreImplement,

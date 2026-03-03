@@ -70,8 +70,8 @@ BROWSER_LAUNCH_TIMEOUT = 60
 # Set to False to keep the browser running for easy debugging
 AUTO_CLOSE_BROWSER = True
 
-# Data saving type option configuration, supports six types: csv, db, json, sqlite, excel, postgres. It is best to save to DB, with deduplication function.
-SAVE_DATA_OPTION = "json"  # csv or db or json or sqlite or excel or postgres
+# Data saving type option configuration, supports: csv, db, json, jsonl, sqlite, excel, postgres. It is best to save to DB, with deduplication function.
+SAVE_DATA_OPTION = "jsonl"  # csv or db or json or jsonl or sqlite or excel or postgres
 
 # Data saving path, if not specified by default, it will be saved to the data folder.
 SAVE_DATA_PATH = ""

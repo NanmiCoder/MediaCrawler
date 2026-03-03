@@ -101,6 +101,24 @@ class XhsJsonStoreImplement(AbstractStore):
 
 
 
+class XhsJsonlStoreImplement(AbstractStore):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.writer = AsyncFileWriter(platform="xhs", crawler_type=crawler_type_var.get())
+
+    async def store_content(self, content_item: Dict):
+        await self.writer.write_to_jsonl(item_type="contents", item=content_item)
+
+    async def store_comment(self, comment_item: Dict):
+        await self.writer.write_to_jsonl(item_type="comments", item=comment_item)
+
+    async def store_creator(self, creator_item: Dict):
+        pass
+
+    def flush(self):
+        pass
+
+
 class XhsDbStoreImplement(AbstractStore):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

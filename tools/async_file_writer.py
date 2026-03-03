@@ -53,6 +53,12 @@ class AsyncFileWriter:
                     await writer.writeheader()
                 await writer.writerow(item)
 
+    async def write_to_jsonl(self, item: Dict, item_type: str):
+        file_path = self._get_file_path('jsonl', item_type)
+        async with self.lock:
+            async with aiofiles.open(file_path, 'a', encoding='utf-8') as f:
+                await f.write(json.dumps(item, ensure_ascii=False) + '\n')
+
     async def write_single_item_to_json(self, item: Dict, item_type: str):
         file_path = self._get_file_path('json', item_type)
         async with self.lock:
@@ -85,21 +91,31 @@ class AsyncFileWriter:
             return
 
         try:
-            # Read comments from JSON file
-            comments_file_path = self._get_file_path('json', 'comments')
-            if not os.path.exists(comments_file_path) or os.path.getsize(comments_file_path) == 0:
-                utils.logger.info(f"[AsyncFileWriter.generate_wordcloud_from_comments] No comments file found at {comments_file_path}")
+            # Read comments from JSON or JSONL file
+            comments_data = []
+            jsonl_file_path = self._get_file_path('jsonl', 'comments')
+            json_file_path = self._get_file_path('json', 'comments')
+
+            if os.path.exists(jsonl_file_path) and os.path.getsize(jsonl_file_path) > 0:
+                async with aiofiles.open(jsonl_file_path, 'r', encoding='utf-8') as f:
+                    async for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                comments_data.append(json.loads(line))
+                            except json.JSONDecodeError:
+                                continue
+            elif os.path.exists(json_file_path) and os.path.getsize(json_file_path) > 0:
+                async with aiofiles.open(json_file_path, 'r', encoding='utf-8') as f:
+                    content = await f.read()
+                    if content:
+                        comments_data = json.loads(content)
+                        if not isinstance(comments_data, list):
+                            comments_data = [comments_data]
+
+            if not comments_data:
+                utils.logger.info(f"[AsyncFileWriter.generate_wordcloud_from_comments] No comments data found")
                 return
-
-            async with aiofiles.open(comments_file_path, 'r', encoding='utf-8') as f:
-                content = await f.read()
-                if not content:
-                    utils.logger.info(f"[AsyncFileWriter.generate_wordcloud_from_comments] Comments file is empty")
-                    return
-
-                comments_data = json.loads(content)
-                if not isinstance(comments_data, list):
-                    comments_data = [comments_data]
 
             # Filter comments data to only include 'content' field
             # Handle different comment data structures across platforms

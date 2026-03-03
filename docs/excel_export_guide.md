@@ -34,7 +34,7 @@ pip install openpyxl
 1. **Configure Excel export** in `config/base_config.py`:
 
 ```python
-SAVE_DATA_OPTION = "excel"  # Change from json/csv/db to excel
+SAVE_DATA_OPTION = "excel"  # Change from jsonl/json/csv/db to excel
 ```
 
 2. **Run the crawler**:

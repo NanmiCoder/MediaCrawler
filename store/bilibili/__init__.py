@@ -37,6 +37,7 @@ class BiliStoreFactory:
         "db": BiliDbStoreImplement,
         "postgres": BiliDbStoreImplement,
         "json": BiliJsonStoreImplement,
+        "jsonl": BiliJsonlStoreImplement,
         "sqlite": BiliSqliteStoreImplement,
         "mongodb": BiliMongoStoreImplement,
         "excel": BiliExcelStoreImplement,

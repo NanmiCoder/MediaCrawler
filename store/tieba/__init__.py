@@ -33,6 +33,7 @@ class TieBaStoreFactory:
         "db": TieBaDbStoreImplement,
         "postgres": TieBaDbStoreImplement,
         "json": TieBaJsonStoreImplement,
+        "jsonl": TieBaJsonlStoreImplement,
         "sqlite": TieBaSqliteStoreImplement,
         "mongodb": TieBaMongoStoreImplement,
         "excel": TieBaExcelStoreImplement,

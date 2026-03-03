@@ -57,7 +57,7 @@ def get_async_engine(db_type: str = None):
     if db_type in _engines:
         return _engines[db_type]
 
-    if db_type in ["json", "csv"]:
+    if db_type in ["json", "jsonl", "csv"]:
         return None
 
     if db_type == "sqlite":

@@ -159,6 +159,7 @@ async def get_config_options():
             {"value": "creator", "label": "Creator Mode"},
         ],
         "save_options": [
+            {"value": "jsonl", "label": "JSONL File"},
             {"value": "json", "label": "JSON File"},
             {"value": "csv", "label": "CSV File"},
             {"value": "excel", "label": "Excel File"},

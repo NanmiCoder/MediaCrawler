@@ -36,6 +36,7 @@ class DouyinStoreFactory:
         "db": DouyinDbStoreImplement,
         "postgres": DouyinDbStoreImplement,
         "json": DouyinJsonStoreImplement,
+        "jsonl": DouyinJsonlStoreImplement,
         "sqlite": DouyinSqliteStoreImplement,
         "mongodb": DouyinMongoStoreImplement,
         "excel": DouyinExcelStoreImplement,

@@ -84,7 +84,7 @@ def _flush_excel_if_needed() -> None:
 
 
 async def _generate_wordcloud_if_needed() -> None:
-    if config.SAVE_DATA_OPTION != "json" or not config.ENABLE_GET_WORDCLOUD:
+    if config.SAVE_DATA_OPTION not in ("json", "jsonl") or not config.ENABLE_GET_WORDCLOUD:
         return
 
     try:

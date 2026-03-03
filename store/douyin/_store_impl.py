@@ -204,6 +204,32 @@ class DouyinJsonStoreImplement(AbstractStore):
 
 
 
+class DouyinJsonlStoreImplement(AbstractStore):
+    def __init__(self):
+        self.file_writer = AsyncFileWriter(
+            crawler_type=crawler_type_var.get(),
+            platform="douyin"
+        )
+
+    async def store_content(self, content_item: Dict):
+        await self.file_writer.write_to_jsonl(
+            item=content_item,
+            item_type="contents"
+        )
+
+    async def store_comment(self, comment_item: Dict):
+        await self.file_writer.write_to_jsonl(
+            item=comment_item,
+            item_type="comments"
+        )
+
+    async def store_creator(self, creator: Dict):
+        await self.file_writer.write_to_jsonl(
+            item=creator,
+            item_type="creators"
+        )
+
+
 class DouyinSqliteStoreImplement(DouyinDbStoreImplement):
     pass
 

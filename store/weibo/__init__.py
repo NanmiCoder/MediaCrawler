@@ -37,6 +37,7 @@ class WeibostoreFactory:
         "db": WeiboDbStoreImplement,
         "postgres": WeiboDbStoreImplement,
         "json": WeiboJsonStoreImplement,
+        "jsonl": WeiboJsonlStoreImplement,
         "sqlite": WeiboSqliteStoreImplement,
         "mongodb": WeiboMongoStoreImplement,
         "excel": WeiboExcelStoreImplement,

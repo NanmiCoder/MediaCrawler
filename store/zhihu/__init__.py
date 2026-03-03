@@ -27,6 +27,7 @@ from model.m_zhihu import ZhihuComment, ZhihuContent, ZhihuCreator
 from ._store_impl import (ZhihuCsvStoreImplement,
                                           ZhihuDbStoreImplement,
                                           ZhihuJsonStoreImplement,
+                                          ZhihuJsonlStoreImplement,
                                           ZhihuSqliteStoreImplement,
                                           ZhihuMongoStoreImplement,
                                           ZhihuExcelStoreImplement)
@@ -40,6 +41,7 @@ class ZhihuStoreFactory:
         "db": ZhihuDbStoreImplement,
         "postgres": ZhihuDbStoreImplement,
         "json": ZhihuJsonStoreImplement,
+        "jsonl": ZhihuJsonlStoreImplement,
         "sqlite": ZhihuSqliteStoreImplement,
         "mongodb": ZhihuMongoStoreImplement,
         "excel": ZhihuExcelStoreImplement,
