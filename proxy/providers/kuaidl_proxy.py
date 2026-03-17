@@ -28,6 +28,7 @@ from typing import Dict, List
 
 import httpx
 from pydantic import BaseModel, Field
+from tools.httpx_util import make_async_client
 
 from proxy import IpCache, IpInfoModel, ProxyProvider
 from proxy.types import ProviderNameEnum
@@ -113,7 +114,7 @@ class KuaiDaiLiProxy(ProxyProvider):
         self.params.update({"num": need_get_count})
 
         ip_infos: List[IpInfoModel] = []
-        async with httpx.AsyncClient() as client:
+        async with make_async_client() as client:
             response = await client.get(self.api_base + uri, params=self.params)
 
             if response.status_code != 200:
