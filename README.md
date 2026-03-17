@@ -246,15 +246,6 @@ TikHub.io 提供 900+ 高稳定性数据接口，覆盖 TK、DY、XHS、Y2B、In
 
 ---
 
-<a href="https://www.thordata.com/?ls=github&lk=mediacrawler">
-<img width="500" src="docs/static/images/Thordata.png">
-<br>
-Thordata：可靠且经济高效的代理服务提供商。为企业和开发者提供稳定、高效且合规的全球代理 IP 服务。立即注册，赠送1GB住宅代理免费试用和2000次serp-api调用。
-</a>
-<br>
-<a href="https://www.thordata.com/products/residential-proxies/?ls=github&lk=mediacrawler">【住宅代理】</a> | <a href="https://www.thordata.com/products/web-scraper/?ls=github&lk=mediacrawler">【serp-api】</a>
-
-
 ## 🤝 成为赞助者
 
 成为赞助者，可以将您的产品展示在这里，每天获得大量曝光！

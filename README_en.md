@@ -244,15 +244,6 @@ TikHub.io provides 900+ highly stable data interfaces, covering 14+ mainstream d
 
 ---
 
-<a href="https://www.thordata.com/?ls=github&lk=mediacrawler">
-<img width="500" src="docs/static/images/Thordata.png">
-<br>
-Thordata: Reliable and cost-effective proxy service provider. Provides stable, efficient and compliant global proxy IP services for enterprises and developers. Register now to get 1GB free residential proxy trial and 2000 serp-api calls.
-</a>
-<br>
-<a href="https://www.thordata.com/products/residential-proxies/?ls=github&lk=mediacrawler">【Residential Proxies】</a> | <a href="https://www.thordata.com/products/web-scraper/?ls=github&lk=mediacrawler">【serp-api】</a>
-
-
 ### 🤝 Become a Sponsor
 
 Become a sponsor and showcase your product here, getting massive exposure daily!
