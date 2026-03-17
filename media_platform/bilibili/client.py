@@ -68,7 +68,7 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         # Check if proxy has expired before each request
         await self._refresh_proxy_if_expired()
 
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with httpx.AsyncClient(proxy=self.proxy, verify=False) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:
             data: Dict = response.json()
@@ -222,7 +222,7 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
 
     async def get_video_media(self, url: str) -> Union[bytes, None]:
         # Follow CDN 302 redirects and treat any 2xx as success (some endpoints return 206)
-        async with httpx.AsyncClient(proxy=self.proxy, follow_redirects=True) as client:
+        async with httpx.AsyncClient(proxy=self.proxy, follow_redirects=True, verify=False) as client:
             try:
                 response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
                 response.raise_for_status()

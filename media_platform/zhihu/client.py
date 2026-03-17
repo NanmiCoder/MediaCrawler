@@ -98,7 +98,7 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         # return response.text
         return_response = kwargs.pop('return_response', False)
 
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with httpx.AsyncClient(proxy=self.proxy, verify=False) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
         if response.status_code != 200:
