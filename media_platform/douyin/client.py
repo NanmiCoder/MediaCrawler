@@ -29,6 +29,7 @@ from playwright.async_api import BrowserContext
 from base.base_crawler import AbstractApiClient
 from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
+from tools.httpx_util import make_async_client
 from var import request_keyword_var
 
 if TYPE_CHECKING:
@@ -116,7 +117,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         # Check whether the proxy has expired before each request
         await self._refresh_proxy_if_expired()
 
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:
             if response.text == "" or response.text == "blocked":
@@ -333,7 +334,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         return result
 
     async def get_aweme_media(self, url: str) -> Union[bytes, None]:
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             try:
                 response = await client.request("GET", url, timeout=self.timeout, follow_redirects=True)
                 response.raise_for_status()
@@ -354,7 +355,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
             重定向后的完整URL
         """
-        async with httpx.AsyncClient(proxy=self.proxy, follow_redirects=False) as client:
+        async with make_async_client(proxy=self.proxy, follow_redirects=False) as client:
             try:
                 utils.logger.info(f"[DouYinClient.resolve_short_url] Resolving short URL: {short_url}")
                 response = await client.get(short_url, timeout=10)

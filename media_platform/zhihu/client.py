@@ -26,6 +26,7 @@ from urllib.parse import urlencode
 import httpx
 from httpx import Response
 from playwright.async_api import BrowserContext, Page
+from tools.httpx_util import make_async_client
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 import config
@@ -98,7 +99,7 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         # return response.text
         return_response = kwargs.pop('return_response', False)
 
-        async with httpx.AsyncClient(proxy=self.proxy, verify=False) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
         if response.status_code != 200:

@@ -120,6 +120,11 @@ FONT_PATH = "./docs/STZHONGS.TTF"
 # Crawl interval
 CRAWLER_MAX_SLEEP_SEC = 2
 
+# Disable SSL certificate verification. Set to True only when running behind an intercepting
+# proxy (corporate gateway, Burp Suite, mitmproxy, etc.) that injects its own certificate.
+# WARNING: disabling SSL verification exposes all traffic to MITM attacks.
+DISABLE_SSL_VERIFY = False
+
 from .bilibili_config import *
 from .xhs_config import *
 from .dy_config import *

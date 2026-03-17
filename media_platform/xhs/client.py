@@ -25,6 +25,7 @@ from urllib.parse import urlencode
 import httpx
 from playwright.async_api import BrowserContext, Page
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_not_exception_type
+from tools.httpx_util import make_async_client
 
 import config
 from base.base_crawler import AbstractApiClient
@@ -127,7 +128,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
 
         # return response.text
         return_response = kwargs.pop("return_response", False)
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
         if response.status_code == 471 or response.status_code == 461:
@@ -192,7 +193,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         # Check if proxy is expired before request
         await self._refresh_proxy_if_expired()
 
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             try:
                 response = await client.request("GET", url, timeout=self.timeout)
                 response.raise_for_status()
@@ -219,7 +220,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         """
         uri = "/api/sns/web/v1/user/selfinfo"
         headers = await self._pre_headers(uri, params={})
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.get(f"{self._host}{uri}", headers=headers)
             if response.status_code == 200:
                 return response.json()

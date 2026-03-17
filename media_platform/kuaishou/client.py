@@ -31,6 +31,7 @@ import config
 from base.base_crawler import AbstractApiClient
 from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
+from tools.httpx_util import make_async_client
 
 if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
@@ -65,7 +66,7 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         # Check if proxy is expired before each request
         await self._refresh_proxy_if_expired()
 
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         data: Dict = response.json()
         if data.get("errors"):
@@ -97,7 +98,7 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         await self._refresh_proxy_if_expired()
 
         json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(
                 method="POST",
                 url=f"{self._rest_host}{uri}",
