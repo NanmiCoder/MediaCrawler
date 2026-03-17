@@ -120,9 +120,8 @@ FONT_PATH = "./docs/STZHONGS.TTF"
 # Crawl interval
 CRAWLER_MAX_SLEEP_SEC = 2
 
-# Disable SSL certificate verification. Set to True only when running behind an intercepting
-# proxy (corporate gateway, Burp Suite, mitmproxy, etc.) that injects its own certificate.
-# WARNING: disabling SSL verification exposes all traffic to MITM attacks.
+# 是否禁用 SSL 证书验证。仅在使用企业代理、Burp Suite、mitmproxy 等会注入自签名证书的中间人代理时设为 True。
+# 警告：禁用 SSL 验证将使所有流量暴露于中间人攻击风险，请勿在生产环境中开启。
 DISABLE_SSL_VERIFY = False
 
 from .bilibili_config import *

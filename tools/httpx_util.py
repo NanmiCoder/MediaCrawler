@@ -4,11 +4,10 @@ import config
 
 
 def make_async_client(**kwargs) -> httpx.AsyncClient:
-    """Create an httpx.AsyncClient with project-wide defaults.
+    """创建统一配置的 httpx.AsyncClient。
 
-    Reads DISABLE_SSL_VERIFY from config (default False).
-    Set DISABLE_SSL_VERIFY = True in config/base_config.py only when running
-    behind an intercepting proxy (corporate gateway, Burp, mitmproxy, etc.).
+    从配置文件读取 DISABLE_SSL_VERIFY（默认 False，即开启 SSL 验证）。
+    仅在使用企业代理、Burp、mitmproxy 等中间人代理时才需将其设为 True。
     """
     kwargs.setdefault("verify", not getattr(config, "DISABLE_SSL_VERIFY", False))
     return httpx.AsyncClient(**kwargs)
