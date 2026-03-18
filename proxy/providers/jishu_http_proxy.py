@@ -30,6 +30,7 @@ import httpx
 from proxy import IpCache, IpGetError, ProxyProvider
 from proxy.types import IpInfoModel
 from tools import utils
+from tools.httpx_util import make_async_client
 
 
 class JiSuHttpProxy(ProxyProvider):
@@ -68,7 +69,7 @@ class JiSuHttpProxy(ProxyProvider):
         need_get_count = num - len(ip_cache_list)
         self.params.update({"num": need_get_count})
         ip_infos = []
-        async with httpx.AsyncClient() as client:
+        async with make_async_client() as client:
             url = self.api_path + "/fetchips" + '?' + urlencode(self.params)
             utils.logger.info(f"[JiSuHttpProxy.get_proxy] get ip proxy url:{url}")
             response = await client.get(url, headers={

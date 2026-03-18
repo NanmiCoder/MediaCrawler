@@ -32,6 +32,7 @@ from urllib.parse import parse_qs, unquote, urlencode
 import httpx
 from httpx import Response
 from playwright.async_api import BrowserContext, Page
+from tools.httpx_util import make_async_client
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 import config
@@ -73,7 +74,7 @@ class WeiboClient(ProxyRefreshMixin):
         await self._refresh_proxy_if_expired()
 
         enable_return_response = kwargs.pop("return_response", False)
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
         if enable_return_response:
@@ -261,7 +262,7 @@ class WeiboClient(ProxyRefreshMixin):
         :return:
         """
         url = f"{self._host}/detail/{note_id}"
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
             if response.status_code != 200:
                 raise DataFetchError(f"get weibo detail err: {response.text}")
@@ -291,7 +292,7 @@ class WeiboClient(ProxyRefreshMixin):
         # Since Weibo images are accessed through i1.wp.com, we need to concatenate the URL
         final_uri = (f"{self._image_agent_host}"
                      f"{image_url}")
-        async with httpx.AsyncClient(proxy=self.proxy) as client:
+        async with make_async_client(proxy=self.proxy) as client:
             try:
                 response = await client.request("GET", final_uri, timeout=self.timeout)
                 response.raise_for_status()
