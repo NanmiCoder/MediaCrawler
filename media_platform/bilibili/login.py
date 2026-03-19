@@ -85,7 +85,32 @@ class BilibiliLogin(AbstractLogin):
         login_button_ele = self.context_page.locator(
             "xpath=//div[@class='right-entry__outside go-login-btn']//div"
         )
-        await login_button_ele.click()
+        try:
+            await login_button_ele.click(timeout=5000)
+        except Exception as exc:
+            utils.logger.warning(
+                f"[BilibiliLogin.login_by_qrcode] Normal click failed, retrying with force/script click: {exc}"
+            )
+            await self.context_page.evaluate(
+                """
+                () => {
+                    const selectors = [
+                        ".right-entry__outside.go-login-btn",
+                        ".right-entry__outside.go-login-btn .header-login-entry",
+                        ".right-entry__outside.go-login-btn div",
+                    ];
+                    for (const selector of selectors) {
+                        const node = document.querySelector(selector);
+                        if (node) {
+                            node.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                """
+            )
+            await login_button_ele.click(force=True, timeout=5000)
         await asyncio.sleep(1)
         # find login qrcode
         qrcode_img_selector = "//div[@class='login-scan-box']//img"

@@ -157,8 +157,17 @@ class DouYinCrawler(AbstractCrawler):
                         aweme_info: Dict = (post_item.get("aweme_info") or post_item.get("aweme_mix_info", {}).get("mix_items")[0])
                     except TypeError:
                         continue
-                    aweme_list.append(aweme_info.get("aweme_id", ""))
-                    page_aweme_list.append(aweme_info.get("aweme_id", ""))
+                    aweme_id = aweme_info.get("aweme_id", "")
+                    
+                    # Check if the post already exists to avoid re-fetching media and comments
+                    is_existed = await douyin_store.is_douyin_aweme_exists(aweme_id)
+                    if is_existed:
+                        utils.logger.info(f"[DouYinCrawler.search] aweme_id:{aweme_id} already exists in DB, updating stats and skipping media & comments")
+                        await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
+                        continue
+                        
+                    aweme_list.append(aweme_id)
+                    page_aweme_list.append(aweme_id)
                     await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
                     await self.get_aweme_media(aweme_item=aweme_info)
                 

@@ -28,6 +28,7 @@ from playwright.async_api import (
     BrowserType,
     Page,
     Playwright,
+    TimeoutError as PlaywrightTimeoutError,
     async_playwright,
 )
 from tenacity import RetryError
@@ -92,7 +93,20 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 await self.browser_context.add_init_script(path="libs/stealth.min.js")
 
             self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+            try:
+                await self.context_page.goto(
+                    self.index_url,
+                    wait_until="domcontentloaded",
+                    timeout=60000,
+                )
+            except PlaywrightTimeoutError:
+                # Xiaohongshu often keeps third-party resources pending for a
+                # long time; if the main document is already there, continue.
+                if self.context_page.url == "about:blank":
+                    raise
+                utils.logger.warning(
+                    "[XiaoHongShuCrawler.start] Timed out waiting for the homepage to fully load; continuing with the current page state."
+                )
 
             # Create a client to interact with the Xiaohongshu website.
             self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
@@ -341,13 +355,24 @@ class XiaoHongShuCrawler(AbstractCrawler):
             utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
             # Use fixed crawling interval
             crawl_interval = config.CRAWLER_MAX_SLEEP_SEC
-            await self.xhs_client.get_note_all_comments(
-                note_id=note_id,
-                xsec_token=xsec_token,
-                crawl_interval=crawl_interval,
-                callback=xhs_store.batch_update_xhs_note_comments,
-                max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
-            )
+            try:
+                await self.xhs_client.get_note_all_comments(
+                    note_id=note_id,
+                    xsec_token=xsec_token,
+                    crawl_interval=crawl_interval,
+                    callback=xhs_store.batch_update_xhs_note_comments,
+                    max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
+                )
+            except RetryError as ex:
+                utils.logger.warning(
+                    f"[XiaoHongShuCrawler.get_comments] Failed to fetch comments for note {note_id} after retries: {ex}"
+                )
+                return
+            except Exception as ex:
+                utils.logger.warning(
+                    f"[XiaoHongShuCrawler.get_comments] Failed to fetch comments for note {note_id}: {ex}"
+                )
+                return
 
             # Sleep after fetching comments
             await asyncio.sleep(crawl_interval)

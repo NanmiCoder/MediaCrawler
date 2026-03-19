@@ -105,22 +105,33 @@ class CDPBrowserManager:
         Launch browser and connect via CDP
         """
         try:
-            # 1. Detect browser path
-            browser_path = await self._get_browser_path()
+            # 1. Prefer reusing an existing CDP browser on the configured port.
+            # This is especially important when the user has already logged in
+            # with the dedicated browser profile and expects the crawler to
+            # attach to that live session.
+            preferred_port = config.CDP_DEBUG_PORT
+            if await self._test_cdp_connection(preferred_port):
+                self.debug_port = preferred_port
+                utils.logger.info(
+                    f"[CDPBrowserManager] Reusing existing CDP browser on port {preferred_port}"
+                )
+            else:
+                # 2. Detect browser path
+                browser_path = await self._get_browser_path()
 
-            # 2. Get available port
-            self.debug_port = self.launcher.find_available_port(config.CDP_DEBUG_PORT)
+                # 3. Get available port
+                self.debug_port = self.launcher.find_available_port(config.CDP_DEBUG_PORT)
 
-            # 3. Launch browser
-            await self._launch_browser(browser_path, headless)
+                # 4. Launch browser
+                await self._launch_browser(browser_path, headless)
 
-            # 4. Register cleanup handlers (ensure cleanup on abnormal exit)
+            # 5. Register cleanup handlers (ensure cleanup on abnormal exit)
             self._register_cleanup_handlers()
 
-            # 5. Connect via CDP
+            # 6. Connect via CDP
             await self._connect_via_cdp(playwright)
 
-            # 6. Create browser context
+            # 7. Create browser context
             browser_context = await self._create_browser_context(
                 playwright_proxy, user_agent
             )

@@ -218,7 +218,7 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "nickname": user_info.get("nickname"),
         "avatar": avatar_info.get("url_list", [""])[0],
         "sub_comment_count": str(comment_item.get("reply_comment_total", 0)),
-        "like_count": (comment_item.get("digg_count") if comment_item.get("digg_count") else 0),
+        "like_count": str(comment_item.get("digg_count") if comment_item.get("digg_count") else 0),
         "last_modify_ts": utils.get_current_timestamp(),
         "parent_comment_id": parent_comment_id,
         "pictures": ",".join(_extract_comment_image_list(comment_item)),
@@ -277,3 +277,23 @@ async def update_dy_aweme_video(aweme_id, video_content, extension_file_name):
     """
 
     await DouYinVideo().store_video({"aweme_id": aweme_id, "video_content": video_content, "extension_file_name": extension_file_name})
+
+
+async def is_douyin_aweme_exists(aweme_id: str) -> bool:
+    """
+    Check if a Douyin aweme exists in the database
+    """
+    if config.SAVE_DATA_OPTION not in ["db", "postgres", "sqlite"]:
+        return False
+        
+    try:
+        from database.db_session import get_session
+        from sqlalchemy import select
+        from database.models import DouyinAweme
+        async with get_session() as session:
+            result = await session.execute(select(DouyinAweme).where(DouyinAweme.aweme_id == int(aweme_id)))
+            aweme_detail = result.scalar_one_or_none()
+            return aweme_detail is not None
+    except Exception as e:
+        utils.logger.error(f"[store.douyin.is_douyin_aweme_exists] Query DB failed: {e}")
+        return False
