@@ -40,6 +40,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import kuaishou as kuaishou_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.checkpoint_manager import checkpoint_manager
 from var import comment_tasks_var, crawler_type_var, source_keyword_var
 
 from .client import KuaiShouClient
@@ -138,6 +139,12 @@ class KuaishouCrawler(AbstractCrawler):
                 f"[KuaishouCrawler.search] Current search keyword: {keyword}"
             )
             page = 1
+            
+            # --- Load checkpoint ---
+            checkpoint_page = await checkpoint_manager.get_max_page("kuaishou", keyword)
+            if checkpoint_page > 0:
+                utils.logger.info(f"[KuaishouCrawler.search] Loaded checkpoint for '{keyword}': max_page={checkpoint_page}")
+                
             while (
                 page - start_page + 1
             ) * ks_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
@@ -167,9 +174,27 @@ class KuaishouCrawler(AbstractCrawler):
                     )
                     continue
                 search_session_id = vision_search_photo.get("searchSessionId", "")
+                new_post_count = 0
                 for video_detail in vision_search_photo.get("feeds"):
-                    video_id_list.append(video_detail.get("photo", {}).get("id"))
+                    video_id = video_detail.get("photo", {}).get("id")
+                    if video_id:
+                        is_existed = await kuaishou_store.is_kuaishou_video_exists(str(video_id))
+                        if is_existed:
+                            utils.logger.info(f"[KuaishouCrawler.search] video_id:{video_id} already exists in DB, skipping detail & comments")
+                            continue
+                            
+                    new_post_count += 1
+                    video_id_list.append(video_id)
                     await kuaishou_store.update_kuaishou_video(video_item=video_detail)
+
+                # Checkpoint jump logic
+                if new_post_count == 0 and page < checkpoint_page:
+                    utils.logger.info(f"[KuaishouCrawler.search] Page {page} has 0 new posts. Jumping to checkpoint page {checkpoint_page}")
+                    page = checkpoint_page
+                    continue
+                    
+                # Save max page reached
+                await checkpoint_manager.save_max_page("kuaishou", keyword, max(page, checkpoint_page))
 
                 # batch fetch video comments
                 page += 1

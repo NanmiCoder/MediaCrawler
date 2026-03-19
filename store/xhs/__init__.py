@@ -258,3 +258,22 @@ async def update_xhs_note_video(note_id, video_content, extension_file_name):
     """
 
     await XiaoHongShuVideo().store_video({"notice_id": note_id, "video_content": video_content, "extension_file_name": extension_file_name})
+
+async def is_xhs_note_exists(note_id: str) -> bool:
+    """
+    Check if a Xiaohongshu note exists in the database
+    """
+    if config.SAVE_DATA_OPTION not in ["db", "postgres", "sqlite"]:
+        return False
+        
+    try:
+        from database.db_session import get_session
+        from sqlalchemy import select
+        from database.models import XhsNote
+        async with get_session() as session:
+            result = await session.execute(select(XhsNote).where(XhsNote.note_id == note_id))
+            note_detail = result.scalar_one_or_none()
+            return note_detail is not None
+    except Exception as e:
+        utils.logger.error(f"[store.xhs.is_xhs_note_exists] Query DB failed: {e}")
+        return False

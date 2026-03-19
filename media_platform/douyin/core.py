@@ -37,6 +37,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import douyin as douyin_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.checkpoint_manager import checkpoint_manager
 from var import crawler_type_var, source_keyword_var
 
 from .client import DouYinClient
@@ -126,6 +127,12 @@ class DouYinCrawler(AbstractCrawler):
             aweme_list: List[str] = []
             page = 0
             dy_search_id = ""
+            
+            # --- Load checkpoint ---
+            checkpoint_page = await checkpoint_manager.get_max_page("douyin", keyword)
+            if checkpoint_page > 0:
+                utils.logger.info(f"[DouYinCrawler.search] Loaded checkpoint for '{keyword}': max_page={checkpoint_page}")
+
             while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
@@ -152,6 +159,7 @@ class DouYinCrawler(AbstractCrawler):
                     break
                 dy_search_id = posts_res.get("extra", {}).get("logid", "")
                 page_aweme_list = []
+                new_post_count = 0
                 for post_item in posts_res.get("data"):
                     try:
                         aweme_info: Dict = (post_item.get("aweme_info") or post_item.get("aweme_mix_info", {}).get("mix_items")[0])
@@ -166,11 +174,21 @@ class DouYinCrawler(AbstractCrawler):
                         await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
                         continue
                         
+                    new_post_count += 1
                     aweme_list.append(aweme_id)
                     page_aweme_list.append(aweme_id)
                     await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
                     await self.get_aweme_media(aweme_item=aweme_info)
                 
+                # Checkpoint jump logic
+                if new_post_count == 0 and page < checkpoint_page:
+                    utils.logger.info(f"[DouYinCrawler.search] Page {page} has 0 new posts. Jumping to checkpoint page {checkpoint_page}")
+                    page = checkpoint_page
+                    continue
+                    
+                # Save max page reached
+                await checkpoint_manager.save_max_page("douyin", keyword, max(page, checkpoint_page))
+
                 # Batch get note comments for the current page
                 await self.batch_get_note_comments(page_aweme_list)
 

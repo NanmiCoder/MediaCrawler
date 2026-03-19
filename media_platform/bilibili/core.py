@@ -45,6 +45,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import bilibili as bilibili_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.checkpoint_manager import checkpoint_manager
 from var import crawler_type_var, source_keyword_var
 
 from .client import BilibiliClient
@@ -190,6 +191,12 @@ class BilibiliCrawler(AbstractCrawler):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Current search keyword: {keyword}")
             page = 1
+            
+            # --- Load checkpoint ---
+            checkpoint_page = await checkpoint_manager.get_max_page("bilibili", keyword)
+            if checkpoint_page > 0:
+                utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Loaded checkpoint for '{keyword}': max_page={checkpoint_page}")
+
             while (page - start_page + 1) * bili_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Skip page: {page}")
@@ -215,9 +222,28 @@ class BilibiliCrawler(AbstractCrawler):
                 semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
                 task_list = []
                 try:
-                    task_list = [self.get_video_info_task(aid=video_item.get("aid"), bvid="", semaphore=semaphore) for video_item in video_list]
+                    task_list = []
+                    new_post_count = 0
+                    for video_item in video_list:
+                        aid = video_item.get("aid")
+                        if aid:
+                            is_existed = await bilibili_store.is_bilibili_video_exists(str(aid))
+                            if is_existed:
+                                utils.logger.info(f"[BilibiliCrawler.search_by_keywords] video_id:{aid} already exists in DB, skipping detail & comments")
+                                continue
+                        
+                            new_post_count += 1
+                            task_list.append(self.get_video_info_task(aid=aid, bvid="", semaphore=semaphore))
+                    
+                    # Checkpoint jump logic
+                    if new_post_count == 0 and page < checkpoint_page:
+                        utils.logger.info(f"[BilibiliCrawler.search_by_keywords] Page {page} has 0 new posts. Jumping to checkpoint page {checkpoint_page}")
+                        page = checkpoint_page
+                        continue
+                        
                 except Exception as e:
                     utils.logger.warning(f"[BilibiliCrawler.search_by_keywords] error in the task list. The video for this page will not be included. {e}")
+                
                 video_items = await asyncio.gather(*task_list)
                 for video_item in video_items:
                     if video_item:
@@ -225,6 +251,9 @@ class BilibiliCrawler(AbstractCrawler):
                         await bilibili_store.update_bilibili_video(video_item)
                         await bilibili_store.update_up_info(video_item)
                         await self.get_bilibili_video(video_item, semaphore)
+                        
+                # Save max page reached
+                await checkpoint_manager.save_max_page("bilibili", keyword, max(page, checkpoint_page))
                 page += 1
 
                 # Sleep after page navigation

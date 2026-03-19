@@ -42,6 +42,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import weibo as weibo_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.checkpoint_manager import checkpoint_manager
 from var import crawler_type_var, source_keyword_var
 
 from .client import WeiboClient
@@ -161,6 +162,12 @@ class WeiboCrawler(AbstractCrawler):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[WeiboCrawler.search] Current search keyword: {keyword}")
             page = 1
+            
+            # --- Load checkpoint ---
+            checkpoint_page = await checkpoint_manager.get_max_page("weibo", keyword)
+            if checkpoint_page > 0:
+                utils.logger.info(f"[WeiboCrawler.search] Loaded checkpoint for '{keyword}': max_page={checkpoint_page}")
+
             while (page - start_page + 1) * weibo_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[WeiboCrawler.search] Skip page: {page}")
@@ -170,15 +177,37 @@ class WeiboCrawler(AbstractCrawler):
                 search_res = await self.wb_client.get_note_by_keyword(keyword=keyword, page=page, search_type=search_type)
                 note_id_list: List[str] = []
                 note_list = filter_search_result_card(search_res.get("cards"))
-                # If full text fetching is enabled, batch get full text of posts
-                note_list = await self.batch_get_notes_full_text(note_list)
+                new_note_list = []
+                new_post_count = 0
                 for note_item in note_list:
+                    if note_item and note_item.get("mblog"):
+                        note_id = str(note_item.get("mblog").get("id"))
+                        is_existed = await weibo_store.is_weibo_note_exists(note_id)
+                        if is_existed:
+                            utils.logger.info(f"[WeiboCrawler.search] note_id:{note_id} already exists in DB, skipping detail, media & comments")
+                            continue
+                        
+                        new_post_count += 1
+                        new_note_list.append(note_item)
+
+                # Checkpoint jump logic
+                if new_post_count == 0 and page < checkpoint_page:
+                    utils.logger.info(f"[WeiboCrawler.search] Page {page} has 0 new posts. Jumping to checkpoint page {checkpoint_page}")
+                    page = checkpoint_page
+                    continue
+                        
+                # If full text fetching is enabled, batch get full text of posts
+                new_note_list = await self.batch_get_notes_full_text(new_note_list)
+                for note_item in new_note_list:
                     if note_item:
                         mblog: Dict = note_item.get("mblog")
                         if mblog:
                             note_id_list.append(mblog.get("id"))
                             await weibo_store.update_weibo_note(note_item)
                             await self.get_note_images(mblog)
+                            
+                # Save max page reached
+                await checkpoint_manager.save_max_page("weibo", keyword, max(page, checkpoint_page))
 
                 page += 1
 

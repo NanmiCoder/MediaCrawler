@@ -38,6 +38,7 @@ from proxy.proxy_ip_pool import IpInfoModel, ProxyIpPool, create_ip_pool
 from store import tieba as tieba_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.checkpoint_manager import checkpoint_manager
 from var import crawler_type_var, source_keyword_var
 
 from .client import BaiduTieBaClient
@@ -160,6 +161,12 @@ class TieBaCrawler(AbstractCrawler):
                 f"[BaiduTieBaCrawler.search] Current search keyword: {keyword}"
             )
             page = 1
+            
+            # --- Load checkpoint ---
+            checkpoint_page = await checkpoint_manager.get_max_page("tieba", keyword)
+            if checkpoint_page > 0:
+                utils.logger.info(f"[BaiduTieBaCrawler.search] Loaded checkpoint for '{keyword}': max_page={checkpoint_page}")
+                
             while (
                 page - start_page + 1
             ) * tieba_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
@@ -188,9 +195,29 @@ class TieBaCrawler(AbstractCrawler):
                     utils.logger.info(
                         f"[BaiduTieBaCrawler.search] Note list len: {len(notes_list)}"
                     )
-                    await self.get_specified_notes(
-                        note_id_list=[note_detail.note_id for note_detail in notes_list]
-                    )
+
+                    new_note_ids = []
+                    new_post_count = 0
+                    for note_detail in notes_list:
+                        if note_detail and note_detail.note_id:
+                            is_existed = await tieba_store.is_tieba_note_exists(note_detail.note_id)
+                            if is_existed:
+                                utils.logger.info(f"[BaiduTieBaCrawler.search] note_id:{note_detail.note_id} already exists in DB, skipping detail & comments")
+                                continue
+                            
+                            new_post_count += 1
+                            new_note_ids.append(note_detail.note_id)
+
+                    # Checkpoint jump logic
+                    if new_post_count == 0 and page < checkpoint_page:
+                        utils.logger.info(f"[BaiduTieBaCrawler.search] Page {page} has 0 new posts. Jumping to checkpoint page {checkpoint_page}")
+                        page = checkpoint_page
+                        continue
+                        
+                    await self.get_specified_notes(note_id_list=new_note_ids)
+
+                    # Save max page reached
+                    await checkpoint_manager.save_max_page("tieba", keyword, max(page, checkpoint_page))
 
                     # Sleep after page navigation
                     await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)

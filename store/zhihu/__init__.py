@@ -131,3 +131,23 @@ async def save_creator(creator: ZhihuCreator):
     local_db_item = creator.model_dump()
     local_db_item.update({"last_modify_ts": utils.get_current_timestamp()})
     await ZhihuStoreFactory.create_store().store_creator(local_db_item)
+
+
+async def is_zhihu_content_exists(content_id: str) -> bool:
+    """
+    Check if a Zhihu content exists in the database
+    """
+    if config.SAVE_DATA_OPTION not in ["db", "postgres", "sqlite"]:
+        return False
+        
+    try:
+        from database.db_session import get_session
+        from sqlalchemy import select
+        from database.models import ZhihuContent
+        async with get_session() as session:
+            result = await session.execute(select(ZhihuContent).where(ZhihuContent.content_id == str(content_id)))
+            content_detail = result.scalar_one_or_none()
+            return content_detail is not None
+    except Exception as e:
+        utils.logger.error(f"[store.zhihu.is_zhihu_content_exists] Query DB failed: {e}")
+        return False

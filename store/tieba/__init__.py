@@ -125,3 +125,23 @@ async def save_creator(user_info: TiebaCreator):
     local_db_item["last_modify_ts"] = utils.get_current_timestamp()
     utils.logger.info(f"[store.tieba.save_creator] creator:{local_db_item}")
     await TieBaStoreFactory.create_store().store_creator(local_db_item)
+
+
+async def is_tieba_note_exists(note_id: str) -> bool:
+    """
+    Check if a Tieba note exists in the database
+    """
+    if config.SAVE_DATA_OPTION not in ["db", "postgres", "sqlite"]:
+        return False
+        
+    try:
+        from database.db_session import get_session
+        from sqlalchemy import select
+        from database.models import TiebaNote
+        async with get_session() as session:
+            result = await session.execute(select(TiebaNote).where(TiebaNote.note_id == str(note_id)))
+            note_detail = result.scalar_one_or_none()
+            return note_detail is not None
+    except Exception as e:
+        utils.logger.error(f"[store.tieba.is_tieba_note_exists] Query DB failed: {e}")
+        return False

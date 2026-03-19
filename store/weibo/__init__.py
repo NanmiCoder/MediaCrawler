@@ -201,3 +201,23 @@ async def save_creator(user_id: str, user_info: Dict):
     }
     utils.logger.info(f"[store.weibo.save_creator] creator:{local_db_item}")
     await WeibostoreFactory.create_store().store_creator(local_db_item)
+
+
+async def is_weibo_note_exists(note_id: str) -> bool:
+    """
+    Check if a Weibo note exists in the database
+    """
+    if config.SAVE_DATA_OPTION not in ["db", "postgres", "sqlite"]:
+        return False
+        
+    try:
+        from database.db_session import get_session
+        from sqlalchemy import select
+        from database.models import WeiboNote
+        async with get_session() as session:
+            result = await session.execute(select(WeiboNote).where(WeiboNote.note_id == int(note_id)))
+            note_detail = result.scalar_one_or_none()
+            return note_detail is not None
+    except Exception as e:
+        utils.logger.error(f"[store.weibo.is_weibo_note_exists] Query DB failed: {e}")
+        return False

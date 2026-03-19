@@ -41,6 +41,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import zhihu as zhihu_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.checkpoint_manager import checkpoint_manager
 from var import crawler_type_var, source_keyword_var
 
 from .client import ZhiHuClient
@@ -155,6 +156,12 @@ class ZhihuCrawler(AbstractCrawler):
                 f"[ZhihuCrawler.search] Current search keyword: {keyword}"
             )
             page = 1
+            
+            # --- Load checkpoint ---
+            checkpoint_page = await checkpoint_manager.get_max_page("zhihu", keyword)
+            if checkpoint_page > 0:
+                utils.logger.info(f"[ZhihuCrawler.search] Loaded checkpoint for '{keyword}': max_page={checkpoint_page}")
+                
             while (
                 page - start_page + 1
             ) * zhihu_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
@@ -180,15 +187,34 @@ class ZhihuCrawler(AbstractCrawler):
                         utils.logger.info("No more content!")
                         break
 
-                    # Sleep after page navigation
-                    await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                    utils.logger.info(f"[ZhihuCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
-
-                    page += 1
+                    new_content_list = []
+                    new_post_count = 0
                     for content in content_list:
+                        if content and content.content_id:
+                            is_existed = await zhihu_store.is_zhihu_content_exists(content.content_id)
+                            if is_existed:
+                                utils.logger.info(f"[ZhihuCrawler.search] content_id:{content.content_id} already exists in DB, skipping detail & comments")
+                                continue
+                        
+                        new_post_count += 1
+                        new_content_list.append(content)
                         await zhihu_store.update_zhihu_content(content)
 
-                    await self.batch_get_content_comments(content_list)
+                    # Checkpoint jump logic
+                    if new_post_count == 0 and page < checkpoint_page:
+                        utils.logger.info(f"[ZhihuCrawler.search] Page {page} has 0 new posts. Jumping to checkpoint page {checkpoint_page}")
+                        page = checkpoint_page
+                        continue
+
+                    # Save max page reached
+                    await checkpoint_manager.save_max_page("zhihu", keyword, max(page, checkpoint_page))
+                    
+                    # Sleep after page navigation
+                    await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                    utils.logger.info(f"[ZhihuCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page}")
+
+                    page += 1
+                    await self.batch_get_content_comments(new_content_list)
                 except DataFetchError:
                     utils.logger.error("[ZhihuCrawler.search] Search content error")
                     return

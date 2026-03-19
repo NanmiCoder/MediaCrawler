@@ -231,3 +231,23 @@ async def update_bilibili_creator_dynamic(creator_info: Dict, dynamic_info: Dict
     }
 
     await BiliStoreFactory.create_store().store_dynamic(dynamic_item=save_dynamic_item)
+
+
+async def is_bilibili_video_exists(video_id: str) -> bool:
+    """
+    Check if a Bilibili video exists in the database
+    """
+    if config.SAVE_DATA_OPTION not in ["db", "postgres", "sqlite"]:
+        return False
+        
+    try:
+        from database.db_session import get_session
+        from sqlalchemy import select
+        from database.models import BilibiliVideo
+        async with get_session() as session:
+            result = await session.execute(select(BilibiliVideo).where(BilibiliVideo.video_id == int(video_id)))
+            video_detail = result.scalar_one_or_none()
+            return video_detail is not None
+    except Exception as e:
+        utils.logger.error(f"[store.bilibili.is_bilibili_video_exists] Query DB failed: {e}")
+        return False

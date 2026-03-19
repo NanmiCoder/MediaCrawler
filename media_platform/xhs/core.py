@@ -40,6 +40,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import xhs as xhs_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.checkpoint_manager import checkpoint_manager
 from var import crawler_type_var, source_keyword_var
 
 from .client import XiaoHongShuClient
@@ -148,6 +149,12 @@ class XiaoHongShuCrawler(AbstractCrawler):
             utils.logger.info(f"[XiaoHongShuCrawler.search] Current search keyword: {keyword}")
             page = 1
             search_id = get_search_id()
+            
+            # --- Load checkpoint ---
+            checkpoint_page = await checkpoint_manager.get_max_page("xhs", keyword)
+            if checkpoint_page > 0:
+                utils.logger.info(f"[XiaoHongShuCrawler.search] Loaded checkpoint for '{keyword}': max_page={checkpoint_page}")
+
             while (page - start_page + 1) * xhs_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Skip page {page}")
@@ -169,14 +176,32 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         utils.logger.info("[XiaoHongShuCrawler.search] No more content!")
                         break
                     semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
-                    task_list = [
-                        self.get_note_detail_async_task(
-                            note_id=post_item.get("id"),
+                    task_list = []
+                    new_post_count = 0
+                    for post_item in notes_res.get("items", {}):
+                        if post_item.get("model_type") in ("rec_query", "hot_query"):
+                            continue
+                        
+                        note_id = post_item.get("id")
+                        is_existed = await xhs_store.is_xhs_note_exists(note_id)
+                        if is_existed:
+                            utils.logger.info(f"[XiaoHongShuCrawler.search] note_id:{note_id} already exists in DB, skipping detail, media & comments")
+                            continue
+                            
+                        new_post_count += 1
+                        task_list.append(self.get_note_detail_async_task(
+                            note_id=note_id,
                             xsec_source=post_item.get("xsec_source"),
                             xsec_token=post_item.get("xsec_token"),
                             semaphore=semaphore,
-                        ) for post_item in notes_res.get("items", {}) if post_item.get("model_type") not in ("rec_query", "hot_query")
-                    ]
+                        ))
+
+                    # Checkpoint jump logic
+                    if new_post_count == 0 and page < checkpoint_page:
+                        utils.logger.info(f"[XiaoHongShuCrawler.search] Page {page} has 0 new posts. Jumping to checkpoint page {checkpoint_page}")
+                        page = checkpoint_page
+                        continue
+
                     note_details = await asyncio.gather(*task_list)
                     for note_detail in note_details:
                         if note_detail:
@@ -184,6 +209,10 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             await self.get_notice_media(note_detail)
                             note_ids.append(note_detail.get("note_id"))
                             xsec_tokens.append(note_detail.get("xsec_token"))
+                            
+                    # Save max page reached
+                    await checkpoint_manager.save_max_page("xhs", keyword, max(page, checkpoint_page))
+                            
                     page += 1
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
                     await self.batch_get_note_comments(note_ids, xsec_tokens)
