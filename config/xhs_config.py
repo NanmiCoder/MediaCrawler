@@ -21,7 +21,11 @@
 # Xiaohongshu platform configuration
 
 # Sorting method, the specific enumeration value is in media_platform/xhs/field.py
-SORT_TYPE = "popularity_descending"
+SORT_TYPE = "time_descending"
+
+# Stop pagination when search results contain notes older than the configured hours.
+# Set to 24 for "within one day", or 0 to disable this cutoff.
+XHS_NOTE_MAX_AGE_HOURS = 24
 
 # Specify the note URL list, which must carry the xsec_token parameter
 XHS_SPECIFIED_NOTE_URL_LIST = [
