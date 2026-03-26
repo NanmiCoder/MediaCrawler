@@ -32,7 +32,7 @@ ENABLE_IP_PROXY = False
 IP_PROXY_POOL_COUNT = 2
 
 # Proxy IP provider name
-IP_PROXY_PROVIDER_NAME = "kuaidaili"  # kuaidaili | wandouhttp
+IP_PROXY_PROVIDER_NAME = "kuaidaili"  # kuaidaili | wandouhttp | static
 
 # Setting to True will not open the browser (headless browser)
 # Setting False will open a browser
