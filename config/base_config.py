@@ -47,7 +47,7 @@ SAVE_LOGIN_STATE = True
 # Whether to enable CDP mode - use the user's existing Chrome/Edge browser to crawl, providing better anti-detection capabilities
 # Once enabled, the user's Chrome/Edge browser will be automatically detected and started, and controlled through the CDP protocol.
 # This method uses the real browser environment, including the user's extensions, cookies and settings, greatly reducing the risk of detection.
-ENABLE_CDP_MODE = True
+ENABLE_CDP_MODE = False
 
 # CDP debug port, used to communicate with the browser
 # If the port is occupied, the system will automatically try the next available port

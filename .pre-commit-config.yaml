@@ -8,7 +8,7 @@ repos:
       # Python file header copyright check
       - id: check-file-headers
         name: Check Python file headers
-        entry: python tools/file_header_manager.py --check
+        entry: python3 tools/file_header_manager.py --check
         language: system
         types: [python]
         pass_filenames: true
@@ -17,7 +17,7 @@ repos:
       # Auto-fix Python file headers
       - id: add-file-headers
         name: Add copyright headers to Python files
-        entry: python tools/file_header_manager.py
+        entry: python3 tools/file_header_manager.py
         language: system
         types: [python]
         pass_filenames: true
