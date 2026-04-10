@@ -55,7 +55,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
     cdp_manager: Optional[CDPBrowserManager]
 
     def __init__(self) -> None:
-        self.index_url = "https://www.xiaohongshu.com"
+        self.index_url = "https://www.rednote.com" if config.XHS_INTERNATIONAL else "https://www.xiaohongshu.com"
         # self.user_agent = utils.get_user_agent()
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         self.cdp_manager = None
@@ -364,10 +364,10 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 "accept-language": "zh-CN,zh;q=0.9",
                 "cache-control": "no-cache",
                 "content-type": "application/json;charset=UTF-8",
-                "origin": "https://www.xiaohongshu.com",
+                "origin": self.index_url,
                 "pragma": "no-cache",
                 "priority": "u=1, i",
-                "referer": "https://www.xiaohongshu.com/",
+                "referer": f"{self.index_url}/",
                 "sec-ch-ua": '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
                 "sec-ch-ua-mobile": "?0",
                 "sec-ch-ua-platform": '"Windows"',
