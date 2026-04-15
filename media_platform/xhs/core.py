@@ -356,7 +356,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
     async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XiaoHongShuClient:
         """Create Xiaohongshu client"""
         utils.logger.info("[XiaoHongShuCrawler.create_xhs_client] Begin create Xiaohongshu API client ...")
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
+        cookie_str, cookie_dict = utils.convert_cookies(
+            await self.browser_context.cookies(self.index_url)
+        )
         xhs_client_obj = XiaoHongShuClient(
             proxy=httpx_proxy,
             headers={
