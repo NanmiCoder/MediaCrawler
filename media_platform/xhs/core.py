@@ -122,11 +122,38 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             utils.logger.info("[XiaoHongShuCrawler.start] Xhs Crawler finished ...")
 
+    @staticmethod
+    def _normalize_timestamp_to_milliseconds(timestamp: Optional[int]) -> int:
+        """Normalize 10/13-digit unix timestamps to milliseconds."""
+        if timestamp is None:
+            return 0
+
+        try:
+            normalized_timestamp = int(timestamp)
+        except (TypeError, ValueError):
+            return 0
+
+        if normalized_timestamp < 1000000000000:
+            return normalized_timestamp * 1000
+        return normalized_timestamp
+
     async def search(self) -> None:
         """Search for notes and retrieve their comment information."""
         utils.logger.info("[XiaoHongShuCrawler.search] Begin search Xiaohongshu keywords")
         xhs_limit_count = 20  # Xiaohongshu limit page fixed value
-        if config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
+        max_note_age_hours = int(getattr(config, "XHS_NOTE_MAX_AGE_HOURS", 0) or 0)
+        enable_time_cutoff = (
+            max_note_age_hours > 0
+            and config.SORT_TYPE == SearchSortType.LATEST.value
+        )
+
+        if max_note_age_hours > 0 and not enable_time_cutoff:
+            utils.logger.warning(
+                "[XiaoHongShuCrawler.search] XHS_NOTE_MAX_AGE_HOURS is configured, "
+                "but SORT_TYPE is not 'time_descending'. Skip auto-stop to avoid incorrect early termination."
+            )
+
+        if not enable_time_cutoff and config.CRAWLER_MAX_NOTES_COUNT < xhs_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = xhs_limit_count
         start_page = config.START_PAGE
         for keyword in config.KEYWORDS.split(","):
@@ -172,7 +199,35 @@ class XiaoHongShuCrawler(AbstractCrawler):
                             xsec_tokens.append(note_detail.get("xsec_token"))
                     page += 1
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
+                    # 时间筛选：检查是否有笔记早于阈值
+                    # see https://github.com/NanmiCoder/MediaCrawler/issues/848#issuecomment-4081551779
+                    should_stop = False
+                    if enable_time_cutoff:
+                        threshold_timestamp = (
+                            utils.get_current_timestamp()
+                            - max_note_age_hours * 60 * 60 * 1000
+                        )
+                        valid_note_count = 0
+                        for note_detail in note_details:
+                            if not note_detail:
+                                continue
+
+                            note_time = self._normalize_timestamp_to_milliseconds(note_detail.get("time"))
+                            if note_time and note_time < threshold_timestamp:
+                                should_stop = True
+                                note_ids = note_ids[:valid_note_count]
+                                xsec_tokens = xsec_tokens[:valid_note_count]
+                                utils.logger.info(
+                                    f"[XiaoHongShuCrawler.search] Found note older than {max_note_age_hours} hours, "
+                                    f"stop after current page. note_id: {note_detail.get('note_id')}, "
+                                    f"note_time: {utils.get_time_str_from_unix_time(note_time)}"
+                                )
+                                break
+
+                            valid_note_count += 1
                     await self.batch_get_note_comments(note_ids, xsec_tokens)
+                    if should_stop:
+                        break  # 跳出 while 循环
 
                     # Sleep after each page navigation
                     await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
