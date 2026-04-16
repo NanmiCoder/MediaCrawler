@@ -112,12 +112,28 @@ cd MediaCrawler
 uv sync
 ```
 
-### 🌐 浏览器驱动安装
+### 🌐 浏览器驱动安装（可选）
+
+> 如果使用默认的 CDP 模式（连接已有 Chrome 浏览器），**无需安装浏览器驱动**。仅在使用标准 Playwright 模式时需要安装。
 
 ```shell
-# 安装浏览器驱动
+# 仅在标准 Playwright 模式下需要安装浏览器驱动
 uv run playwright install
 ```
+
+### 🌍 Chrome 浏览器配置（推荐）
+
+项目默认使用 CDP 模式连接用户已有的 Chrome 浏览器，可以复用浏览器已有的登录状态、Cookie、扩展等，**大幅降低平台风控检测风险**。
+
+使用前需要：
+
+1. **安装最新版 Chrome 浏览器**（版本 >= 144），[下载地址](https://www.google.com/chrome/)
+2. **开启远程调试功能**：在 Chrome 地址栏输入 `chrome://inspect/#remote-debugging`，勾选 **"Allow remote debugging for this browser instance"**
+3. 页面显示 `Server running at: 127.0.0.1:9222` 表示已就绪
+
+> 💡 **提示**：运行爬虫后，Chrome 浏览器会弹出确认对话框，点击"接受"即可。程序会等待用户确认，60秒内操作完成即可。
+>
+> 如果不想使用 CDP 模式，可以在 `config/base_config.py` 中设置 `ENABLE_CDP_MODE = False` 切换为标准 Playwright 模式。
 
 ## 🚀 运行爬虫程序
 
@@ -253,6 +269,31 @@ TikHub.io 提供 900+ 高稳定性数据接口，覆盖 TK、DY、XHS、Y2B、In
 **联系方式**：
 - 微信：`relakkes`
 - 邮箱：`relakkes@gmail.com`
+---
+
+## ☕ 请作者喝杯咖啡
+
+如果这个项目对您有帮助，欢迎打赏支持，您的每一份支持都是我持续更新的动力 ❤️
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="docs/static/images/wechat_pay.jpeg" width="250" alt="微信赞赏"><br>
+<b>微信赞赏</b>
+</td>
+<td align="center" width="33%">
+<img src="docs/static/images/zfb_pay.png" width="250" alt="支付宝"><br>
+<b>支付宝</b>
+</td>
+<td align="center" width="33%">
+<a href="https://buymeacoffee.com/relakkes" target="_blank">
+<img src="docs/static/images/bmc_button.png" width="250" alt="Buy Me a Coffee">
+</a><br>
+<b>Buy Me a Coffee</b>
+</td>
+</tr>
+</table>
+
 ---
 
 ## 📚 其他

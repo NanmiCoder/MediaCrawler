@@ -57,8 +57,12 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
-        self._host = "https://edith.xiaohongshu.com"
-        self._domain = "https://www.xiaohongshu.com"
+        if config.XHS_INTERNATIONAL:
+            self._host = "https://webapi.rednote.com"
+            self._domain = "https://www.rednote.com"
+        else:
+            self._host = "https://edith.xiaohongshu.com"
+            self._domain = "https://www.xiaohongshu.com"
         self.IP_ERROR_STR = "Network connection error, please check network settings or restart"
         self.IP_ERROR_CODE = 300012
         self.NOTE_NOT_FOUND_CODE = -510000
@@ -681,7 +685,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
 
         """
         url = (
-            "https://www.xiaohongshu.com/explore/"
+            f"{self._domain}/explore/"
             + note_id
             + f"?xsec_token={xsec_token}&xsec_source={xsec_source}"
         )

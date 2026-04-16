@@ -219,6 +219,6 @@ class XiaoHongShuLogin(AbstractLogin):
             await self.browser_context.add_cookies([{
                 'name': key,
                 'value': value,
-                'domain': ".xiaohongshu.com",
+                'domain': ".rednote.com" if config.XHS_INTERNATIONAL else ".xiaohongshu.com",
                 'path': "/"
             }])

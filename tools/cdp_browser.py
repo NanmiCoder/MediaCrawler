@@ -105,6 +105,10 @@ class CDPBrowserManager:
         Launch browser and connect via CDP
         """
         try:
+            if config.CDP_CONNECT_EXISTING:
+                # Connect to an existing browser that already has remote debugging enabled
+                return await self._connect_existing_browser(playwright, playwright_proxy, user_agent)
+
             # 1. Detect browser path
             browser_path = await self._get_browser_path()
 
@@ -132,6 +136,63 @@ class CDPBrowserManager:
             utils.logger.error(f"[CDPBrowserManager] CDP browser launch failed: {e}")
             await self.cleanup()
             raise
+
+    async def _connect_existing_browser(
+        self,
+        playwright: Playwright,
+        playwright_proxy: Optional[Dict] = None,
+        user_agent: Optional[str] = None,
+    ) -> BrowserContext:
+        """
+        Connect to an existing browser that already has remote debugging enabled.
+        User needs to enable remote debugging via chrome://inspect/#remote-debugging
+        or launch Chrome with --remote-debugging-port flag.
+        """
+        self.debug_port = config.CDP_DEBUG_PORT
+        utils.logger.info(
+            f"[CDPBrowserManager] Connecting to existing browser on port {self.debug_port}..."
+        )
+        utils.logger.info(
+            "[CDPBrowserManager] Make sure remote debugging is enabled in your browser: "
+            "chrome://inspect/#remote-debugging"
+        )
+
+        # Wait for the browser's CDP port to become available
+        # The user may need time to enable remote debugging or confirm the connection dialog
+        timeout = config.BROWSER_LAUNCH_TIMEOUT
+        utils.logger.info(
+            f"[CDPBrowserManager] Waiting up to {timeout}s for browser CDP connection..."
+        )
+        connected = False
+        for i in range(timeout):
+            if await self._test_cdp_connection(self.debug_port):
+                connected = True
+                break
+            if i % 5 == 0 and i > 0:
+                utils.logger.info(
+                    f"[CDPBrowserManager] Still waiting for browser... ({i}s elapsed) "
+                    "Please enable remote debugging: chrome://inspect/#remote-debugging"
+                )
+            await asyncio.sleep(1)
+
+        if not connected:
+            raise RuntimeError(
+                f"Cannot connect to existing browser on port {self.debug_port} "
+                f"after waiting {timeout}s. Please ensure:\n"
+                "  1. Your browser is running\n"
+                "  2. Remote debugging is enabled (chrome://inspect/#remote-debugging)\n"
+                f"  3. The debug port is {self.debug_port} (configure via CDP_DEBUG_PORT)"
+            )
+
+        # Connect via CDP (reuse existing method)
+        await self._connect_via_cdp(playwright)
+
+        # Create browser context (reuse existing method, will prefer existing context)
+        browser_context = await self._create_browser_context(playwright_proxy, user_agent)
+        self.browser_context = browser_context
+
+        utils.logger.info("[CDPBrowserManager] Successfully connected to existing browser")
+        return browser_context
 
     async def _get_browser_path(self) -> str:
         """
@@ -254,12 +315,23 @@ class CDPBrowserManager:
         Connect to browser via CDP
         """
         try:
-            # Get correct WebSocket URL
-            ws_url = await self._get_browser_websocket_url(self.debug_port)
-            utils.logger.info(f"[CDPBrowserManager] Connecting to browser via CDP: {ws_url}")
-
-            # Use Playwright's connectOverCDP method to connect
-            self.browser = await playwright.chromium.connect_over_cdp(ws_url)
+            if config.CDP_CONNECT_EXISTING:
+                # For existing browser (e.g. chrome://inspect/#remote-debugging),
+                # Chrome exposes a WebSocket at /devtools/browser and may show a confirmation
+                # dialog to the user. Use ws:// with a longer timeout to wait for user confirmation.
+                ws_url = f"ws://localhost:{self.debug_port}/devtools/browser"
+                utils.logger.info(f"[CDPBrowserManager] Connecting to existing browser via CDP: {ws_url}")
+                utils.logger.info(
+                    "[CDPBrowserManager] Please check your browser for a confirmation dialog and accept it"
+                )
+                self.browser = await playwright.chromium.connect_over_cdp(
+                    ws_url, timeout=config.BROWSER_LAUNCH_TIMEOUT * 1000
+                )
+            else:
+                # For launched browser, get WebSocket URL first
+                ws_url = await self._get_browser_websocket_url(self.debug_port)
+                utils.logger.info(f"[CDPBrowserManager] Connecting to browser via CDP: {ws_url}")
+                self.browser = await playwright.chromium.connect_over_cdp(ws_url)
 
             if self.browser.is_connected():
                 utils.logger.info("[CDPBrowserManager] Successfully connected to browser")
@@ -403,10 +475,14 @@ class CDPBrowserManager:
                 finally:
                     self.browser = None
 
-            # Close browser process
-            # force=True means force close, ignoring AUTO_CLOSE_BROWSER config
-            # Used for handling abnormal exit or manual cleanup
-            if force or config.AUTO_CLOSE_BROWSER:
+            # Close browser process (skip if connected to existing browser - we didn't launch it)
+            if config.CDP_CONNECT_EXISTING:
+                utils.logger.info(
+                    "[CDPBrowserManager] Connected to existing browser, skipping process cleanup"
+                )
+            elif force or config.AUTO_CLOSE_BROWSER:
+                # force=True means force close, ignoring AUTO_CLOSE_BROWSER config
+                # Used for handling abnormal exit or manual cleanup
                 if self.launcher and self.launcher.browser_process:
                     self.launcher.cleanup()
                 else:
