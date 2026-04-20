@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小红书数据查看器</title>
+    <title>数据查看器</title>
     <link rel="stylesheet" href="/viewer/css/style.css">
 </head>
 <body>
     <!-- 顶部导航栏 -->
     <header class="header">
         <div class="header-left">
-            <h1 class="logo">📚 小红书数据查看器</h1>
+            <h1 class="logo">📚 数据查看器</h1>
         </div>
         <div class="header-center">
             <select id="keywordFilter" class="filter-select">
@@ -27,44 +27,113 @@
         </div>
     </header>
 
-    <!-- 监控面板 -->
-    <div class="monitor-panel">
-        <div class="status-card">
-            <div class="status-indicator" id="statusIndicator">
-                <span class="status-dot"></span>
-                <span class="status-text">加载中...</span>
+    <!-- 平台标签导航 -->
+    <nav class="platform-tabs" role="tablist" aria-label="平台切换">
+        <button class="platform-tab xiaohongshu active"
+                role="tab"
+                aria-selected="true"
+                aria-controls="xiaohongshu-panel"
+                id="xiaohongshu-tab"
+                data-platform="xiaohongshu">
+            📕 小红书
+        </button>
+        <button class="platform-tab zhihu"
+                role="tab"
+                aria-selected="false"
+                aria-controls="zhihu-panel"
+                id="zhihu-tab"
+                data-platform="zhihu"
+                tabindex="-1">
+            🔵 知乎
+        </button>
+    </nav>
+
+    <!-- 小红书面板 -->
+    <div id="xiaohongshu-panel" role="tabpanel" aria-labelledby="xiaohongshu-tab">
+        <!-- 监控面板 -->
+        <div class="monitor-panel">
+            <div class="status-card">
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">加载中...</span>
+                </div>
             </div>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <span class="stat-value" id="totalNotes">0</span>
+                    <span class="stat-label">笔记总数</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="totalImages">0</span>
+                    <span class="stat-label">图片总数</span>
+                </div>
+            </div>
+            <div class="keywords-stats" id="keywordsStats"></div>
         </div>
-        <div class="stats-cards">
-            <div class="stat-card">
-                <span class="stat-value" id="totalNotes">0</span>
-                <span class="stat-label">笔记总数</span>
+
+        <!-- 笔记列表 -->
+        <main class="main-content">
+            <div id="notesGrid" class="note-grid">
+                <!-- 笔记卡片将通过 JS 动态插入 -->
             </div>
-            <div class="stat-card">
-                <span class="stat-value" id="totalImages">0</span>
-                <span class="stat-label">图片总数</span>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <p class="empty-text">暂无数据</p>
+                <p class="empty-hint">请先运行爬虫获取数据</p>
             </div>
-        </div>
-        <div class="keywords-stats" id="keywordsStats"></div>
+            <div id="loadingState" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </main>
     </div>
 
-    <!-- 笔记列表 -->
-    <main class="main-content">
-        <div id="notesGrid" class="note-grid">
-            <!-- 笔记卡片将通过 JS 动态插入 -->
+    <!-- 知乎面板 -->
+    <div id="zhihu-panel" role="tabpanel" aria-labelledby="zhihu-tab" style="display: none;">
+        <!-- 知乎筛选栏 -->
+        <div class="monitor-panel">
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <span class="stat-value" id="zhihuTotalAnswers">0</span>
+                    <span class="stat-label">回答总数</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="zhihuTotalVoteup">0</span>
+                    <span class="stat-label">点赞总数</span>
+                </div>
+            </div>
+            <div class="keywords-stats" id="zhihuCreatorsStats"></div>
+            <div style="display: flex; gap: 12px; margin-left: auto;">
+                <select id="zhihuCreatorFilter" class="zhihu-filter-select">
+                    <option value="">全部创作者</option>
+                </select>
+                <input type="text" id="zhihuSearchInput" class="search-input" placeholder="搜索回答内容..." style="max-width: 200px;">
+                <button id="zhihuRefreshBtn" class="refresh-btn" title="刷新数据">
+                    <span class="refresh-icon">🔄</span>
+                    <span class="refresh-text">刷新</span>
+                </button>
+                <span id="zhihuLastUpdate" class="last-update"></span>
+            </div>
         </div>
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <div class="empty-icon">📭</div>
-            <p class="empty-text">暂无数据</p>
-            <p class="empty-hint">请先运行爬虫获取数据</p>
-        </div>
-        <div id="loadingState" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>加载中...</p>
-        </div>
-    </main>
 
-    <!-- 详情模态框 -->
+        <!-- 知乎回答列表 -->
+        <main class="main-content">
+            <div id="zhihuGrid" class="zhihu-grid">
+                <!-- 知乎卡片将通过 JS 动态插入 -->
+            </div>
+            <div id="zhihuEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <p class="empty-text">暂无知乎数据</p>
+                <p class="empty-hint">请先运行知乎爬虫获取数据</p>
+            </div>
+            <div id="zhihuLoadingState" class="loading-state" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 小红书详情模态框 -->
     <div id="noteModal" class="modal" style="display: none;">
         <div class="modal-overlay"></div>
         <div class="modal-content">
@@ -102,9 +171,127 @@
         </div>
     </div>
 
+    <!-- 知乎详情模态框 -->
+    <div id="zhihuModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="zhihu-modal-content">
+            <button class="modal-close" id="zhihuModalClose">&times;</button>
+            <div class="zhihu-modal-header">
+                <h2 class="zhihu-modal-title" id="zhihuModalTitle">知乎回答</h2>
+                <div class="zhihu-modal-author">
+                    <img id="zhihuModalAuthor" src="" alt="">
+                    <div class="zhihu-modal-author-info">
+                        <span class="zhihu-modal-author-name" id="zhihuModalAuthorName"></span>
+                        <span class="zhihu-modal-author-time" id="zhihuModalAuthorTime"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="zhihu-modal-body">
+                <div class="zhihu-modal-text" id="zhihuModalText"></div>
+            </div>
+            <div class="zhihu-modal-footer">
+                <div class="zhihu-modal-stats">
+                    <span>👍 <span id="zhihuModalVoteup">0</span></span>
+                    <span>💬 <span id="zhihuModalComments">0</span></span>
+                </div>
+                <a class="zhihu-modal-link" id="zhihuModalLink" href="" target="_blank">
+                    查看原回答 →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 小红书脚本 -->
     <script src="/viewer/js/api.js"></script>
     <script src="/viewer/js/app.js"></script>
     <script src="/viewer/js/modal.js"></script>
     <script src="/viewer/js/monitor.js"></script>
+
+    <!-- 知乎脚本 -->
+    <script src="/viewer/js/zhihu-api.js"></script>
+    <script src="/viewer/js/zhihu-app.js"></script>
+    <script src="/viewer/js/zhihu-modal.js"></script>
+
+    <!-- 平台切换脚本 -->
+    <script>
+        // 平台切换逻辑
+        let currentPlatform = 'xiaohongshu';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化平台切换
+            initPlatformTabs();
+
+            // 初始化知乎模块
+            if (window.zhihuApp) {
+                window.zhihuApp.init();
+            }
+            if (window.zhihuModal) {
+                window.zhihuModal.init();
+            }
+        });
+
+        function initPlatformTabs() {
+            const tabs = document.querySelectorAll('.platform-tab');
+            const xiaohongshuPanel = document.getElementById('xiaohongshu-panel');
+            const zhihuPanel = document.getElementById('zhihu-panel');
+            const headerCenter = document.querySelector('.header-center');
+
+            tabs.forEach(tab => {
+                // 点击切换
+                tab.addEventListener('click', () => {
+                    switchPlatform(tab.dataset.platform);
+                });
+
+                // 键盘导航
+                tab.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        const currentIndex = Array.from(tabs).indexOf(tab);
+                        let nextIndex;
+
+                        if (e.key === 'ArrowRight') {
+                            nextIndex = (currentIndex + 1) % tabs.length;
+                        } else {
+                            nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                        }
+
+                        const nextTab = tabs[nextIndex];
+                        nextTab.focus();
+                        switchPlatform(nextTab.dataset.platform);
+                    }
+                });
+            });
+
+            function switchPlatform(platform) {
+                currentPlatform = platform;
+
+                // 更新标签状态
+                tabs.forEach(t => {
+                    const isActive = t.dataset.platform === platform;
+                    t.classList.toggle('active', isActive);
+                    t.setAttribute('aria-selected', isActive);
+                    t.setAttribute('tabindex', isActive ? '0' : '-1');
+                });
+
+                // 切换面板
+                if (platform === 'xiaohongshu') {
+                    xiaohongshuPanel.style.display = 'block';
+                    zhihuPanel.style.display = 'none';
+                    headerCenter.style.display = 'flex';
+                } else if (platform === 'zhihu') {
+                    xiaohongshuPanel.style.display = 'none';
+                    zhihuPanel.style.display = 'block';
+                    headerCenter.style.display = 'none';
+
+                    // 首次切换到知乎时加载数据
+                    if (window.zhihuApp) {
+                        window.zhihuApp.loadCreators();
+                        window.zhihuApp.loadAnswers();
+                        window.zhihuApp.loadStats();
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>

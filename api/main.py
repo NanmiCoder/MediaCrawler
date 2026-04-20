@@ -30,7 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from .routers import crawler_router, data_router, websocket_router, notes_router
+from .routers import crawler_router, data_router, websocket_router, notes_router, zhihu_router
 
 app = FastAPI(
     title="MediaCrawler WebUI API",
@@ -60,6 +60,7 @@ app.include_router(crawler_router, prefix="/api")
 app.include_router(data_router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
 app.include_router(notes_router, prefix="/api")
+app.include_router(zhihu_router, prefix="/api")
 
 
 @app.get("/")

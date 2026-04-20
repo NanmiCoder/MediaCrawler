@@ -3,6 +3,8 @@
 :root {
     --primary-color: #ff2442;
     --primary-light: #ff6b81;
+    --zhihu-primary: #0066FF;
+    --zhihu-light: #E8F3FF;
     --bg-color: #f5f5f5;
     --card-bg: #ffffff;
     --text-primary: #333333;
@@ -599,4 +601,285 @@ body {
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
+}
+
+/* ==================== 知乎样式 ==================== */
+
+/* 平台标签导航 */
+.platform-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--card-bg);
+    padding: 0 24px;
+}
+
+.platform-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.platform-tab:hover {
+    color: var(--text-primary);
+}
+
+.platform-tab.active {
+    color: var(--zhihu-primary);
+}
+
+.platform-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--zhihu-primary);
+    border-radius: 3px 3px 0 0;
+}
+
+.platform-tab.xiaohongshu.active {
+    color: var(--primary-color);
+}
+
+.platform-tab.xiaohongshu.active::after {
+    background: var(--primary-color);
+}
+
+.platform-tab:focus {
+    outline: 2px solid var(--zhihu-primary);
+    outline-offset: -2px;
+    border-radius: 4px;
+}
+
+.platform-tab.xiaohongshu:focus {
+    outline-color: var(--primary-color);
+}
+
+/* 知乎卡片布局 - 文本优先 */
+.zhihu-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.zhihu-card {
+    display: flex;
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid var(--zhihu-primary);
+}
+
+.zhihu-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.zhihu-card-content {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.zhihu-card-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.zhihu-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.zhihu-card-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zhihu-card-author img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.zhihu-card-author span {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.zhihu-card-stats {
+    display: flex;
+    gap: 16px;
+}
+
+.zhihu-card-stats span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 响应式 - 知乎卡片 */
+@media (max-width: 700px) {
+    .zhihu-grid {
+        padding: 0 12px;
+    }
+
+    .zhihu-card {
+        flex-direction: column;
+    }
+
+    .zhihu-card-content {
+        padding: 12px 16px;
+    }
+}
+
+/* 知乎模态框样式 */
+.zhihu-modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.zhihu-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.zhihu-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.zhihu-modal-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.zhihu-modal-author img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.zhihu-modal-author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.zhihu-modal-author-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.zhihu-modal-author-time {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.zhihu-modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.zhihu-modal-text {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.zhihu-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.zhihu-modal-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.zhihu-modal-stats span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.zhihu-modal-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    background: var(--zhihu-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.zhihu-modal-link:hover {
+    background: #0052CC;
+}
+
+/* 知乎筛选器样式 */
+.zhihu-filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--card-bg);
+    cursor: pointer;
+    min-width: 140px;
+}
+
+.zhihu-filter-select:focus {
+    border-color: var(--zhihu-primary);
+    outline: none;
 }
