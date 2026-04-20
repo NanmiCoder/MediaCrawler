@@ -17,11 +17,13 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 import asyncio
+from datetime import datetime
 from typing import Set, Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from ..services import crawler_manager
+from ..schemas import StatsUpdateMessage
 
 router = APIRouter(tags=["websocket"])
 
@@ -57,6 +59,45 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+
+
+async def broadcast_stats_update():
+    """
+    Broadcast stats_update message to all connected WebSocket clients.
+    Called by FileWatcherService when JSONL files change.
+    Recalculates stats from files to ensure consistency.
+    """
+    from .notes import get_notes_stats
+
+    try:
+        stats = await get_notes_stats()
+        message = StatsUpdateMessage(
+            type="stats_update",
+            total_notes=stats.get("total_notes", 0),
+            total_images=stats.get("total_images", 0),
+            timestamp=datetime.now().isoformat()
+        )
+        await manager.broadcast(message.model_dump())
+        print(f"[WS] Broadcasted stats_update: {message.total_notes} notes, {message.total_images} images")
+    except Exception as e:
+        print(f"[WS] Error broadcasting stats_update: {e}")
+
+
+async def send_initial_stats(websocket: WebSocket):
+    """Send current stats to a newly connected WebSocket client."""
+    from .notes import get_notes_stats
+
+    try:
+        stats = await get_notes_stats()
+        message = StatsUpdateMessage(
+            type="stats_update",
+            total_notes=stats.get("total_notes", 0),
+            total_images=stats.get("total_images", 0),
+            timestamp=datetime.now().isoformat()
+        )
+        await websocket.send_json(message.model_dump())
+    except Exception as e:
+        print(f"[WS] Error sending initial stats: {e}")
 
 
 async def log_broadcaster():
@@ -136,10 +177,13 @@ async def websocket_logs(websocket: WebSocket):
 
 @router.websocket("/ws/status")
 async def websocket_status(websocket: WebSocket):
-    """WebSocket status stream"""
+    """WebSocket status stream - sends crawler status and stats updates"""
     await websocket.accept()
 
     try:
+        # Send initial stats on connect
+        await send_initial_stats(websocket)
+
         while True:
             # Send status every second
             status = crawler_manager.get_status()

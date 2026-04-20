@@ -24,6 +24,7 @@ from .crawler import (
     CrawlerStartRequest,
     CrawlerStatusResponse,
     LogEntry,
+    StatsUpdateMessage,
 )
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "CrawlerStartRequest",
     "CrawlerStatusResponse",
     "LogEntry",
+    "StatsUpdateMessage",
 ]

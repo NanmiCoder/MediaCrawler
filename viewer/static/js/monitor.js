@@ -85,6 +85,8 @@ function connectWebSocket() {
             console.log('WebSocket 连接成功');
             reconnectAttempts = 0;
             updateCrawlerStatus({ status: 'connected' });
+            // WebSocket 连接成功后停止轮询
+            stopPolling();
         };
 
         ws.onmessage = (event) => {
@@ -99,6 +101,8 @@ function connectWebSocket() {
         ws.onclose = (event) => {
             console.log('WebSocket 连接关闭:', event.code, event.reason);
             updateCrawlerStatus({ status: 'disconnected' });
+            // WebSocket 断开后恢复轮询
+            startPolling();
 
             // 自动重连
             if (reconnectAttempts < MAX_RECONNECT) {

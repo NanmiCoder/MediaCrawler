@@ -24,6 +24,9 @@ Or: python -m api.main
 import asyncio
 import os
 import subprocess
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,11 +34,38 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from .routers import crawler_router, data_router, websocket_router, notes_router, zhihu_router
+from .services import file_watcher
+from .routers.websocket import broadcast_stats_update
+
+
+# Data directory for JSONL files
+DATA_DIR = Path(__file__).parent.parent / "data"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager - start/stop file watcher."""
+    # Startup
+    jsonl_dir = DATA_DIR / "xhs" / "jsonl"
+    jsonl_dir.mkdir(parents=True, exist_ok=True)
+
+    file_watcher.start(
+        path=str(jsonl_dir),
+        callback=broadcast_stats_update
+    )
+    app.state.file_watcher = file_watcher
+
+    yield
+
+    # Shutdown
+    file_watcher.stop()
+
 
 app = FastAPI(
     title="MediaCrawler WebUI API",
     description="API for controlling MediaCrawler from WebUI",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Get webui static files directory

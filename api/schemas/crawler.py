@@ -97,3 +97,11 @@ class DataFileInfo(BaseModel):
     size: int
     modified_at: str
     record_count: Optional[int] = None
+
+
+class StatsUpdateMessage(BaseModel):
+    """WebSocket message for stats update"""
+    type: str = "stats_update"
+    total_notes: int = 0
+    total_images: int = 0
+    timestamp: str = ""
