@@ -4,114 +4,136 @@ let currentNote = null;
 let currentImageIndex = 0;
 let currentImages = [];
 
-// DOM 元素
-const noteModal = document.getElementById('noteModal');
-const modalClose = document.getElementById('modalClose');
-const modalOverlay = noteModal.querySelector('.modal-overlay');
-const galleryImage = document.getElementById('galleryImage');
-const galleryPrev = document.getElementById('galleryPrev');
-const galleryNext = document.getElementById('galleryNext');
-const galleryIndex = document.getElementById('galleryIndex');
-const imageGallery = document.getElementById('imageGallery');
-const modalTitle = document.getElementById('modalTitle');
-const modalAuthor = document.getElementById('modalAuthor');
-const modalTime = document.getElementById('modalTime');
-const modalLikes = document.getElementById('modalLikes');
-const modalCollects = document.getElementById('modalCollects');
-const modalComments = document.getElementById('modalComments');
-const modalShares = document.getElementById('modalShares');
-const modalTags = document.getElementById('modalTags');
-const modalDesc = document.getElementById('modalDesc');
-const modalLink = document.getElementById('modalLink');
+// DOM 元素 - 在DOMContentLoaded后初始化
+let noteModal, modalClose, modalOverlay, galleryImage, galleryPrev, galleryNext;
+let galleryIndex, imageGallery, modalTitle, modalAuthor, modalTime;
+let modalLikes, modalCollects, modalComments, modalShares, modalTags, modalDesc, modalLink;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 初始化DOM元素引用
+    noteModal = document.getElementById('noteModal');
+    modalClose = document.getElementById('modalClose');
+    if (noteModal) {
+        modalOverlay = noteModal.querySelector('.modal-overlay');
+    }
+    galleryImage = document.getElementById('galleryImage');
+    galleryPrev = document.getElementById('galleryPrev');
+    galleryNext = document.getElementById('galleryNext');
+    galleryIndex = document.getElementById('galleryIndex');
+    imageGallery = document.getElementById('imageGallery');
+    modalTitle = document.getElementById('modalTitle');
+    modalAuthor = document.getElementById('modalAuthor');
+    modalTime = document.getElementById('modalTime');
+    modalLikes = document.getElementById('modalLikes');
+    modalCollects = document.getElementById('modalCollects');
+    modalComments = document.getElementById('modalComments');
+    modalShares = document.getElementById('modalShares');
+    modalTags = document.getElementById('modalTags');
+    modalDesc = document.getElementById('modalDesc');
+    modalLink = document.getElementById('modalLink');
+
     setupModalEvents();
 });
 
 // 设置模态框事件
 function setupModalEvents() {
+    if (!noteModal || !modalClose || !modalOverlay) return;
+
     // 关闭按钮
-    modalClose.addEventListener('click', closeNoteModal);
+    modalClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeNoteModal();
+    });
 
     // 点击遮罩关闭
-    modalOverlay.addEventListener('click', closeNoteModal);
+    modalOverlay.addEventListener('click', () => {
+        closeNoteModal();
+    });
 
     // ESC 键关闭
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && noteModal.style.display === 'flex') {
+        if (e.key === 'Escape' && noteModal && noteModal.style.display !== 'none') {
             closeNoteModal();
         }
         // 图片导航
-        if (noteModal.style.display === 'flex') {
+        if (noteModal && noteModal.style.display !== 'none') {
             if (e.key === 'ArrowLeft') navigateGallery(-1);
             if (e.key === 'ArrowRight') navigateGallery(1);
         }
     });
 
     // 图片导航按钮
-    galleryPrev.addEventListener('click', () => navigateGallery(-1));
-    galleryNext.addEventListener('click', () => navigateGallery(1));
+    if (galleryPrev) galleryPrev.addEventListener('click', () => navigateGallery(-1));
+    if (galleryNext) galleryNext.addEventListener('click', () => navigateGallery(1));
 }
 
 // 打开笔记详情模态框
 async function openNoteModal(note) {
+    if (!noteModal) return;
+
     currentNote = note;
     currentImageIndex = 0;
 
     // 设置基本信息
-    modalTitle.textContent = note.title || '无标题';
-    modalAuthor.textContent = `作者: ${note.nickname || '匿名用户'}`;
-    modalTime.textContent = note.time || '';
+    if (modalTitle) modalTitle.textContent = note.title || '无标题';
+    if (modalAuthor) modalAuthor.textContent = `作者: ${note.nickname || '匿名用户'}`;
+    if (modalTime) modalTime.textContent = note.time || '';
 
     // 设置统计数据
-    modalLikes.textContent = formatCount(note.liked_count);
-    modalCollects.textContent = formatCount(note.collected_count);
-    modalComments.textContent = formatCount(note.comment_count);
-    modalShares.textContent = formatCount(note.share_count);
+    if (modalLikes) modalLikes.textContent = formatCount(note.liked_count);
+    if (modalCollects) modalCollects.textContent = formatCount(note.collected_count);
+    if (modalComments) modalComments.textContent = formatCount(note.comment_count);
+    if (modalShares) modalShares.textContent = formatCount(note.share_count);
 
     // 设置标签
-    modalTags.innerHTML = '';
-    if (note.keywords && note.keywords.length > 0) {
-        note.keywords.forEach(keyword => {
-            const tag = document.createElement('span');
-            tag.className = 'note-tag';
-            tag.textContent = `#${keyword}`;
-            tag.addEventListener('click', () => {
-                closeNoteModal();
-                // 点击标签筛选该关键词
-                keywordFilter.value = keyword;
-                currentKeyword = keyword;
-                loadNotes();
+    if (modalTags) {
+        modalTags.innerHTML = '';
+        if (note.keywords && note.keywords.length > 0) {
+            note.keywords.forEach(keyword => {
+                const tag = document.createElement('span');
+                tag.className = 'note-tag';
+                tag.textContent = `#${keyword}`;
+                tag.addEventListener('click', () => {
+                    closeNoteModal();
+                    // 点击标签筛选该关键词
+                    if (keywordFilter) keywordFilter.value = keyword;
+                    currentKeyword = keyword;
+                    loadNotes();
+                });
+                modalTags.appendChild(tag);
             });
-            modalTags.appendChild(tag);
-        });
+        }
     }
 
     // 设置描述
-    modalDesc.textContent = note.desc || '暂无描述';
+    if (modalDesc) modalDesc.textContent = note.desc || '暂无描述';
 
     // 设置原笔记链接
-    if (note.note_url) {
-        modalLink.href = note.note_url;
-        modalLink.style.display = 'inline-block';
-    } else {
-        modalLink.style.display = 'none';
+    if (modalLink) {
+        if (note.note_url) {
+            modalLink.href = note.note_url;
+            modalLink.style.display = 'inline-block';
+        } else {
+            modalLink.style.display = 'none';
+        }
     }
 
     // 设置图片画廊
     currentImages = note.image_list || [];
     if (currentImages.length > 0) {
-        imageGallery.style.display = 'block';
+        if (imageGallery) imageGallery.style.display = 'block';
         updateGallery();
     } else if (note.video_url) {
         // 视频内容
-        imageGallery.style.display = 'block';
-        galleryImage.src = '';
-        galleryImage.style.display = 'none';
-        galleryPrev.style.display = 'none';
-        galleryNext.style.display = 'none';
-        galleryIndex.textContent = '🎬 视频内容';
+        if (imageGallery) imageGallery.style.display = 'block';
+        if (galleryImage) {
+            galleryImage.src = '';
+            galleryImage.style.display = 'none';
+        }
+        if (galleryPrev) galleryPrev.style.display = 'none';
+        if (galleryNext) galleryNext.style.display = 'none';
+        if (galleryIndex) galleryIndex.textContent = '🎬 视频内容';
 
         // 创建视频播放器
         const videoContainer = document.createElement('div');
@@ -123,11 +145,13 @@ async function openNoteModal(note) {
             </video>
         `;
         const galleryMain = document.querySelector('.gallery-main');
-        const existingVideo = galleryMain.querySelector('.video-container');
-        if (existingVideo) existingVideo.remove();
-        galleryMain.appendChild(videoContainer);
+        if (galleryMain) {
+            const existingVideo = galleryMain.querySelector('.video-container');
+            if (existingVideo) existingVideo.remove();
+            galleryMain.appendChild(videoContainer);
+        }
     } else {
-        imageGallery.style.display = 'none';
+        if (imageGallery) imageGallery.style.display = 'none';
     }
 
     // 显示模态框
@@ -137,6 +161,8 @@ async function openNoteModal(note) {
 
 // 关闭模态框
 function closeNoteModal() {
+    if (!noteModal) return;
+
     noteModal.style.display = 'none';
     document.body.style.overflow = '';
 
@@ -145,7 +171,7 @@ function closeNoteModal() {
     if (videoContainer) {
         videoContainer.remove();
     }
-    galleryImage.style.display = 'block';
+    if (galleryImage) galleryImage.style.display = 'block';
 
     currentNote = null;
     currentImages = [];
@@ -158,21 +184,23 @@ function updateGallery() {
     // 移除视频容器
     const videoContainer = document.querySelector('.gallery-main .video-container');
     if (videoContainer) videoContainer.remove();
-    galleryImage.style.display = 'block';
+    if (galleryImage) galleryImage.style.display = 'block';
 
-    galleryImage.src = currentImages[currentImageIndex];
-    galleryImage.alt = currentNote?.title || '笔记图片';
+    if (galleryImage) {
+        galleryImage.src = currentImages[currentImageIndex];
+        galleryImage.alt = currentNote?.title || '笔记图片';
+    }
 
     // 更新索引显示
-    galleryIndex.textContent = `${currentImageIndex + 1}/${currentImages.length}`;
+    if (galleryIndex) galleryIndex.textContent = `${currentImageIndex + 1}/${currentImages.length}`;
 
     // 更新导航按钮
-    galleryPrev.style.display = currentImages.length > 1 ? 'flex' : 'none';
-    galleryNext.style.display = currentImages.length > 1 ? 'flex' : 'none';
+    if (galleryPrev) galleryPrev.style.display = currentImages.length > 1 ? 'flex' : 'none';
+    if (galleryNext) galleryNext.style.display = currentImages.length > 1 ? 'flex' : 'none';
 
     // 更新按钮状态
-    galleryPrev.style.opacity = currentImageIndex === 0 ? '0.5' : '1';
-    galleryNext.style.opacity = currentImageIndex === currentImages.length - 1 ? '0.5' : '1';
+    if (galleryPrev) galleryPrev.style.opacity = currentImageIndex === 0 ? '0.5' : '1';
+    if (galleryNext) galleryNext.style.opacity = currentImageIndex === currentImages.length - 1 ? '0.5' : '1';
 }
 
 // 图片导航

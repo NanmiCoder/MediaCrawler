@@ -39,17 +39,22 @@ function initZhihuModal() {
 function setupZhihuModalEvents() {
     // 关闭按钮
     if (zhihuModalClose) {
-        zhihuModalClose.addEventListener('click', closeZhihuModal);
+        zhihuModalClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeZhihuModal();
+        });
     }
 
     // 点击遮罩关闭
     if (zhihuModalOverlay) {
-        zhihuModalOverlay.addEventListener('click', closeZhihuModal);
+        zhihuModalOverlay.addEventListener('click', () => {
+            closeZhihuModal();
+        });
     }
 
     // ESC 键关闭
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && zhihuModal && zhihuModal.style.display === 'flex') {
+        if (e.key === 'Escape' && zhihuModal && zhihuModal.style.display !== 'none') {
             closeZhihuModal();
         }
     });
