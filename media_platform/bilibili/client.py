@@ -60,6 +60,7 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         self.timeout = timeout
         self.headers = headers
         self._host = "https://api.bilibili.com"
+        self.cookie_urls = ["https://www.bilibili.com"]
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         # Initialize proxy pool (from ProxyRefreshMixin)
@@ -145,8 +146,11 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
             ping_flag = False
         return ping_flag
 
-    async def update_cookies(self, browser_context: BrowserContext):
-        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+    async def update_cookies(self, browser_context: BrowserContext, urls: Optional[list[str]] = None):
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=urls or self.cookie_urls,
+        )
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
 

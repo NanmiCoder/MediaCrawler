@@ -63,6 +63,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         else:
             self._host = "https://edith.xiaohongshu.com"
             self._domain = "https://www.xiaohongshu.com"
+        self.cookie_urls = [self._domain]
         self.IP_ERROR_STR = "Network connection error, please check network settings or restart"
         self.IP_ERROR_CODE = 300012
         self.NOTE_NOT_FOUND_CODE = -510000
@@ -260,7 +261,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         utils.logger.info(f"[XiaoHongShuClient.pong] Login state result: {ping_flag}")
         return ping_flag
 
-    async def update_cookies(self, browser_context: BrowserContext):
+    async def update_cookies(self, browser_context: BrowserContext, urls: Optional[list[str]] = None):
         """
         Update cookies method provided by API client, usually called after successful login
         Args:
@@ -269,7 +270,10 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
-        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=urls or self.cookie_urls,
+        )
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
 

@@ -54,6 +54,7 @@ class BaiduTieBaClient(AbstractApiClient):
             "Cookie": "",
         }
         self._host = "https://tieba.baidu.com"
+        self.cookie_urls = [self._host]
         self._page_extractor = TieBaExtractor()
         self.default_ip_proxy = default_ip_proxy
         self.playwright_page = playwright_page  # Playwright page object
@@ -209,7 +210,10 @@ class BaiduTieBaClient(AbstractApiClient):
 
         try:
             # Get cookies from browser and check key login cookies
-            _, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+            _, cookie_dict = await utils.convert_browser_context_cookies(
+                browser_context,
+                urls=self.cookie_urls,
+            )
 
             # Baidu Tieba login identifiers: STOKEN or PTOKEN
             stoken = cookie_dict.get("STOKEN")
@@ -227,7 +231,7 @@ class BaiduTieBaClient(AbstractApiClient):
             utils.logger.error(f"[BaiduTieBaClient.pong] Check login state failed: {e}, assume not logged in")
             return False
 
-    async def update_cookies(self, browser_context: BrowserContext):
+    async def update_cookies(self, browser_context: BrowserContext, urls: Optional[list[str]] = None):
         """
         Update cookies method provided by API client, usually called after successful login
         Args:
@@ -236,7 +240,10 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
-        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=urls or self.cookie_urls,
+        )
         self.headers["Cookie"] = cookie_str
         utils.logger.info("[BaiduTieBaClient.update_cookies] Cookie has been updated")
 

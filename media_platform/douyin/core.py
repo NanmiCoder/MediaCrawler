@@ -54,6 +54,13 @@ class DouYinCrawler(AbstractCrawler):
 
     def __init__(self) -> None:
         self.index_url = "https://www.douyin.com"
+        self.cookie_urls = [
+            "https://douyin.com",
+            self.index_url,
+            "https://creator.douyin.com",
+            "https://douhot.douyin.com",
+            "https://live.douyin.com",
+        ]
         self.cdp_manager = None
         self.ip_proxy_pool = None  # Proxy IP pool for automatic proxy refresh
 
@@ -100,7 +107,10 @@ class DouYinCrawler(AbstractCrawler):
                     cookie_str=config.COOKIES,
                 )
                 await login_obj.begin()
-                await self.dy_client.update_cookies(browser_context=self.browser_context)
+                await self.dy_client.update_cookies(
+                    browser_context=self.browser_context,
+                    urls=self.cookie_urls,
+                )
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
                 # Search for notes and retrieve their comment information.
@@ -298,7 +308,10 @@ class DouYinCrawler(AbstractCrawler):
 
     async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DouYinClient:
         """Create douyin client"""
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())  # type: ignore
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            self.browser_context,
+            urls=self.cookie_urls,
+        )  # type: ignore
         douyin_client = DouYinClient(
             proxy=httpx_proxy,
             headers={

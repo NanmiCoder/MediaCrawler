@@ -56,6 +56,7 @@ class KuaishouCrawler(AbstractCrawler):
 
     def __init__(self):
         self.index_url = "https://www.kuaishou.com"
+        self.cookie_urls = [self.index_url]
         self.user_agent = utils.get_user_agent()
         self.cdp_manager = None
         self.ip_proxy_pool = None  # Proxy IP pool, used for automatic proxy refresh
@@ -107,7 +108,8 @@ class KuaishouCrawler(AbstractCrawler):
                 )
                 await login_obj.begin()
                 await self.ks_client.update_cookies(
-                    browser_context=self.browser_context
+                    browser_context=self.browser_context,
+                    urls=self.cookie_urls,
                 )
 
             crawler_type_var.set(config.CRAWLER_TYPE)
@@ -296,7 +298,8 @@ class KuaishouCrawler(AbstractCrawler):
                 time.sleep(20)
                 await self.context_page.goto(f"{self.index_url}?isHome=1")
                 await self.ks_client.update_cookies(
-                    browser_context=self.browser_context
+                    browser_context=self.browser_context,
+                    urls=self.cookie_urls,
                 )
 
     async def create_ks_client(self, httpx_proxy: Optional[str]) -> KuaiShouClient:
@@ -304,8 +307,9 @@ class KuaishouCrawler(AbstractCrawler):
         utils.logger.info(
             "[KuaishouCrawler.create_ks_client] Begin create kuaishou API client ..."
         )
-        cookie_str, cookie_dict = utils.convert_cookies(
-            await self.browser_context.cookies()
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            self.browser_context,
+            urls=self.cookie_urls,
         )
         ks_client_obj = KuaiShouClient(
             proxy=httpx_proxy,

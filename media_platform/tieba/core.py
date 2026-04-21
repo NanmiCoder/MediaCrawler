@@ -54,6 +54,7 @@ class TieBaCrawler(AbstractCrawler):
 
     def __init__(self) -> None:
         self.index_url = "https://tieba.baidu.com"
+        self.cookie_urls = [self.index_url]
         self.user_agent = utils.get_user_agent()
         self._page_extractor = TieBaExtractor()
         self.cdp_manager = None
@@ -123,7 +124,10 @@ class TieBaCrawler(AbstractCrawler):
                     cookie_str=config.COOKIES,
                 )
                 await login_obj.begin()
-                await self.tieba_client.update_cookies(browser_context=self.browser_context)
+                await self.tieba_client.update_cookies(
+                    browser_context=self.browser_context,
+                    urls=self.cookie_urls,
+                )
 
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
@@ -560,7 +564,10 @@ class TieBaCrawler(AbstractCrawler):
         user_agent = await self.context_page.evaluate("() => navigator.userAgent")
         utils.logger.info(f"[TieBaCrawler.create_tieba_client] Extracted User-Agent from browser: {user_agent}")
 
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            self.browser_context,
+            urls=self.cookie_urls,
+        )
 
         # Build complete browser request headers, simulating real browser behavior
         tieba_client = BaiduTieBaClient(

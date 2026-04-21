@@ -62,6 +62,7 @@ class WeiboClient(ProxyRefreshMixin):
         self.timeout = timeout
         self.headers = headers
         self._host = "https://m.weibo.cn"
+        self.cookie_urls = [self._host]
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         self._image_agent_host = "https://i1.wp.com/"
@@ -137,17 +138,16 @@ class WeiboClient(ProxyRefreshMixin):
         :param urls: Optional list of URLs to filter cookies (e.g., ["https://m.weibo.cn"])
                      If provided, only cookies for these URLs will be retrieved
         """
-        if urls:
-            cookies = await browser_context.cookies(urls=urls)
-            utils.logger.info(f"[WeiboClient.update_cookies] Updating cookies for specific URLs: {urls}")
-        else:
-            cookies = await browser_context.cookies()
-            utils.logger.info("[WeiboClient.update_cookies] Updating all cookies")
-
-        cookie_str, cookie_dict = utils.convert_cookies(cookies)
+        cookie_urls = urls or self.cookie_urls
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=cookie_urls,
+        )
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
-        utils.logger.info(f"[WeiboClient.update_cookies] Cookie updated successfully, total: {len(cookie_dict)} cookies")
+        utils.logger.info(
+            f"[WeiboClient.update_cookies] Cookie updated successfully for {cookie_urls}, total: {len(cookie_dict)} cookies"
+        )
 
     async def get_note_by_keyword(
         self,

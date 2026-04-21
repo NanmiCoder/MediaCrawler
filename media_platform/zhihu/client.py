@@ -59,6 +59,7 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         self.proxy = proxy
         self.timeout = timeout
         self.default_headers = headers
+        self.cookie_urls = ["https://www.zhihu.com"]
         self.cookie_dict = cookie_dict
         self._extractor = ZhihuExtractor()
         # Initialize proxy pool (from ProxyRefreshMixin)
@@ -160,7 +161,7 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
             ping_flag = False
         return ping_flag
 
-    async def update_cookies(self, browser_context: BrowserContext):
+    async def update_cookies(self, browser_context: BrowserContext, urls: Optional[list[str]] = None):
         """
         Update cookies method provided by API client, typically called after successful login
         Args:
@@ -169,7 +170,10 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
-        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=urls or self.cookie_urls,
+        )
         self.default_headers["cookie"] = cookie_str
         self.cookie_dict = cookie_dict
 
