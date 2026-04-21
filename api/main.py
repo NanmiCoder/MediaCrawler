@@ -30,7 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from .routers import crawler_router, data_router, websocket_router
+from .routers import crawler_router, data_router, websocket_router, notes_router
 
 app = FastAPI(
     title="MediaCrawler WebUI API",
@@ -59,6 +59,7 @@ app.add_middleware(
 app.include_router(crawler_router, prefix="/api")
 app.include_router(data_router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
+app.include_router(notes_router, prefix="/api")
 
 
 @app.get("/")
@@ -181,6 +182,16 @@ if os.path.exists(WEBUI_DIR):
         app.mount("/logos", StaticFiles(directory=logos_dir), name="logos")
     # Mount other static files (e.g., vite.svg)
     app.mount("/static", StaticFiles(directory=WEBUI_DIR), name="webui-static")
+
+# Mount viewer static files
+VIEWER_DIR = os.path.join(os.path.dirname(__file__), "..", "viewer", "static")
+if os.path.exists(VIEWER_DIR):
+    app.mount("/viewer", StaticFiles(directory=VIEWER_DIR, html=True), name="viewer")
+
+# Mount images directory for note images
+IMAGES_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "xhs", "images")
+if os.path.exists(IMAGES_DIR):
+    app.mount("/images", StaticFiles(directory=IMAGES_DIR), name="images")
 
 
 if __name__ == "__main__":
