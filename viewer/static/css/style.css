@@ -2900,3 +2900,79 @@ body::after {
         gap: 12px;
     }
 }
+
+/* ============================================
+   INFINITE SCROLL STYLES
+   ============================================ */
+
+#infinite-scroll-sentinel {
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+}
+
+.loading-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.loading-more .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--bg-elevated);
+    border-top-color: var(--xhs-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.no-more {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+}
+
+/* ============================================
+   SORT CONTROLS STYLES
+   ============================================ */
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-glass);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin: -32px -32px 16px -32px;
+}
+
+.sort-select {
+    padding: 8px 32px 8px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-normal);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236e6e7a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: all var(--transition-fast);
+}
+
+.sort-select:hover {
+    border-color: var(--current-accent);
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--current-accent);
+    box-shadow: 0 0 0 2px var(--current-glow);
+}

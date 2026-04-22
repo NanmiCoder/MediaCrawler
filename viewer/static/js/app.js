@@ -5,12 +5,28 @@ let currentKeyword = '';
 let currentSearch = '';
 let refreshTimeout = null;
 
+// 无限滚动状态变量
+let currentOffset = 0;
+let currentLimit = 100;
+let isLoadingMore = false;
+let hasMoreData = true;
+
+// 排序状态变量
+let currentSortOrder = 'time'; // 默认按时间排序
+const SORT_STORAGE_KEY = 'xhs_sort_order';
+
 // DOM 元素 - 在DOMContentLoaded后初始化
 let notesGrid, emptyState, loadingState, keywordFilter, searchInput, refreshBtn, lastUpdate;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('[XHS] DOMContentLoaded - starting initialization');
+
+    // 读取保存的排序偏好
+    const savedSort = localStorage.getItem(SORT_STORAGE_KEY);
+    if (savedSort) {
+        currentSortOrder = savedSort;
+    }
 
     // 初始化DOM元素引用
     notesGrid = document.getElementById('notesGrid');
@@ -74,6 +90,10 @@ async function loadNotes() {
     console.log('[XHS] loadNotes called');
     showLoading(true);
 
+    // 重置分页状态
+    currentOffset = 0;
+    hasMoreData = true;
+
     try {
         const params = {};
         if (currentKeyword) params.keyword = currentKeyword;
@@ -83,6 +103,10 @@ async function loadNotes() {
         const data = await API.getNotes(params);
         allNotes = data.notes;
         console.log('[XHS] Loaded notes:', allNotes.length);
+
+        // 更新分页状态
+        currentOffset = allNotes.length;
+        hasMoreData = allNotes.length === currentLimit;
 
         renderNotes(allNotes);
         updateLastUpdate();
@@ -113,8 +137,71 @@ function renderNotes(notes) {
     // 触发懒加载
     triggerLazyLoad();
 
+    // 设置无限滚动 sentinel
+    setupInfiniteScrollSentinel();
+
     // 滚动到顶部
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 加载更多笔记数据（无限滚动）
+async function loadMoreNotes() {
+    // 检查是否可以加载
+    if (isLoadingMore || !hasMoreData) {
+        return;
+    }
+
+    isLoadingMore = true;
+    showLoadingMore(true);
+
+    try {
+        const params = {
+            offset: currentOffset,
+            limit: currentLimit
+        };
+        if (currentKeyword) params.keyword = currentKeyword;
+        if (currentSearch) params.search = currentSearch;
+
+        console.log('[XHS] Loading more notes with params:', params);
+        const data = await API.getNotes(params);
+        const newNotes = data.notes;
+
+        if (newNotes.length > 0) {
+            // 追加到 allNotes
+            allNotes = [...allNotes, ...newNotes];
+            currentOffset += newNotes.length;
+
+            // 增量渲染
+            renderMoreNotes(newNotes);
+        }
+
+        // 更新 hasMoreData 状态
+        hasMoreData = newNotes.length === currentLimit;
+
+        // 如果没有更多数据，显示提示
+        if (!hasMoreData) {
+            showNoMoreData();
+        }
+
+    } catch (error) {
+        console.error('加载更多笔记失败:', error);
+    } finally {
+        isLoadingMore = false;
+        showLoadingMore(false);
+    }
+}
+
+// 增量渲染笔记（无限滚动）
+function renderMoreNotes(notes) {
+    notes.forEach(note => {
+        const card = createNoteCard(note);
+        notesGrid.appendChild(card);
+    });
+
+    // 触发懒加载
+    triggerLazyLoad();
+
+    // 不滚动，保持当前位置
 }
 
 // 创建笔记卡片
@@ -242,11 +329,25 @@ function setupEventListeners() {
         }
     });
     console.log('[XHS] Refresh button listener attached');
+
+    // 排序选择器
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+        sortSelect.value = currentSortOrder;
+        sortSelect.addEventListener('change', (e) => {
+            currentSortOrder = e.target.value;
+            localStorage.setItem(SORT_STORAGE_KEY, currentSortOrder);
+            // 重新加载数据
+            loadNotes();
+        });
+        console.log('[XHS] Sort select listener attached');
+    }
 }
 
-// 设置懒加载
+// 设置懒加载和无限滚动
 function setupLazyLoading() {
     if ('IntersectionObserver' in window) {
+        // 图片懒加载 Observer
         window.lazyObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -256,6 +357,18 @@ function setupLazyLoading() {
                         img.onload = () => img.classList.add('loaded');
                         window.lazyObserver.unobserve(img);
                     }
+                }
+            });
+        }, {
+            rootMargin: '100px'
+        });
+
+        // 无限滚动 Observer
+        window.scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !isLoadingMore && hasMoreData) {
+                    console.log('[XHS] Infinite scroll triggered');
+                    loadMoreNotes();
                 }
             });
         }, {
@@ -293,6 +406,53 @@ function showError(message) {
     emptyState.style.display = 'flex';
     emptyState.querySelector('.empty-text').textContent = message;
     emptyState.querySelector('.empty-hint').textContent = '请检查网络连接或刷新页面';
+}
+
+// 显示/隐藏加载更多指示器
+function showLoadingMore(show) {
+    let sentinel = document.getElementById('infinite-scroll-sentinel');
+    if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.id = 'infinite-scroll-sentinel';
+        notesGrid.appendChild(sentinel);
+    }
+
+    if (show) {
+        sentinel.innerHTML = `
+            <div class="loading-more">
+                <div class="loading-spinner"></div>
+                <span>加载中...</span>
+            </div>
+        `;
+    } else {
+        sentinel.innerHTML = '';
+    }
+}
+
+// 显示没有更多数据
+function showNoMoreData() {
+    let sentinel = document.getElementById('infinite-scroll-sentinel');
+    if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.id = 'infinite-scroll-sentinel';
+        notesGrid.appendChild(sentinel);
+    }
+
+    sentinel.innerHTML = `<div class="no-more">没有更多数据了</div>`;
+}
+
+// 设置无限滚动 sentinel
+function setupInfiniteScrollSentinel() {
+    let sentinel = document.getElementById('infinite-scroll-sentinel');
+    if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.id = 'infinite-scroll-sentinel';
+        notesGrid.appendChild(sentinel);
+    }
+
+    if (window.scrollObserver) {
+        window.scrollObserver.observe(sentinel);
+    }
 }
 
 // 更新最后更新时间
