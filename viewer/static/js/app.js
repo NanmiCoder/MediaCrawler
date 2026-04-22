@@ -322,12 +322,8 @@ function subscribeToXhsUpdates() {
                 } else if (data.type === 'subscription_update') {
                     window.DataNotification.handleSubscriptionUpdate(data);
                 } else if (data.type === 'stats_update') {
-                    // 统计更新时也显示通知
-                    window.DataNotification.show({
-                        platform: 'xhs',
-                        count: data.total_notes || 0,
-                        message: '📊 数据统计已更新'
-                    });
+                    // 统计更新仅用于数据展示，不触发通知
+                    console.log('[XHS] Stats updated:', data.total_notes, 'notes');
                 }
             }
 
