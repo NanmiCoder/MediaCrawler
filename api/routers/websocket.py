@@ -61,6 +61,28 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+# Track previous record counts per platform for delta calculation
+_previous_counts: dict[str, int] = {}
+
+
+def set_previous_count(platform: str, count: int) -> None:
+    """Set the previous count for a platform."""
+    _previous_counts[platform] = count
+
+
+def get_previous_count(platform: str) -> int:
+    """Get the previous count for a platform, default to 0."""
+    return _previous_counts.get(platform, 0)
+
+
+def calculate_new_count(platform: str, current_count: int) -> int:
+    """Calculate new records count by comparing with previous count."""
+    previous = get_previous_count(platform)
+    new_count = max(0, current_count - previous)
+    set_previous_count(platform, current_count)
+    return new_count
+
+
 async def broadcast_stats_update(platform: str = "xhs"):
     """
     Broadcast stats_update message to all connected WebSocket clients.
