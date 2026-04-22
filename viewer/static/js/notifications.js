@@ -96,6 +96,13 @@
     function showDataNotification(data) {
         if (!notificationContainer) init();
 
+        // 去重检查
+        const hash = generateNotificationHash(data);
+        if (isDuplicateNotification(hash)) {
+            console.log('[通知] 去重，跳过:', hash);
+            return;
+        }
+
         const config = PLATFORM_CONFIG[data.platform] || PLATFORM_CONFIG['xhs'];
         const notification = document.createElement('div');
         notification.className = 'data-notification-leaf';
