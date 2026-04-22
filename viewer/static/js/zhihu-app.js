@@ -264,3 +264,35 @@ window.zhihuApp = {
     loadCreators: loadZhihuCreators,
     updateLastUpdate: updateZhihuLastUpdate
 };
+
+// Subscribe to WebSocket updates for Zhihu (zhihu)
+// Use a small delay to ensure WSClient is fully initialized
+function subscribeToZhihuUpdates() {
+    if (window.WSClient && typeof window.WSClient.subscribe === 'function') {
+        window.WSClient.subscribe('zhihu', (data) => {
+            console.log('[ZHIHU] Received update notification:', data.type);
+
+            // 显示实时数据通知弹窗
+            if (window.DataNotification) {
+                if (data.type === 'data_update') {
+                    window.DataNotification.handleDataUpdate(data);
+                } else if (data.type === 'stats_update') {
+                    // 统计更新仅用于数据展示，不触发通知
+                    console.log('[ZHIHU] Stats updated');
+                }
+            }
+
+            // Only reload if Zhihu panel is visible
+            const zhihuPanel = document.getElementById('zhihu-panel');
+            if (zhihuPanel && zhihuPanel.style.display !== 'none') {
+                loadZhihuAnswers();
+                loadZhihuStats();
+            }
+        });
+        console.log('[ZHIHU] Subscribed to WebSocket updates');
+    } else {
+        // Retry after a short delay if WSClient not ready
+        setTimeout(subscribeToZhihuUpdates, 100);
+    }
+}
+subscribeToZhihuUpdates();
