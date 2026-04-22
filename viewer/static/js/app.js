@@ -197,9 +197,15 @@ async function loadMoreNotes() {
 
 // 增量渲染笔记（无限滚动）
 function renderMoreNotes(notes) {
+    // 在 sentinel 之前插入新卡片
+    const sentinel = document.getElementById('infinite-scroll-sentinel');
     notes.forEach(note => {
         const card = createNoteCard(note);
-        notesGrid.appendChild(card);
+        if (sentinel) {
+            notesGrid.insertBefore(card, sentinel);
+        } else {
+            notesGrid.appendChild(card);
+        }
     });
 
     // 触发懒加载
