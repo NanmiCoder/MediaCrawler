@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数据查看器</title>
+    <title>Media Command Center</title>
     <link rel="stylesheet" href="/viewer/css/style.css">
 </head>
 <body>
     <!-- 顶部导航栏 -->
     <header class="header">
         <div class="header-left">
-            <h1 class="logo">📚 数据查看器</h1>
+            <h1 class="logo">Media Command Center</h1>
         </div>
         <div class="header-center">
             <select id="keywordFilter" class="filter-select">
                 <option value="">全部关键词</option>
             </select>
-            <input type="text" id="searchInput" class="search-input" placeholder="搜索笔记标题...">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索内容...">
         </div>
         <div class="header-right">
-            <button id="refreshBtn" class="refresh-btn" title="刷新数据">
-                <span class="refresh-icon">🔄</span>
+            <div id="wsConnectionStatus" class="ws-connection-status disconnected" title="WebSocket 连接状态">
+                <span class="ws-status-dot"></span>
+                <span class="ws-status-text">未连接</span>
+            </div>
+            <button id="refreshBtn" class="refresh-btn" title="刷新数据" onclick="console.log('[REFRESH] Button clicked!'); if(window.app && window.app.loadNotes) { console.log('[REFRESH] Calling loadNotes'); window.app.loadNotes(); } else { console.log('[REFRESH] window.app not found'); }">
+                <span class="refresh-icon">↻</span>
                 <span class="refresh-text">刷新</span>
             </button>
             <span id="lastUpdate" class="last-update"></span>
@@ -35,7 +39,16 @@
                 aria-controls="xiaohongshu-panel"
                 id="xiaohongshu-tab"
                 data-platform="xiaohongshu">
-            📕 小红书
+            <span class="tab-icon">📕</span> 小红书
+        </button>
+        <button class="platform-tab douyin"
+                role="tab"
+                aria-selected="false"
+                aria-controls="douyin-panel"
+                id="douyin-tab"
+                data-platform="douyin"
+                tabindex="-1">
+            <span class="tab-icon">🎵</span> 抖音
         </button>
         <button class="platform-tab zhihu"
                 role="tab"
@@ -44,7 +57,25 @@
                 id="zhihu-tab"
                 data-platform="zhihu"
                 tabindex="-1">
-            🔵 知乎
+            <span class="tab-icon">◈</span> 知乎
+        </button>
+        <button class="platform-tab bilibili"
+                role="tab"
+                aria-selected="false"
+                aria-controls="bilibili-panel"
+                id="bilibili-tab"
+                data-platform="bilibili"
+                tabindex="-1">
+            <span class="tab-icon">📺</span> B站
+        </button>
+        <button class="platform-tab subscriptions"
+                role="tab"
+                aria-selected="false"
+                aria-controls="subscriptions-panel"
+                id="subscriptions-tab"
+                data-platform="subscriptions"
+                tabindex="-1">
+            <span class="tab-icon">📋</span> 订阅管理
         </button>
     </nav>
 
@@ -77,11 +108,64 @@
                 <!-- 笔记卡片将通过 JS 动态插入 -->
             </div>
             <div id="emptyState" class="empty-state" style="display: none;">
-                <div class="empty-icon">📭</div>
+                <div class="empty-icon">◇</div>
                 <p class="empty-text">暂无数据</p>
-                <p class="empty-hint">请先运行爬虫获取数据</p>
+                <p class="empty-hint">运行爬虫获取数据</p>
             </div>
             <div id="loadingState" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 抖音面板 -->
+    <div id="douyin-panel" role="tabpanel" aria-labelledby="douyin-tab" style="display: none;">
+        <!-- 抖音统计面板 -->
+        <div class="monitor-panel">
+            <div class="stats-cards">
+                <div class="stat-card dy-stat">
+                    <span class="stat-value" id="dyTotalVideos">0</span>
+                    <span class="stat-label">视频总数</span>
+                </div>
+                <div class="stat-card dy-stat">
+                    <span class="stat-value" id="dyTotalPlay">0</span>
+                    <span class="stat-label">播放总量</span>
+                </div>
+                <div class="stat-card dy-stat">
+                    <span class="stat-value" id="dyTotalLikes">0</span>
+                    <span class="stat-label">点赞总量</span>
+                </div>
+                <div class="stat-card dy-stat">
+                    <span class="stat-value" id="dyTotalComments">0</span>
+                    <span class="stat-label">评论总数</span>
+                </div>
+            </div>
+            <div class="keywords-stats" id="dySourceStats"></div>
+            <div style="display: flex; gap: 12px; margin-left: auto;">
+                <select id="dySourceFilter" class="zhihu-filter-select">
+                    <option value="">全部关键词</option>
+                </select>
+                <input type="text" id="dySearchInput" class="search-input" placeholder="搜索视频标题..." style="max-width: 200px;">
+                <button id="dyRefreshBtn" class="refresh-btn dy-refresh" title="刷新数据">
+                    <span class="refresh-icon">↻</span>
+                    <span class="refresh-text">刷新</span>
+                </button>
+                <span id="dyLastUpdate" class="last-update"></span>
+            </div>
+        </div>
+
+        <!-- 抖音视频列表 -->
+        <main class="main-content">
+            <div id="dyGrid" class="dy-grid">
+                <!-- 抖音卡片将通过 JS 动态插入 -->
+            </div>
+            <div id="dyEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">◇</div>
+                <p class="empty-text">暂无抖音数据</p>
+                <p class="empty-hint">请先运行抖音爬虫获取数据</p>
+            </div>
+            <div id="dyLoadingState" class="loading-state" style="display: none;">
                 <div class="loading-spinner"></div>
                 <p>加载中...</p>
             </div>
@@ -108,8 +192,8 @@
                     <option value="">全部创作者</option>
                 </select>
                 <input type="text" id="zhihuSearchInput" class="search-input" placeholder="搜索回答内容..." style="max-width: 200px;">
-                <button id="zhihuRefreshBtn" class="refresh-btn" title="刷新数据">
-                    <span class="refresh-icon">🔄</span>
+                <button id="zhihuRefreshBtn" class="refresh-btn zhihu-refresh" title="刷新数据">
+                    <span class="refresh-icon">↻</span>
                     <span class="refresh-text">刷新</span>
                 </button>
                 <span id="zhihuLastUpdate" class="last-update"></span>
@@ -122,11 +206,122 @@
                 <!-- 知乎卡片将通过 JS 动态插入 -->
             </div>
             <div id="zhihuEmptyState" class="empty-state" style="display: none;">
-                <div class="empty-icon">📭</div>
+                <div class="empty-icon">◇</div>
                 <p class="empty-text">暂无知乎数据</p>
                 <p class="empty-hint">请先运行知乎爬虫获取数据</p>
             </div>
             <div id="zhihuLoadingState" class="loading-state" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- B站面板 -->
+    <div id="bilibili-panel" role="tabpanel" aria-labelledby="bilibili-tab" style="display: none;">
+        <!-- B站统计面板 -->
+        <div class="monitor-panel">
+            <div class="stats-cards">
+                <div class="stat-card bili-stat">
+                    <span class="stat-value" id="biliTotalVideos">0</span>
+                    <span class="stat-label">视频总数</span>
+                </div>
+                <div class="stat-card bili-stat">
+                    <span class="stat-value" id="biliTotalPlay">0</span>
+                    <span class="stat-label">播放总量</span>
+                </div>
+                <div class="stat-card bili-stat">
+                    <span class="stat-value" id="biliTotalLikes">0</span>
+                    <span class="stat-label">点赞总量</span>
+                </div>
+                <div class="stat-card bili-stat">
+                    <span class="stat-value" id="biliTotalComments">0</span>
+                    <span class="stat-label">评论总数</span>
+                </div>
+            </div>
+            <div class="keywords-stats" id="biliSourceStats"></div>
+            <div style="display: flex; gap: 12px; margin-left: auto;">
+                <select id="biliSourceFilter" class="zhihu-filter-select">
+                    <option value="">All Sources</option>
+                </select>
+                <input type="text" id="biliSearchInput" class="search-input" placeholder="Search video title..." style="max-width: 200px;">
+                <button id="biliRefreshBtn" class="refresh-btn bili-refresh" title="Refresh data">
+                    <span class="refresh-icon">↻</span>
+                    <span class="refresh-text">Refresh</span>
+                </button>
+                <span id="biliLastUpdate" class="last-update"></span>
+            </div>
+        </div>
+
+        <!-- B站视频列表 -->
+        <main class="main-content">
+            <div id="biliGrid" class="bili-grid">
+                <!-- B站卡片将通过 JS 动态插入 -->
+            </div>
+            <div id="biliEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">◇</div>
+                <p class="empty-text">No Bilibili data</p>
+                <p class="empty-hint">Please run Bilibili crawler first</p>
+            </div>
+            <div id="biliLoadingState" class="loading-state" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Loading...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 订阅管理面板 -->
+    <div id="subscriptions-panel" role="tabpanel" aria-labelledby="subscriptions-tab" style="display: none;">
+        <!-- 订阅管理工具栏 -->
+        <div class="monitor-panel">
+            <div class="stats-cards">
+                <div class="stat-card sub-stat">
+                    <span class="stat-value" id="subTotalCount">0</span>
+                    <span class="stat-label">订阅总数</span>
+                </div>
+                <div class="stat-card sub-stat">
+                    <span class="stat-value" id="subActiveCount">0</span>
+                    <span class="stat-label">活跃订阅</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-left: auto;">
+                <button id="addSubscriptionBtn" class="refresh-btn sub-add-btn" title="添加订阅">
+                    <span class="refresh-icon">+</span>
+                    <span class="refresh-text">添加订阅</span>
+                </button>
+                <button id="refreshSubscriptionsBtn" class="refresh-btn sub-refresh" title="刷新数据">
+                    <span class="refresh-icon">↻</span>
+                    <span class="refresh-text">刷新</span>
+                </button>
+                <span id="subLastUpdate" class="last-update"></span>
+            </div>
+        </div>
+
+        <!-- 订阅列表 -->
+        <main class="main-content">
+            <div class="subscription-table-container">
+                <table class="subscription-table" id="subscriptionTable">
+                    <thead>
+                        <tr>
+                            <th>关键词</th>
+                            <th>平台</th>
+                            <th>频率</th>
+                            <th>状态</th>
+                            <th>最后执行</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subscriptionList">
+                        <!-- 订阅列表将通过 JS 动态插入 -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="subEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">◇</div>
+                <p class="empty-text">暂无订阅</p>
+                <p class="empty-hint">点击"添加订阅"创建新的订阅任务</p>
+            </div>
+            <div id="subLoadingState" class="loading-state" style="display: none;">
                 <div class="loading-spinner"></div>
                 <p>加载中...</p>
             </div>
@@ -171,6 +366,64 @@
         </div>
     </div>
 
+    <!-- 抖音详情模态框 -->
+    <div id="dyModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="dy-modal-content">
+            <button class="modal-close" id="dyModalClose">&times;</button>
+            <div class="dy-modal-header">
+                <img id="dyModalCover" class="dy-modal-cover" src="" alt="">
+            </div>
+            <div class="dy-modal-body">
+                <h2 class="dy-modal-title" id="dyModalTitle"></h2>
+                <div class="dy-modal-author">
+                    <img id="dyModalAuthorAvatar" src="" alt="">
+                    <div class="dy-modal-author-info">
+                        <span class="dy-modal-author-name" id="dyModalAuthorName"></span>
+                        <span class="dy-modal-time" id="dyModalTime"></span>
+                    </div>
+                </div>
+                <div class="dy-modal-stats">
+                    <div class="dy-stat-row">
+                        <span class="dy-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                            <span id="dyModalPlay">0</span>
+                        </span>
+                        <span class="dy-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+                            <span id="dyModalLike">0</span>
+                        </span>
+                        <span class="dy-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+                            <span id="dyModalComment">0</span>
+                        </span>
+                    </div>
+                    <div class="dy-stat-row">
+                        <span class="dy-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.35 3-3s-1.35-3-3-3-3 1.35-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.35-3 3s1.35 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.42-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                            <span id="dyModalShare">0</span>
+                        </span>
+                        <span class="dy-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span id="dyModalCollect">0</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="dy-modal-desc" id="dyModalDesc"></div>
+                <div class="dy-modal-music" id="dyModalMusic"></div>
+                <div class="dy-modal-comments-section">
+                    <h3>评论</h3>
+                    <div id="dyModalComments" class="dy-comments-list"></div>
+                </div>
+            </div>
+            <div class="dy-modal-footer">
+                <a class="dy-modal-link" id="dyModalLink" href="" target="_blank">
+                    在抖音查看 →
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- 知乎详情模态框 -->
     <div id="zhihuModal" class="modal" style="display: none;">
         <div class="modal-overlay"></div>
@@ -201,6 +454,222 @@
         </div>
     </div>
 
+    <!-- B站详情模态框 -->
+    <div id="biliModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="bili-modal-content">
+            <button class="modal-close" id="biliModalClose">&times;</button>
+            <div class="bili-modal-header">
+                <img id="biliModalCover" class="bili-modal-cover" src="" alt="">
+            </div>
+            <div class="bili-modal-body">
+                <h2 class="bili-modal-title" id="biliModalTitle"></h2>
+                <div class="bili-modal-author">
+                    <img id="biliModalAuthorAvatar" src="" alt="">
+                    <div class="bili-modal-author-info">
+                        <span class="bili-modal-author-name" id="biliModalAuthorName"></span>
+                        <span class="bili-modal-time" id="biliModalTime"></span>
+                    </div>
+                </div>
+                <div class="bili-modal-stats">
+                    <div class="bili-stat-row">
+                        <span class="bili-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                            <span id="biliModalPlay">0</span>
+                        </span>
+                        <span class="bili-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+                            <span id="biliModalLike">0</span>
+                        </span>
+                        <span class="bili-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                            <span id="biliModalCoin">0</span>
+                        </span>
+                        <span class="bili-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span id="biliModalFavorite">0</span>
+                        </span>
+                    </div>
+                    <div class="bili-stat-row">
+                        <span class="bili-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.35 3-3s-1.35-3-3-3-3 1.35-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.35-3 3s1.35 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.42-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                            <span id="biliModalShare">0</span>
+                        </span>
+                        <span class="bili-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                            <span id="biliModalDanmaku">0</span>
+                        </span>
+                        <span class="bili-stat-item">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+                            <span id="biliModalComment">0</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="bili-modal-desc" id="biliModalDesc"></div>
+                <div class="bili-modal-comments-section">
+                    <h3>Comments</h3>
+                    <div id="biliModalComments" class="bili-comments-list"></div>
+                </div>
+            </div>
+            <div class="bili-modal-footer">
+                <a class="bili-modal-link" id="biliModalLink" href="" target="_blank">
+                    Watch on Bilibili →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 订阅编辑模态框 -->
+    <div id="subscriptionModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="sub-modal-content">
+            <button class="modal-close" id="subModalClose">&times;</button>
+            <div class="sub-modal-header">
+                <h2 class="sub-modal-title" id="subModalTitle">添加订阅</h2>
+            </div>
+            <div class="sub-modal-body">
+                <form id="subscriptionForm">
+                    <input type="hidden" id="subId" value="">
+                    <div class="form-group">
+                        <label for="subKeyword">关键词 <span class="required">*</span></label>
+                        <input type="text" id="subKeyword" class="form-input" placeholder="输入搜索关键词" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subPlatform">平台 <span class="required">*</span></label>
+                        <select id="subPlatform" class="form-select" required>
+                            <option value="">选择平台</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subCron">执行频率 (Cron表达式)</label>
+                        <input type="text" id="subCron" class="form-input" placeholder="例如: 0 */6 * * * (每6小时)">
+                        <span class="form-hint">常用: 每小时(0 * * * *), 每6小时(0 */6 * * *), 每天(0 0 * * *)</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="subEnabled">状态</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="subEnabled" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">启用</span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" id="subCancelBtn">取消</button>
+                        <button type="submit" class="btn-save" id="subSaveBtn">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div id="confirmModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-body">
+                <div class="confirm-icon">⚠️</div>
+                <h3 class="confirm-title" id="confirmTitle">确认删除</h3>
+                <p class="confirm-message" id="confirmMessage">确定要删除这个订阅吗？此操作不可撤销。</p>
+            </div>
+            <div class="confirm-modal-footer">
+                <button class="btn-cancel" id="confirmCancelBtn">取消</button>
+                <button class="btn-danger" id="confirmOkBtn">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 趋势看板模态框 -->
+    <div id="trendsModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="trends-modal-content">
+            <button class="modal-close" id="trendsModalClose">&times;</button>
+            <div class="trends-modal-header">
+                <div class="trends-header-info">
+                    <h2 class="trends-modal-title" id="trendsTitle">趋势看板</h2>
+                    <div class="trends-sub-info">
+                        <span class="trends-keyword" id="trendsKeyword"></span>
+                        <span class="trends-platform-badge" id="trendsPlatformBadge"></span>
+                    </div>
+                </div>
+                <div class="trends-time-selector">
+                    <button class="time-btn active" data-days="7">7天</button>
+                    <button class="time-btn" data-days="30">30天</button>
+                    <button class="time-btn" data-days="90">90天</button>
+                </div>
+            </div>
+            <div class="trends-modal-body">
+                <!-- 统计卡片 -->
+                <div class="trends-stats-grid">
+                    <div class="trends-stat-card">
+                        <div class="trends-stat-icon">📊</div>
+                        <div class="trends-stat-content">
+                            <span class="trends-stat-value" id="trendsTotalData">0</span>
+                            <span class="trends-stat-label">数据总量</span>
+                        </div>
+                    </div>
+                    <div class="trends-stat-card">
+                        <div class="trends-stat-icon">🔥</div>
+                        <div class="trends-stat-content">
+                            <span class="trends-stat-value" id="trendsTotalInteractions">0</span>
+                            <span class="trends-stat-label">互动总量</span>
+                        </div>
+                    </div>
+                    <div class="trends-stat-card">
+                        <div class="trends-stat-icon">📈</div>
+                        <div class="trends-stat-content">
+                            <span class="trends-stat-value" id="trendsAvgInteractions">0</span>
+                            <span class="trends-stat-label">平均互动</span>
+                        </div>
+                    </div>
+                    <div class="trends-stat-card">
+                        <div class="trends-stat-icon">🎯</div>
+                        <div class="trends-stat-content">
+                            <span class="trends-stat-value" id="trendsHeatScore">0</span>
+                            <span class="trends-stat-label">热度指数</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 热度变化指示器 -->
+                <div class="trends-heat-indicators">
+                    <div class="heat-indicator">
+                        <span class="heat-label">7日热度变化</span>
+                        <span class="heat-value" id="trendsHeat7d">-</span>
+                    </div>
+                    <div class="heat-indicator">
+                        <span class="heat-label">30日热度变化</span>
+                        <span class="heat-value" id="trendsHeat30d">-</span>
+                    </div>
+                </div>
+
+                <!-- 趋势图表 -->
+                <div class="trends-chart-container">
+                    <h3 class="trends-chart-title">数据趋势</h3>
+                    <div class="trends-chart-wrapper">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 互动图表 -->
+                <div class="trends-chart-container">
+                    <h3 class="trends-chart-title">互动趋势</h3>
+                    <div class="trends-chart-wrapper">
+                        <canvas id="trendsInteractionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="trends-modal-footer">
+                <span class="trends-last-update" id="trendsLastUpdate"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebSocket Client (shared) -->
+    <script src="/viewer/js/websocket-client.js"></script>
+
+    <!-- 实时数据通知模块 -->
+    <script src="/viewer/js/notifications.js"></script>
+
     <!-- 小红书脚本 -->
     <script src="/viewer/js/api.js"></script>
     <script src="/viewer/js/app.js"></script>
@@ -211,6 +680,25 @@
     <script src="/viewer/js/zhihu-api.js"></script>
     <script src="/viewer/js/zhihu-app.js"></script>
     <script src="/viewer/js/zhihu-modal.js"></script>
+
+    <!-- B站脚本 -->
+    <script src="/viewer/js/bilibili-api.js"></script>
+    <script src="/viewer/js/bilibili-app.js"></script>
+    <script src="/viewer/js/bilibili-modal.js"></script>
+
+    <!-- 抖音脚本 -->
+    <script src="/viewer/js/douyin-api.js"></script>
+    <script src="/viewer/js/douyin-app.js"></script>
+    <script src="/viewer/js/douyin-modal.js"></script>
+
+    <!-- 订阅管理脚本 -->
+    <script src="/viewer/js/subscriptions-app.js"></script>
+
+    <!-- 趋势看板脚本 -->
+    <script src="/viewer/js/trends-app.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <!-- 平台切换脚本 -->
     <script>
@@ -228,12 +716,31 @@
             if (window.zhihuModal) {
                 window.zhihuModal.init();
             }
+
+            // 初始化B站模块
+            if (window.biliApp) {
+                window.biliApp.init();
+            }
+            if (window.biliModal) {
+                window.biliModal.init();
+            }
+
+            // 初始化抖音模块
+            if (window.dyApp) {
+                window.dyApp.init();
+            }
+            if (window.dyModal) {
+                window.dyModal.init();
+            }
         });
 
         function initPlatformTabs() {
             const tabs = document.querySelectorAll('.platform-tab');
             const xiaohongshuPanel = document.getElementById('xiaohongshu-panel');
+            const douyinPanel = document.getElementById('douyin-panel');
             const zhihuPanel = document.getElementById('zhihu-panel');
+            const biliPanel = document.getElementById('bilibili-panel');
+            const subscriptionsPanel = document.getElementById('subscriptions-panel');
             const headerCenter = document.querySelector('.header-center');
 
             tabs.forEach(tab => {
@@ -276,11 +783,29 @@
                 // 切换面板
                 if (platform === 'xiaohongshu') {
                     xiaohongshuPanel.style.display = 'block';
+                    douyinPanel.style.display = 'none';
                     zhihuPanel.style.display = 'none';
+                    biliPanel.style.display = 'none';
+                    subscriptionsPanel.style.display = 'none';
                     headerCenter.style.display = 'flex';
+                } else if (platform === 'douyin') {
+                    xiaohongshuPanel.style.display = 'none';
+                    douyinPanel.style.display = 'block';
+                    zhihuPanel.style.display = 'none';
+                    biliPanel.style.display = 'none';
+                    subscriptionsPanel.style.display = 'none';
+                    headerCenter.style.display = 'none';
+
+                    // 首次切换到抖音时加载数据
+                    if (window.dyApp) {
+                        window.dyApp.loadVideos();
+                    }
                 } else if (platform === 'zhihu') {
                     xiaohongshuPanel.style.display = 'none';
+                    douyinPanel.style.display = 'none';
                     zhihuPanel.style.display = 'block';
+                    biliPanel.style.display = 'none';
+                    subscriptionsPanel.style.display = 'none';
                     headerCenter.style.display = 'none';
 
                     // 首次切换到知乎时加载数据
@@ -288,6 +813,30 @@
                         window.zhihuApp.loadCreators();
                         window.zhihuApp.loadAnswers();
                         window.zhihuApp.loadStats();
+                    }
+                } else if (platform === 'bilibili') {
+                    xiaohongshuPanel.style.display = 'none';
+                    douyinPanel.style.display = 'none';
+                    zhihuPanel.style.display = 'none';
+                    biliPanel.style.display = 'block';
+                    subscriptionsPanel.style.display = 'none';
+                    headerCenter.style.display = 'none';
+
+                    // 首次切换到B站时加载数据
+                    if (window.biliApp) {
+                        window.biliApp.loadVideos();
+                    }
+                } else if (platform === 'subscriptions') {
+                    xiaohongshuPanel.style.display = 'none';
+                    douyinPanel.style.display = 'none';
+                    zhihuPanel.style.display = 'none';
+                    biliPanel.style.display = 'none';
+                    subscriptionsPanel.style.display = 'block';
+                    headerCenter.style.display = 'none';
+
+                    // 首次切换到订阅管理时加载数据
+                    if (window.subApp) {
+                        window.subApp.loadSubscriptions();
                     }
                 }
             }

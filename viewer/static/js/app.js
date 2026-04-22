@@ -5,22 +5,48 @@ let currentKeyword = '';
 let currentSearch = '';
 let refreshTimeout = null;
 
-// DOM 元素
-const notesGrid = document.getElementById('notesGrid');
-const emptyState = document.getElementById('emptyState');
-const loadingState = document.getElementById('loadingState');
-const keywordFilter = document.getElementById('keywordFilter');
-const searchInput = document.getElementById('searchInput');
-const refreshBtn = document.getElementById('refreshBtn');
-const lastUpdate = document.getElementById('lastUpdate');
+// DOM 元素 - 在DOMContentLoaded后初始化
+let notesGrid, emptyState, loadingState, keywordFilter, searchInput, refreshBtn, lastUpdate;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('[XHS] DOMContentLoaded - starting initialization');
+
+    // 初始化DOM元素引用
+    notesGrid = document.getElementById('notesGrid');
+    emptyState = document.getElementById('emptyState');
+    loadingState = document.getElementById('loadingState');
+    keywordFilter = document.getElementById('keywordFilter');
+    searchInput = document.getElementById('searchInput');
+    refreshBtn = document.getElementById('refreshBtn');
+    lastUpdate = document.getElementById('lastUpdate');
+
+    console.log('[XHS] DOM elements:', {
+        notesGrid: !!notesGrid,
+        emptyState: !!emptyState,
+        loadingState: !!loadingState,
+        keywordFilter: !!keywordFilter,
+        searchInput: !!searchInput,
+        refreshBtn: !!refreshBtn,
+        lastUpdate: !!lastUpdate
+    });
+
+    // 如果 refreshBtn 不存在，尝试直接绑定
+    if (!refreshBtn) {
+        console.error('[XHS] refreshBtn not found! Trying to find it...');
+        refreshBtn = document.querySelector('.refresh-btn');
+        console.log('[XHS] Found via querySelector:', !!refreshBtn);
+    }
+
     try {
         await loadKeywords();
+        console.log('[XHS] loadKeywords done');
         await loadNotes();
+        console.log('[XHS] loadNotes done');
         setupEventListeners();
+        console.log('[XHS] setupEventListeners done');
         setupLazyLoading();
+        console.log('[XHS] setupLazyLoading done');
     } catch (error) {
         console.error('初始化失败:', error);
         showError('加载数据失败，请刷新页面重试');
@@ -45,6 +71,7 @@ async function loadKeywords() {
 
 // 加载笔记数据
 async function loadNotes() {
+    console.log('[XHS] loadNotes called');
     showLoading(true);
 
     try {
@@ -52,8 +79,10 @@ async function loadNotes() {
         if (currentKeyword) params.keyword = currentKeyword;
         if (currentSearch) params.search = currentSearch;
 
+        console.log('[XHS] Fetching notes with params:', params);
         const data = await API.getNotes(params);
         allNotes = data.notes;
+        console.log('[XHS] Loaded notes:', allNotes.length);
 
         renderNotes(allNotes);
         updateLastUpdate();
@@ -83,6 +112,9 @@ function renderNotes(notes) {
 
     // 触发懒加载
     triggerLazyLoad();
+
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // 创建笔记卡片
@@ -179,6 +211,9 @@ function formatCount(count) {
 
 // 设置事件监听
 function setupEventListeners() {
+    console.log('[XHS] Setting up event listeners');
+    console.log('[XHS] refreshBtn element:', refreshBtn);
+
     // 关键词筛选
     keywordFilter.addEventListener('change', (e) => {
         currentKeyword = e.target.value;
@@ -196,11 +231,17 @@ function setupEventListeners() {
     });
 
     // 刷新按钮
-    refreshBtn.addEventListener('click', async () => {
+    refreshBtn.addEventListener('click', async (e) => {
+        console.log('[XHS] Refresh button clicked!');
+        e.preventDefault();
         refreshBtn.classList.add('loading');
-        await loadNotes();
-        refreshBtn.classList.remove('loading');
+        try {
+            await loadNotes();
+        } finally {
+            refreshBtn.classList.remove('loading');
+        }
     });
+    console.log('[XHS] Refresh button listener attached');
 }
 
 // 设置懒加载
@@ -266,3 +307,40 @@ window.app = {
     loadNotes,
     updateLastUpdate
 };
+
+// Subscribe to WebSocket updates for Xiaohongshu (xhs)
+// Use a small delay to ensure WSClient is fully initialized
+function subscribeToXhsUpdates() {
+    if (window.WSClient && typeof window.WSClient.subscribe === 'function') {
+        window.WSClient.subscribe('xhs', (data) => {
+            console.log('[XHS] Received update notification:', data.type);
+
+            // 显示实时数据通知弹窗
+            if (window.DataNotification) {
+                if (data.type === 'data_update') {
+                    window.DataNotification.handleDataUpdate(data);
+                } else if (data.type === 'subscription_update') {
+                    window.DataNotification.handleSubscriptionUpdate(data);
+                } else if (data.type === 'stats_update') {
+                    // 统计更新时也显示通知
+                    window.DataNotification.show({
+                        platform: 'xhs',
+                        count: data.total_notes || 0,
+                        message: '📊 数据统计已更新'
+                    });
+                }
+            }
+
+            // Only reload if XHS panel is visible
+            const xhsPanel = document.getElementById('xiaohongshu-panel');
+            if (xhsPanel && xhsPanel.style.display !== 'none') {
+                loadNotes();
+            }
+        });
+        console.log('[XHS] Subscribed to WebSocket updates');
+    } else {
+        // Retry after a short delay if WSClient not ready
+        setTimeout(subscribeToXhsUpdates, 100);
+    }
+}
+subscribeToXhsUpdates();
