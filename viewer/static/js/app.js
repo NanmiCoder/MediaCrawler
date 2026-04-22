@@ -148,6 +148,7 @@ function renderNotes(notes) {
 async function loadMoreNotes() {
     // 检查是否可以加载
     if (isLoadingMore || !hasMoreData) {
+        console.log('[XHS] loadMoreNotes skipped: isLoadingMore=', isLoadingMore, ', hasMoreData=', hasMoreData);
         return;
     }
 
@@ -165,6 +166,7 @@ async function loadMoreNotes() {
         console.log('[XHS] Loading more notes with params:', params);
         const data = await API.getNotes(params);
         const newNotes = data.notes;
+        console.log('[XHS] Loaded more notes:', newNotes.length, ', hasMoreData will be:', newNotes.length === currentLimit);
 
         if (newNotes.length > 0) {
             // 追加到 allNotes
@@ -187,6 +189,7 @@ async function loadMoreNotes() {
         if (hasMoreData) {
             showLoadingMore(false);
         } else {
+            console.log('[XHS] No more data, showing "没有更多数据了"');
             showNoMoreData();
         }
     }
