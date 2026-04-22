@@ -29,6 +29,7 @@ from playwright.async_api import BrowserContext
 from base.base_crawler import AbstractApiClient
 from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
+from tools.retry_decorator import auto_retry
 from var import request_keyword_var
 
 if TYPE_CHECKING:
@@ -112,6 +113,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
             a_bogus = await get_a_bogus(uri, query_string, post_data, headers["User-Agent"], self.playwright_page)
             params["a_bogus"] = a_bogus
 
+    @auto_retry(max_retries=3, base_delay=1.0)
     async def request(self, method, url, **kwargs):
         # 每次请求前检测代理是否过期
         await self._refresh_proxy_if_expired()
@@ -332,6 +334,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
             result.extend(aweme_list)
         return result
 
+    @auto_retry(max_retries=3, base_delay=1.0)
     async def get_aweme_media(self, url: str) -> Union[bytes, None]:
         async with httpx.AsyncClient(proxy=self.proxy) as client:
             try:

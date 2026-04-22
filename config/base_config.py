@@ -117,6 +117,10 @@ FONT_PATH = "./docs/STZHONGS.TTF"
 # 爬取间隔时间
 CRAWLER_MAX_SLEEP_SEC = 2
 
+# 自动重试机制开关（仅针对小红书和抖音平台）
+# 开启后，网络相关异常（超时、连接失败等）会自动重试3次，采用指数退避策略（1s、2s、4s）
+ENABLE_AUTO_RETRY = True
+
 from .bilibili_config import *
 from .xhs_config import *
 from .dy_config import *

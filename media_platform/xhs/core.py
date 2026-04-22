@@ -30,8 +30,6 @@ from playwright.async_api import (
     Playwright,
     async_playwright,
 )
-from tenacity import RetryError
-
 import config
 from base.base_crawler import AbstractCrawler
 from model.m_xiaohongshu import NoteUrlInfo, CreatorUrlInfo
@@ -39,6 +37,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import xhs as xhs_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.retry_decorator import RetryExhaustedError
 from var import crawler_type_var, source_keyword_var
 
 from .client import XiaoHongShuClient
@@ -291,7 +290,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
             try:
                 try:
                     note_detail = await self.xhs_client.get_note_by_id(note_id, xsec_source, xsec_token)
-                except RetryError:
+                except RetryExhaustedError:
                     pass
 
                 if not note_detail:
