@@ -298,11 +298,9 @@ function subscribeToBilibiliUpdates() {
             if (window.DataNotification) {
                 if (data.type === 'data_update') {
                     window.DataNotification.handleDataUpdate(data);
-                } else {
-                    window.DataNotification.show({
-                        platform: 'bili',
-                        message: '📺 B站数据已更新'
-                    });
+                } else if (data.type === 'stats_update') {
+                    // 统计更新仅用于数据展示，不触发通知
+                    console.log('[BILI] Stats updated');
                 }
             }
 
