@@ -46,6 +46,46 @@
     }
 
     /**
+     * 生成通知去重哈希
+     * @param {Object} data - 通知数据
+     * @returns {string} 哈希字符串
+     */
+    function generateNotificationHash(data) {
+        // 使用 platform + titles + count 作为去重键
+        const titles = data.titles ? data.titles.slice(0, 3).join(',') : '';
+        const count = data.count || 0;
+        return `${data.platform}-${titles}-${count}`;
+    }
+
+    /**
+     * 检查是否为重复通知
+     * @param {string} hash - 通知哈希
+     * @returns {boolean} true 表示是重复通知，应跳过
+     */
+    function isDuplicateNotification(hash) {
+        const now = Date.now();
+        const lastShown = NOTIFICATION_DEDUP.recentNotifications.get(hash);
+
+        if (lastShown && (now - lastShown < NOTIFICATION_DEDUP.dedupWindowMs)) {
+            return true;
+        }
+
+        // 记录本次通知时间
+        NOTIFICATION_DEDUP.recentNotifications.set(hash, now);
+
+        // 定期清理过期条目（每 30 秒）
+        if (NOTIFICATION_DEDUP.recentNotifications.size > 50) {
+            for (const [key, timestamp] of NOTIFICATION_DEDUP.recentNotifications) {
+                if (now - timestamp > NOTIFICATION_DEDUP.cleanupIntervalMs) {
+                    NOTIFICATION_DEDUP.recentNotifications.delete(key);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * 显示数据更新通知 - 叶子式弹窗
      * @param {Object} data - 通知数据
      * @param {string} data.platform - 平台标识 (xhs, dy, bili, zhihu)
