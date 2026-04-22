@@ -20,6 +20,7 @@ import os
 import re
 import json
 import glob
+import aiofiles
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -32,6 +33,7 @@ router = APIRouter(prefix="/notes", tags=["notes"])
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 XHS_DATA_DIR = DATA_DIR / "xhs"
 JSONL_DIR = XHS_DATA_DIR / "jsonl"
+JSON_DIR = XHS_DATA_DIR / "json"  # Also check JSON directory
 IMAGES_DIR = XHS_DATA_DIR / "images"
 
 
@@ -116,40 +118,56 @@ def get_local_image_count(note_id: str) -> int:
 
 
 def read_jsonl_files() -> List[Dict[str, Any]]:
-    """Read all JSONL files and return list of notes.
+    """Read all JSONL and JSON files and return list of notes.
 
     Returns:
         List of note dictionaries sorted by time (newest first)
     """
     notes: List[Dict[str, Any]] = []
 
-    if not JSONL_DIR.exists():
-        return notes
-
-    # Find all JSONL files
-    try:
-        jsonl_files = list(JSONL_DIR.glob("*.jsonl"))
-    except OSError:
-        return notes
-
-    for jsonl_file in jsonl_files:
+    # Read from JSONL directory
+    if JSONL_DIR.exists():
         try:
-            with open(jsonl_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
+            jsonl_files = list(JSONL_DIR.glob("*.jsonl"))
+        except OSError:
+            jsonl_files = []
+
+        for jsonl_file in jsonl_files:
+            try:
+                with open(jsonl_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            note = json.loads(line)
+                            note["local_image_count"] = get_local_image_count(note.get("note_id", ""))
+                            notes.append(note)
+                        except json.JSONDecodeError:
+                            continue
+            except (OSError, IOError):
+                continue
+
+    # Also read from JSON directory (for compatibility with json format storage)
+    if JSON_DIR.exists():
+        try:
+            json_files = list(JSON_DIR.glob("search_contents_*.json"))
+        except OSError:
+            json_files = []
+
+        for json_file in json_files:
+            try:
+                with open(json_file, "r", encoding="utf-8") as f:
                     try:
-                        note = json.loads(line)
-                        # Add local image count
-                        note["local_image_count"] = get_local_image_count(note.get("note_id", ""))
-                        notes.append(note)
+                        data = json.load(f)
+                        if isinstance(data, list):
+                            for note in data:
+                                note["local_image_count"] = get_local_image_count(note.get("note_id", ""))
+                                notes.append(note)
                     except json.JSONDecodeError:
-                        # Skip malformed JSON lines
                         continue
-        except (OSError, IOError):
-            # Skip files that cannot be read
-            continue
+            except (OSError, IOError):
+                continue
 
     # Sort by time (newest first), handle None/0 values explicitly
     notes.sort(key=lambda x: x.get("time") or 0, reverse=True)
@@ -290,3 +308,109 @@ async def get_keywords() -> Dict[str, Any]:
     return {
         "keywords": sorted(list(keywords))
     }
+
+
+async def get_recent_notes(platform: str, limit: int = 5) -> list[dict]:
+    """
+    Get the most recent notes for a platform.
+    Used by WebSocket broadcast to include titles in notifications.
+
+    Args:
+        platform: Platform identifier (xhs, dy, bili, zhihu)
+        limit: Maximum number of records to return
+
+    Returns:
+        List of note dictionaries with title field
+    """
+    platform_dir = DATA_DIR / platform
+    if not platform_dir.exists():
+        return []
+
+    notes = []
+
+    # Try JSONL files first
+    jsonl_dir = platform_dir / "jsonl"
+    if jsonl_dir.exists():
+        for jsonl_file in sorted(jsonl_dir.glob("*.jsonl"), key=lambda x: x.stat().st_mtime, reverse=True):
+            try:
+                async with aiofiles.open(jsonl_file, 'r', encoding='utf-8') as f:
+                    lines = await f.readlines()
+                    # Read from end (most recent first)
+                    for line in reversed(lines):
+                        line = line.strip()
+                        if line:
+                            try:
+                                note = json.loads(line)
+                                if note.get('title'):
+                                    notes.append(note)
+                                    if len(notes) >= limit:
+                                        return notes
+                            except json.JSONDecodeError:
+                                continue
+            except Exception as e:
+                print(f"[Notes] Error reading {jsonl_file}: {e}")
+                continue
+
+    # Fallback to JSON directory
+    if len(notes) < limit:
+        json_dir = platform_dir / "json"
+        if json_dir.exists():
+            for json_file in sorted(json_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True):
+                try:
+                    async with aiofiles.open(json_file, 'r', encoding='utf-8') as f:
+                        content = await f.read()
+                        data = json.loads(content)
+                        if isinstance(data, list):
+                            for note in reversed(data):
+                                if isinstance(note, dict) and note.get('title'):
+                                    notes.append(note)
+                                    if len(notes) >= limit:
+                                        return notes
+                except Exception as e:
+                    print(f"[Notes] Error reading {json_file}: {e}")
+                    continue
+
+    return notes
+
+
+async def get_platform_notes_count(platform: str) -> int:
+    """
+    Get the total count of notes for a platform.
+
+    Args:
+        platform: Platform identifier
+
+    Returns:
+        Total number of notes
+    """
+    platform_dir = DATA_DIR / platform
+    if not platform_dir.exists():
+        return 0
+
+    count = 0
+
+    # Count from JSONL files
+    jsonl_dir = platform_dir / "jsonl"
+    if jsonl_dir.exists():
+        for jsonl_file in jsonl_dir.glob("*.jsonl"):
+            try:
+                async with aiofiles.open(jsonl_file, 'r', encoding='utf-8') as f:
+                    lines = await f.readlines()
+                    count += len([l for l in lines if l.strip()])
+            except Exception:
+                continue
+
+    # Count from JSON files
+    json_dir = platform_dir / "json"
+    if json_dir.exists():
+        for json_file in json_dir.glob("*.json"):
+            try:
+                async with aiofiles.open(json_file, 'r', encoding='utf-8') as f:
+                    content = await f.read()
+                    data = json.loads(content)
+                    if isinstance(data, list):
+                        count += len(data)
+            except Exception:
+                continue
+
+    return count
