@@ -309,7 +309,9 @@ function formatCount(count) {
 // 格式化时间显示
 function formatTime(timestamp) {
     if (!timestamp) return '';
-    const date = new Date(timestamp * 1000); // Unix timestamp to Date
+    // 时间戳可能是秒级（10位）或毫秒级（13位）
+    const ms = timestamp > 9999999999 ? timestamp : timestamp * 1000;
+    const date = new Date(ms);
     const now = new Date();
     const diff = (now - date) / 1000; // 秒
 
@@ -465,6 +467,11 @@ function showNoMoreData() {
         sentinel = document.createElement('div');
         sentinel.id = 'infinite-scroll-sentinel';
         notesGrid.appendChild(sentinel);
+    }
+
+    // 停止监听 sentinel，避免重复触发
+    if (window.scrollObserver) {
+        window.scrollObserver.unobserve(sentinel);
     }
 
     sentinel.innerHTML = `<div class="no-more">没有更多数据了</div>`;
