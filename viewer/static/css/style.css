@@ -2976,3 +2976,11 @@ body::after {
     border-color: var(--current-accent);
     box-shadow: 0 0 0 2px var(--current-glow);
 }
+
+/* Note card time display */
+.note-card-time {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+}

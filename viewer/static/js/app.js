@@ -178,16 +178,17 @@ async function loadMoreNotes() {
         // 更新 hasMoreData 状态
         hasMoreData = newNotes.length === currentLimit;
 
-        // 如果没有更多数据，显示提示
-        if (!hasMoreData) {
-            showNoMoreData();
-        }
-
     } catch (error) {
         console.error('加载更多笔记失败:', error);
     } finally {
         isLoadingMore = false;
-        showLoadingMore(false);
+        // 只有还有更多数据时才清除加载指示器
+        // 如果没有更多数据，显示"没有更多数据了"
+        if (hasMoreData) {
+            showLoadingMore(false);
+        } else {
+            showNoMoreData();
+        }
     }
 }
 
@@ -281,6 +282,15 @@ function createNoteCard(note) {
     stats.appendChild(collects);
 
     meta.appendChild(stats);
+
+    // 时间显示
+    if (note.time) {
+        const timeEl = document.createElement('div');
+        timeEl.className = 'note-card-time';
+        timeEl.textContent = formatTime(note.time);
+        content.appendChild(timeEl);
+    }
+
     content.appendChild(meta);
     card.appendChild(content);
 
@@ -294,6 +304,25 @@ function createNoteCard(note) {
 function formatCount(count) {
     if (!count) return '0';
     return count;
+}
+
+// 格式化时间显示
+function formatTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp * 1000); // Unix timestamp to Date
+    const now = new Date();
+    const diff = (now - date) / 1000; // 秒
+
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}天前`;
+
+    // 超过一周显示日期
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 // 设置事件监听
