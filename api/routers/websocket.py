@@ -116,14 +116,26 @@ async def broadcast_platform_update(platform: str):
     Args:
         platform: The platform identifier (e.g., "xhs", "dy", "bili", "zhihu")
     """
+    from .notes import get_recent_notes, get_platform_notes_count
+
     try:
+        # Get current count and calculate new records
+        current_count = await get_platform_notes_count(platform)
+        new_count = calculate_new_count(platform, current_count)
+
+        # Get recent notes for titles
+        recent_notes = await get_recent_notes(platform, limit=5)
+        titles = [note.get('title', '') for note in recent_notes if note.get('title')]
+
         message = DataUpdateMessage(
             type="data_update",
             platform=platform,
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
+            new_count=new_count,
+            titles=titles
         )
         await manager.broadcast(message.model_dump())
-        print(f"[WS] Broadcasted data_update for platform '{platform}'")
+        print(f"[WS] Broadcasted data_update for platform '{platform}': {new_count} new, titles: {titles[:2]}")
     except Exception as e:
         print(f"[WS] Error broadcasting data_update for platform '{platform}': {e}")
 
