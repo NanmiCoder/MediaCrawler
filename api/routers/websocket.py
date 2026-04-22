@@ -23,7 +23,7 @@ from typing import Set, Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from ..services import crawler_manager
-from ..schemas import StatsUpdateMessage
+from ..schemas import StatsUpdateMessage, DataUpdateMessage, SubscriptionUpdateMessage
 
 router = APIRouter(tags=["websocket"])
 
@@ -61,11 +61,14 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-async def broadcast_stats_update():
+async def broadcast_stats_update(platform: str = "xhs"):
     """
     Broadcast stats_update message to all connected WebSocket clients.
     Called by FileWatcherService when JSONL files change.
     Recalculates stats from files to ensure consistency.
+
+    Args:
+        platform: The platform identifier that triggered this update (e.g., "xhs", "dy", "bili", "zhihu")
     """
     from .notes import get_notes_stats
 
@@ -78,9 +81,60 @@ async def broadcast_stats_update():
             timestamp=datetime.now().isoformat()
         )
         await manager.broadcast(message.model_dump())
-        print(f"[WS] Broadcasted stats_update: {message.total_notes} notes, {message.total_images} images")
+        print(f"[WS] Broadcasted stats_update from platform '{platform}': {message.total_notes} notes, {message.total_images} images")
     except Exception as e:
-        print(f"[WS] Error broadcasting stats_update: {e}")
+        print(f"[WS] Error broadcasting stats_update from platform '{platform}': {e}")
+
+
+async def broadcast_platform_update(platform: str):
+    """
+    Broadcast platform-specific data_update message to all connected WebSocket clients.
+    This allows frontend to filter and route updates to specific viewer components.
+
+    Args:
+        platform: The platform identifier (e.g., "xhs", "dy", "bili", "zhihu")
+    """
+    try:
+        message = DataUpdateMessage(
+            type="data_update",
+            platform=platform,
+            timestamp=datetime.now().isoformat()
+        )
+        await manager.broadcast(message.model_dump())
+        print(f"[WS] Broadcasted data_update for platform '{platform}'")
+    except Exception as e:
+        print(f"[WS] Error broadcasting data_update for platform '{platform}': {e}")
+
+
+async def broadcast_subscription_update(
+    subscription_id: str,
+    keyword: str,
+    platform: str,
+    new_count: int = 0
+):
+    """
+    Broadcast subscription_update message to all connected WebSocket clients.
+    Called when a subscription-triggered crawl completes.
+
+    Args:
+        subscription_id: The subscription identifier
+        keyword: The search keyword for this subscription
+        platform: The platform identifier (e.g., "xhs", "zhihu")
+        new_count: Number of new items crawled
+    """
+    try:
+        message = SubscriptionUpdateMessage(
+            type="subscription_update",
+            subscription_id=subscription_id,
+            keyword=keyword,
+            platform=platform,
+            new_count=new_count,
+            timestamp=datetime.now().isoformat()
+        )
+        await manager.broadcast(message.model_dump())
+        print(f"[WS] Broadcasted subscription_update for '{keyword}' on {platform}: {new_count} new items")
+    except Exception as e:
+        print(f"[WS] Error broadcasting subscription_update: {e}")
 
 
 async def send_initial_stats(websocket: WebSocket):
@@ -177,19 +231,40 @@ async def websocket_logs(websocket: WebSocket):
 
 @router.websocket("/ws/status")
 async def websocket_status(websocket: WebSocket):
-    """WebSocket status stream - sends crawler status and stats updates"""
-    await websocket.accept()
+    """
+    WebSocket status stream - sends crawler status, stats updates, and data updates.
+
+    This endpoint:
+    1. Sends initial stats on connect
+    2. Sends crawler status every second
+    3. Receives broadcast messages (data_update, stats_update, subscription_update) from manager
+    """
+    await manager.connect(websocket)
 
     try:
         # Send initial stats on connect
         await send_initial_stats(websocket)
 
         while True:
-            # Send status every second
+            # Send status every second (with type field for frontend parsing)
             status = crawler_manager.get_status()
+            status["type"] = "crawler_status"
             await websocket.send_json(status)
-            await asyncio.sleep(1)
+
+            # Wait for incoming messages (heartbeat) with timeout
+            try:
+                data = await asyncio.wait_for(
+                    websocket.receive_text(),
+                    timeout=1.0
+                )
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except asyncio.TimeoutError:
+                # No message received, continue loop
+                pass
     except WebSocketDisconnect:
         pass
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[WS Status] Error: {e}")
+    finally:
+        manager.disconnect(websocket)
