@@ -109,9 +109,22 @@
 
         // 构建通知内容
         const title = data.message || `📥 ${config.name} 新数据`;
-        const detail = data.keyword
-            ? `关键词: ${data.keyword}`
-            : (data.count ? `新增 ${data.count} 条数据` : '数据已更新');
+        let detail;
+        if (data.titles && data.titles.length > 0) {
+            // 显示标题列表
+            const displayTitles = data.titles.slice(0, 2);
+            const remaining = data.titles.length - displayTitles.length;
+            detail = displayTitles.map(t => `"${t}"`).join(', ');
+            if (remaining > 0) {
+                detail += ` 等${data.titles.length}条`;
+            }
+        } else if (data.keyword) {
+            detail = `关键词: ${data.keyword}`;
+        } else if (data.count) {
+            detail = `新增 ${data.count} 条数据`;
+        } else {
+            detail = '数据已更新';
+        }
 
         notification.innerHTML = `
             <div class="notification-leaf-header" style="background: ${config.gradient}">
