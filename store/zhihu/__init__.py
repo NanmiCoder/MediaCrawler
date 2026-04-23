@@ -35,6 +35,13 @@ from tools import utils
 from var import source_keyword_var
 
 
+def _normalize_zhihu_time_fields(local_db_item: dict, fields: List[str]):
+    for field in fields:
+        value = local_db_item.get(field)
+        if value is not None and value != "":
+            local_db_item[field] = str(value)
+
+
 class ZhihuStoreFactory:
     STORES = {
         "csv": ZhihuCsvStoreImplement,
@@ -80,6 +87,7 @@ async def update_zhihu_content(content_item: ZhihuContent):
     """
     content_item.source_keyword = source_keyword_var.get()
     local_db_item = content_item.model_dump()
+    _normalize_zhihu_time_fields(local_db_item, ["created_time", "updated_time"])
     local_db_item.update({"last_modify_ts": utils.get_current_timestamp()})
     utils.logger.info(f"[store.zhihu.update_zhihu_content] zhihu content: {local_db_item}")
     await ZhihuStoreFactory.create_store().store_content(local_db_item)
@@ -112,6 +120,7 @@ async def update_zhihu_content_comment(comment_item: ZhihuComment):
 
     """
     local_db_item = comment_item.model_dump()
+    _normalize_zhihu_time_fields(local_db_item, ["publish_time"])
     local_db_item.update({"last_modify_ts": utils.get_current_timestamp()})
     utils.logger.info(f"[store.zhihu.update_zhihu_note_comment] zhihu content comment:{local_db_item}")
     await ZhihuStoreFactory.create_store().store_comment(local_db_item)
