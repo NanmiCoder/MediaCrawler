@@ -601,23 +601,24 @@ body::after {
     z-index: 1;
 }
 
-/* Masonry layout for Xiaohongshu */
+/* Grid layout for Xiaohongshu (横向排列，符合阅读习惯) */
 .note-grid {
-    column-count: 4;
-    column-gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
 }
 
 @media (max-width: 1400px) {
-    .note-grid { column-count: 3; }
+    .note-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 1000px) {
-    .note-grid { column-count: 2; }
+    .note-grid { grid-template-columns: repeat(2, 1fr); }
     .header-center { max-width: 300px; }
 }
 
 @media (max-width: 700px) {
-    .note-grid { column-count: 1; }
+    .note-grid { grid-template-columns: 1fr; }
     .header { flex-wrap: wrap; gap: 12px; }
     .header-center { order: 3; width: 100%; max-width: none; margin: 0; }
     .monitor-panel { flex-wrap: wrap; }
@@ -628,8 +629,6 @@ body::after {
    ============================================ */
 
 .note-card {
-    break-inside: avoid;
-    margin-bottom: 20px;
     background: var(--bg-card);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-lg);
@@ -2906,6 +2905,7 @@ body::after {
    ============================================ */
 
 #infinite-scroll-sentinel {
+    grid-column: 1 / -1; /* 跨越所有列 */
     width: 100%;
     padding: 20px;
     text-align: center;
@@ -2931,10 +2931,11 @@ body::after {
 }
 
 .no-more {
-    padding: 20px;
+    padding: 24px;
     text-align: center;
-    color: var(--text-dim);
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: 16px;
+    font-weight: 500;
 }
 
 /* ============================================
@@ -2983,4 +2984,55 @@ body::after {
     color: var(--text-dim);
     margin-top: 8px;
     font-family: 'JetBrains Mono', monospace;
+}
+
+/* ============================================
+   IMAGE LOADING STATES
+   ============================================ */
+
+.note-card-image {
+    transition: opacity 0.3s ease;
+}
+
+.note-card-image.image-loading {
+    opacity: 0;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.note-card-image.image-loaded {
+    opacity: 1;
+}
+
+.note-card-image.image-error {
+    opacity: 0;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Loading spinner overlay */
+.image-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.image-loading-overlay::after {
+    content: '';
+    width: 30px;
+    height: 30px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #666;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }

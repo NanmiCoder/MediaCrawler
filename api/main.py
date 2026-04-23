@@ -35,7 +35,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from .routers import crawler_router, data_router, websocket_router, notes_router, zhihu_router, bilibili_router, douyin_router, subscriptions_router, trends_router, image_queue_router
-from .services import file_watcher, image_task_db, image_downloader, image_queue_service
+from .services import file_watcher, image_task_db, image_downloader, image_queue_service, image_scheduler
 from .services.file_watcher import PLATFORMS
 from .routers.websocket import broadcast_stats_update, broadcast_platform_update
 
@@ -70,6 +70,9 @@ async def lifespan(app: FastAPI):
     # Start queue service (launches consumers)
     image_queue_service.start()
 
+    # Start scheduler (scans for timeout and retry tasks)
+    image_scheduler.start()
+
     # Startup - watch all platform directories
     file_watcher.start(
         platforms=PLATFORMS,
@@ -81,6 +84,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+    image_scheduler.stop()
     image_queue_service.stop()
     await image_downloader.close()
     file_watcher.stop()
@@ -217,6 +221,11 @@ if os.path.exists(VIEWER_DIR):
 IMAGES_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "xhs", "images")
 if os.path.exists(IMAGES_DIR):
     app.mount("/images", StaticFiles(directory=IMAGES_DIR), name="images")
+
+# Mount data directory for local images (downloaded images with hash-based paths)
+LOCAL_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+if os.path.exists(LOCAL_DATA_DIR):
+    app.mount("/local-images", StaticFiles(directory=LOCAL_DATA_DIR), name="local-images")
 
 
 if __name__ == "__main__":

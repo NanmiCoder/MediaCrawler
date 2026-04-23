@@ -224,17 +224,47 @@ function createNoteCard(note) {
     const imageContainer = document.createElement('div');
     imageContainer.style.position = 'relative';
 
-    if (note.first_image_url) {
+    // Determine image URLs - prefer local, fallback to remote
+    const localUrl = note.local_image_url;
+    const remoteUrl = note.remote_image_url;
+    const primaryUrl = localUrl || remoteUrl;
+
+    if (primaryUrl) {
         const img = document.createElement('img');
-        img.className = 'note-card-image lazy';
-        img.dataset.src = note.first_image_url;
+        img.className = 'note-card-image lazy image-loading';
+        img.dataset.src = primaryUrl;
         img.alt = note.title;
-        img.onerror = () => {
-            img.style.display = 'none';
-            const placeholder = document.createElement('div');
-            placeholder.className = 'note-card-placeholder';
-            placeholder.textContent = '🖼️';
-            imageContainer.appendChild(placeholder);
+
+        // Store URLs for fallback mechanism
+        if (localUrl && remoteUrl) {
+            img.dataset.localUrl = localUrl;
+            img.dataset.remoteUrl = remoteUrl;
+            img.dataset.fallbackUsed = 'false';
+        }
+
+        // Load success handler
+        img.onload = function() {
+            this.classList.remove('image-loading');
+            this.classList.add('image-loaded');
+        };
+
+        // Fallback handler
+        img.onerror = function() {
+            if (this.dataset.remoteUrl && this.dataset.fallbackUsed === 'false') {
+                console.log('[XHS] Local image failed, falling back to remote:', this.dataset.remoteUrl);
+                this.dataset.fallbackUsed = 'true';
+                this.classList.remove('image-loaded');
+                this.classList.add('image-loading');
+                this.src = this.dataset.remoteUrl;
+            } else {
+                this.classList.remove('image-loading');
+                this.classList.add('image-error');
+                this.style.display = 'none';
+                const placeholder = document.createElement('div');
+                placeholder.className = 'note-card-placeholder';
+                placeholder.textContent = '🖼️';
+                imageContainer.appendChild(placeholder);
+            }
         };
         imageContainer.appendChild(img);
     } else {
@@ -394,7 +424,14 @@ function setupLazyLoading() {
                     const img = entry.target;
                     if (img.dataset.src) {
                         img.src = img.dataset.src;
-                        img.onload = () => img.classList.add('loaded');
+                        // Don't override onload - it's already set in createNoteCard
+                        // Just add 'loaded' class for backward compatibility
+                        if (!img.onload) {
+                            img.onload = () => {
+                                img.classList.remove('image-loading');
+                                img.classList.add('image-loaded', 'loaded');
+                            };
+                        }
                         window.lazyObserver.unobserve(img);
                     }
                 }
@@ -406,6 +443,10 @@ function setupLazyLoading() {
         // 无限滚动 Observer
         window.scrollObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
+                // 检查是否已标记为没有更多数据
+                if (entry.target.dataset?.noMore === 'true') {
+                    return;
+                }
                 if (entry.isIntersecting && !isLoadingMore && hasMoreData) {
                     console.log('[XHS] Infinite scroll triggered');
                     loadMoreNotes();
@@ -484,6 +525,7 @@ function showNoMoreData() {
     }
 
     sentinel.innerHTML = `<div class="no-more">没有更多数据了</div>`;
+    sentinel.dataset.noMore = 'true'; // 标记状态，防止 observer 再次触发
 }
 
 // 设置无限滚动 sentinel
@@ -510,7 +552,8 @@ function updateLastUpdate() {
 // 导出函数供其他模块使用
 window.app = {
     loadNotes,
-    updateLastUpdate
+    updateLastUpdate,
+    formatTime
 };
 
 // Subscribe to WebSocket updates for Xiaohongshu (xhs)

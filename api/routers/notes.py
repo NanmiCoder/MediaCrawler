@@ -27,6 +27,8 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query
 
+from ..services.image_storage import image_storage
+
 router = APIRouter(prefix="/notes", tags=["notes"])
 
 # Data directories
@@ -180,6 +182,23 @@ def format_note_for_response(note: Dict[str, Any]) -> Dict[str, Any]:
     note_id = note.get("note_id", "")
     local_image_count = note.get("local_image_count", 0)
 
+    # Get first image URL for local/remote
+    image_list = note.get("image_list", [])
+    first_remote_url = image_list[0] if image_list else ""
+    remote_image_url = f"/images/{note_id}/0.jpg" if local_image_count > 0 else None
+
+    # Check local image using image_storage service
+    local_image_url = None
+    if first_remote_url:
+        local_path = image_storage.get_local_path(first_remote_url, "xhs")
+        if local_path:
+            # Convert to URL path relative to data directory
+            try:
+                rel_path = local_path.relative_to(image_storage._data_dir)
+                local_image_url = f"/local-images/{rel_path.as_posix()}"
+            except ValueError:
+                pass  # Path not relative to data_dir
+
     return {
         "note_id": note_id,
         "type": note.get("type", "normal"),
@@ -198,7 +217,9 @@ def format_note_for_response(note: Dict[str, Any]) -> Dict[str, Any]:
         "note_url": note.get("note_url", ""),
         "time": note.get("time", 0),
         "image_count": local_image_count,
-        "first_image_url": f"/images/{note_id}/0.jpg" if local_image_count > 0 else None,
+        "local_image_url": local_image_url,
+        "remote_image_url": remote_image_url,
+        "first_image_url": local_image_url or remote_image_url,
         "video_url": note.get("video_url", ""),
     }
 
