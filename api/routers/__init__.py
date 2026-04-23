@@ -21,5 +21,10 @@ from .data import router as data_router
 from .websocket import router as websocket_router
 from .notes import router as notes_router
 from .zhihu import router as zhihu_router
+from .bilibili import router as bilibili_router
+from .douyin import router as douyin_router
+from .subscriptions import router as subscriptions_router
+from .trends import router as trends_router
+from .image_queue import router as image_queue_router
 
-__all__ = ["crawler_router", "data_router", "websocket_router", "notes_router", "zhihu_router"]
+__all__ = ["crawler_router", "data_router", "websocket_router", "notes_router", "zhihu_router", "bilibili_router", "douyin_router", "subscriptions_router", "trends_router", "image_queue_router"]

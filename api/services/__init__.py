@@ -18,5 +18,16 @@
 
 from .crawler_manager import CrawlerManager, crawler_manager
 from .file_watcher import FileWatcherService, file_watcher
+from .subscription_manager import SubscriptionManager, subscription_manager
+from .image_task_db import ImageTaskDB, ImageTask, TaskStatus, TaskPriority, image_task_db
+from .image_downloader import ImageDownloader, DownloadResult, image_downloader
+from .image_queue import ImageQueueService, image_queue_service
 
-__all__ = ["CrawlerManager", "crawler_manager", "FileWatcherService", "file_watcher"]
+__all__ = [
+    "CrawlerManager", "crawler_manager",
+    "FileWatcherService", "file_watcher",
+    "SubscriptionManager", "subscription_manager",
+    "ImageTaskDB", "ImageTask", "TaskStatus", "TaskPriority", "image_task_db",
+    "ImageDownloader", "DownloadResult", "image_downloader",
+    "ImageQueueService", "image_queue_service",
+]

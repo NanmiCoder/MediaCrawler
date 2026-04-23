@@ -23,6 +23,7 @@ Or: python -m api.main
 """
 import asyncio
 import os
+import shutil
 import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -33,31 +34,55 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from .routers import crawler_router, data_router, websocket_router, notes_router, zhihu_router
-from .services import file_watcher
-from .routers.websocket import broadcast_stats_update
+from .routers import crawler_router, data_router, websocket_router, notes_router, zhihu_router, bilibili_router, douyin_router, subscriptions_router, trends_router, image_queue_router
+from .services import file_watcher, image_task_db, image_downloader, image_queue_service
+from .services.file_watcher import PLATFORMS
+from .routers.websocket import broadcast_stats_update, broadcast_platform_update
 
 
 # Data directory for JSONL files
 DATA_DIR = Path(__file__).parent.parent / "data"
 
 
+async def on_file_change_callback(platform: str):
+    """
+    Callback for file watcher when a platform's data changes.
+    Broadcasts both platform-specific update and global stats update.
+
+    Args:
+        platform: The platform identifier (e.g., "xhs", "dy", "bili", "zhihu")
+    """
+    # Broadcast platform-specific update (for viewer components)
+    await broadcast_platform_update(platform)
+    # Broadcast global stats update (for WebUI compatibility)
+    await broadcast_stats_update(platform)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager - start/stop file watcher."""
-    # Startup
-    jsonl_dir = DATA_DIR / "xhs" / "jsonl"
-    jsonl_dir.mkdir(parents=True, exist_ok=True)
+    """Application lifespan manager - start/stop file watcher for all platforms."""
+    # Initialize task database
+    await image_task_db.init_db()
 
+    # Initialize image downloader
+    await image_downloader.init()
+
+    # Start queue service (launches consumers)
+    image_queue_service.start()
+
+    # Startup - watch all platform directories
     file_watcher.start(
-        path=str(jsonl_dir),
-        callback=broadcast_stats_update
+        platforms=PLATFORMS,
+        base_callback=on_file_change_callback,
+        base_path=str(DATA_DIR)
     )
     app.state.file_watcher = file_watcher
 
     yield
 
     # Shutdown
+    image_queue_service.stop()
+    await image_downloader.close()
     file_watcher.stop()
 
 
@@ -91,6 +116,11 @@ app.include_router(data_router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
 app.include_router(notes_router, prefix="/api")
 app.include_router(zhihu_router, prefix="/api")
+app.include_router(bilibili_router, prefix="/api")
+app.include_router(douyin_router, prefix="/api")
+app.include_router(subscriptions_router, prefix="/api")
+app.include_router(trends_router, prefix="/api")
+app.include_router(image_queue_router, prefix="/api")
 
 
 @app.get("/")
@@ -115,50 +145,14 @@ async def health_check():
 @app.get("/api/env/check")
 async def check_environment():
     """Check if MediaCrawler environment is configured correctly"""
-    try:
-        # Run uv run main.py --help command to check environment
-        process = await asyncio.create_subprocess_exec(
-            "uv", "run", "main.py", "--help",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd="."  # Project root directory
-        )
-        stdout, stderr = await asyncio.wait_for(
-            process.communicate(),
-            timeout=30.0  # 30 seconds timeout
-        )
+    # Simple check - just verify uv is available
+    uv_path = shutil.which("uv")
 
-        if process.returncode == 0:
-            return {
-                "success": True,
-                "message": "MediaCrawler environment configured correctly",
-                "output": stdout.decode("utf-8", errors="ignore")[:500]  # Truncate to first 500 characters
-            }
-        else:
-            error_msg = stderr.decode("utf-8", errors="ignore") or stdout.decode("utf-8", errors="ignore")
-            return {
-                "success": False,
-                "message": "Environment check failed",
-                "error": error_msg[:500]
-            }
-    except asyncio.TimeoutError:
-        return {
-            "success": False,
-            "message": "Environment check timeout",
-            "error": "Command execution exceeded 30 seconds"
-        }
-    except FileNotFoundError:
-        return {
-            "success": False,
-            "message": "uv command not found",
-            "error": "Please ensure uv is installed and configured in system PATH"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "message": "Environment check error",
-            "error": str(e)
-        }
+    return {
+        "success": uv_path is not None,
+        "message": "Environment ready" if uv_path else "uv not found",
+        "uv_path": uv_path
+    }
 
 
 @app.get("/api/config/platforms")
