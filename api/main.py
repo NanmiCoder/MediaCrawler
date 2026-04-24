@@ -23,19 +23,78 @@ Or: python -m api.main
 """
 import asyncio
 import os
+import shutil
 import subprocess
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from .routers import crawler_router, data_router, websocket_router
+from .routers import crawler_router, data_router, websocket_router, notes_router, zhihu_router, bilibili_router, douyin_router, subscriptions_router, trends_router, image_queue_router
+from .services import file_watcher, image_task_db, image_downloader, image_queue_service, image_scheduler
+from .services.file_watcher import PLATFORMS
+from .routers.websocket import broadcast_stats_update, broadcast_platform_update
+
+
+# Data directory for JSONL files
+DATA_DIR = Path(__file__).parent.parent / "data"
+
+
+async def on_file_change_callback(platform: str):
+    """
+    Callback for file watcher when a platform's data changes.
+    Broadcasts both platform-specific update and global stats update.
+
+    Args:
+        platform: The platform identifier (e.g., "xhs", "dy", "bili", "zhihu")
+    """
+    # Broadcast platform-specific update (for viewer components)
+    await broadcast_platform_update(platform)
+    # Broadcast global stats update (for WebUI compatibility)
+    await broadcast_stats_update(platform)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager - start/stop file watcher for all platforms."""
+    # Initialize task database
+    await image_task_db.init_db()
+
+    # Initialize image downloader
+    await image_downloader.init()
+
+    # Start queue service (launches consumers)
+    image_queue_service.start()
+
+    # Start scheduler (scans for timeout and retry tasks)
+    image_scheduler.start()
+
+    # Startup - watch all platform directories
+    file_watcher.start(
+        platforms=PLATFORMS,
+        base_callback=on_file_change_callback,
+        base_path=str(DATA_DIR)
+    )
+    app.state.file_watcher = file_watcher
+
+    yield
+
+    # Shutdown
+    image_scheduler.stop()
+    image_queue_service.stop()
+    await image_downloader.close()
+    file_watcher.stop()
+
 
 app = FastAPI(
     title="MediaCrawler WebUI API",
     description="API for controlling MediaCrawler from WebUI",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Get webui static files directory
@@ -59,6 +118,13 @@ app.add_middleware(
 app.include_router(crawler_router, prefix="/api")
 app.include_router(data_router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
+app.include_router(notes_router, prefix="/api")
+app.include_router(zhihu_router, prefix="/api")
+app.include_router(bilibili_router, prefix="/api")
+app.include_router(douyin_router, prefix="/api")
+app.include_router(subscriptions_router, prefix="/api")
+app.include_router(trends_router, prefix="/api")
+app.include_router(image_queue_router, prefix="/api")
 
 
 @app.get("/")
@@ -83,50 +149,14 @@ async def health_check():
 @app.get("/api/env/check")
 async def check_environment():
     """Check if MediaCrawler environment is configured correctly"""
-    try:
-        # Run uv run main.py --help command to check environment
-        process = await asyncio.create_subprocess_exec(
-            "uv", "run", "main.py", "--help",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd="."  # Project root directory
-        )
-        stdout, stderr = await asyncio.wait_for(
-            process.communicate(),
-            timeout=30.0  # 30 seconds timeout
-        )
+    # Simple check - just verify uv is available
+    uv_path = shutil.which("uv")
 
-        if process.returncode == 0:
-            return {
-                "success": True,
-                "message": "MediaCrawler environment configured correctly",
-                "output": stdout.decode("utf-8", errors="ignore")[:500]  # Truncate to first 500 characters
-            }
-        else:
-            error_msg = stderr.decode("utf-8", errors="ignore") or stdout.decode("utf-8", errors="ignore")
-            return {
-                "success": False,
-                "message": "Environment check failed",
-                "error": error_msg[:500]
-            }
-    except asyncio.TimeoutError:
-        return {
-            "success": False,
-            "message": "Environment check timeout",
-            "error": "Command execution exceeded 30 seconds"
-        }
-    except FileNotFoundError:
-        return {
-            "success": False,
-            "message": "uv command not found",
-            "error": "Please ensure uv is installed and configured in system PATH"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "message": "Environment check error",
-            "error": str(e)
-        }
+    return {
+        "success": uv_path is not None,
+        "message": "Environment ready" if uv_path else "uv not found",
+        "uv_path": uv_path
+    }
 
 
 @app.get("/api/config/platforms")
@@ -182,6 +212,21 @@ if os.path.exists(WEBUI_DIR):
     # Mount other static files (e.g., vite.svg)
     app.mount("/static", StaticFiles(directory=WEBUI_DIR), name="webui-static")
 
+# Mount viewer static files
+VIEWER_DIR = os.path.join(os.path.dirname(__file__), "..", "viewer", "static")
+if os.path.exists(VIEWER_DIR):
+    app.mount("/viewer", StaticFiles(directory=VIEWER_DIR, html=True), name="viewer")
+
+# Mount images directory for note images
+IMAGES_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "xhs", "images")
+if os.path.exists(IMAGES_DIR):
+    app.mount("/images", StaticFiles(directory=IMAGES_DIR), name="images")
+
+# Mount data directory for local images (downloaded images with hash-based paths)
+LOCAL_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+if os.path.exists(LOCAL_DATA_DIR):
+    app.mount("/local-images", StaticFiles(directory=LOCAL_DATA_DIR), name="local-images")
+
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8081)

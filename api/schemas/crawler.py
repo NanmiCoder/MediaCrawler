@@ -97,3 +97,30 @@ class DataFileInfo(BaseModel):
     size: int
     modified_at: str
     record_count: Optional[int] = None
+
+
+class StatsUpdateMessage(BaseModel):
+    """WebSocket message for stats update (legacy, broadcasts to all clients)"""
+    type: str = "stats_update"
+    total_notes: int = 0
+    total_images: int = 0
+    timestamp: str = ""
+
+
+class DataUpdateMessage(BaseModel):
+    """WebSocket message for platform-specific data update"""
+    type: str = "data_update"
+    platform: str  # Platform identifier: "xhs", "dy", "bili", "zhihu", etc.
+    timestamp: str = ""
+    new_count: int = 0  # Number of new records added
+    titles: list[str] = []  # Titles of new records (max 5)
+
+
+class SubscriptionUpdateMessage(BaseModel):
+    """WebSocket message for subscription crawl completion notification"""
+    type: str = "subscription_update"
+    subscription_id: str
+    keyword: str
+    platform: str  # Platform identifier: "xhs", "zhihu", etc.
+    new_count: int = 0  # Number of new items crawled
+    timestamp: str = ""
