@@ -18,21 +18,18 @@
 
 """
 Image download service for downloading images from URLs.
-Supports jitter interval to avoid rate limiting.
+Supports jitter interval, deduplication, validation, and storage management.
 """
-import asyncio
-import hashlib
 import random
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import httpx
 
+from .image_storage import image_storage
+from .image_task_db import image_task_db, TaskStatus
 
-# Default download directory
-DOWNLOAD_DIR = Path(__file__).parent.parent.parent / "data" / "downloads"
 
 # Configuration
 DOWNLOAD_TIMEOUT = 30.0  # seconds
@@ -55,26 +52,24 @@ class ImageDownloader:
     Features:
     - HTTP download with timeout
     - Jitter interval to avoid rate limiting
-    - Automatic file naming with URL hash
-    - Date-based directory structure
+    - Deduplication (skip already downloaded URLs)
+    - Image format validation
+    - Storage cleanup when exceeding limit
     """
 
     def __init__(
         self,
-        download_dir: Path = DOWNLOAD_DIR,
         timeout: float = DOWNLOAD_TIMEOUT,
         min_interval: float = MIN_INTERVAL,
         max_interval: float = MAX_INTERVAL
     ):
-        self._download_dir = download_dir
         self._timeout = timeout
         self._min_interval = min_interval
         self._max_interval = max_interval
         self._client: Optional[httpx.AsyncClient] = None
 
     async def init(self) -> None:
-        """Initialize the downloader - create directory and HTTP client."""
-        self._download_dir.mkdir(parents=True, exist_ok=True)
+        """Initialize the downloader - create HTTP client."""
         self._client = httpx.AsyncClient(
             timeout=self._timeout,
             follow_redirects=True,
@@ -82,7 +77,7 @@ class ImageDownloader:
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
             }
         )
-        print(f"[ImageDownloader] Initialized, download dir: {self._download_dir}")
+        print(f"[ImageDownloader] Initialized")
 
     async def close(self) -> None:
         """Close the HTTP client."""
@@ -90,12 +85,13 @@ class ImageDownloader:
             await self._client.aclose()
             self._client = None
 
-    async def download(self, url: str) -> DownloadResult:
+    async def download(self, url: str, platform: str = "xhs") -> DownloadResult:
         """
         Download an image from URL.
 
         Args:
             url: The image URL to download
+            platform: Platform identifier (xhs, dy, bili, zhihu)
 
         Returns:
             DownloadResult with success status, local path, or error message
@@ -103,30 +99,50 @@ class ImageDownloader:
         if not self._client:
             return DownloadResult(success=False, error="Downloader not initialized")
 
+        # Check for existing completed download (deduplication)
+        existing_task = await image_task_db.get_completed_task_by_url(url)
+        if existing_task and existing_task.local_path:
+            existing_path = Path(existing_task.local_path)
+            if existing_path.exists():
+                print(f"[ImageDownloader] Skipped (exists): {url} -> {existing_path}")
+                return DownloadResult(success=True, local_path=str(existing_path))
+
         try:
             response = await self._client.get(url)
             response.raise_for_status()
-
-            # Generate filename from URL hash
-            url_hash = hashlib.md5(url.encode()).hexdigest()[:16]
 
             # Determine extension from content-type
             content_type = response.headers.get("content-type", "")
             ext = self._get_extension(content_type)
 
-            # Create dated subdirectory
-            now = datetime.now()
-            date_dir = self._download_dir / str(now.year) / f"{now.month:02d}" / f"{now.day:02d}"
-            date_dir.mkdir(parents=True, exist_ok=True)
+            # Get storage path from ImageStorageService
+            file_path, url_hash = image_storage.get_storage_path(url, platform, ext)
 
             # Save file
-            filename = f"{url_hash}{ext}"
-            file_path = date_dir / filename
-
             with open(file_path, "wb") as f:
                 f.write(response.content)
 
+            # Validate downloaded image
+            is_valid, actual_ext = image_storage.validate_image(file_path)
+            if not is_valid:
+                file_path.unlink(missing_ok=True)  # Delete invalid file
+                error = f"Invalid image format downloaded from {url}"
+                print(f"[ImageDownloader] {error}")
+                return DownloadResult(success=False, error=error)
+
+            # Rename if extension differs
+            if actual_ext and actual_ext != ext:
+                new_path = file_path.with_suffix(actual_ext)
+                file_path.rename(new_path)
+                file_path = new_path
+
             print(f"[ImageDownloader] Downloaded: {url} -> {file_path}")
+
+            # Trigger cleanup if storage exceeds limit
+            deleted_count = image_storage.cleanup_by_size(platform)
+            if deleted_count > 0:
+                print(f"[ImageDownloader] Cleanup: removed {deleted_count} old images")
+
             return DownloadResult(success=True, local_path=str(file_path))
 
         except httpx.TimeoutException:

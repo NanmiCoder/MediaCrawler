@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from ..services import image_queue_service, image_task_db
+from ..services import image_queue_service, image_task_db, image_scheduler
 from ..services.image_task_db import TaskPriority
 
 
@@ -40,6 +40,10 @@ class StatsResponse(BaseModel):
     downloading: int
     completed: int
     failed: int
+    # Scheduler status
+    scheduler_running: bool
+    scheduler_interval: int
+    scheduler_last_scan: Optional[str] = None
 
 
 @router.post("/enqueue", response_model=EnqueueResponse)
@@ -80,6 +84,7 @@ async def get_queue_stats():
     """
     queue_stats = image_queue_service.get_stats()
     db_stats = await image_task_db.get_stats()
+    scheduler_stats = image_scheduler.get_stats()
 
     return StatsResponse(
         queue_size=queue_stats["queue_size"],
@@ -89,7 +94,10 @@ async def get_queue_stats():
         pending=db_stats.get("pending", 0),
         downloading=db_stats.get("downloading", 0),
         completed=db_stats.get("completed", 0),
-        failed=db_stats.get("failed", 0)
+        failed=db_stats.get("failed", 0),
+        scheduler_running=scheduler_stats["running"],
+        scheduler_interval=scheduler_stats["scan_interval"],
+        scheduler_last_scan=scheduler_stats.get("last_scan_at")
     )
 
 

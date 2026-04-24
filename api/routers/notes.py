@@ -183,13 +183,22 @@ def format_note_for_response(note: Dict[str, Any]) -> Dict[str, Any]:
     local_image_count = note.get("local_image_count", 0)
 
     # Get first image URL for local/remote
-    image_list = note.get("image_list", [])
+    # Handle both string (comma-separated) and array formats
+    image_list_raw = note.get("image_list", "")
+    if isinstance(image_list_raw, str):
+        image_list = [url.strip() for url in image_list_raw.split(",") if url.strip()]
+    else:
+        image_list = image_list_raw if image_list_raw else []
     first_remote_url = image_list[0] if image_list else ""
-    remote_image_url = f"/images/{note_id}/0.jpg" if local_image_count > 0 else None
 
-    # Check local image using image_storage service
+    # Build local image URL (support both old note_id-based and new hash-based storage)
     local_image_url = None
-    if first_remote_url:
+    if local_image_count > 0:
+        # Old storage format: /images/{note_id}/0.jpg
+        local_image_url = f"/images/{note_id}/0.jpg"
+
+    # Also check new hash-based storage if old format not found
+    if not local_image_url and first_remote_url:
         local_path = image_storage.get_local_path(first_remote_url, "xhs")
         if local_path:
             # Convert to URL path relative to data directory
@@ -198,6 +207,9 @@ def format_note_for_response(note: Dict[str, Any]) -> Dict[str, Any]:
                 local_image_url = f"/local-images/{rel_path.as_posix()}"
             except ValueError:
                 pass  # Path not relative to data_dir
+
+    # Remote image URL for fallback
+    remote_image_url = first_remote_url if first_remote_url else None
 
     return {
         "note_id": note_id,

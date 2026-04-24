@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import aiosqlite
 
@@ -137,14 +137,40 @@ class ImageTaskDB:
             row = await cursor.fetchone()
             return self._row_to_task(row) if row else None
 
+    async def get_completed_task_by_url(self, url: str) -> Optional[ImageTask]:
+        """
+        Get completed task by URL for deduplication.
+
+        Returns task with local_path if URL was successfully downloaded,
+        otherwise None. Used to skip redundant downloads.
+
+        Args:
+            url: The image URL to check
+
+        Returns:
+            ImageTask if completed download exists, None otherwise
+        """
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(
+                'SELECT * FROM image_tasks WHERE url = ? AND status = ?',
+                (url, TaskStatus.COMPLETED.value)
+            )
+            row = await cursor.fetchone()
+            return self._row_to_task(row) if row else None
+
     async def get_pending_task(self) -> Optional[ImageTask]:
-        """Get next pending task ordered by priority (high > medium > low)."""
+        """
+        Get next pending task ordered by priority (high > medium > low).
+        Excludes retry tasks waiting for their scheduled time (next_retry_at > now).
+        """
+        now = datetime.now().isoformat()
         async with self._lock:
             async with aiosqlite.connect(self._db_path) as db:
                 db.row_factory = aiosqlite.Row
                 cursor = await db.execute('''
                     SELECT * FROM image_tasks
-                    WHERE status = ?
+                    WHERE status = ? AND (next_retry_at IS NULL OR next_retry_at <= ?)
                     ORDER BY
                         CASE priority
                             WHEN 'high' THEN 0
@@ -153,7 +179,7 @@ class ImageTaskDB:
                         END,
                         created_at ASC
                     LIMIT 1
-                ''', (TaskStatus.PENDING.value,))
+                ''', (TaskStatus.PENDING.value, now))
                 row = await cursor.fetchone()
                 return self._row_to_task(row) if row else None
 
@@ -213,6 +239,62 @@ class ImageTaskDB:
                         SET status = ?, updated_at = ?, error_message = ?
                         WHERE id = ?
                     ''', (TaskStatus.FAILED.value, now.isoformat(), error, task_id))
+                await db.commit()
+
+    async def get_timeout_tasks(self, timeout_seconds: int) -> List[ImageTask]:
+        """
+        Get tasks that have been downloading for too long.
+
+        Args:
+            timeout_seconds: Timeout threshold in seconds
+
+        Returns:
+            List of tasks that have exceeded the timeout
+        """
+        cutoff = (datetime.now() - timedelta(seconds=timeout_seconds)).isoformat()
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute('''
+                SELECT * FROM image_tasks
+                WHERE status = ? AND updated_at < ?
+            ''', (TaskStatus.DOWNLOADING.value, cutoff))
+            rows = await cursor.fetchall()
+            return [self._row_to_task(row) for row in rows]
+
+    async def get_ready_retry_tasks(self) -> List[ImageTask]:
+        """
+        Get tasks ready for retry (next_retry_at has passed).
+
+        Returns:
+            List of pending tasks with next_retry_at <= now
+        """
+        now = datetime.now().isoformat()
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute('''
+                SELECT * FROM image_tasks
+                WHERE status = ? AND next_retry_at IS NOT NULL AND next_retry_at <= ?
+                ORDER BY next_retry_at ASC
+            ''', (TaskStatus.PENDING.value, now))
+            rows = await cursor.fetchall()
+            return [self._row_to_task(row) for row in rows]
+
+    async def clear_next_retry_at(self, task_id: int) -> None:
+        """
+        Clear next_retry_at for a task ready for retry.
+        This makes the task a regular pending task that enqueue_from_db can pick up.
+
+        Args:
+            task_id: The task ID to update
+        """
+        now = datetime.now().isoformat()
+        async with self._lock:
+            async with aiosqlite.connect(self._db_path) as db:
+                await db.execute('''
+                    UPDATE image_tasks
+                    SET next_retry_at = NULL, updated_at = ?
+                    WHERE id = ?
+                ''', (now, task_id))
                 await db.commit()
 
     async def get_stats(self) -> dict:
