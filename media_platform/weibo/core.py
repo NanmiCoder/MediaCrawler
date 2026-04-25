@@ -168,7 +168,13 @@ class WeiboCrawler(AbstractCrawler):
                     page += 1
                     continue
                 utils.logger.info(f"[WeiboCrawler.search] search weibo keyword: {keyword}, page: {page}")
-                search_res = await self.wb_client.get_note_by_keyword(keyword=keyword, page=page, search_type=search_type)
+                try:
+                    search_res = await self.wb_client.get_note_by_keyword(keyword=keyword, page=page, search_type=search_type)
+                except Exception as ex:
+                    utils.logger.error(f"[WeiboCrawler.search] Error fetching keyword {keyword} at page {page}: {ex}")
+                    utils.logger.info(f"[WeiboCrawler.search] Moving to the next keyword.")
+                    break
+
                 note_id_list: List[str] = []
                 note_list = filter_search_result_card(search_res.get("cards"))
                 # If full text fetching is enabled, batch get full text of posts
