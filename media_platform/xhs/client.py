@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
 
 from .exception import DataFetchError, IPBlockError, NoteNotFoundError
-from .field import SearchNoteType, SearchSortType
+from .field import SearchNoteType, SearchSortType, SearchNoteTimeType
 from .help import get_search_id
 from .extractor import XiaoHongShuExtractor
 from .playwright_sign import sign_with_xhshow
@@ -285,6 +285,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         page_size: int = 20,
         sort: SearchSortType = SearchSortType.GENERAL,
         note_type: SearchNoteType = SearchNoteType.ALL,
+        note_time: SearchNoteTimeType = SearchNoteTimeType.ALL,
     ) -> Dict:
         """
         Search notes by keyword
@@ -292,8 +293,9 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             keyword: Keyword parameter
             page: Page number
             page_size: Page data length
-            sort: Search result sorting specification
+            sort: 排序方式 (综合/最热 popularity_descending/最新 time_descending)
             note_type: Type of note to search
+            note_time: 发布时间过滤 (不限/一天内/一周内/一月内)
 
         Returns:
 
@@ -306,6 +308,10 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             "search_id": search_id,
             "sort": sort.value,
             "note_type": note_type.value,
+            "filters": [
+                {"tags": [sort.value], "type": "sort_type"},
+                {"tags": [note_time.value], "type": "filter_note_time"},
+            ],
         }
         return await self.post(uri, data)
 
@@ -702,3 +708,4 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         )
 
         return self._extractor.extract_note_detail_from_html(note_id, html)
+

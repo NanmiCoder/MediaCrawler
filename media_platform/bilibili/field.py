@@ -52,3 +52,22 @@ class CommentOrderType(Enum):
 
     # By time
     TIME = 2
+
+
+# 通用 sort_type -> bilibili order 映射
+# 对应 CLI/REST 通用枚举 SortTypeEnum
+GENERAL_SORT_TO_BILI_ORDER: dict = {
+    "general": SearchOrderType.DEFAULT,
+    "popularity_descending": SearchOrderType.MOST_CLICK,
+    "time_descending": SearchOrderType.LAST_PUBLISH,
+}
+
+# 通用 publish_time_type -> bilibili pubtime 时间窗口（秒）
+# 0 表示不限制
+PUBLISH_TIME_TO_SECONDS: dict = {
+    "不限": 0,
+    "一天内": 24 * 60 * 60,
+    "一周内": 7 * 24 * 60 * 60,
+    "一月内": 30 * 24 * 60 * 60,
+}
+

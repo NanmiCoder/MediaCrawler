@@ -20,7 +20,6 @@ from enum import Enum
 from typing import Optional, Literal
 from pydantic import BaseModel
 
-
 class PlatformEnum(str, Enum):
     """Supported media platforms"""
     XHS = "xhs"
@@ -57,6 +56,21 @@ class SaveDataOptionEnum(str, Enum):
     EXCEL = "excel"
 
 
+class SortTypeEnum(str, Enum):
+    """搜索排序方式 (sort_type)"""
+    GENERAL = "general"
+    POPULARITY_DESCENDING = "popularity_descending"
+    TIME_DESCENDING = "time_descending"
+
+
+class PublishTimeTypeEnum(str, Enum):
+    """搜索-发布时间过滤"""
+    ALL = "不限"
+    WITHIN_ONE_DAY = "一天内"
+    WITHIN_ONE_WEEK = "一周内"
+    WITHIN_ONE_MONTH = "一月内"
+
+
 class CrawlerStartRequest(BaseModel):
     """Crawler start request"""
     platform: PlatformEnum
@@ -71,6 +85,9 @@ class CrawlerStartRequest(BaseModel):
     save_option: SaveDataOptionEnum = SaveDataOptionEnum.JSONL
     cookies: str = ""
     headless: bool = False
+    # 搜索过滤参数（按平台能力生效，未适配的平台会忽略）
+    sort_type: SortTypeEnum = SortTypeEnum.POPULARITY_DESCENDING
+    publish_time_type: PublishTimeTypeEnum = PublishTimeTypeEnum.ALL
 
 
 class CrawlerStatusResponse(BaseModel):
@@ -97,3 +114,4 @@ class DataFileInfo(BaseModel):
     size: int
     modified_at: str
     record_count: Optional[int] = None
+

@@ -20,8 +20,16 @@
 
 # Xiaohongshu platform configuration
 
-# Sorting method, the specific enumeration value is in media_platform/xhs/field.py
+# 排序方式 (sort_type), 具体枚举见 media_platform/xhs/field.py
+# 可选值:
+#   "general"               -> 综合
+#   "popularity_descending" -> 最热
+#   "time_descending"       -> 最新
 SORT_TYPE = "popularity_descending"
+
+# 发布时间过滤 (filter_note_time / pubtime_*) - 各平台共享
+# 可选值: "不限" | "一天内" | "一周内" | "一月内"
+PUBLISH_TIME_TYPE_FILTER = "不限"
 
 # Specify the note URL list, which must carry the xsec_token parameter
 XHS_SPECIFIED_NOTE_URL_LIST = [
@@ -35,3 +43,4 @@ XHS_CREATOR_ID_LIST = [
     "https://www.xiaohongshu.com/user/profile/5f58bd990000000001003753?xsec_token=ABYVg1evluJZZzpMX-VWzchxQ1qSNVW3r-jOEnKqMcgZw=&xsec_source=pc_search"
     # ........................
 ]
+

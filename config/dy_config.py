@@ -18,7 +18,7 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # Douyin platform configuration
-PUBLISH_TIME_TYPE = 0
+# 注：PUBLISH_TIME_TYPE 已迁移到通用配置 PUBLISH_TIME_TYPE_FILTER（见 xhs_config.py）
 
 # Specify DY video URL list (supports multiple formats)
 # Supported formats:
@@ -44,3 +44,4 @@ DY_CREATOR_ID_LIST = [
     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE"
     # ........................
 ]
+

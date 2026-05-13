@@ -230,6 +230,10 @@ class CrawlerManager:
 
         cmd.extend(["--headless", "true" if config.headless else "false"])
 
+        # 搜索过滤参数（按平台能力生效，未适配的平台会忽略）
+        cmd.extend(["--sort_type", config.sort_type.value])
+        cmd.extend(["--publish_time_type", config.publish_time_type.value])
+
         return cmd
 
     async def _read_output(self):
@@ -280,3 +284,4 @@ class CrawlerManager:
 
 # Global singleton
 crawler_manager = CrawlerManager()
+

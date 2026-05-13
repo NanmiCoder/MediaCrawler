@@ -43,7 +43,7 @@ from var import crawler_type_var, source_keyword_var
 
 from .client import XiaoHongShuClient
 from .exception import DataFetchError, NoteNotFoundError
-from .field import SearchSortType
+from .field import SearchSortType, SearchNoteTimeType
 from .help import parse_note_info_from_note_url, parse_creator_info_from_url, get_search_id
 from .login import XiaoHongShuLogin
 
@@ -153,6 +153,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         search_id=search_id,
                         page=page,
                         sort=(SearchSortType(config.SORT_TYPE) if config.SORT_TYPE != "" else SearchSortType.GENERAL),
+                        note_time=(SearchNoteTimeType(config.PUBLISH_TIME_TYPE_FILTER) if getattr(config, "PUBLISH_TIME_TYPE_FILTER", "") else SearchNoteTimeType.ALL),
                     )
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Search notes response: {notes_res}")
                     if not notes_res or not notes_res.get("has_more", False):
@@ -519,3 +520,4 @@ class XiaoHongShuCrawler(AbstractCrawler):
             extension_file_name = f"{videoNum}.mp4"
             videoNum += 1
             await xhs_store.update_xhs_note_video(note_id, content, extension_file_name)
+

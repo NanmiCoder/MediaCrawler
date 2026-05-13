@@ -21,6 +21,8 @@ from .crawler import (
     LoginTypeEnum,
     CrawlerTypeEnum,
     SaveDataOptionEnum,
+    SortTypeEnum,
+    PublishTimeTypeEnum,
     CrawlerStartRequest,
     CrawlerStatusResponse,
     LogEntry,
@@ -31,7 +33,10 @@ __all__ = [
     "LoginTypeEnum",
     "CrawlerTypeEnum",
     "SaveDataOptionEnum",
+    "SortTypeEnum",
+    "PublishTimeTypeEnum",
     "CrawlerStartRequest",
     "CrawlerStatusResponse",
     "LogEntry",
 ]
+

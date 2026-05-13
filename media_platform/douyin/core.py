@@ -41,7 +41,12 @@ from var import crawler_type_var, source_keyword_var
 
 from .client import DouYinClient
 from .exception import DataFetchError
-from .field import PublishTimeType
+from .field import (
+    GENERAL_PUBLISH_TIME_TO_DY,
+    GENERAL_SORT_TO_DY_SORT,
+    PublishTimeType,
+    SearchSortType,
+)
 from .help import parse_video_info_from_url, parse_creator_info_from_url
 from .login import DouYinLogin
 
@@ -143,10 +148,23 @@ class DouYinCrawler(AbstractCrawler):
                     continue
                 try:
                     utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page}")
+                    # 复用通用配置 SORT_TYPE / PUBLISH_TIME_TYPE_FILTER
+                    dy_sort = GENERAL_SORT_TO_DY_SORT.get(
+                        getattr(config, "SORT_TYPE", "general"), SearchSortType.GENERAL
+                    )
+                    publish_time_filter = getattr(config, "PUBLISH_TIME_TYPE_FILTER", "不限")
+                    dy_publish_time = GENERAL_PUBLISH_TIME_TO_DY.get(publish_time_filter)
+                    if dy_publish_time is None:
+                        utils.logger.warning(
+                            f"[DouYinCrawler.search] publish_time '{publish_time_filter}' "
+                            f"is not supported by douyin, fallback to UNLIMITED"
+                        )
+                        dy_publish_time = PublishTimeType.UNLIMITED
                     posts_res = await self.dy_client.search_info_by_keyword(
                         keyword=keyword,
                         offset=page * dy_limit_count - dy_limit_count,
-                        publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE),
+                        sort_type=dy_sort,
+                        publish_time=dy_publish_time,
                         search_id=dy_search_id,
                     )
                     if posts_res.get("data") is None or posts_res.get("data") == []:
@@ -468,3 +486,4 @@ class DouYinCrawler(AbstractCrawler):
             return
         extension_file_name = f"video.mp4"
         await douyin_store.update_dy_aweme_video(aweme_id, content, extension_file_name)
+

@@ -22,7 +22,6 @@ from __future__ import annotations
 
 
 import sys
-import re
 from enum import Enum
 from types import SimpleNamespace
 from typing import Iterable, Optional, Sequence, Type, TypeVar
@@ -86,6 +85,23 @@ class InitDbOptionEnum(str, Enum):
     POSTGRES = "postgres"
 
 
+class SortTypeEnum(str, Enum):
+    """搜索排序方式 (sort_type)"""
+
+    GENERAL = "general"
+    POPULARITY_DESCENDING = "popularity_descending"
+    TIME_DESCENDING = "time_descending"
+
+
+class PublishTimeTypeEnum(str, Enum):
+    """搜索-发布时间过滤 (filter_note_time)"""
+
+    ALL = "不限"
+    WITHIN_ONE_DAY = "一天内"
+    WITHIN_ONE_WEEK = "一周内"
+    WITHIN_ONE_MONTH = "一月内"
+
+
 def _to_bool(value: bool | str) -> bool:
     if isinstance(value, bool):
         return value
@@ -134,21 +150,6 @@ def _inject_init_db_default(args: Sequence[str]) -> list[str]:
         i += 1
 
     return normalized
-
-
-def _normalize_tieba_note_id(value: str) -> str:
-    """Accept a raw Tieba thread id or a /p/<id> URL."""
-    value = value.strip()
-    match = re.search(r"/p/(\d+)", value)
-    return match.group(1) if match else value
-
-
-def _normalize_tieba_creator_url(value: str) -> str:
-    """Accept a Tieba creator homepage URL or a portrait id."""
-    value = value.strip()
-    if value.startswith("http://") or value.startswith("https://"):
-        return value
-    return f"https://tieba.baidu.com/home/main?id={value}"
 
 
 async def parse_cmd(argv: Optional[Sequence[str]] = None):
@@ -316,6 +317,30 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Proxy Configuration",
             ),
         ] = config.IP_PROXY_PROVIDER_NAME,
+        sort_type: Annotated[
+            SortTypeEnum,
+            typer.Option(
+                "--sort_type",
+                help="搜索排序方式 (general=综合 | popularity_descending=最热 | time_descending=最新)",
+                rich_help_panel="Search Filter",
+            ),
+        ] = _coerce_enum(
+            SortTypeEnum,
+            getattr(config, "SORT_TYPE", SortTypeEnum.POPULARITY_DESCENDING.value),
+            SortTypeEnum.POPULARITY_DESCENDING,
+        ),
+        publish_time_type: Annotated[
+            PublishTimeTypeEnum,
+            typer.Option(
+                "--publish_time_type",
+                help="发布时间过滤 (不限 | 一天内 | 一周内 | 一月内)",
+                rich_help_panel="Search Filter",
+            ),
+        ] = _coerce_enum(
+            PublishTimeTypeEnum,
+            getattr(config, "PUBLISH_TIME_TYPE_FILTER", PublishTimeTypeEnum.ALL.value),
+            PublishTimeTypeEnum.ALL,
+        ),
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
@@ -347,6 +372,8 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.ENABLE_IP_PROXY = enable_ip_proxy_value
         config.IP_PROXY_POOL_COUNT = ip_proxy_pool_count
         config.IP_PROXY_PROVIDER_NAME = ip_proxy_provider_name
+        config.SORT_TYPE = sort_type.value
+        config.PUBLISH_TIME_TYPE_FILTER = publish_time_type.value
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:
@@ -360,10 +387,6 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 config.WEIBO_SPECIFIED_ID_LIST = specified_id_list
             elif platform == PlatformEnum.KUAISHOU:
                 config.KS_SPECIFIED_ID_LIST = specified_id_list
-            elif platform == PlatformEnum.TIEBA:
-                config.TIEBA_SPECIFIED_ID_LIST = [
-                    _normalize_tieba_note_id(item) for item in specified_id_list
-                ]
 
         if creator_id_list:
             if platform == PlatformEnum.XHS:
@@ -376,10 +399,6 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 config.WEIBO_CREATOR_ID_LIST = creator_id_list
             elif platform == PlatformEnum.KUAISHOU:
                 config.KS_CREATOR_ID_LIST = creator_id_list
-            elif platform == PlatformEnum.TIEBA:
-                config.TIEBA_CREATOR_URL_LIST = [
-                    _normalize_tieba_creator_url(item) for item in creator_id_list
-                ]
 
         return SimpleNamespace(
             platform=config.PLATFORM,
@@ -395,6 +414,8 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             cookies=config.COOKIES,
             specified_id=specified_id,
             creator_id=creator_id,
+            sort_type=config.SORT_TYPE,
+            publish_time_type=config.PUBLISH_TIME_TYPE_FILTER,
         )
 
     command = typer.main.get_command(app)
@@ -409,3 +430,4 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         return result
     except typer.Exit as exc:  # pragma: no cover - CLI exit paths
         raise SystemExit(exc.exit_code) from exc
+

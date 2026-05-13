@@ -49,7 +49,11 @@ from var import crawler_type_var, source_keyword_var
 
 from .client import BilibiliClient
 from .exception import DataFetchError
-from .field import SearchOrderType
+from .field import (
+    GENERAL_SORT_TO_BILI_ORDER,
+    PUBLISH_TIME_TO_SECONDS,
+    SearchOrderType,
+)
 from .help import parse_video_info_from_url, parse_creator_info_from_url
 from .login import BilibiliLogin
 
@@ -202,13 +206,27 @@ class BilibiliCrawler(AbstractCrawler):
 
                 utils.logger.info(f"[BilibiliCrawler.search_by_keywords] search bilibili keyword: {keyword}, page: {page}")
                 video_id_list: List[str] = []
+                # 复用通用配置 SORT_TYPE / PUBLISH_TIME_TYPE_FILTER
+                bili_order = GENERAL_SORT_TO_BILI_ORDER.get(
+                    getattr(config, "SORT_TYPE", "general"), SearchOrderType.DEFAULT
+                )
+                window_sec = PUBLISH_TIME_TO_SECONDS.get(
+                    getattr(config, "PUBLISH_TIME_TYPE_FILTER", "不限"), 0
+                )
+                if window_sec > 0:
+                    now_ts = int(datetime.now().timestamp())
+                    pubtime_begin = now_ts - window_sec
+                    pubtime_end = now_ts
+                else:
+                    pubtime_begin = 0
+                    pubtime_end = 0
                 videos_res = await self.bili_client.search_video_by_keyword(
                     keyword=keyword,
                     page=page,
                     page_size=bili_limit_count,
-                    order=SearchOrderType.DEFAULT,
-                    pubtime_begin_s=0,  # Publish date start timestamp
-                    pubtime_end_s=0,  # Publish date end timestamp
+                    order=bili_order,
+                    pubtime_begin_s=pubtime_begin,
+                    pubtime_end_s=pubtime_end,
                 )
                 video_list: List[Dict] = videos_res.get("result")
 
@@ -277,11 +295,15 @@ class BilibiliCrawler(AbstractCrawler):
                     try:
                         utils.logger.info(f"[BilibiliCrawler.search] search bilibili keyword: {keyword}, date: {day.ctime()}, page: {page}")
                         video_id_list: List[str] = []
+                        # 复用通用配置 SORT_TYPE（time_range 模式下 pubtime 由日期范围决定）
+                        bili_order = GENERAL_SORT_TO_BILI_ORDER.get(
+                            getattr(config, "SORT_TYPE", "general"), SearchOrderType.DEFAULT
+                        )
                         videos_res = await self.bili_client.search_video_by_keyword(
                             keyword=keyword,
                             page=page,
                             page_size=bili_limit_count,
-                            order=SearchOrderType.DEFAULT,
+                            order=bili_order,
                             pubtime_begin_s=pubtime_begin_s,
                             pubtime_end_s=pubtime_end_s,
                         )
@@ -724,3 +746,4 @@ class BilibiliCrawler(AbstractCrawler):
                 utils.logger.error(f"[BilibiliCrawler.get_dynamics] get creator_id: {creator_id} dynamics error: {ex}")
             except Exception as e:
                 utils.logger.error(f"[BilibiliCrawler.get_dynamics] may be been blocked, err:{e}")
+

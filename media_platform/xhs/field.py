@@ -72,6 +72,18 @@ class SearchNoteType(Enum):
     IMAGE = 2
 
 
+class SearchNoteTimeType(Enum):
+    """搜索-发布时间过滤 (filter_note_time)"""
+    # 不限
+    ALL = "不限"
+    # 一天内
+    WITHIN_ONE_DAY = "一天内"
+    # 一周内
+    WITHIN_ONE_WEEK = "一周内"
+    # 一月内
+    WITHIN_ONE_MONTH = "一月内"
+
+
 class Note(NamedTuple):
     """Note tuple"""
     note_id: str
@@ -89,3 +101,4 @@ class Note(NamedTuple):
     share_count: str
     time: int
     last_update_time: int
+

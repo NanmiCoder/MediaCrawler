@@ -41,3 +41,20 @@ class PublishTimeType(Enum):
     ONE_DAY = 1  # Within one day
     ONE_WEEK = 7  # Within one week
     SIX_MONTH = 180  # Within six months
+
+
+# 通用 SortTypeEnum -> douyin SearchSortType 映射
+GENERAL_SORT_TO_DY_SORT: dict = {
+    "general": SearchSortType.GENERAL,
+    "popularity_descending": SearchSortType.MOST_LIKE,
+    "time_descending": SearchSortType.LATEST,
+}
+
+# 通用 PublishTimeTypeEnum -> douyin PublishTimeType 映射
+# 注意：抖音原生未提供"一月内"，缺失项会在调用处回退为 UNLIMITED
+GENERAL_PUBLISH_TIME_TO_DY: dict = {
+    "不限": PublishTimeType.UNLIMITED,
+    "一天内": PublishTimeType.ONE_DAY,
+    "一周内": PublishTimeType.ONE_WEEK,
+}
+
