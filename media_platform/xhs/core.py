@@ -302,7 +302,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     note_detail = await self.xhs_client.get_note_by_id_from_html(note_id, xsec_source, xsec_token,
                                                                                  enable_cookie=True)
                     if not note_detail:
-                        raise Exception(f"[get_note_detail_async_task] Failed to get note detail, Id: {note_id}")
+                        utils.logger.warning(f"[skip] Failed to get note detail, Id: {note_id}, 跳过继续")
+                        return None
 
                 note_detail.update({"xsec_token": xsec_token, "xsec_source": xsec_source})
 
