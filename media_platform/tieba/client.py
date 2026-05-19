@@ -18,9 +18,10 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 import asyncio
+import hashlib
 import json
 from typing import Any, Callable, Dict, List, Optional, Union
-from urllib.parse import urlencode, quote
+from urllib.parse import urlencode, quote, parse_qs, unquote, urlparse
 
 import requests
 from playwright.async_api import BrowserContext, Page
@@ -34,6 +35,8 @@ from tools import utils
 
 from .field import SearchNoteType, SearchSortType
 from .help import TieBaExtractor
+
+PC_SIGN_SECRET = "36770b1f34c9bbf2e7d1a99d2b82fa9e"
 
 
 class BaiduTieBaClient(AbstractApiClient):
@@ -54,9 +57,132 @@ class BaiduTieBaClient(AbstractApiClient):
             "Cookie": "",
         }
         self._host = "https://tieba.baidu.com"
+        self.cookie_urls = [self._host]
         self._page_extractor = TieBaExtractor()
         self.default_ip_proxy = default_ip_proxy
         self.playwright_page = playwright_page  # Playwright page object
+        self._pc_tbs = ""
+
+    @staticmethod
+    def _sign_pc_params(params: Dict[str, Any]) -> str:
+        sign_text = ""
+        for key in sorted(params):
+            if key in {"sign", "sig"} or params[key] is None:
+                continue
+            sign_text += f"{key}={params[key]}"
+        sign_text += PC_SIGN_SECRET
+        return hashlib.md5(sign_text.encode("utf-8")).hexdigest()
+
+    async def _ensure_tieba_origin(self) -> None:
+        if not self.playwright_page:
+            raise Exception("playwright_page is required for tieba PC API requests")
+        if not self.playwright_page.url.startswith(self._host):
+            await self.playwright_page.goto(self._host, wait_until="domcontentloaded")
+
+    async def _fetch_json_by_browser(
+        self,
+        uri: str,
+        method: str = "GET",
+        params: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+        use_sign: bool = False,
+    ) -> Dict:
+        """
+        Fetch current Tieba PC JSON APIs from the browser context.
+        These APIs rely on logged-in browser cookies and Baidu's PC signing
+        convention, while Python requests can be blocked by local proxy/TLS.
+        """
+        await self._ensure_tieba_origin()
+        params = {k: v for k, v in (params or {}).items() if v is not None}
+        data = {k: v for k, v in (data or {}).items() if v is not None}
+        if use_sign:
+            sign_source = data if method.upper() == "POST" else params
+            sign_source.setdefault("subapp_type", "pc")
+            sign_source.setdefault("_client_type", "20")
+            sign_source["sign"] = self._sign_pc_params(sign_source)
+
+        url = f"{self._host}{uri}"
+        if params:
+            url = f"{url}?{urlencode(params)}"
+        body = urlencode(data) if data else ""
+        response = await self.playwright_page.evaluate(
+            """async ({ url, method, body }) => {
+                const headers = { "Accept": "application/json, text/plain, */*" };
+                const options = { method, credentials: "include", headers };
+                if (method === "POST") {
+                    headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
+                    options.body = body;
+                }
+                const resp = await fetch(url, options);
+                const text = await resp.text();
+                return { status: resp.status, text };
+            }""",
+            {"url": url, "method": method.upper(), "body": body},
+        )
+        if response["status"] != 200:
+            raise Exception(f"Tieba PC API failed, status={response['status']}, url={url}")
+        try:
+            json_data = json.loads(response["text"])
+        except json.JSONDecodeError as exc:
+            raise Exception(f"Tieba PC API returned non-JSON, url={url}, body={response['text'][:500]}") from exc
+        error_code = json_data.get("error_code", json_data.get("no", 0))
+        if str(error_code) not in {"0", "None"}:
+            raise Exception(f"Tieba PC API error, url={url}, response={json_data}")
+        return json_data
+
+    async def _get_pc_tbs(self) -> str:
+        if self._pc_tbs:
+            return self._pc_tbs
+        sync_data = await self._fetch_json_by_browser(
+            "/c/s/pc/sync",
+            params={"subapp_type": "pc", "_client_type": "20"},
+            use_sign=True,
+        )
+        self._pc_tbs = (
+            sync_data.get("data", {})
+            .get("anti", {})
+            .get("tbs", "")
+        )
+        if not self._pc_tbs:
+            raise Exception(f"Can not get Tieba tbs from pc sync API: {sync_data}")
+        return self._pc_tbs
+
+    async def _get_pc_page_data(self, note_id: str, page: int = 1) -> Dict:
+        tbs = await self._get_pc_tbs()
+        return await self._fetch_json_by_browser(
+            "/c/f/pb/page_pc",
+            method="POST",
+            data={
+                "pn": page,
+                "lz": 0,
+                "r": 2,
+                "mark_type": 0,
+                "back": 0,
+                "fr": "",
+                "kz": note_id,
+                "session_request_times": 1,
+                "tbs": tbs,
+                "subapp_type": "pc",
+                "_client_type": "20",
+            },
+            use_sign=True,
+        )
+
+    @staticmethod
+    def _extract_creator_portrait(creator_url: str) -> str:
+        creator_url = (creator_url or "").strip()
+        if not creator_url:
+            return ""
+        if not creator_url.startswith(("http://", "https://")):
+            return creator_url.split("?")[0]
+        parsed = urlparse(creator_url)
+        query = parse_qs(parsed.query)
+        portrait = (
+            query.get("id", [""])[0]
+            or query.get("portrait", [""])[0]
+            or query.get("un", [""])[0]
+        )
+        return unquote(portrait).split("?")[0]
 
     def _sync_request(self, method, url, proxy=None, **kwargs):
         """
@@ -209,7 +335,10 @@ class BaiduTieBaClient(AbstractApiClient):
 
         try:
             # Get cookies from browser and check key login cookies
-            _, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+            _, cookie_dict = await utils.convert_browser_context_cookies(
+                browser_context,
+                urls=self.cookie_urls,
+            )
 
             # Baidu Tieba login identifiers: STOKEN or PTOKEN
             stoken = cookie_dict.get("STOKEN")
@@ -227,7 +356,7 @@ class BaiduTieBaClient(AbstractApiClient):
             utils.logger.error(f"[BaiduTieBaClient.pong] Check login state failed: {e}, assume not logged in")
             return False
 
-    async def update_cookies(self, browser_context: BrowserContext):
+    async def update_cookies(self, browser_context: BrowserContext, urls: Optional[list[str]] = None):
         """
         Update cookies method provided by API client, usually called after successful login
         Args:
@@ -236,7 +365,10 @@ class BaiduTieBaClient(AbstractApiClient):
         Returns:
 
         """
-        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=urls or self.cookie_urls,
+        )
         self.headers["Cookie"] = cookie_str
         utils.logger.info("[BaiduTieBaClient.update_cookies] Cookie has been updated")
 
@@ -263,35 +395,29 @@ class BaiduTieBaClient(AbstractApiClient):
             utils.logger.error("[BaiduTieBaClient.get_notes_by_keyword] playwright_page is None, cannot use browser mode")
             raise Exception("playwright_page is required for browser-based search")
 
-        # Construct search URL
-        # Example: https://tieba.baidu.com/f/search/res?ie=utf-8&qw=keyword
-        search_url = f"{self._host}/f/search/res"
         params = {
-            "ie": "utf-8",
-            "qw": keyword,
-            "rn": page_size,
+            "rn": max(page_size, 20),
+            "st": sort.value,
+            "word": keyword,
+            "needbrand": 1,
+            "sug_type": 2,
             "pn": page,
-            "sm": sort.value,
-            "only_thread": note_type.value,
+            "come_from": "search",
+            "subapp_type": "pc",
+            "_client_type": "20",
         }
-
-        # Concatenate full URL
-        full_url = f"{search_url}?{urlencode(params)}"
-        utils.logger.info(f"[BaiduTieBaClient.get_notes_by_keyword] Accessing search page: {full_url}")
+        utils.logger.info(
+            f"[BaiduTieBaClient.get_notes_by_keyword] Accessing search API: "
+            f"{self._host}/mo/q/search/multsearch?{urlencode(params)}"
+        )
 
         try:
-            # Use Playwright to access search page
-            await self.playwright_page.goto(full_url, wait_until="domcontentloaded")
-
-            # Wait for page loading, using delay setting from config file
-            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-
-            # Get page HTML content
-            page_content = await self.playwright_page.content()
-            utils.logger.info(f"[BaiduTieBaClient.get_notes_by_keyword] Successfully retrieved search page HTML, length: {len(page_content)}")
-
-            # Extract search results
-            notes = self._page_extractor.extract_search_note_list(page_content)
+            api_data = await self._fetch_json_by_browser(
+                "/mo/q/search/multsearch",
+                params=params,
+                use_sign=True,
+            )
+            notes = self._page_extractor.extract_search_note_list_from_api(api_data)[:page_size]
             utils.logger.info(f"[BaiduTieBaClient.get_notes_by_keyword] Extracted {len(notes)} posts")
             return notes
 
@@ -312,23 +438,11 @@ class BaiduTieBaClient(AbstractApiClient):
             utils.logger.error("[BaiduTieBaClient.get_note_by_id] playwright_page is None, cannot use browser mode")
             raise Exception("playwright_page is required for browser-based note detail fetching")
 
-        # Construct post detail URL
-        note_url = f"{self._host}/p/{note_id}"
-        utils.logger.info(f"[BaiduTieBaClient.get_note_by_id] Accessing post detail page: {note_url}")
+        utils.logger.info(f"[BaiduTieBaClient.get_note_by_id] Accessing post detail API, note_id: {note_id}")
 
         try:
-            # Use Playwright to access post detail page
-            await self.playwright_page.goto(note_url, wait_until="domcontentloaded")
-
-            # Wait for page loading, using delay setting from config file
-            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-
-            # Get page HTML content
-            page_content = await self.playwright_page.content()
-            utils.logger.info(f"[BaiduTieBaClient.get_note_by_id] Successfully retrieved post detail HTML, length: {len(page_content)}")
-
-            # Extract post details
-            note_detail = self._page_extractor.extract_note_detail(page_content)
+            api_data = await self._get_pc_page_data(note_id=note_id, page=1)
+            note_detail = self._page_extractor.extract_note_detail_from_api(api_data)
             return note_detail
 
         except Exception as e:
@@ -360,23 +474,15 @@ class BaiduTieBaClient(AbstractApiClient):
         current_page = 1
 
         while note_detail.total_replay_page >= current_page and len(result) < max_count:
-            # Construct comment page URL
-            comment_url = f"{self._host}/p/{note_detail.note_id}?pn={current_page}"
-            utils.logger.info(f"[BaiduTieBaClient.get_note_all_comments] Accessing comment page: {comment_url}")
+            utils.logger.info(
+                f"[BaiduTieBaClient.get_note_all_comments] Accessing comment API, "
+                f"note_id: {note_detail.note_id}, page: {current_page}"
+            )
 
             try:
-                # Use Playwright to access comment page
-                await self.playwright_page.goto(comment_url, wait_until="domcontentloaded")
-
-                # Wait for page loading, using delay setting from config file
-                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-
-                # Get page HTML content
-                page_content = await self.playwright_page.content()
-
-                # Extract comments
-                comments = self._page_extractor.extract_tieba_note_parment_comments(
-                    page_content, note_id=note_detail.note_id
+                api_data = await self._get_pc_page_data(note_id=note_detail.note_id, page=current_page)
+                comments = self._page_extractor.extract_tieba_note_parent_comments_from_api(
+                    api_data, note_detail=note_detail
                 )
 
                 if not comments:
@@ -491,7 +597,7 @@ class BaiduTieBaClient(AbstractApiClient):
 
     async def get_notes_by_tieba_name(self, tieba_name: str, page_num: int) -> List[TiebaNote]:
         """
-        Get post list by Tieba name (uses Playwright to access page, avoiding API detection)
+        Get post list by Tieba name from current PC forum JSON API.
         Args:
             tieba_name: Tieba name
             page_num: Page number
@@ -503,23 +609,33 @@ class BaiduTieBaClient(AbstractApiClient):
             utils.logger.error("[BaiduTieBaClient.get_notes_by_tieba_name] playwright_page is None, cannot use browser mode")
             raise Exception("playwright_page is required for browser-based tieba note fetching")
 
-        # Construct Tieba post list URL
-        tieba_url = f"{self._host}/f?kw={quote(tieba_name)}&pn={page_num}"
-        utils.logger.info(f"[BaiduTieBaClient.get_notes_by_tieba_name] Accessing Tieba page: {tieba_url}")
+        page_size = 30
+        api_page = page_num // page_size + 1
+        tbs = await self._get_pc_tbs()
+        utils.logger.info(
+            f"[BaiduTieBaClient.get_notes_by_tieba_name] Accessing Tieba FRS API, "
+            f"tieba_name: {tieba_name}, page: {api_page}"
+        )
 
         try:
-            # Use Playwright to access Tieba page
-            await self.playwright_page.goto(tieba_url, wait_until="domcontentloaded")
-
-            # Wait for page loading, using delay setting from config file
-            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-
-            # Get page HTML content
-            page_content = await self.playwright_page.content()
-            utils.logger.info(f"[BaiduTieBaClient.get_notes_by_tieba_name] Successfully retrieved Tieba page HTML, length: {len(page_content)}")
-
-            # Extract post list
-            notes = self._page_extractor.extract_tieba_note_list(page_content)
+            api_data = await self._fetch_json_by_browser(
+                "/c/f/frs/page_pc",
+                method="POST",
+                data={
+                    "kw": quote(tieba_name),
+                    "pn": api_page,
+                    "sort_type": -1,
+                    "is_newfrs": 1,
+                    "is_newfeed": 1,
+                    "rn": page_size,
+                    "rn_need": 10,
+                    "tbs": tbs,
+                    "subapp_type": "pc",
+                    "_client_type": "20",
+                },
+                use_sign=True,
+            )
+            notes = self._page_extractor.extract_tieba_note_list_from_frs_api(api_data)[:page_size]
             utils.logger.info(f"[BaiduTieBaClient.get_notes_by_tieba_name] Extracted {len(notes)} posts")
             return notes
 
@@ -527,37 +643,71 @@ class BaiduTieBaClient(AbstractApiClient):
             utils.logger.error(f"[BaiduTieBaClient.get_notes_by_tieba_name] Failed to get Tieba post list: {e}")
             raise
 
-    async def get_creator_info_by_url(self, creator_url: str) -> str:
+    async def get_creator_info_by_url(self, creator_url: str) -> TiebaCreator:
         """
-        Get creator information by creator URL (uses Playwright to access page, avoiding API detection)
+        Get creator information by creator URL from current PC JSON API.
         Args:
             creator_url: Creator homepage URL
 
         Returns:
-            str: Page HTML content
+            TiebaCreator: Creator information
         """
         if not self.playwright_page:
             utils.logger.error("[BaiduTieBaClient.get_creator_info_by_url] playwright_page is None, cannot use browser mode")
             raise Exception("playwright_page is required for browser-based creator info fetching")
 
-        utils.logger.info(f"[BaiduTieBaClient.get_creator_info_by_url] Accessing creator homepage: {creator_url}")
+        portrait = self._extract_creator_portrait(creator_url)
+        if not portrait:
+            raise Exception(f"Can not extract Tieba creator portrait from url: {creator_url}")
+
+        utils.logger.info(
+            f"[BaiduTieBaClient.get_creator_info_by_url] Accessing creator info API, portrait: {portrait}"
+        )
 
         try:
-            # Use Playwright to access creator homepage
-            await self.playwright_page.goto(creator_url, wait_until="domcontentloaded")
-
-            # Wait for page loading, using delay setting from config file
-            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-
-            # Get page HTML content
-            page_content = await self.playwright_page.content()
-            utils.logger.info(f"[BaiduTieBaClient.get_creator_info_by_url] Successfully retrieved creator homepage HTML, length: {len(page_content)}")
-
-            return page_content
+            api_data = await self._fetch_json_by_browser(
+                "/c/u/pc/homeSidebarRight",
+                params={
+                    "portrait": portrait,
+                    "un": "",
+                    "subapp_type": "pc",
+                    "_client_type": "20",
+                },
+                use_sign=True,
+            )
+            return self._page_extractor.extract_creator_info_from_api(api_data)
 
         except Exception as e:
-            utils.logger.error(f"[BaiduTieBaClient.get_creator_info_by_url] Failed to get creator homepage: {e}")
+            utils.logger.error(f"[BaiduTieBaClient.get_creator_info_by_url] Failed to get creator info: {e}")
             raise
+
+    async def get_notes_by_creator_portrait(
+        self, portrait: str, page_number: int, page_size: int = 20
+    ) -> Dict:
+        """
+        Get creator's thread feed by creator portrait from current PC JSON API.
+        """
+        if not self.playwright_page:
+            utils.logger.error("[BaiduTieBaClient.get_notes_by_creator_portrait] playwright_page is None, cannot use browser mode")
+            raise Exception("playwright_page is required for browser-based creator notes fetching")
+
+        utils.logger.info(
+            f"[BaiduTieBaClient.get_notes_by_creator_portrait] Accessing creator feed API, "
+            f"portrait: {portrait}, page: {page_number}"
+        )
+        return await self._fetch_json_by_browser(
+            "/c/u/feed/myThread",
+            params={
+                "pn": page_number,
+                "rn": page_size,
+                "portrait": portrait,
+                "type": 1,
+                "un": "",
+                "subapp_type": "pc",
+                "_client_type": "20",
+            },
+            use_sign=True,
+        )
 
     async def get_notes_by_creator(self, user_name: str, page_number: int) -> Dict:
         """
@@ -641,12 +791,12 @@ class BaiduTieBaClient(AbstractApiClient):
         while notes_has_more == 1 and (max_note_count == 0 or total_get_count < max_note_count):
             notes_res = await self.get_notes_by_creator(user_name, page_number)
             if not notes_res or notes_res.get("no") != 0:
-                utils.logger.error(f"[WeiboClient.get_notes_by_creator] got user_name:{user_name} notes failed, notes_res: {notes_res}")
+                utils.logger.error(f"[TieBaClient.get_notes_by_creator] got user_name:{user_name} notes failed, notes_res: {notes_res}")
                 break
             notes_data = notes_res.get("data")
             notes_has_more = notes_data.get("has_more")
             notes = notes_data["thread_list"]
-            utils.logger.info(f"[WeiboClient.get_all_notes_by_creator] got user_name:{user_name} notes len : {len(notes)}")
+            utils.logger.info(f"[TieBaClient.get_all_notes_by_creator] got user_name:{user_name} notes len : {len(notes)}")
 
             note_detail_task = [self.get_note_by_id(note['thread_id']) for note in notes]
             notes = await asyncio.gather(*note_detail_task)
@@ -656,4 +806,60 @@ class BaiduTieBaClient(AbstractApiClient):
             result.extend(notes)
             page_number += 1
             total_get_count += page_per_count
+        return result
+
+    async def get_all_notes_by_creator_url(
+        self,
+        creator_url: str,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        max_note_count: int = 0,
+    ) -> List[TiebaNote]:
+        """
+        Get all creator posts by current PC creator feed API.
+        """
+        portrait = self._extract_creator_portrait(creator_url)
+        if not portrait:
+            raise Exception(f"Can not extract Tieba creator portrait from url: {creator_url}")
+
+        result: List[TiebaNote] = []
+        page_number = 1
+        page_size = 20
+
+        while max_note_count == 0 or len(result) < max_note_count:
+            notes_res = await self.get_notes_by_creator_portrait(
+                portrait=portrait,
+                page_number=page_number,
+                page_size=page_size,
+            )
+            thread_id_list = self._page_extractor.extract_creator_thread_id_list_from_api(notes_res)
+            if not thread_id_list:
+                utils.logger.info(
+                    f"[BaiduTieBaClient.get_all_notes_by_creator_url] "
+                    f"Creator portrait:{portrait} page:{page_number} has no threads"
+                )
+                break
+
+            if max_note_count:
+                thread_id_list = thread_id_list[: max_note_count - len(result)]
+
+            utils.logger.info(
+                f"[BaiduTieBaClient.get_all_notes_by_creator_url] "
+                f"got portrait:{portrait} thread ids len: {len(thread_id_list)}"
+            )
+            note_detail_task = [self.get_note_by_id(thread_id) for thread_id in thread_id_list]
+            notes = await asyncio.gather(*note_detail_task)
+            notes = [note for note in notes if note]
+            if callback and notes:
+                await callback(notes)
+            result.extend(notes)
+
+            data = notes_res.get("data", {})
+            has_more = int(data.get("has_more") or 0)
+            if not has_more:
+                break
+
+            await asyncio.sleep(crawl_interval)
+            page_number += 1
+
         return result

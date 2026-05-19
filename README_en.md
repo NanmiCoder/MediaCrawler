@@ -242,6 +242,15 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
 TikHub.io provides 900+ highly stable data interfaces, covering 14+ mainstream domestic and international platforms including TK, DY, XHS, Y2B, Ins, X, etc. Supports multi-dimensional public data APIs for users, content, products, comments, etc., with 40M+ cleaned structured datasets. Use invitation code <code>cfzyejV9</code> to register and recharge, and get an additional $2 bonus.
 </a>
 
+<br>
+<br>
+
+<a href="https://legionproxy.io/?utm_source=github&utm_campaign=mediacrawler">
+<img width="420" src="docs/static/images/legionproxy_banner.jpg" alt="LegionProxy residential proxy sponsor banner">
+<br>
+LegionProxy provides residential proxies built for account registration and automation, with 74M+ real residential IPs, 195+ countries, HTTP/3 high-speed connections, and pricing from $0.60/GB.
+</a>
+
 ---
 
 ### 🤝 Become a Sponsor

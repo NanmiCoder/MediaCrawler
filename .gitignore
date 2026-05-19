@@ -218,3 +218,4 @@ yarn-debug.log*
 dist/
 build/
 *.egg
+.omx/

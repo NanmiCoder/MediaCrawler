@@ -56,6 +56,13 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         self.timeout = timeout
         self.headers = headers
         self._host = "https://www.douyin.com"
+        self.cookie_urls = [
+            "https://douyin.com",
+            self._host,
+            "https://creator.douyin.com",
+            "https://douhot.douyin.com",
+            "https://live.douyin.com",
+        ]
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
         # Initialize proxy pool (from ProxyRefreshMixin)
@@ -145,11 +152,17 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         if local_storage.get("HasUserLogin", "") == "1":
             return True
 
-        _, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+        _, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=self.cookie_urls,
+        )
         return cookie_dict.get("LOGIN_STATUS") == "1"
 
-    async def update_cookies(self, browser_context: BrowserContext):
-        cookie_str, cookie_dict = utils.convert_cookies(await browser_context.cookies())
+    async def update_cookies(self, browser_context: BrowserContext, urls: Optional[list[str]] = None):
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            browser_context,
+            urls=urls or self.cookie_urls,
+        )
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
 
@@ -313,8 +326,6 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
             "max_cursor": max_cursor,
             "locate_query": "false",
             "publish_video_strategy_type": 2,
-            'verifyFp': 'verify_ma3hrt8n_q2q2HyYA_uLyO_4N6D_BLvX_E2LgoGmkA1BU',
-            'fp': 'verify_ma3hrt8n_q2q2HyYA_uLyO_4N6D_BLvX_E2LgoGmkA1BU'
         }
         return await self.get(uri, params)
 

@@ -54,6 +54,7 @@ class TieBaCrawler(AbstractCrawler):
 
     def __init__(self) -> None:
         self.index_url = "https://tieba.baidu.com"
+        self.cookie_urls = [self.index_url]
         self.user_agent = utils.get_user_agent()
         self._page_extractor = TieBaExtractor()
         self.cdp_manager = None
@@ -123,7 +124,10 @@ class TieBaCrawler(AbstractCrawler):
                     cookie_str=config.COOKIES,
                 )
                 await login_obj.begin()
-                await self.tieba_client.update_cookies(browser_context=self.browser_context)
+                await self.tieba_client.update_cookies(
+                    browser_context=self.browser_context,
+                    urls=self.cookie_urls,
+                )
 
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
@@ -209,7 +213,7 @@ class TieBaCrawler(AbstractCrawler):
         Returns:
 
         """
-        tieba_limit_count = 50
+        tieba_limit_count = 30
         if config.CRAWLER_MAX_NOTES_COUNT < tieba_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = tieba_limit_count
         for tieba_name in config.TIEBA_NAME_LIST:
@@ -241,7 +245,7 @@ class TieBaCrawler(AbstractCrawler):
                 page_number += tieba_limit_count
 
     async def get_specified_notes(
-        self, note_id_list: List[str] = config.TIEBA_SPECIFIED_ID_LIST
+        self, note_id_list: Optional[List[str]] = None
     ):
         """
         Get the information and comments of the specified post
@@ -251,6 +255,8 @@ class TieBaCrawler(AbstractCrawler):
         Returns:
 
         """
+        if note_id_list is None:
+            note_id_list = config.TIEBA_SPECIFIED_ID_LIST
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_note_detail_async_task(note_id=note_id, semaphore=semaphore)
@@ -361,18 +367,15 @@ class TieBaCrawler(AbstractCrawler):
 
         """
         utils.logger.info(
-            "[WeiboCrawler.get_creators_and_notes] Begin get weibo creators"
+            "[TieBaCrawler.get_creators_and_notes] Begin get tieba creators"
         )
         for creator_url in config.TIEBA_CREATOR_URL_LIST:
-            creator_page_html_content = await self.tieba_client.get_creator_info_by_url(
+            creator_info: TiebaCreator = await self.tieba_client.get_creator_info_by_url(
                 creator_url=creator_url
-            )
-            creator_info: TiebaCreator = self._page_extractor.extract_creator_info(
-                creator_page_html_content
             )
             if creator_info:
                 utils.logger.info(
-                    f"[WeiboCrawler.get_creators_and_notes] creator info: {creator_info}"
+                    f"[TieBaCrawler.get_creators_and_notes] creator info: {creator_info}"
                 )
                 if not creator_info:
                     raise Exception("Get creator info error")
@@ -381,12 +384,11 @@ class TieBaCrawler(AbstractCrawler):
 
                 # Get all note information of the creator
                 all_notes_list = (
-                    await self.tieba_client.get_all_notes_by_creator_user_name(
-                        user_name=creator_info.user_name,
+                    await self.tieba_client.get_all_notes_by_creator_url(
+                        creator_url=creator_url,
                         crawl_interval=0,
                         callback=tieba_store.batch_update_tieba_notes,
                         max_note_count=config.CRAWLER_MAX_NOTES_COUNT,
-                        creator_page_html_content=creator_page_html_content,
                     )
                 )
 
@@ -394,7 +396,7 @@ class TieBaCrawler(AbstractCrawler):
 
             else:
                 utils.logger.error(
-                    f"[WeiboCrawler.get_creators_and_notes] get creator info error, creator_url:{creator_url}"
+                    f"[TieBaCrawler.get_creators_and_notes] get creator info error, creator_url:{creator_url}"
                 )
 
     async def _navigate_to_tieba_via_baidu(self):
@@ -560,7 +562,10 @@ class TieBaCrawler(AbstractCrawler):
         user_agent = await self.context_page.evaluate("() => navigator.userAgent")
         utils.logger.info(f"[TieBaCrawler.create_tieba_client] Extracted User-Agent from browser: {user_agent}")
 
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            self.browser_context,
+            urls=self.cookie_urls,
+        )
 
         # Build complete browser request headers, simulating real browser behavior
         tieba_client = BaiduTieBaClient(
