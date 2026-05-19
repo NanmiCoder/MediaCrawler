@@ -179,3 +179,42 @@ agent_zone
 debug_tools
 
 database/*.db
+
+# === auto-added by ensure-repo-hygiene.sh ===
+# 敏感文件
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+credentials.*
+secrets.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+.pnpm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Build
+dist/
+build/
+*.egg
