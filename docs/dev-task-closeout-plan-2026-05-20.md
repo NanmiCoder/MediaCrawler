@@ -42,6 +42,12 @@
 - online regression: not applicable; no live runtime, launchd, release entrypoint, or external owner write path touched
 - external endstate: branch pushed to `origin/chore/dirty-worktree-checkpoint-20260422`; PR #880 updated
 
+### Compatibility Oracle
+
+- 旧调用方 / caller: existing CLI and platform crawler callers remain on the same public module paths; no caller contract was intentionally changed in this closeout slice.
+- legacy fixture / oracle: existing tests plus upstream-added Tieba tests are the oracle for preserved behavior in this branch.
+- 行为是否变化: no behavior change was introduced by the closeout work itself; only merge conflict resolution, lockfile normalization, hygiene ignore rules, and documentation evidence were added.
+
 ## TODO
 
 - [x] Commit dirty worktree changes with precise staged files.
