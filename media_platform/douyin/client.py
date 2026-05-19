@@ -326,8 +326,6 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
             "max_cursor": max_cursor,
             "locate_query": "false",
             "publish_video_strategy_type": 2,
-            'verifyFp': 'verify_ma3hrt8n_q2q2HyYA_uLyO_4N6D_BLvX_E2LgoGmkA1BU',
-            'fp': 'verify_ma3hrt8n_q2q2HyYA_uLyO_4N6D_BLvX_E2LgoGmkA1BU'
         }
         return await self.get(uri, params)
 
