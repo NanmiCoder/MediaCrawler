@@ -200,9 +200,10 @@ async def create_ip_pool(ip_pool_count: int, enable_validate_ip: bool) -> ProxyI
     :param enable_validate_ip: Whether to enable IP proxy validation
     :return:
     """
+    is_static = config.IP_PROXY_PROVIDER_NAME == "static"
     pool = ProxyIpPool(
         ip_pool_count=ip_pool_count,
-        enable_validate_ip=enable_validate_ip,
+        enable_validate_ip=False if is_static else enable_validate_ip,
         ip_provider=IpProxyProvider.get(config.IP_PROXY_PROVIDER_NAME),
     )
     await pool.load_proxies()
