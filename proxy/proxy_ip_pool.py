@@ -150,9 +150,46 @@ class ProxyIpPool:
         await self.load_proxies()
 
 
+class StaticProxyProvider(ProxyProvider):
+    async def get_proxy(self, num: int) -> List[IpInfoModel]:
+        from urllib.parse import urlparse
+        import time
+        
+        proxy_url = getattr(config, "STATIC_PROXY_URL", "")
+        if not proxy_url:
+            utils.logger.warning("[StaticProxyProvider] STATIC_PROXY_URL is not configured!")
+            return []
+            
+        try:
+            parsed = urlparse(proxy_url)
+            ip = parsed.hostname or ""
+            port = parsed.port or 80
+            user = parsed.username or ""
+            password = parsed.password or ""
+            protocol = parsed.scheme + "://" if parsed.scheme else "http://"
+            
+            # Static proxy doesn't expire
+            expired_time_ts = int(time.time()) + 99999999
+            
+            return [
+                IpInfoModel(
+                    ip=ip,
+                    port=port,
+                    user=user,
+                    password=password,
+                    protocol=protocol,
+                    expired_time_ts=expired_time_ts
+                )
+            ]
+        except Exception as e:
+            utils.logger.error(f"[StaticProxyProvider] Parse static proxy url error: {e}")
+            return []
+
+
 IpProxyProvider: Dict[str, ProxyProvider] = {
     ProviderNameEnum.KUAI_DAILI_PROVIDER.value: new_kuai_daili_proxy(),
     ProviderNameEnum.WANDOU_HTTP_PROVIDER.value: new_wandou_http_proxy(),
+    "static": StaticProxyProvider(),
 }
 
 
