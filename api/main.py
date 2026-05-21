@@ -23,6 +23,7 @@ Or: python -m api.main
 """
 import asyncio
 import os
+import sys
 import subprocess
 import uvicorn
 from fastapi import FastAPI
