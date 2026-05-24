@@ -47,6 +47,7 @@ class PlatformEnum(str, Enum):
     WEIBO = "wb"
     TIEBA = "tieba"
     ZHIHU = "zhihu"
+    SMZDM = "smzdm"
 
 
 class LoginTypeEnum(str, Enum):
@@ -162,7 +163,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             PlatformEnum,
             typer.Option(
                 "--platform",
-                help="Media platform selection (xhs=XiaoHongShu | dy=Douyin | ks=Kuaishou | bili=Bilibili | wb=Weibo | tieba=Baidu Tieba | zhihu=Zhihu)",
+                help="Media platform selection (xhs=XiaoHongShu | dy=Douyin | ks=Kuaishou | bili=Bilibili | wb=Weibo | tieba=Baidu Tieba | zhihu=Zhihu | smzdm=Shenme Zhide Mai)",
                 rich_help_panel="Basic Configuration",
             ),
         ] = _coerce_enum(PlatformEnum, config.PLATFORM, PlatformEnum.XHS),
@@ -364,6 +365,8 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 config.TIEBA_SPECIFIED_ID_LIST = [
                     _normalize_tieba_note_id(item) for item in specified_id_list
                 ]
+            elif platform == PlatformEnum.SMZDM:
+                config.SMZDM_SPECIFIED_ID_LIST = specified_id_list
 
         if creator_id_list:
             if platform == PlatformEnum.XHS:

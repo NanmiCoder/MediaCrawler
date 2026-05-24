@@ -450,3 +450,34 @@ class ZhihuCreator(Base):
     get_voteup_count = Column(Integer, default=0, comment='获赞数')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
+
+class SmzdmPost(Base):
+    __tablename__ = 'smzdm_post'
+    id = Column(Integer, primary_key=True, comment='主键ID')
+    post_id = Column(String(64), index=True, unique=True, comment='文章/商品ID')
+    title = Column(Text, comment='标题')
+    content = Column(Text, comment='描述内容')
+    post_url = Column(Text, comment='文章URL')
+    publish_time = Column(String(32), comment='发布时间')
+    like_count = Column(Integer, default=0, comment='点赞数')
+    comment_count = Column(Integer, default=0, comment='评论数')
+    author_nickname = Column(Text, comment='作者昵称')
+    add_ts = Column(BigInteger, comment='添加时间戳')
+    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
+
+class SmzdmComment(Base):
+    __tablename__ = 'smzdm_comment'
+    id = Column(Integer, primary_key=True, comment='主键ID')
+    comment_id = Column(String(64), index=True, comment='评论ID')
+    parent_comment_id = Column(String(64), comment='父评论ID')
+    content = Column(Text, comment='评论内容')
+    publish_time = Column(String(32), comment='发布时间')
+    ip_location = Column(Text, comment='IP地址位置')
+    like_count = Column(Integer, default=0, comment='点赞数')
+    sub_comment_count = Column(Integer, default=0, comment='子评论数')
+    post_id = Column(String(64), index=True, comment='内容ID')
+    user_id = Column(String(64), comment='用户ID')
+    user_nickname = Column(Text, comment='用户昵称')
+    user_avatar = Column(Text, comment='用户头像')
+    add_ts = Column(BigInteger, comment='添加时间戳')
+    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
