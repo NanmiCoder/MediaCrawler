@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 class ProviderNameEnum(Enum):
     KUAI_DAILI_PROVIDER: str = "kuaidaili"
     WANDOU_HTTP_PROVIDER: str = "wandouhttp"
+    STATIC_HTTP_PROVIDER: str = "static"
 
 
 class IpInfoModel(BaseModel):
