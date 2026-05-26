@@ -43,6 +43,10 @@ class CrawlerManager:
         self._project_root = Path(__file__).parent.parent.parent
         # Log queue - for pushing to WebSocket
         self._log_queue: Optional[asyncio.Queue] = None
+        # Subscription context for tracking subscription-triggered crawls
+        self._subscription_context: Optional[dict] = None
+        # Completion callback
+        self._completion_callback: Optional[callable] = None
 
     @property
     def logs(self) -> List[LogEntry]:
@@ -202,6 +206,35 @@ class CrawlerManager:
             "error_message": None
         }
 
+    def set_subscription_context(
+        self,
+        subscription_id: str,
+        keyword: str,
+        platform: str,
+        completion_callback: Optional[callable] = None
+    ):
+        """
+        Set subscription context for the current crawl.
+        When crawl completes, the callback will be invoked with the context.
+
+        Args:
+            subscription_id: The subscription ID
+            keyword: The search keyword
+            platform: The platform identifier
+            completion_callback: Async callback to invoke on completion
+        """
+        self._subscription_context = {
+            "subscription_id": subscription_id,
+            "keyword": keyword,
+            "platform": platform,
+        }
+        self._completion_callback = completion_callback
+
+    def clear_subscription_context(self):
+        """Clear subscription context"""
+        self._subscription_context = None
+        self._completion_callback = None
+
     def _build_command(self, config: CrawlerStartRequest) -> list:
         """Build main.py command line arguments"""
         cmd = ["uv", "run", "python", "main.py"]
@@ -235,6 +268,7 @@ class CrawlerManager:
     async def _read_output(self):
         """Asynchronously read process output"""
         loop = asyncio.get_event_loop()
+        line_count = 0
 
         try:
             while self.process and self.process.poll() is None:
@@ -245,9 +279,14 @@ class CrawlerManager:
                 if line:
                     line = line.strip()
                     if line:
+                        line_count += 1
                         level = self._parse_log_level(line)
-                        entry = self._create_log_entry(line, level)
+                        # Add line number prefix for easier tracking
+                        prefixed_line = f"[{line_count:04d}] {line}"
+                        entry = self._create_log_entry(prefixed_line, level)
                         await self._push_log(entry)
+                        # Also print to console for real-time debugging
+                        print(f"[Crawler] {prefixed_line}")
 
             # Read remaining output
             if self.process and self.process.stdout:
@@ -266,10 +305,26 @@ class CrawlerManager:
                 exit_code = self.process.returncode if self.process else -1
                 if exit_code == 0:
                     entry = self._create_log_entry("Crawler completed successfully", "success")
+                    await self._push_log(entry)
+                    self.status = "idle"
+
+                    # Invoke subscription completion callback if set
+                    if self._subscription_context and self._completion_callback:
+                        try:
+                            await self._completion_callback(self._subscription_context)
+                        except Exception as e:
+                            entry = self._create_log_entry(f"Subscription callback error: {str(e)}", "error")
+                            await self._push_log(entry)
+                        finally:
+                            self._subscription_context = None
+                            self._completion_callback = None
                 else:
                     entry = self._create_log_entry(f"Crawler exited with code: {exit_code}", "warning")
-                await self._push_log(entry)
-                self.status = "idle"
+                    await self._push_log(entry)
+                    self.status = "idle"
+                    # Clear subscription context on error
+                    self._subscription_context = None
+                    self._completion_callback = None
 
         except asyncio.CancelledError:
             pass

@@ -21,6 +21,7 @@
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/1/14 17:34
 # @Desc    :
+import asyncio
 from typing import List
 
 import config
@@ -130,6 +131,17 @@ async def update_xhs_note(note_item: Dict):
     }
     utils.logger.info(f"[store.xhs.update_xhs_note] xhs note: {local_db_item}")
     await XhsStoreFactory.create_store().store_content(local_db_item)
+
+    # 图片下载任务入队 (fire-and-forget)
+    try:
+        from api.services import image_queue_service
+        for img in image_list:
+            url = img.get("url")
+            if url:
+                # Fire-and-forget: 不等待结果，不阻塞主流程
+                asyncio.create_task(image_queue_service.enqueue(url))
+    except Exception as e:
+        utils.logger.warning(f"[store.xhs.update_xhs_note] Failed to enqueue image download task: {e}")
 
 
 async def batch_update_xhs_note_comments(note_id: str, comments: List[Dict]):

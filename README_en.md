@@ -142,14 +142,14 @@ MediaCrawler provides a web-based visual operation interface, allowing you to ea
 #### Start WebUI Service
 
 ```shell
-# Start API server (default port 8080)
-uv run uvicorn api.main:app --port 8080 --reload
+# Start API server (default port 8081)
+uv run uvicorn api.main:app --port 8081 --reload
 
 # Or start using module method
 uv run python -m api.main
 ```
 
-After successful startup, visit `http://localhost:8080` to open the WebUI interface.
+After successful startup, visit `http://localhost:8081` to open the WebUI interface.
 
 #### WebUI Features
 
