@@ -320,10 +320,18 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             str,
             typer.Option(
                 "--ip_proxy_provider_name",
-                help="IP proxy provider name (kuaidaili | wandouhttp)",
+                help="IP proxy provider name (kuaidaili | wandouhttp | static)",
                 rich_help_panel="Proxy Configuration",
             ),
         ] = config.IP_PROXY_PROVIDER_NAME,
+        static_proxy_url: Annotated[
+            str,
+            typer.Option(
+                "--static_proxy_url",
+                help="Static proxy URL, for example http://user:password@host:port",
+                rich_help_panel="Proxy Configuration",
+            ),
+        ] = config.STATIC_PROXY_URL,
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
@@ -356,6 +364,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.ENABLE_IP_PROXY = enable_ip_proxy_value
         config.IP_PROXY_POOL_COUNT = ip_proxy_pool_count
         config.IP_PROXY_PROVIDER_NAME = ip_proxy_provider_name
+        config.STATIC_PROXY_URL = static_proxy_url
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:

@@ -22,7 +22,9 @@
 # @Time    : 2023/12/2 13:45
 # @Desc    : IP proxy pool implementation
 import random
+import time
 from typing import Dict, List
+from urllib.parse import unquote, urlparse
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -152,33 +154,33 @@ class ProxyIpPool:
 
 class StaticProxyProvider(ProxyProvider):
     async def get_proxy(self, num: int) -> List[IpInfoModel]:
-        from urllib.parse import urlparse
-        import time
-        
         proxy_url = getattr(config, "STATIC_PROXY_URL", "")
         if not proxy_url:
             utils.logger.warning("[StaticProxyProvider] STATIC_PROXY_URL is not configured!")
             return []
-            
+
         try:
             parsed = urlparse(proxy_url)
+            scheme = parsed.scheme or "http"
+            if scheme not in {"http", "https"}:
+                utils.logger.error(f"[StaticProxyProvider] Unsupported proxy scheme: {scheme}")
+                return []
+
             ip = parsed.hostname or ""
-            port = parsed.port or 80
-            user = parsed.username or ""
-            password = parsed.password or ""
-            protocol = parsed.scheme + "://" if parsed.scheme else "http://"
-            
-            # Static proxy doesn't expire
-            expired_time_ts = int(time.time()) + 99999999
-            
+            port = parsed.port or (443 if scheme == "https" else 80)
+            if not ip:
+                utils.logger.error("[StaticProxyProvider] STATIC_PROXY_URL host is empty!")
+                return []
+
             return [
                 IpInfoModel(
                     ip=ip,
                     port=port,
-                    user=user,
-                    password=password,
-                    protocol=protocol,
-                    expired_time_ts=expired_time_ts
+                    user=unquote(parsed.username or ""),
+                    password=unquote(parsed.password or ""),
+                    protocol=f"{scheme}://",
+                    # Static proxy doesn't expire.
+                    expired_time_ts=int(time.time()) + 99999999,
                 )
             ]
         except Exception as e:
@@ -189,7 +191,7 @@ class StaticProxyProvider(ProxyProvider):
 IpProxyProvider: Dict[str, ProxyProvider] = {
     ProviderNameEnum.KUAI_DAILI_PROVIDER.value: new_kuai_daili_proxy(),
     ProviderNameEnum.WANDOU_HTTP_PROVIDER.value: new_wandou_http_proxy(),
-    "static": StaticProxyProvider(),
+    ProviderNameEnum.STATIC_PROVIDER.value: StaticProxyProvider(),
 }
 
 
@@ -200,7 +202,7 @@ async def create_ip_pool(ip_pool_count: int, enable_validate_ip: bool) -> ProxyI
     :param enable_validate_ip: Whether to enable IP proxy validation
     :return:
     """
-    is_static = config.IP_PROXY_PROVIDER_NAME == "static"
+    is_static = config.IP_PROXY_PROVIDER_NAME == ProviderNameEnum.STATIC_PROVIDER.value
     pool = ProxyIpPool(
         ip_pool_count=ip_pool_count,
         enable_validate_ip=False if is_static else enable_validate_ip,
