@@ -23,6 +23,7 @@ Or: python -m api.main
 """
 import asyncio
 import os
+import sys
 import subprocess
 import uvicorn
 from fastapi import FastAPI
@@ -85,17 +86,29 @@ async def check_environment():
     """Check if MediaCrawler environment is configured correctly"""
     try:
         # Run uv run main.py --help command to check environment
-        process = await asyncio.create_subprocess_exec(
-            "uv", "run", "main.py", "--help",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd="."  # Project root directory
-        )
-        stdout, stderr = await asyncio.wait_for(
-            process.communicate(),
-            timeout=30.0  # 30 seconds timeout
-        )
-
+        if sys.platform == "win32":
+            loop = asyncio.get_running_loop()
+            process = await loop.run_in_executor(
+                None,
+                lambda: subprocess.run(
+                    ["uv", "run", "main.py", "--help"],
+                    capture_output=True,
+                    timeout=30.0,
+                    cwd="."
+                )
+            )
+            stdout, stderr = process.stdout, process.stderr  # bytes
+        else:
+            process = await asyncio.create_subprocess_exec(
+                "uv", "run", "main.py", "--help",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd="."  # Project root directory
+            )
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=30.0  # 30 seconds timeout
+            )
         if process.returncode == 0:
             return {
                 "success": True,
@@ -125,7 +138,7 @@ async def check_environment():
         return {
             "success": False,
             "message": "Environment check error",
-            "error": str(e)
+            "error": f"{type(e).__name__}: {str(e) or 'Unknown'}"
         }
 
 
