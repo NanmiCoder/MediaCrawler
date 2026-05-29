@@ -37,7 +37,11 @@ ENABLE_IP_PROXY = False
 IP_PROXY_POOL_COUNT = 2
 
 # Proxy IP provider name
-IP_PROXY_PROVIDER_NAME = "kuaidaili"  # kuaidaili | wandouhttp
+IP_PROXY_PROVIDER_NAME = "kuaidaili"  # kuaidaili | wandouhttp | static
+
+# Static proxy configuration (used when IP_PROXY_PROVIDER_NAME is set to "static")
+# Format: "http://your_home_domain:port" or "http://user:password@your_home_domain:port"
+STATIC_PROXY_URL = ""
 
 # Setting to True will not open the browser (headless browser)
 # Setting False will open a browser
