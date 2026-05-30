@@ -248,10 +248,11 @@ class DouYinLogin(AbstractLogin):
         element = await self.context_page.query_selector(gap_selector)
         bounding_box = await element.bounding_box() # type: ignore
 
-        await self.context_page.mouse.move(bounding_box["x"] + bounding_box["width"] / 2, # type: ignore
-                                           bounding_box["y"] + bounding_box["height"] / 2) # type: ignore
+        slider_center_x = bounding_box["x"] + bounding_box["width"] / 2 # type: ignore
+        slider_center_y = bounding_box["y"] + bounding_box["height"] / 2 # type: ignore
+        await self.context_page.mouse.move(slider_center_x, slider_center_y)
         # Get x coordinate center position
-        x = bounding_box["x"] + bounding_box["width"] / 2 # type: ignore
+        x = slider_center_x
         # Simulate sliding operation
         await element.hover() # type: ignore
         await self.context_page.mouse.down()
@@ -259,7 +260,7 @@ class DouYinLogin(AbstractLogin):
         for track in tracks:
             # Loop mouse movement according to trajectory
             # steps controls the ratio of single movement speed, default is 1, meaning the distance moves in 0.1 seconds no matter how far, larger value means slower
-            await self.context_page.mouse.move(x + track, 0, steps=move_step)
+            await self.context_page.mouse.move(x + track, slider_center_y, steps=move_step)
             x += track
         await self.context_page.mouse.up()
 
