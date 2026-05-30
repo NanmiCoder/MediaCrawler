@@ -30,6 +30,13 @@ from ._store_impl import *
 from .douyin_store_media import *
 
 
+def _normalize_str_fields(payload: Dict, fields: List[str]):
+    for field in fields:
+        value = payload.get(field)
+        if value is not None and value != "":
+            payload[field] = str(value)
+
+
 class DouyinStoreFactory:
     STORES = {
         "csv": DouyinCsvStoreImplement,
@@ -184,6 +191,7 @@ async def update_douyin_aweme(aweme_item: Dict):
         "note_download_url": ",".join(_extract_note_image_list(aweme_item)),
         "source_keyword": source_keyword_var.get(),
     }
+    _normalize_str_fields(save_content_item, ["aweme_id", "user_id", "sec_uid", "short_user_id", "user_unique_id"])
     utils.logger.info(f"[store.douyin.update_douyin_aweme] douyin aweme id:{aweme_id}, title:{save_content_item.get('title')}")
     await DouyinStoreFactory.create_store().store_content(content_item=save_content_item)
 
@@ -218,11 +226,12 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
         "nickname": user_info.get("nickname"),
         "avatar": avatar_info.get("url_list", [""])[0],
         "sub_comment_count": str(comment_item.get("reply_comment_total", 0)),
-        "like_count": (comment_item.get("digg_count") if comment_item.get("digg_count") else 0),
+        "like_count": str(comment_item.get("digg_count") if comment_item.get("digg_count") else 0),
         "last_modify_ts": utils.get_current_timestamp(),
         "parent_comment_id": parent_comment_id,
         "pictures": ",".join(_extract_comment_image_list(comment_item)),
     }
+    _normalize_str_fields(save_comment_item, ["comment_id", "aweme_id", "user_id", "sec_uid", "short_user_id", "user_unique_id", "parent_comment_id"])
     utils.logger.info(f"[store.douyin.update_dy_aweme_comment] douyin aweme comment: {comment_id}, content: {save_comment_item.get('content')}")
 
     await DouyinStoreFactory.create_store().store_comment(comment_item=save_comment_item)
@@ -245,6 +254,7 @@ async def save_creator(user_id: str, creator: Dict):
         "videos_count": user_info.get("aweme_count", 0),
         "last_modify_ts": utils.get_current_timestamp(),
     }
+    _normalize_str_fields(local_db_item, ["user_id"])
     utils.logger.info(f"[store.douyin.save_creator] creator:{local_db_item}")
     await DouyinStoreFactory.create_store().store_creator(local_db_item)
 
