@@ -16,9 +16,10 @@
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
+import re
 from enum import Enum
 from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 MAX_API_LIMIT_COUNT = 10000
@@ -74,6 +75,20 @@ class CrawlerStartRequest(BaseModel):
     save_option: SaveDataOptionEnum = SaveDataOptionEnum.JSONL
     cookies: str = ""
     headless: bool = False
+
+    @field_validator("specified_ids", "creator_ids")
+    @classmethod
+    def validate_ids(cls, v: str) -> str:
+        if v and not re.fullmatch(r"[A-Za-z0-9_,\- ]*", v):
+            raise ValueError("IDs must only contain alphanumeric characters, commas, hyphens, underscores, or spaces")
+        return v
+
+    @field_validator("keywords", "cookies")
+    @classmethod
+    def validate_no_control_chars(cls, v: str) -> str:
+        if v and re.search(r"[\x00\n\r]", v):
+            raise ValueError("Field must not contain null bytes or newline characters")
+        return v
     max_notes_count: Optional[int] = Field(default=None, ge=1, le=MAX_API_LIMIT_COUNT)
     max_comments_count: Optional[int] = Field(default=None, ge=1, le=MAX_API_LIMIT_COUNT)
 
