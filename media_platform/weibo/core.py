@@ -60,6 +60,7 @@ class WeiboCrawler(AbstractCrawler):
     def __init__(self):
         self.index_url = "https://www.weibo.com"
         self.mobile_index_url = "https://m.weibo.cn"
+        self.cookie_urls = [self.mobile_index_url]
         self.user_agent = utils.get_user_agent()
         self.mobile_user_agent = utils.get_mobile_user_agent()
         self.cdp_manager = None
@@ -116,7 +117,7 @@ class WeiboCrawler(AbstractCrawler):
                 # Only get mobile cookies to avoid confusion between PC and mobile cookies
                 await self.wb_client.update_cookies(
                     browser_context=self.browser_context,
-                    urls=[self.mobile_index_url]
+                    urls=self.cookie_urls,
                 )
 
             crawler_type_var.set(config.CRAWLER_TYPE)
@@ -338,7 +339,10 @@ class WeiboCrawler(AbstractCrawler):
     async def create_weibo_client(self, httpx_proxy: Optional[str]) -> WeiboClient:
         """Create xhs client"""
         utils.logger.info("[WeiboCrawler.create_weibo_client] Begin create weibo API client ...")
-        cookie_str, cookie_dict = utils.convert_cookies(await self.browser_context.cookies(urls=[self.mobile_index_url]))
+        cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
+            self.browser_context,
+            urls=self.cookie_urls,
+        )
         weibo_client_obj = WeiboClient(
             proxy=httpx_proxy,
             headers={

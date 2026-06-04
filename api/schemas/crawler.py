@@ -18,7 +18,10 @@
 
 from enum import Enum
 from typing import Optional, Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+MAX_API_LIMIT_COUNT = 10000
 
 
 class PlatformEnum(str, Enum):
@@ -71,6 +74,8 @@ class CrawlerStartRequest(BaseModel):
     save_option: SaveDataOptionEnum = SaveDataOptionEnum.JSONL
     cookies: str = ""
     headless: bool = False
+    max_notes_count: Optional[int] = Field(default=None, ge=1, le=MAX_API_LIMIT_COUNT)
+    max_comments_count: Optional[int] = Field(default=None, ge=1, le=MAX_API_LIMIT_COUNT)
 
 
 class CrawlerStatusResponse(BaseModel):

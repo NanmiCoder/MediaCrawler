@@ -67,7 +67,7 @@ def parse_static_http_proxies(proxy_urls: str) -> List[IpInfoModel]:
 
 class StaticHttpProxy(ProxyProvider):
     def __init__(self):
-        self.proxy_brand_name = ProviderNameEnum.STATIC_HTTP_PROVIDER.value
+        self.proxy_brand_name = ProviderNameEnum.STATIC_PROVIDER.value
 
     async def get_proxy(self, num: int) -> List[IpInfoModel]:
         del num
