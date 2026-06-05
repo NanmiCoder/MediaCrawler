@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from cmd_arg import parse_cmd
 from api.schemas import CrawlerStartRequest, PlatformEnum, LoginTypeEnum, CrawlerTypeEnum
 from api.services.crawler_manager import CrawlerManager
+import api.main as api_main
 from api.main import app
 
 @pytest.mark.asyncio
@@ -127,6 +128,14 @@ def test_crawler_manager_build_command_keeps_cookie_value_for_subprocess():
 
     cookies_index = cmd.index("--cookies")
     assert cmd[cookies_index + 1] == "web_session=secret; a=b"
+
+
+def test_run_api_server_binds_to_loopback():
+    with patch("api.main.uvicorn.run") as mock_run:
+        api_main.run_api_server()
+
+    mock_run.assert_called_once_with(api_main.app, host="127.0.0.1", port=8080)
+
 
 def test_api_start_crawler_with_limits():
     client = TestClient(app)
