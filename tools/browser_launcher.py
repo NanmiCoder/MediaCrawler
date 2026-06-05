@@ -125,7 +125,7 @@ class BrowserLauncher:
         args = [
             browser_path,
             f"--remote-debugging-port={debug_port}",
-            "--remote-debugging-address=0.0.0.0",  # Allow remote access
+            "--remote-debugging-address=127.0.0.1",  # Restrict CDP to local access
             "--no-first-run",
             "--no-default-browser-check",
             "--disable-background-timer-throttling",

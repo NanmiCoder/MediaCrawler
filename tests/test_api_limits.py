@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from cmd_arg import parse_cmd
 from api.schemas import CrawlerStartRequest, PlatformEnum, LoginTypeEnum, CrawlerTypeEnum
 from api.services.crawler_manager import CrawlerManager
+from tools.browser_launcher import BrowserLauncher
 import api.main as api_main
 from api.main import app
 
@@ -128,6 +129,17 @@ def test_crawler_manager_build_command_keeps_cookie_value_for_subprocess():
 
     cookies_index = cmd.index("--cookies")
     assert cmd[cookies_index + 1] == "web_session=secret; a=b"
+
+
+def test_browser_launcher_binds_remote_debugging_to_loopback():
+    launcher = BrowserLauncher()
+
+    with patch("tools.browser_launcher.subprocess.Popen") as mock_popen:
+        launcher.launch_browser(r"C:\Browser\browser.exe", 9222)
+
+    args = mock_popen.call_args.args[0]
+    assert "--remote-debugging-address=127.0.0.1" in args
+    assert "--remote-debugging-address=0.0.0.0" not in args
 
 
 def test_run_api_server_binds_to_loopback():
