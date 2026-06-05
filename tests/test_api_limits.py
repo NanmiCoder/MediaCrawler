@@ -62,6 +62,72 @@ def test_crawler_manager_build_command():
     idx_comments = cmd2.index("--max_comments_count_singlenotes")
     assert cmd2[idx_comments + 1] == "5"
 
+def test_crawler_manager_redacts_cookies_in_logged_command():
+    cm = CrawlerManager()
+    cmd = [
+        "uv",
+        "run",
+        "python",
+        "main.py",
+        "--platform",
+        "xhs",
+        "--cookies",
+        "web_session=secret; a=b",
+        "--headless",
+        "false",
+    ]
+
+    redacted = cm._redact_command_for_log(cmd)
+
+    assert redacted == [
+        "uv",
+        "run",
+        "python",
+        "main.py",
+        "--platform",
+        "xhs",
+        "--cookies",
+        "[REDACTED]",
+        "--headless",
+        "false",
+    ]
+    assert cmd[cmd.index("--cookies") + 1] == "web_session=secret; a=b"
+
+
+def test_crawler_manager_format_start_log_redacts_cookie_value():
+    cm = CrawlerManager()
+    cmd = [
+        "uv",
+        "run",
+        "python",
+        "main.py",
+        "--cookies",
+        "web_session=secret; a=b",
+        "--headless",
+        "false",
+    ]
+
+    message = cm._format_start_command_log(cmd)
+
+    assert message == "Starting crawler: uv run python main.py --cookies [REDACTED] --headless false"
+    assert "web_session=secret" not in message
+
+
+def test_crawler_manager_build_command_keeps_cookie_value_for_subprocess():
+    cm = CrawlerManager()
+    req = CrawlerStartRequest(
+        platform=PlatformEnum.XHS,
+        login_type=LoginTypeEnum.COOKIE,
+        crawler_type=CrawlerTypeEnum.SEARCH,
+        keywords="test",
+        cookies="web_session=secret; a=b",
+    )
+
+    cmd = cm._build_command(req)
+
+    cookies_index = cmd.index("--cookies")
+    assert cmd[cookies_index + 1] == "web_session=secret; a=b"
+
 def test_api_start_crawler_with_limits():
     client = TestClient(app)
 

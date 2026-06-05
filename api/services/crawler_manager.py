@@ -90,6 +90,20 @@ class CrawlerManager:
             return "debug"
         return "info"
 
+    @staticmethod
+    def _redact_command_for_log(cmd: list) -> list:
+        """Return a display-safe command copy with cookie values hidden."""
+        redacted_cmd = list(cmd)
+        for index, arg in enumerate(redacted_cmd):
+            if arg == "--cookies" and index + 1 < len(redacted_cmd):
+                redacted_cmd[index + 1] = "[REDACTED]"
+        return redacted_cmd
+
+    def _format_start_command_log(self, cmd: list) -> str:
+        """Format the crawler start message without exposing secrets."""
+        redacted_cmd = self._redact_command_for_log(cmd)
+        return f"Starting crawler: {' '.join(redacted_cmd)}"
+
     async def start(self, config: CrawlerStartRequest) -> bool:
         """Start crawler process"""
         async with self._lock:
@@ -114,7 +128,7 @@ class CrawlerManager:
             cmd = self._build_command(config)
 
             # Log start information
-            entry = self._create_log_entry(f"Starting crawler: {' '.join(cmd)}", "info")
+            entry = self._create_log_entry(self._format_start_command_log(cmd), "info")
             await self._push_log(entry)
 
             try:
