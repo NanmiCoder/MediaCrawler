@@ -22,7 +22,7 @@ MISFIRE_GRACE_TIME = 3600
 #   creator 额外需要 "creator_ids"（创作者 ID 或 URL 的列表）
 # 可选键：minute（默认 0）、max_notes（int）、max_comments（int）、get_sub_comment（bool）
 JOBS = [
-    {"name": "kw_daily", "type": "search", "keywords": "编程副业,编程兼职", "hour": 2, "minute": 0, "max_notes": 20},
+    {"name": "kw_daily", "type": "search", "keywords": "全球流量卡,国际流量卡", "hour": 2, "minute": 0, "max_notes": 20},
     {"name": "watch_notes", "type": "detail", "note_ids": ["请替换为真实笔记ID"], "hour": 3, "minute": 0},
     {"name": "creator_daily", "type": "creator", "creator_ids": ["请替换为真实创作者ID"], "hour": 4, "minute": 0},
 ]

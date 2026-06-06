@@ -36,11 +36,18 @@ def cmd_status(args: argparse.Namespace) -> None:
         print("(no runs yet)")
         return
     for run in runs:
-        print(
+        line = (
             f"#{run['id']} {run['job_name']} [{run['crawler_type']}] "
             f"status={run['status']} exit={run['exit_code']} "
             f"notes={run['notes_crawled']} comments={run['comments_crawled']}"
         )
+        # 失败/超时/被中断时把原因也打出来（最多 200 字符）
+        if run["status"] in ("error", "timeout", "interrupted") and run.get("error_msg"):
+            tail = run["error_msg"].strip().replace("\n", " ⏎ ")
+            if len(tail) > 200:
+                tail = tail[:200] + "..."
+            line += f"\n    err: {tail}"
+        print(line)
 
 
 def build_parser() -> argparse.ArgumentParser:
