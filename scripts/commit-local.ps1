@@ -1,5 +1,5 @@
-# 提交并推送本地 feature 分支的定制代码
-# 用法: .\scripts\commit-local.ps1 -Message "feat: xxx" [-Branch <分支名>]
+# Stage, commit, and push local customizations on a feature branch.
+# Usage: .\scripts\commit-local.ps1 -Message "feat: xxx" [-Branch <branch>]
 
 param(
     [Parameter(Mandatory = $true)]
@@ -9,22 +9,22 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# 检查是否在目标 feature 分支
+# Refuse to run on the wrong branch (avoid committing custom code onto main).
 $current = git rev-parse --abbrev-ref HEAD
 if ($current -ne $Branch) {
-    Write-Host "Error: 当前分支 '$current'，期望 '$Branch'" -ForegroundColor Red
-    Write-Host "请先执行: git checkout $Branch" -ForegroundColor Yellow
+    Write-Host "ERROR: current branch is '$current', expected '$Branch'." -ForegroundColor Red
+    Write-Host "Run: git checkout $Branch" -ForegroundColor Yellow
     exit 1
 }
 
-# 检查是否有改动
+# Bail out if there is nothing to commit.
 $status = git status --porcelain
 if (-not $status) {
-    Write-Host "没有可提交的改动" -ForegroundColor Yellow
+    Write-Host "No changes to commit." -ForegroundColor Yellow
     exit 0
 }
 
-Write-Host "==> 待提交改动:" -ForegroundColor Cyan
+Write-Host "==> Changes to commit:" -ForegroundColor Cyan
 git status --short
 
 Write-Host "==> git add ." -ForegroundColor Cyan
@@ -36,4 +36,4 @@ git commit -m $Message
 Write-Host "==> git push origin $Branch ..." -ForegroundColor Cyan
 git push origin $Branch
 
-Write-Host "==> 提交并推送完成" -ForegroundColor Green
+Write-Host "==> Commit and push complete." -ForegroundColor Green
