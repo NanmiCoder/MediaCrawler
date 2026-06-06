@@ -3,6 +3,7 @@
 
 仅测 data.py；app.py 不做单测（Streamlit 启动成本/收益不划算）。
 """
+import datetime
 import pytest
 
 from insight.viewer.data import format_ts, load_comments, load_notes
@@ -17,8 +18,8 @@ def test_imports_smoke():
 
 def test_format_ts_normal_timestamp():
     """正常时间戳格式化。"""
-    # 2024-03-15 12:34:00 UTC+8 = 1710477240
-    assert format_ts(1710477240) == "2024-03-15 12:34"
+    ts = datetime.datetime(2024, 3, 15, 12, 34).timestamp()
+    assert format_ts(int(ts)) == "2024-03-15 12:34"
 
 
 def test_format_ts_none_returns_dash():
