@@ -16,7 +16,9 @@ DB_PATH = Path(__file__).resolve().parents[2] / "database" / "sqlite_tables.db"
 
 def format_ts(ts: int | None) -> str:
     """将 Unix 时间戳（秒）格式化为 'YYYY-MM-DD HH:MM'。None/0 返回 '—'。"""
-    raise NotImplementedError
+    if not ts:
+        return "—"
+    return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
 
 
 def load_notes() -> list[dict[str, Any]]:
