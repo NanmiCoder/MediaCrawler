@@ -15,10 +15,16 @@ DB_PATH = Path(__file__).resolve().parents[2] / "database" / "sqlite_tables.db"
 
 
 def format_ts(ts: int | None) -> str:
-    """将 Unix 时间戳（秒）格式化为 'YYYY-MM-DD HH:MM'。None/0 返回 '—'。"""
+    """将 Unix 时间戳格式化为 'YYYY-MM-DD HH:MM'。None/0 返回 '—'。
+
+    DB 实际存储毫秒级时间戳（13 位），同时兼容秒级（10 位）以方便测试。
+    判定阈值 1e12（≈ 33658 年的秒数，远大于任何合理秒级时间戳）。
+    """
     if not ts:
         return "—"
-    return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
+    # 兼容毫秒与秒：> 1e12 视为毫秒
+    seconds = ts / 1000 if ts > 1e12 else ts
+    return datetime.datetime.fromtimestamp(seconds).strftime("%Y-%m-%d %H:%M")
 
 
 def load_notes(db_path: Path | None = None) -> list[dict[str, Any]]:

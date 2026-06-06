@@ -32,6 +32,12 @@ def test_format_ts_zero_returns_dash():
     assert format_ts(0) == "—"
 
 
+def test_format_ts_handles_millisecond_timestamp():
+    """生产数据存的是毫秒级时间戳（13 位），也要正确格式化。"""
+    # 1725724800 秒 = 2024-09-08 00:00 local（UTC+8）；乘 1000 转为毫秒
+    assert format_ts(1725724800000) == "2024-09-08 00:00"
+
+
 def _make_xhs_db(path) -> None:
     """构造一个最小的 xhs_note 测试库。"""
     import sqlite3
