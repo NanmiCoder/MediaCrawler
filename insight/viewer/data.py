@@ -21,9 +21,21 @@ def format_ts(ts: int | None) -> str:
     return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
 
 
-def load_notes() -> list[dict[str, Any]]:
-    """加载所有笔记，按发布时间 time 倒序。"""
-    raise NotImplementedError
+def load_notes(db_path: Path | None = None) -> list[dict[str, Any]]:
+    """加载所有笔记，按发布时间 time 倒序。db_path=None 时使用 DB_PATH。"""
+    path = db_path if db_path is not None else DB_PATH
+    conn = sqlite3.connect(str(path))
+    conn.row_factory = sqlite3.Row
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT note_id, title, liked_count, comment_count, time, "
+            "source_keyword, nickname, desc "
+            "FROM xhs_note ORDER BY time DESC"
+        )
+        return [dict(row) for row in cur.fetchall()]
+    finally:
+        conn.close()
 
 
 def load_comments(note_id: str) -> list[dict[str, Any]]:

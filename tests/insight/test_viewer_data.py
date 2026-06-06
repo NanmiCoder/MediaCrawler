@@ -30,3 +30,59 @@ def test_format_ts_none_returns_dash():
 def test_format_ts_zero_returns_dash():
     """0（未设置）返回 '—'。"""
     assert format_ts(0) == "—"
+
+
+def _make_xhs_db(path) -> None:
+    """构造一个最小的 xhs_note 测试库。"""
+    import sqlite3
+    conn = sqlite3.connect(str(path))
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE xhs_note (
+            note_id VARCHAR(255) PRIMARY KEY,
+            title TEXT,
+            liked_count TEXT,
+            comment_count TEXT,
+            time BIGINT,
+            source_keyword TEXT,
+            nickname TEXT,
+            desc TEXT
+        )
+        """
+    )
+    cur.executemany(
+        "INSERT INTO xhs_note VALUES (?,?,?,?,?,?,?,?)",
+        [
+            ("n1", "春日穿搭", "1200", "38", 1710474840, "穿搭", "博主A", "正文1"),
+            ("n2", "护肤心得", "856",  "12", 1710388440, "护肤", "博主B", "正文2"),
+            ("n3", "无时间戳笔记", "0", "0", 0, "", "博主C", ""),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_load_notes_returns_sorted_by_time_desc(tmp_path):
+    """load_notes 按 time 倒序，time=0 的排最后。"""
+    from insight.viewer.data import load_notes
+    db = tmp_path / "t.db"
+    _make_xhs_db(db)
+
+    notes = load_notes(db_path=db)
+
+    assert len(notes) == 3
+    # 倒序：n1 (1710474840) > n2 (1710388440) > n3 (0)
+    assert [n["note_id"] for n in notes] == ["n1", "n2", "n3"]
+    assert notes[0]["title"] == "春日穿搭"
+    assert notes[0]["source_keyword"] == "穿搭"
+
+
+def test_load_notes_missing_table_raises(tmp_path):
+    """xhs_note 表不存在时抛 OperationalError（让 UI 捕获后展示）。"""
+    import sqlite3
+    from insight.viewer.data import load_notes
+    db = tmp_path / "empty.db"
+    # 不建表
+    with pytest.raises(sqlite3.OperationalError):
+        load_notes(db_path=db)
