@@ -51,6 +51,7 @@
 """
 from __future__ import annotations
 
+import datetime
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -149,7 +150,6 @@ def format_ts(ts: int | None) -> str:
     """将 Unix 时间戳（秒）格式化为 'YYYY-MM-DD HH:MM'。None/0 返回 '—'。"""
     if not ts:
         return "—"
-    import datetime
     return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
 ```
 
@@ -236,25 +236,6 @@ def test_load_notes_returns_sorted_by_time_desc(tmp_path):
     assert notes[0]["source_keyword"] == "穿搭"
 
 
-def test_load_notes_missing_table_raises():
-    """xhs_note 表不存在时抛 OperationalError（让 UI 捕获后展示）。"""
-    import sqlite3
-    from insight.viewer.data import load_notes
-    db_path = "/tmp/__no_such_xhs_db__.db"  # 实际不存在
-    # 用一个临时空库（无表）替代
-    import tempfile, os
-    fd, path = tempfile.mkstemp(suffix=".db")
-    os.close(fd)
-    try:
-        with pytest.raises(sqlite3.OperationalError):
-            load_notes(db_path=type(DB_PATH_DEFAULT)())  # placeholder, fix below
-    finally:
-        os.unlink(path)
-```
-
-> **修订**：上面 `test_load_notes_missing_table_raises` 用了一个未定义的 `DB_PATH_DEFAULT`，需要替换为更简单的写法。重写为：
-
-```python
 def test_load_notes_missing_table_raises(tmp_path):
     """xhs_note 表不存在时抛 OperationalError（让 UI 捕获后展示）。"""
     import sqlite3
@@ -449,6 +430,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
 from insight.viewer.data import (
@@ -519,8 +501,6 @@ if not notes:
     st.stop()
 
 # 准备表格数据：加一列"发布时间"已格式化
-import pandas as pd
-
 df = pd.DataFrame(
     [
         {
@@ -547,9 +527,9 @@ event = st.dataframe(
     key="notes_table",
 )
 
-# Streamlit 1.32+：用户点击某行后 event.selected_rows 包含行号
-selected_rows = event.selected_rows if hasattr(event, "selected_rows") else {}
-selected_idx = selected_rows["rows"][0] if selected_rows and selected_rows.get("rows") else None
+# Streamlit 1.32+：用户点击某行后 event.selection.rows 包含选中行号（0-based）
+selected_rows = getattr(event, "selection", None)
+selected_idx = selected_rows.rows[0] if selected_rows and selected_rows.rows else None
 
 
 # ---------- 详情面板 ----------
