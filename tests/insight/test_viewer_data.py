@@ -86,3 +86,68 @@ def test_load_notes_missing_table_raises(tmp_path):
     # 不建表
     with pytest.raises(sqlite3.OperationalError):
         load_notes(db_path=db)
+
+
+def _make_xhs_db_with_comments(path) -> None:
+    """构造包含 xhs_note + xhs_note_comment 的测试库。"""
+    import sqlite3
+    conn = sqlite3.connect(str(path))
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE xhs_note (
+            note_id VARCHAR(255) PRIMARY KEY,
+            title TEXT, liked_count TEXT, comment_count TEXT,
+            time BIGINT, source_keyword TEXT, nickname TEXT, desc TEXT
+        )
+        """
+    )
+    cur.execute(
+        """
+        CREATE TABLE xhs_note_comment (
+            comment_id VARCHAR(255) PRIMARY KEY,
+            note_id VARCHAR(255),
+            nickname TEXT,
+            content TEXT,
+            like_count TEXT,
+            create_time BIGINT
+        )
+        """
+    )
+    cur.executemany("INSERT INTO xhs_note VALUES (?,?,?,?,?,?,?,?)",
+                    [("n1","A","0","0",0,"","",""), ("n2","B","0","0",0,"","","")])
+    cur.executemany(
+        "INSERT INTO xhs_note_comment VALUES (?,?,?,?,?,?)",
+        [
+            ("c1", "n1", "用户1", "第一条", "10", 1710475000),
+            ("c2", "n1", "用户2", "第二条", "5",  1710476000),
+            ("c3", "n2", "用户3", "另一条笔记的评论", "0", 1710477000),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_load_comments_filters_by_note_id(tmp_path):
+    """load_comments 仅返回指定 note_id 的评论。"""
+    from insight.viewer.data import load_comments
+    db = tmp_path / "t.db"
+    _make_xhs_db_with_comments(db)
+
+    rows = load_comments("n1", db_path=db)
+
+    assert len(rows) == 2
+    assert {r["comment_id"] for r in rows} == {"c1", "c2"}
+    # 默认按 create_time 升序
+    assert [r["comment_id"] for r in rows] == ["c1", "c2"]
+
+
+def test_load_comments_empty_when_no_match(tmp_path):
+    """不存在的 note_id 返回空列表，不抛异常。"""
+    from insight.viewer.data import load_comments
+    db = tmp_path / "t.db"
+    _make_xhs_db_with_comments(db)
+
+    rows = load_comments("nonexistent", db_path=db)
+
+    assert rows == []

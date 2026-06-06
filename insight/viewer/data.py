@@ -38,6 +38,18 @@ def load_notes(db_path: Path | None = None) -> list[dict[str, Any]]:
         conn.close()
 
 
-def load_comments(note_id: str) -> list[dict[str, Any]]:
-    """加载指定笔记的评论，按 create_time 升序。"""
-    raise NotImplementedError
+def load_comments(note_id: str, db_path: Path | None = None) -> list[dict[str, Any]]:
+    """加载指定笔记的评论，按 create_time 升序。db_path=None 时使用 DB_PATH。"""
+    path = db_path if db_path is not None else DB_PATH
+    conn = sqlite3.connect(str(path))
+    conn.row_factory = sqlite3.Row
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT comment_id, note_id, nickname, content, like_count, create_time "
+            "FROM xhs_note_comment WHERE note_id = ? ORDER BY create_time ASC",
+            (note_id,),
+        )
+        return [dict(row) for row in cur.fetchall()]
+    finally:
+        conn.close()
