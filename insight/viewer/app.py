@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import sqlite3
-from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -23,6 +22,14 @@ from insight.viewer.data import (
     load_comments,
     load_notes,
 )
+
+
+def _to_int(v: object) -> int:
+    """安全地把 comment_count 等字符串字段转 int，失败回 0。"""
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return 0
 
 
 # ---------- 启动配置 ----------
@@ -71,11 +78,12 @@ if notes is None:
 
 col_stat, col_btn = st.columns([4, 1])
 with col_stat:
-    total_comments = sum(int(n.get("comment_count") or 0) for n in notes)
+    total_comments = sum(_to_int(n.get("comment_count")) for n in notes)
     st.caption(f"共 {len(notes)} 条笔记 / {total_comments} 条评论（按 comment_count 估算）")
 with col_btn:
     if st.button("🔄 刷新", use_container_width=True):
         st.cache_data.clear()
+        st.session_state.pop("notes_table", None)  # 清掉旧选择，避免重读后指向错位
         st.rerun()
 
 
@@ -101,7 +109,7 @@ df = pd.DataFrame(
 )
 
 st.subheader("笔记列表")
-st.caption("点击下方'查看'按钮查看评论")
+st.caption("点击表格中的行查看笔记详情与评论")
 event = st.dataframe(
     df[["#", "标题", "点赞", "评论数", "关键词", "发布时间"]],
     use_container_width=True,
