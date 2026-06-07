@@ -91,7 +91,7 @@ async def check_environment():
             process = await loop.run_in_executor(
                 None,
                 lambda: subprocess.run(
-                    ["uv", "run", "main.py", "--help"],
+                    [sys.executable, "main.py", "--help"],
                     capture_output=True,
                     timeout=30.0,
                     cwd="."
@@ -100,7 +100,7 @@ async def check_environment():
             stdout, stderr = process.stdout, process.stderr  # bytes
         else:
             process = await asyncio.create_subprocess_exec(
-                "uv", "run", "main.py", "--help",
+                sys.executable, "main.py", "--help",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd="."  # Project root directory

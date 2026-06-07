@@ -1,17 +1,1171 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MediaCrawler - Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-DvClRayq.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-OiBmsgXF.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediaCrawler - 自媒体数据采集工具</title>
+<link rel="icon" type="image/svg+xml" href="/vite.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ========== CSS 变量 ========== */
+:root {
+  --color-primary: #4F46E5;
+  --color-primary-hover: #4338CA;
+  --color-primary-light: #EEF2FF;
+  --color-success: #059669;
+  --color-success-light: #ECFDF5;
+  --color-danger: #DC2626;
+  --color-danger-hover: #B91C1C;
+  --color-danger-light: #FEF2F2;
+  --color-warning: #D97706;
+  --color-warning-light: #FFFBEB;
+  --bg-page: #F3F4F6;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F9FAFB;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --border: #E5E7EB;
+  --border-focus: #4F46E5;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+}
+
+/* ========== 全局重置 ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ========== 布局 ========== */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+/* ========== 头部 ========== */
+.header {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.header .container { display: flex; align-items: center; justify-content: space-between; }
+.header-logo { display: flex; align-items: center; gap: 12px; }
+.header-logo svg { width: 32px; height: 32px; }
+.header-logo h1 { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+.header-logo span { font-size: 0.8rem; color: var(--text-muted); font-weight: 400; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-right a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; transition: color 0.15s; display: flex; align-items: center; gap: 4px; }
+.header-right a:hover { color: var(--color-primary); }
+
+/* 状态指示灯 */
+.status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.status-dot.idle { background: #9CA3AF; }
+.status-dot.running { background: #10B981; animation: pulse 1.5s ease-in-out infinite; }
+.status-dot.stopping { background: #F59E0B; }
+.status-dot.error { background: #EF4444; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ========== 标签页 ========== */
+.tabs { display: flex; gap: 0; background: var(--bg-surface); border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+.tab-btn {
+  padding: 14px 28px; border: none; background: none; cursor: pointer;
+  font-size: 0.95rem; font-weight: 500; color: var(--text-secondary);
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.15s; font-family: inherit;
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+
+/* ========== 主区域 ========== */
+.main-content { padding: 24px 0 48px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ========== 区块标题 ========== */
+.section-title {
+  font-size: 1rem; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.section-title .icon { color: var(--color-primary); }
+
+/* ========== 卡片 ========== */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ========== 平台选择卡片网格 ========== */
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+.platform-card {
+  background: var(--bg-surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  position: relative;
+}
+.platform-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #C7D2FE;
+}
+.platform-card.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+}
+.platform-card .platform-icon { width: 40px; height: 40px; margin: 0 auto 10px; display: block; }
+.platform-card .platform-name { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+.platform-card .platform-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.platform-card .check-mark {
+  display: none; position: absolute; top: 8px; right: 8px;
+  width: 20px; height: 20px; background: var(--color-primary);
+  border-radius: 50%; color: #fff; font-size: 12px; line-height: 20px; text-align: center;
+}
+.platform-card.selected .check-mark { display: block; }
+
+/* ========== 模式选择器 ========== */
+.mode-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+.mode-btn {
+  flex: 1; min-width: 100px;
+  padding: 14px 20px; border: 2px solid var(--border); border-radius: var(--radius-md);
+  background: var(--bg-surface); cursor: pointer;
+  font-size: 0.9rem; font-weight: 500; color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s; font-family: inherit;
+}
+.mode-btn:hover { border-color: #C7D2FE; color: var(--text-primary); }
+.mode-btn.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ========== 输入框 ========== */
+.form-group { margin-bottom: 16px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+.form-input, .form-textarea, .form-select {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 0.9rem; font-family: inherit; color: var(--text-primary);
+  background: var(--bg-surface); transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select { cursor: pointer; }
+.form-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+.form-error { font-size: 0.8rem; color: var(--color-danger); margin-top: 4px; display: none; }
+
+/* ========== Toggle Switch ========== */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+.toggle-label { font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
+.toggle-desc { font-size: 0.78rem; color: var(--text-muted); }
+.toggle {
+  position: relative; width: 44px; height: 24px; flex-shrink: 0; cursor: pointer;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: #D1D5DB; border-radius: 24px;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; left: 3px; top: 3px;
+  width: 18px; height: 18px; background: #fff; border-radius: 50%;
+  transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle input:checked + .toggle-slider { background: var(--color-primary); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* ========== 按钮 ========== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 24px; border: none; border-radius: var(--radius-sm);
+  font-size: 0.9rem; font-weight: 600; font-family: inherit; cursor: pointer;
+  transition: all 0.15s; text-decoration: none;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); }
+.btn-danger { background: var(--color-danger); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: var(--color-danger-hover); }
+.btn-outline {
+  background: var(--bg-surface); color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover:not(:disabled) { border-color: #D1D5DB; background: var(--bg-elevated); }
+.btn-sm { padding: 7px 14px; font-size: 0.82rem; }
+.btn-group { display: flex; gap: 10px; margin-top: 20px; }
+
+/* ========== 高级选项 ========== */
+.collapse-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; cursor: pointer; user-select: none;
+  border-top: 1px solid var(--border); margin-top: 16px;
+}
+.collapse-header span {
+  font-size: 0.9rem; font-weight: 500; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+}
+.collapse-header .arrow { transition: transform 0.2s; color: var(--text-muted); }
+.collapse-header.open .arrow { transform: rotate(180deg); }
+.collapse-body { display: none; padding-bottom: 8px; }
+.collapse-body.open { display: block; }
+
+/* ========== 状态栏 ========== */
+.status-bar {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 12px 16px; background: var(--bg-elevated);
+  border-radius: var(--radius-sm); margin-bottom: 20px;
+  font-size: 0.85rem; border: 1px solid var(--border);
+}
+.status-item { display: flex; align-items: center; gap: 6px; }
+.status-label { color: var(--text-muted); }
+.status-value { font-weight: 600; color: var(--text-primary); }
+
+/* ========== 日志终端 ========== */
+.log-terminal {
+  background: #1E1E2E; color: #CDD6F4; border-radius: var(--radius-md);
+  padding: 16px; font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.8rem; line-height: 1.7; overflow-y: auto; max-height: 420px;
+  min-height: 180px;
+  white-space: pre-wrap; word-break: break-all;
+}
+.log-terminal .log-line { padding: 1px 0; display: flex; }
+.log-terminal .log-time { color: #585B70; margin-right: 8px; flex-shrink: 0; }
+.log-terminal .log-level {
+  margin-right: 8px; font-weight: 600; min-width: 56px; flex-shrink: 0;
+}
+.log-terminal .log-info .log-level { color: #89B4FA; }
+.log-terminal .log-success .log-level { color: #A6E3A1; }
+.log-terminal .log-success { color: #A6E3A1; }
+.log-terminal .log-warning .log-level { color: #F9E2AF; }
+.log-terminal .log-warning { color: #F9E2AF; }
+.log-terminal .log-error .log-level { color: #F38BA8; }
+.log-terminal .log-error { color: #F38BA8; }
+.log-terminal .log-debug { color: #6C7086; }
+.log-terminal .log-debug .log-level { color: #6C7086; }
+.log-terminal .log-placeholder { color: #585B70; text-align: center; padding: 40px 0; font-family: inherit; }
+.log-msg { color: #CDD6F4; }
+.log-info .log-msg { color: #CDD6F4; }
+.log-success .log-msg { color: #A6E3A1; }
+.log-warning .log-msg { color: #F9E2AF; }
+.log-error .log-msg { color: #F38BA8; }
+.log-debug .log-msg { color: #6C7086; }
+
+.log-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.log-toolbar .log-count { font-size: 0.78rem; color: var(--text-muted); }
+.log-toolbar .log-auto-scroll {
+  margin-left: auto; display: flex; align-items: center; gap: 4px;
+  font-size: 0.78rem; cursor: pointer; color: var(--text-muted);
+}
+
+/* ========== 数据文件表格 ========== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th {
+  text-align: left; padding: 10px 14px; background: var(--bg-elevated);
+  color: var(--text-secondary); font-weight: 600; font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.data-table td { padding: 10px 14px; border-top: 1px solid var(--border); color: var(--text-primary); }
+.data-table tr:hover td { background: var(--bg-elevated); }
+.data-stats { display: flex; gap: 24px; margin-bottom: 16px; flex-wrap: wrap; }
+.data-stat { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+.data-stat strong { color: var(--color-primary); }
+
+/* ========== 模态框 ========== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-surface); border-radius: var(--radius-lg);
+  width: 90vw; max-width: 960px; max-height: 80vh;
+  display: flex; flex-direction: column; box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 1rem; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); padding: 4px; line-height: 1; }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.modal-body table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.modal-body table th, .modal-body table td { padding: 6px 10px; border: 1px solid var(--border); text-align: left; }
+.modal-body table th { background: var(--bg-elevated); position: sticky; top: 0; }
+
+/* ========== Toast ========== */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 12px 20px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500;
+  box-shadow: var(--shadow-lg); animation: slideIn 0.25s ease;
+  max-width: 400px;
+}
+.toast.success { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+.toast.error { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+.toast.warning { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ========== 加载动画 ========== */
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner.dark { border-color: #D1D5DB; border-top-color: var(--color-primary); }
+
+/* ========== 空状态 ========== */
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.3; }
+.empty-state p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 4px; }
+.empty-state .empty-title { font-weight: 600; color: var(--text-secondary); }
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .platform-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .platform-card { padding: 14px 8px; }
+  .platform-card .platform-icon { width: 32px; height: 32px; }
+  .platform-card .platform-name { font-size: 0.8rem; }
+  .btn-group { flex-direction: column; }
+  .btn { width: 100%; }
+  .data-table { font-size: 0.75rem; }
+  .data-table th, .data-table td { padding: 6px 8px; }
+  .mode-selector { flex-direction: column; }
+}
+@media (max-width: 480px) {
+  .platform-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== 头部 ========== -->
+<header class="header">
+  <div class="container">
+    <div class="header-logo">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#4F46E5"/><circle cx="11" cy="14" r="5" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="21" cy="14" r="5" fill="none" stroke="#fff" stroke-width="1.5"/><rect x="4" y="20" width="24" height="10" rx="3" fill="#fff" opacity="0.8"/></svg>
+      <h1>MediaCrawler <span>自媒体数据采集工具</span></h1>
+    </div>
+    <div class="header-right">
+      <span class="status-dot idle" id="statusDot" title="状态指示灯"></span>
+      <span id="statusText" style="font-size:0.85rem;color:var(--text-secondary);">空闲</span>
+      <a href="https://github.com/NanmiCoder/MediaCrawler" target="_blank" style="margin-left:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ========== 主内容区 ========== -->
+<main class="main-content">
+  <div class="container">
+
+    <!-- 标签页 -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="control">控制面板</button>
+      <button class="tab-btn" data-tab="data">数据文件</button>
+    </div>
+
+    <!-- ========== 控制面板 ========== -->
+    <div class="tab-panel active" id="tab-control">
+
+      <!-- 选择平台 -->
+      <div class="card">
+        <div class="section-title">
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          选择平台
+        </div>
+        <div class="platform-grid" id="platformGrid"></div>
+        <div id="platformError" class="form-error">请选择一个平台</div>
+      </div>
+
+      <!-- 爬取配置 -->
+      <div class="card">
+        <div class="section-title">
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          爬取配置
+        </div>
+
+        <!-- 模式选择 -->
+        <div class="form-group">
+          <label class="form-label">爬取模式</label>
+          <div class="mode-selector" id="modeSelector">
+            <button class="mode-btn active" data-mode="search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              搜索模式
+            </button>
+            <button class="mode-btn" data-mode="detail">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              详情模式
+            </button>
+            <button class="mode-btn" data-mode="creator">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              创作者模式
+            </button>
+          </div>
+        </div>
+
+        <!-- 搜索关键词 (search 模式) -->
+        <div class="form-group" id="fieldKeywords">
+          <label class="form-label">搜索关键词</label>
+          <textarea class="form-textarea" id="inputKeywords" placeholder="输入搜索关键词，多个关键词用逗号分隔&#10;例如：编程副业,编程兼职"></textarea>
+          <div class="form-hint">多个关键词用英文逗号分隔</div>
+          <div id="keywordsError" class="form-error">请输入搜索关键词</div>
+        </div>
+
+        <!-- 指定作品ID (detail 模式) -->
+        <div class="form-group" id="fieldSpecifiedIds" style="display:none;">
+          <label class="form-label">作品ID / 链接</label>
+          <textarea class="form-textarea" id="inputSpecifiedIds" placeholder="输入作品ID或完整链接，多个用逗号分隔&#10;例如：https://www.xiaohongshu.com/explore/xxx, xxx"></textarea>
+          <div class="form-hint">支持完整URL或纯ID，多个用逗号分隔</div>
+          <div id="specifiedIdsError" class="form-error">请输入作品ID或链接</div>
+        </div>
+
+        <!-- 指定创作者ID (creator 模式) -->
+        <div class="form-group" id="fieldCreatorIds" style="display:none;">
+          <label class="form-label">创作者ID / 链接</label>
+          <textarea class="form-textarea" id="inputCreatorIds" placeholder="输入创作者ID或主页链接，多个用逗号分隔"></textarea>
+          <div class="form-hint">支持完整URL或纯ID，多个用逗号分隔</div>
+          <div id="creatorIdsError" class="form-error">请输入创作者ID或链接</div>
+        </div>
+
+        <!-- 高级选项 -->
+        <div class="collapse-header" id="advancedToggle">
+          <span>
+            高级选项
+            <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+        <div class="collapse-body" id="advancedBody">
+          <div class="form-group">
+            <label class="form-label">登录方式</label>
+            <select class="form-select" id="inputLoginType">
+              <option value="qrcode">二维码扫码登录</option>
+              <option value="cookie">Cookie 登录</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="fieldCookies" style="display:none;">
+            <label class="form-label">Cookie 字符串</label>
+            <textarea class="form-textarea" id="inputCookies" placeholder="粘贴完整的 Cookie 字符串"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">数据保存格式</label>
+            <select class="form-select" id="inputSaveOption">
+              <option value="jsonl">JSONL 文件</option>
+              <option value="json">JSON 文件</option>
+              <option value="csv">CSV 文件</option>
+              <option value="excel">Excel 文件</option>
+              <option value="sqlite">SQLite 数据库</option>
+              <option value="db">MySQL 数据库</option>
+              <option value="mongodb">MongoDB 数据库</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">起始页码</label>
+            <input type="number" class="form-input" id="inputStartPage" value="1" min="1" style="max-width:150px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">最大爬取数量</label>
+            <input type="number" class="form-input" id="inputMaxNotes" placeholder="默认 15" min="1" max="10000" style="max-width:150px;">
+            <div class="form-hint">留空使用默认值 15，最大 10000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">每条最大评论数</label>
+            <input type="number" class="form-input" id="inputMaxComments" placeholder="默认 10" min="1" max="10000" style="max-width:150px;">
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">抓取评论</div>
+              <div class="toggle-desc">是否抓取作品的一级评论</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="inputComments" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">抓取子评论</div>
+              <div class="toggle-desc">是否抓取评论下的二级回复</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="inputSubComments"><span class="toggle-slider"></span></label>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">无头模式</div>
+              <div class="toggle-desc">不显示浏览器窗口，后台运行</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="inputHeadless"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btnStart" style="flex:1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            开始爬取
+          </button>
+          <button class="btn btn-danger" id="btnStop" style="flex:1;" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            停止爬取
+          </button>
+        </div>
+      </div>
+
+      <!-- 运行状态栏 -->
+      <div class="status-bar" id="statusBar">
+        <div class="status-item">
+          <span class="status-label">状态：</span>
+          <span class="status-value" id="sbStatus">空闲</span>
+        </div>
+        <div class="status-item" id="sbPlatformItem" style="display:none;">
+          <span class="status-label">平台：</span>
+          <span class="status-value" id="sbPlatform"></span>
+        </div>
+        <div class="status-item" id="sbCrawlerTypeItem" style="display:none;">
+          <span class="status-label">类型：</span>
+          <span class="status-value" id="sbCrawlerType"></span>
+        </div>
+        <div class="status-item" id="sbStartedItem" style="display:none;">
+          <span class="status-label">开始于：</span>
+          <span class="status-value" id="sbStarted"></span>
+        </div>
+      </div>
+
+      <!-- 实时日志 -->
+      <div class="card">
+        <div class="log-toolbar">
+          <div class="section-title" style="margin-bottom:0;">实时日志</div>
+          <span class="log-count" id="logCount">0 条</span>
+          <label class="log-auto-scroll" title="自动滚动到最新日志">
+            <input type="checkbox" id="autoScroll" checked> 自动滚动
+          </label>
+          <button class="btn btn-outline btn-sm" id="btnClearLogs">清空</button>
+        </div>
+        <div class="log-terminal" id="logTerminal">
+          <div class="log-placeholder">暂无日志，点击"开始爬取"后将在此显示实时日志输出</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 数据文件 ========== -->
+    <div class="tab-panel" id="tab-data">
+      <div class="card">
+        <div class="section-title">
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          数据文件
+        </div>
+        <div class="data-stats" id="dataStats">
+          <div class="data-stat">总文件数：<strong id="statTotalFiles">0</strong></div>
+          <div class="data-stat">总大小：<strong id="statTotalSize">0 B</strong></div>
+        </div>
+        <div id="dataFilesContainer">
+          <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <p class="empty-title">暂无数据文件</p>
+            <p>完成爬取后，生成的数据文件将显示在此处</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ========== 数据预览模态框 ========== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">数据预览</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ========== Toast 容器 ========== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ================================================================
+   MediaCrawler WebUI - 全中文可视化控制面板
+   纯原生 HTML/CSS/JS，零框架依赖
+   ================================================================ */
+
+// ========== 平台配置 ==========
+const PLATFORM_CONFIG = {
+  xhs:   { name: '小红书',   color: '#FF2442', desc: 'Xiaohongshu' },
+  dy:    { name: '抖音',     color: '#000000', desc: 'Douyin' },
+  ks:    { name: '快手',     color: '#FF4906', desc: 'Kuaishou' },
+  bili:  { name: 'B站',      color: '#FB7299', desc: 'Bilibili' },
+  wb:    { name: '微博',     color: '#E6162D', desc: 'Weibo' },
+  tieba: { name: '百度贴吧', color: '#3385FF', desc: 'Tieba' },
+  zhihu: { name: '知乎',     color: '#0084FF', desc: 'Zhihu' },
+};
+
+const CRAWLER_TYPE_NAMES = { search: '搜索模式', detail: '详情模式', creator: '创作者模式' };
+
+// ========== 平台 SVG 图标 ==========
+const PLATFORM_ICONS = {
+  xhs:   '<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10" fill="COLOR"/><text x="20" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="sans-serif">红</text></svg>',
+  dy:    '<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10" fill="COLOR"/><text x="20" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="sans-serif">抖</text></svg>',
+  ks:    '<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10" fill="COLOR"/><text x="20" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="sans-serif">快</text></svg>',
+  bili:  '<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10" fill="COLOR"/><text x="20" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="sans-serif">B</text></svg>',
+  wb:    '<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10" fill="COLOR"/><text x="20" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="sans-serif">微</text></svg>',
+  tieba: '<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10" fill="COLOR"/><text x="20" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="sans-serif">贴</text></svg>',
+  zhihu: '<svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10" fill="COLOR"/><text x="20" y="26" text-anchor="middle" font-size="17" font-weight="700" fill="#fff" font-family="sans-serif">知</text></svg>',
+};
+
+// ========== 应用状态 ==========
+const state = {
+  platforms: [],
+  selectedPlatform: null,
+  selectedMode: 'search',
+  crawlerStatus: { status: 'idle' },
+  logs: [],
+  maxLogId: 0,
+  dataFiles: [],
+  dataStats: { total_files: 0, total_size: 0 },
+  wsLogs: null,
+  wsStatus: null,
+  wsReconnectDelay: 3000,
+  wsReconnectTimer: null,
+  wsLogReconnectTimer: null,
+};
+
+// ========== DOM 工具函数 ==========
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+// ========== 格式化工具 ==========
+function formatBytes(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function formatTime(isoStr) {
+  if (!isoStr) return '-';
+  const d = new Date(isoStr);
+  return d.toLocaleString('zh-CN', { hour12: false });
+}
+
+function formatLogTime(timestamp) {
+  if (!timestamp) return '--:--:--';
+  const d = new Date(timestamp);
+  return d.toLocaleTimeString('zh-CN', { hour12: false });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+// ========== Toast 通知 ==========
+function showToast(message, type) {
+  type = type || 'success';
+  var container = $('#toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 3500);
+}
+
+// ========== 标签页切换 ==========
+$$('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    $$('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    $$('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    var tabId = 'tab-' + btn.dataset.tab;
+    $('#' + tabId).classList.add('active');
+    if (btn.dataset.tab === 'data') loadDataFiles();
+  });
+});
+
+// ========== 高级选项折叠 ==========
+$('#advancedToggle').addEventListener('click', function() {
+  $('#advancedToggle').classList.toggle('open');
+  $('#advancedBody').classList.toggle('open');
+});
+
+// ========== 登录方式切换显示 Cookie 输入框 ==========
+$('#inputLoginType').addEventListener('change', function(e) {
+  $('#fieldCookies').style.display = e.target.value === 'cookie' ? 'block' : 'none';
+});
+
+// ========== 渲染平台卡片 ==========
+function renderPlatformCards() {
+  var grid = $('#platformGrid');
+  grid.innerHTML = '';
+  state.platforms.forEach(function(p) {
+    var cfg = PLATFORM_CONFIG[p.value] || { name: p.label, color: '#6B7280', desc: '' };
+    var iconSvg = (PLATFORM_ICONS[p.value] || PLATFORM_ICONS.xhs).replace('COLOR', cfg.color);
+    var card = document.createElement('div');
+    card.className = 'platform-card';
+    card.dataset.platform = p.value;
+    if (state.selectedPlatform === p.value) card.classList.add('selected');
+    card.innerHTML = '<div class="platform-icon">' + iconSvg + '</div>' +
+      '<div class="platform-name">' + cfg.name + '</div>' +
+      '<div class="platform-desc">' + cfg.desc + '</div>' +
+      '<div class="check-mark">✓</div>';
+    card.addEventListener('click', function() { selectPlatform(p.value); });
+    grid.appendChild(card);
+  });
+}
+
+function selectPlatform(value) {
+  state.selectedPlatform = value;
+  document.querySelectorAll('.platform-card').forEach(function(c) {
+    if (c.dataset.platform === value) { c.classList.add('selected'); }
+    else { c.classList.remove('selected'); }
+  });
+  $('#platformError').style.display = 'none';
+}
+
+// ========== 模式选择器 ==========
+$$('.mode-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    $$('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.selectedMode = btn.dataset.mode;
+    updateModeFields();
+  });
+});
+
+function updateModeFields() {
+  var mode = state.selectedMode;
+  $('#fieldKeywords').style.display = mode === 'search' ? 'block' : 'none';
+  $('#fieldSpecifiedIds').style.display = mode === 'detail' ? 'block' : 'none';
+  $('#fieldCreatorIds').style.display = mode === 'creator' ? 'block' : 'none';
+  $$('.form-error').forEach(function(e) { e.style.display = 'none'; });
+}
+
+// ========== 表单校验 ==========
+function validateForm() {
+  var valid = true;
+  $$('.form-error').forEach(function(e) { e.style.display = 'none'; });
+
+  if (!state.selectedPlatform) {
+    $('#platformError').style.display = 'block';
+    valid = false;
+  }
+
+  if (state.selectedMode === 'search' && !$('#inputKeywords').value.trim()) {
+    $('#keywordsError').style.display = 'block';
+    valid = false;
+  }
+
+  if (state.selectedMode === 'detail' && !$('#inputSpecifiedIds').value.trim()) {
+    $('#specifiedIdsError').style.display = 'block';
+    valid = false;
+  }
+
+  if (state.selectedMode === 'creator' && !$('#inputCreatorIds').value.trim()) {
+    $('#creatorIdsError').style.display = 'block';
+    valid = false;
+  }
+
+  return valid;
+}
+
+// ========== 收集表单数据 ==========
+function collectFormData() {
+  var data = {
+    platform: state.selectedPlatform,
+    crawler_type: state.selectedMode,
+    login_type: $('#inputLoginType').value,
+    save_option: $('#inputSaveOption').value,
+    keywords: $('#inputKeywords').value.trim(),
+    specified_ids: $('#inputSpecifiedIds').value.trim(),
+    creator_ids: $('#inputCreatorIds').value.trim(),
+    start_page: parseInt($('#inputStartPage').value) || 1,
+    max_notes_count: $('#inputMaxNotes').value ? parseInt($('#inputMaxNotes').value) : null,
+    max_comments_count: $('#inputMaxComments').value ? parseInt($('#inputMaxComments').value) : null,
+    enable_comments: $('#inputComments').checked,
+    enable_sub_comments: $('#inputSubComments').checked,
+    cookies: $('#inputCookies').value.trim(),
+    headless: $('#inputHeadless').checked,
+  };
+  return data;
+}
+
+// ========== API 调用 ==========
+function apiGet(path) {
+  return fetch(path).then(function(resp) {
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.json();
+  });
+}
+
+function apiPost(path, body) {
+  return fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(function(resp) {
+    return resp.json().then(function(data) {
+      if (!resp.ok) throw new Error(data.detail || data.message || 'HTTP ' + resp.status);
+      return data;
+    });
+  });
+}
+
+// ========== 爬虫控制 ==========
+function startCrawler() {
+  if (!validateForm()) return;
+  var body = collectFormData();
+  setButtonsDisabled(true);
+  $('#btnStart').innerHTML = '<span class="spinner"></span> 启动中...';
+  apiPost('/api/crawler/start', body).then(function() {
+    showToast('爬虫已启动', 'success');
+  }).catch(function(e) {
+    showToast('启动失败：' + e.message, 'error');
+    setButtonsDisabled(false);
+    updateStartButton();
+  });
+}
+
+function stopCrawler() {
+  setButtonsDisabled(true);
+  apiPost('/api/crawler/stop', {}).then(function() {
+    showToast('爬虫已停止', 'warning');
+  }).catch(function(e) {
+    showToast('停止失败：' + e.message, 'error');
+    setButtonsDisabled(false);
+    updateStartButton();
+  });
+}
+
+function loadStatus() {
+  apiGet('/api/crawler/status').then(function(data) {
+    state.crawlerStatus = data;
+    updateStatusUI(data);
+  }).catch(function() { /* 忽略轮询错误 */ });
+}
+
+function loadLogs() {
+  apiGet('/api/crawler/logs?limit=200').then(function(data) {
+    if (data.logs && data.logs.length > 0) {
+      state.logs = data.logs;
+      state.maxLogId = data.logs.reduce(function(max, l) { return Math.max(max, l.id || 0); }, 0);
+      renderLogs();
+    }
+  }).catch(function() { /* 忽略 */ });
+}
+
+function loadDataFiles() {
+  Promise.all([
+    apiGet('/api/data/files'),
+    apiGet('/api/data/stats'),
+  ]).then(function(results) {
+    state.dataFiles = results[0].files || [];
+    state.dataStats = results[1];
+    renderDataFiles();
+  }).catch(function() {
+    $('#dataFilesContainer').innerHTML = '<div class="empty-state"><p style="color:var(--text-muted);">加载数据文件失败</p></div>';
+  });
+}
+
+function loadInitialData() {
+  apiGet('/api/config/platforms').then(function(data) {
+    state.platforms = data.platforms || [];
+    renderPlatformCards();
+  }).catch(function() {
+    showToast('无法连接到后端服务，请确保服务器已启动', 'error');
+  });
+
+  loadStatus();
+  loadLogs();
+  connectLogsWS();
+  connectStatusWS();
+}
+
+// ========== 状态 UI 更新 ==========
+function updateStatusUI(data) {
+  var status = data.status || 'idle';
+  var isRunning = status === 'running';
+
+  state.crawlerStatus = data;
+
+  // 状态指示灯
+  var dot = $('#statusDot');
+  dot.className = 'status-dot ' + status;
+
+  // 状态文字
+  var statusNames = { idle: '空闲', running: '运行中', stopping: '停止中', error: '错误' };
+  $('#statusText').textContent = statusNames[status] || status;
+
+  // 底部状态栏
+  $('#sbStatus').textContent = statusNames[status] || status;
+  $('#sbStatus').style.color = status === 'running' ? 'var(--color-success)' : status === 'error' ? 'var(--color-danger)' : '';
+
+  if (isRunning && data.platform) {
+    $('#sbPlatformItem').style.display = 'flex';
+    var cfg = PLATFORM_CONFIG[data.platform];
+    $('#sbPlatform').textContent = cfg ? cfg.name : data.platform;
+    $('#sbCrawlerTypeItem').style.display = 'flex';
+    $('#sbCrawlerType').textContent = CRAWLER_TYPE_NAMES[data.crawler_type] || data.crawler_type || '-';
+    $('#sbStartedItem').style.display = 'flex';
+    $('#sbStarted').textContent = formatTime(data.started_at);
+  } else {
+    $('#sbPlatformItem').style.display = 'none';
+    $('#sbCrawlerTypeItem').style.display = 'none';
+    $('#sbStartedItem').style.display = 'none';
+  }
+
+  // 按钮状态
+  if (isRunning) {
+    $('#btnStart').disabled = true;
+    $('#btnStart').innerHTML = '<span class="status-dot running" style="display:inline-block;width:10px;height:10px;"></span> 正在运行...';
+    $('#btnStop').disabled = false;
+  } else if (status === 'stopping') {
+    setButtonsDisabled(true);
+    $('#btnStart').innerHTML = '<span class="spinner dark"></span> 停止中...';
+  } else {
+    setButtonsDisabled(false);
+    updateStartButton();
+  }
+}
+
+function setButtonsDisabled(disabled) {
+  $('#btnStart').disabled = disabled;
+  $('#btnStop').disabled = disabled || state.crawlerStatus.status !== 'running';
+}
+
+function updateStartButton() {
+  $('#btnStart').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 开始爬取';
+}
+
+// ========== 日志渲染 ==========
+function appendLog(log) {
+  if (log.id && log.id <= state.maxLogId) return;
+  if (log.id) state.maxLogId = Math.max(state.maxLogId, log.id);
+
+  state.logs.push(log);
+
+  var terminal = $('#logTerminal');
+  // 移除占位符
+  var placeholder = terminal.querySelector('.log-placeholder');
+  if (placeholder) placeholder.remove();
+
+  // 保持最多 500 条 DOM 节点
+  while (terminal.children.length >= 500) {
+    terminal.firstChild.remove();
+  }
+
+  var line = createLogLine(log);
+  terminal.appendChild(line);
+
+  // 自动滚动
+  if ($('#autoScroll').checked) {
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  $('#logCount').textContent = state.logs.length + ' 条';
+}
+
+function renderLogs() {
+  var terminal = $('#logTerminal');
+  terminal.innerHTML = '';
+  if (state.logs.length === 0) {
+    terminal.innerHTML = '<div class="log-placeholder">暂无日志，点击"开始爬取"后将在此显示实时日志输出</div>';
+    return;
+  }
+
+  var recent = state.logs.slice(-300);
+  recent.forEach(function(log) {
+    terminal.appendChild(createLogLine(log));
+  });
+
+  if ($('#autoScroll').checked) {
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  $('#logCount').textContent = state.logs.length + ' 条';
+}
+
+function createLogLine(log) {
+  var levelClasses = {
+    info: 'log-info', success: 'log-success', warning: 'log-warning',
+    error: 'log-error', debug: 'log-debug'
+  };
+  var levelNames = {
+    info: 'INFO', success: 'OK', warning: 'WARN', error: 'ERROR', debug: 'DEBUG'
+  };
+  var cls = levelClasses[log.level] || 'log-info';
+  var lvl = levelNames[log.level] || log.level.toUpperCase();
+  var time = formatLogTime(log.timestamp);
+
+  var div = document.createElement('div');
+  div.className = 'log-line ' + cls;
+  div.innerHTML = '<span class="log-time">[' + time + ']</span><span class="log-level">' + lvl + '</span><span class="log-msg">' + escapeHtml(log.message) + '</span>';
+  return div;
+}
+
+// ========== WebSocket 连接 ==========
+function connectLogsWS() {
+  var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  var wsUrl = protocol + '//' + location.host + '/api/ws/logs';
+
+  var ws = new WebSocket(wsUrl);
+  state.wsLogs = ws;
+
+  ws.onopen = function() {
+    state.wsReconnectDelay = 3000;
+  };
+
+  ws.onmessage = function(event) {
+    var msg = event.data;
+    if (msg === 'ping' || msg === 'pong') return;
+
+    try {
+      var log = JSON.parse(msg);
+      if (log && log.message) appendLog(log);
+    } catch (e) {
+      appendLog({ id: ++state.maxLogId + 100000, timestamp: new Date().toISOString(), level: 'info', message: msg });
+    }
+  };
+
+  ws.onclose = function() {
+    state.wsLogReconnectTimer = setTimeout(function() {
+      state.wsReconnectDelay = Math.min(state.wsReconnectDelay * 2, 30000);
+      connectLogsWS();
+    }, state.wsReconnectDelay);
+  };
+
+  ws.onerror = function() { ws.close(); };
+}
+
+function connectStatusWS() {
+  var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  var wsUrl = protocol + '//' + location.host + '/api/ws/status';
+
+  var ws = new WebSocket(wsUrl);
+  state.wsStatus = ws;
+
+  ws.onmessage = function(event) {
+    try {
+      var data = JSON.parse(event.data);
+      updateStatusUI(data);
+    } catch (e) { /* 忽略 */ }
+  };
+
+  ws.onclose = function() {
+    state.wsReconnectTimer = setTimeout(connectStatusWS, 5000);
+  };
+
+  ws.onerror = function() { ws.close(); };
+}
+
+// ========== 数据文件渲染 ==========
+function renderDataFiles() {
+  var container = $('#dataFilesContainer');
+  $('#statTotalFiles').textContent = state.dataStats.total_files || 0;
+  $('#statTotalSize').textContent = formatBytes(state.dataStats.total_size || 0);
+
+  if (!state.dataFiles.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📂</div><p class="empty-title">暂无数据文件</p><p>完成爬取后，生成的数据文件将显示在此处</p></div>';
+    return;
+  }
+
+  var html = '<table class="data-table"><thead><tr><th>文件名</th><th>类型</th><th>大小</th><th>记录数</th><th>修改时间</th><th>操作</th></tr></thead><tbody>';
+  state.dataFiles.forEach(function(f) {
+    var ext = (f.type || '').toUpperCase();
+    var recordCount = f.record_count != null ? f.record_count.toLocaleString() : '-';
+    var displayName = f.name.length > 40 ? f.name.substring(0, 40) + '...' : f.name;
+    html += '<tr>' +
+      '<td title="' + escapeHtml(f.name) + '">' + escapeHtml(displayName) + '</td>' +
+      '<td><span style="background:var(--color-primary-light);color:var(--color-primary);padding:2px 8px;border-radius:4px;font-size:0.75rem;">' + ext + '</span></td>' +
+      '<td>' + formatBytes(f.size) + '</td>' +
+      '<td>' + recordCount + '</td>' +
+      '<td>' + formatTime(f.modified_at) + '</td>' +
+      '<td><a href="/api/data/download/' + encodeURIComponent(f.path) + '" class="btn btn-outline btn-sm" download>\u{1F4E5} 下载</a></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ========== 按钮事件 ==========
+$('#btnStart').addEventListener('click', startCrawler);
+$('#btnStop').addEventListener('click', stopCrawler);
+
+// ========== 清空日志 ==========
+$('#btnClearLogs').addEventListener('click', function() {
+  state.logs = [];
+  state.maxLogId = 0;
+  renderLogs();
+});
+
+// ========== 模态框关闭 ==========
+$('#modalClose').addEventListener('click', function() { $('#modalOverlay').classList.remove('open'); });
+$('#modalOverlay').addEventListener('click', function(e) {
+  if (e.target === $('#modalOverlay')) $('#modalOverlay').classList.remove('open');
+});
+
+// ========== 键盘快捷关闭 ==========
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') $('#modalOverlay').classList.remove('open');
+});
+
+// ========== 表单输入时隐藏错误 ==========
+['#inputKeywords', '#inputSpecifiedIds', '#inputCreatorIds'].forEach(function(sel) {
+  $(sel).addEventListener('input', function() {
+    var errorSel = sel === '#inputKeywords' ? '#keywordsError' : sel === '#inputSpecifiedIds' ? '#specifiedIdsError' : '#creatorIdsError';
+    $(errorSel).style.display = 'none';
+  });
+});
+
+// 点击平台区域时隐藏平台错误
+$('#platformGrid').addEventListener('click', function() {
+  $('#platformError').style.display = 'none';
+});
+
+// ========== 自动滚动检测 ==========
+$('#logTerminal').addEventListener('scroll', function() {
+  var t = $('#logTerminal');
+  var atBottom = t.scrollHeight - t.scrollTop - t.clientHeight < 50;
+  $('#autoScroll').checked = atBottom;
+});
+
+// ========== 启动应用 ==========
+loadInitialData();
+</script>
+</body>
 </html>
