@@ -15,7 +15,16 @@ uv run python main.py --init_db sqlite
 从项目根目录执行：
 
 ```bash
-uv run --with streamlit streamlit run insight/viewer/app.py
+# 注意：必须把项目根加到 PYTHONPATH，
+# 否则 `uv run --with streamlit` 创建的临时 env 里没有 insight 包，
+# streamlit 启动时会报 ModuleNotFoundError: No module named 'insight'
+PYTHONPATH=. uv run --with streamlit streamlit run insight/viewer/app.py
+```
+
+**Windows PowerShell / conda 用户**：如果 streamlit 已经在你的 conda env 里，可以省掉 `uv run --with`（它只是临时拉 streamlit）：
+
+```powershell
+$env:PYTHONPATH = "." ; streamlit run insight/viewer/app.py
 ```
 
 - 自动打开浏览器 `http://localhost:8501`
