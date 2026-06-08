@@ -338,6 +338,12 @@ class DouYinCrawler(AbstractCrawler):
         """Launch browser and create browser context"""
         if config.SAVE_LOGIN_STATE:
             user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
+            # 使用系统 Chrome 而非 Playwright 自带的 Chromium（后者缺 VC++ 运行时会启动失败）
+            system_chrome = None
+            for p in [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"]:
+                if os.path.exists(p):
+                    system_chrome = p
+                    break
             if system_chrome:
                 browser_context = await chromium.launch_persistent_context(
                     user_data_dir=user_data_dir,
@@ -360,7 +366,6 @@ class DouYinCrawler(AbstractCrawler):
             return browser_context
         else:
             # 使用系统 Chrome 而非 Playwright 自带的 Chromium（后者缺 VC++ 运行时会启动失败）
-            import shutil
             system_chrome = None
             for p in [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"]:
                 if os.path.exists(p):

@@ -621,18 +621,43 @@ class TieBaCrawler(AbstractCrawler):
             user_data_dir = os.path.join(
                 os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM
             )  # type: ignore
-            browser_context = await chromium.launch_persistent_context(
-                user_data_dir=user_data_dir,
-                accept_downloads=True,
-                headless=headless,
-                proxy=playwright_proxy,  # type: ignore
-                viewport={"width": 1920, "height": 1080},
-                user_agent=user_agent,
-                channel="chrome",  # Use system's stable Chrome version
-            )
+            # 使用系统 Chrome 而非 Playwright 自带的 Chromium（后者缺 VC++ 运行时会启动失败）
+            system_chrome = None
+            for p in [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"]:
+                if os.path.exists(p):
+                    system_chrome = p
+                    break
+            if system_chrome:
+                browser_context = await chromium.launch_persistent_context(
+                    user_data_dir=user_data_dir,
+                    accept_downloads=True,
+                    headless=headless,
+                    proxy=playwright_proxy,  # type: ignore
+                    viewport={"width": 1920, "height": 1080},
+                    user_agent=user_agent,
+                    executable_path=system_chrome,
+                )
+            else:
+                browser_context = await chromium.launch_persistent_context(
+                    user_data_dir=user_data_dir,
+                    accept_downloads=True,
+                    headless=headless,
+                    proxy=playwright_proxy,  # type: ignore
+                    viewport={"width": 1920, "height": 1080},
+                    user_agent=user_agent,
+                )
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy, channel="chrome")  # type: ignore
+            # 使用系统 Chrome 而非 Playwright 自带的 Chromium（后者缺 VC++ 运行时会启动失败）
+            system_chrome = None
+            for p in [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"]:
+                if os.path.exists(p):
+                    system_chrome = p
+                    break
+            if system_chrome:
+                browser = await chromium.launch(executable_path=system_chrome, headless=headless, proxy=playwright_proxy)  # type: ignore
+            else:
+                browser = await chromium.launch(headless=headless, proxy=playwright_proxy)  # type: ignore
             browser_context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080}, user_agent=user_agent
             )
