@@ -93,7 +93,7 @@ class CrawlerManager:
         return "info"
 
     async def start_login_only(self, platform: str) -> bool:
-        """仅启动浏览器扫码登录，不开始爬取"""
+        """仅启动浏览器扫码登录，不开始爬取——改用 check_call 在主进程内同步拉起浏览器"""
         async with self._lock:
             if self.process and self.process.poll() is None:
                 return False
@@ -109,29 +109,31 @@ class CrawlerManager:
                 except asyncio.QueueEmpty:
                     pass
 
-            # 构建登录专用命令：使用 main.py 的 --type login_only 模式
-            cmd = [
-                sys.executable, "main.py",
-                "--platform", platform,
-                "--lt", "qrcode",
-                "--type", "search",
-                "--keywords", "__login_only__",
-                "--headless", "false",
-                "--crawler_max_notes_count", "0",
-            ]
-
             entry = self._create_log_entry(f"启动 {platform} 平台扫码登录...", "info")
             await self._push_log(entry)
-            entry = self._create_log_entry("即将打开浏览器窗口，请扫码登录", "info")
+            entry = self._create_log_entry("即将使用系统 Chrome 打开浏览器窗口，请扫码登录", "info")
             await self._push_log(entry)
 
             try:
+                # 直接调用 main.py，让 playwright 在主进程内拉起系统 Chrome
+                # --type login_only 模式：只打开浏览器扫码登录，不爬取数据
+                cmd = [
+                    sys.executable, "main.py",
+                    "--platform", platform,
+                    "--lt", "qrcode",
+                    "--type", "search",
+                    "--keywords", "__login_only__",
+                    "--headless", "false",
+                    "--crawler_max_notes_count", "0",
+                ]
+
                 self.process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
                     encoding='utf-8',
+                    errors='replace',
                     bufsize=1,
                     cwd=str(self._project_root),
                     env={**os.environ, "PYTHONUNBUFFERED": "1", "MEDIACRAWLER_LOGIN_ONLY": "1"}
