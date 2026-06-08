@@ -809,13 +809,28 @@ async function doLogin() {
   btn.innerHTML = '<span class="spinner dark"></span> 启动浏览器...';
   try {
     var resp = await apiPost('/api/crawler/login?platform=' + state.selectedPlatform, {});
-    showToast('浏览器已打开，请在浏览器中扫码登录 ' + (PLATFORM_CONFIG[state.selectedPlatform]?.name || state.selectedPlatform), 'success');
-    state.loginStatus[state.selectedPlatform] = 'logged_in';
-    updateLoginStatusBar();
-    // 登录进程超时后自动停
-    setTimeout(function() {
-      apiPost('/api/crawler/stop', {}).catch(function(){});
-    }, 120000); // 2分钟后自动停止
+    showToast('浏览器正在启动，请在浏览器窗口中扫码登录', 'success');
+    // 不要立即标记为已登录，等几秒轮询检查状态
+    btn.innerHTML = '<span class="spinner dark"></span> 等待扫码...';
+    // 轮询检查登录状态，每3秒一次，最多40次(2分钟)
+    var attempts = 0;
+    var checkInterval = setInterval(async function() {
+      attempts++;
+      try {
+        var statusResp = await apiGet('/api/crawler/login-status?platform=' + state.selectedPlatform);
+        if (statusResp.login_status === 'logged_in') {
+          clearInterval(checkInterval);
+          state.loginStatus[state.selectedPlatform] = 'logged_in';
+          updateLoginStatusBar();
+          showToast('登录成功！现在可以开始爬取了', 'success');
+        } else if (attempts >= 40) {
+          clearInterval(checkInterval);
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> 扫码登录';
+          showToast('登录超时，请重试', 'warning');
+        }
+      } catch(e) {}
+    }, 3000);
   } catch (e) {
     showToast('登录失败：' + e.message, 'error');
     btn.disabled = false;

@@ -50,7 +50,7 @@ async def login_platform(platform: str = ""):
         success = await crawler_manager.start_login_only(platform)
         if not success:
             raise HTTPException(status_code=500, detail="登录启动失败")
-        _login_status[platform] = "logged_in"
+        # 不再在这里设置为登录成功——等用户真正扫码后才算登录
         return {"status": "ok", "message": f"{platform} 登录流程已启动", "platform": platform}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"登录失败：{str(e)}")
