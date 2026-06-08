@@ -54,7 +54,7 @@ class WeiboLogin(AbstractLogin):
 
     async def begin(self):
         """Start login weibo"""
-        utils.logger.info("[WeiboLogin.begin] Begin login weibo ...")
+        utils.logger.info("[WeiboLogin.begin] 开始登录微博 ...")
         if config.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
         elif config.LOGIN_TYPE == "phone":
@@ -84,7 +84,7 @@ class WeiboLogin(AbstractLogin):
 
     async def login_by_qrcode(self):
         """login weibo website and keep webdriver login state"""
-        utils.logger.info("[WeiboLogin.login_by_qrcode] Begin login weibo by qrcode ...")
+        utils.logger.info("[WeiboLogin.login_by_qrcode] 开始通过二维码登录微博 ...")
         await self.context_page.goto(self.weibo_sso_login_url)
         # find login qrcode
         qrcode_img_selector = "xpath=//img[@class='w-full h-full']"
@@ -93,14 +93,14 @@ class WeiboLogin(AbstractLogin):
             selector=qrcode_img_selector
         )
         if not base64_qrcode_img:
-            utils.logger.info("[WeiboLogin.login_by_qrcode] login failed , have not found qrcode please check ....")
+            utils.logger.info("[WeiboLogin.login_by_qrcode] 登录失败，未找到二维码，请检查 ...")
             sys.exit()
 
         # show login qrcode
         partial_show_qrcode = functools.partial(utils.show_qrcode, base64_qrcode_img)
         asyncio.get_running_loop().run_in_executor(executor=None, func=partial_show_qrcode)
 
-        utils.logger.info(f"[WeiboLogin.login_by_qrcode] Waiting for scan code login, remaining time is 20s")
+        utils.logger.info(f"[WeiboLogin.login_by_qrcode] 等待扫码登录，剩余时间 20秒")
 
         # get not logged session
         current_cookie = await self.browser_context.cookies()
@@ -110,19 +110,19 @@ class WeiboLogin(AbstractLogin):
         try:
             await self.check_login_state(no_logged_in_session)
         except RetryError:
-            utils.logger.info("[WeiboLogin.login_by_qrcode] Login weibo failed by qrcode login method ...")
+            utils.logger.info("[WeiboLogin.login_by_qrcode] 通过二维码登录微博失败 ...")
             sys.exit()
 
         wait_redirect_seconds = 5
         utils.logger.info(
-            f"[WeiboLogin.login_by_qrcode] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
+            f"[WeiboLogin.login_by_qrcode] 登录成功，等待 {wait_redirect_seconds} 秒后跳转 ...")
         await asyncio.sleep(wait_redirect_seconds)
 
     async def login_by_mobile(self):
         pass
 
     async def login_by_cookies(self):
-        utils.logger.info("[WeiboLogin.login_by_qrcode] Begin login weibo by cookie ...")
+        utils.logger.info("[WeiboLogin.login_by_qrcode] 开始通过 Cookie 登录微博 ...")
         for key, value in utils.convert_str_cookie_to_dict(self.cookie_str).items():
             await self.browser_context.add_cookies([{
                 'name': key,

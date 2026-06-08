@@ -122,27 +122,27 @@ class DouYinCrawler(AbstractCrawler):
                 # Get the information and comments of the specified creator
                 await self.get_creators_and_videos()
 
-            utils.logger.info("[DouYinCrawler.start] Douyin Crawler finished ...")
+            utils.logger.info("[DouYinCrawler.start] 抖音爬虫已完成 ...")
 
     async def search(self) -> None:
-        utils.logger.info("[DouYinCrawler.search] Begin search douyin keywords")
+        utils.logger.info("[DouYinCrawler.search] 开始搜索抖音关键词")
         dy_limit_count = 10  # douyin limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < dy_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = dy_limit_count
         start_page = config.START_PAGE  # start page number
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
-            utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
+            utils.logger.info(f"[DouYinCrawler.search] 当前搜索关键词: {keyword}")
             aweme_list: List[str] = []
             page = 0
             dy_search_id = ""
             while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
-                    utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
+                    utils.logger.info(f"[DouYinCrawler.search] 跳过第 {page} 页")
                     page += 1
                     continue
                 try:
-                    utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page}")
+                    utils.logger.info(f"[DouYinCrawler.search] 搜索抖音关键词: {keyword}, 页码: {page}")
                     posts_res = await self.dy_client.search_info_by_keyword(
                         keyword=keyword,
                         offset=page * dy_limit_count - dy_limit_count,
@@ -150,15 +150,15 @@ class DouYinCrawler(AbstractCrawler):
                         search_id=dy_search_id,
                     )
                     if posts_res.get("data") is None or posts_res.get("data") == []:
-                        utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page} is empty,{posts_res.get('data')}`")
+                        utils.logger.info(f"[DouYinCrawler.search] 搜索抖音关键词: {keyword}, 页码: {page} 结果为空，{posts_res.get('data')}`")
                         break
                 except DataFetchError:
-                    utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed")
+                    utils.logger.error(f"[DouYinCrawler.search] 搜索抖音关键词: {keyword} 失败")
                     break
 
                 page += 1
                 if "data" not in posts_res:
-                    utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed，账号也许被风控了。")
+                    utils.logger.error(f"[DouYinCrawler.search] 搜索抖音关键词: {keyword} 失败，账号可能已被风控。")
                     break
                 dy_search_id = posts_res.get("extra", {}).get("logid", "")
                 page_aweme_list = []
@@ -177,12 +177,12 @@ class DouYinCrawler(AbstractCrawler):
 
                 # Sleep after each page navigation
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[DouYinCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
+                utils.logger.info(f"[DouYinCrawler.search] 第 {page-1} 页抓取完成，休眠 {config.CRAWLER_MAX_SLEEP_SEC} 秒")
             utils.logger.info(f"[DouYinCrawler.search] keyword:{keyword}, aweme_list:{aweme_list}")
 
     async def get_specified_awemes(self):
         """Get the information and comments of the specified post from URLs or IDs"""
-        utils.logger.info("[DouYinCrawler.get_specified_awemes] Parsing video URLs...")
+        utils.logger.info("[DouYinCrawler.get_specified_awemes] 开始解析视频URL ...")
         aweme_id_list = []
         for video_url in config.DY_SPECIFIED_ID_LIST:
             try:
@@ -190,20 +190,20 @@ class DouYinCrawler(AbstractCrawler):
 
                 # Handling short links
                 if video_info.url_type == "short":
-                    utils.logger.info(f"[DouYinCrawler.get_specified_awemes] Resolving short link: {video_url}")
+                    utils.logger.info(f"[DouYinCrawler.get_specified_awemes] 正在解析短链接: {video_url}")
                     resolved_url = await self.dy_client.resolve_short_url(video_url)
                     if resolved_url:
                         # Extract video ID from parsed URL
                         video_info = parse_video_info_from_url(resolved_url)
-                        utils.logger.info(f"[DouYinCrawler.get_specified_awemes] Short link resolved to aweme ID: {video_info.aweme_id}")
+                        utils.logger.info(f"[DouYinCrawler.get_specified_awemes] 短链接已解析为 aweme ID: {video_info.aweme_id}")
                     else:
-                        utils.logger.error(f"[DouYinCrawler.get_specified_awemes] Failed to resolve short link: {video_url}")
+                        utils.logger.error(f"[DouYinCrawler.get_specified_awemes] 短链接解析失败: {video_url}")
                         continue
 
                 aweme_id_list.append(video_info.aweme_id)
-                utils.logger.info(f"[DouYinCrawler.get_specified_awemes] Parsed aweme ID: {video_info.aweme_id} from {video_url}")
+                utils.logger.info(f"[DouYinCrawler.get_specified_awemes] 从 {video_url} 解析到 aweme ID: {video_info.aweme_id}")
             except ValueError as e:
-                utils.logger.error(f"[DouYinCrawler.get_specified_awemes] Failed to parse video URL: {e}")
+                utils.logger.error(f"[DouYinCrawler.get_specified_awemes] 视频URL解析失败: {e}")
                 continue
 
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
@@ -222,13 +222,13 @@ class DouYinCrawler(AbstractCrawler):
                 result = await self.dy_client.get_video_by_id(aweme_id)
                 # Sleep after fetching aweme detail
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[DouYinCrawler.get_aweme_detail] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching aweme {aweme_id}")
+                utils.logger.info(f"[DouYinCrawler.get_aweme_detail] 获取视频 {aweme_id} 详情后休眠 {config.CRAWLER_MAX_SLEEP_SEC} 秒")
                 return result
             except DataFetchError as ex:
-                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] Get aweme detail error: {ex}")
+                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] 获取视频详情出错: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] have not fund note detail aweme_id:{aweme_id}, err: {ex}")
+                utils.logger.error(f"[DouYinCrawler.get_aweme_detail] 未找到视频详情 aweme_id:{aweme_id}, 错误: {ex}")
                 return None
 
     async def batch_get_note_comments(self, aweme_list: List[str]) -> None:
@@ -236,7 +236,7 @@ class DouYinCrawler(AbstractCrawler):
         Batch get note comments
         """
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(f"[DouYinCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            utils.logger.info(f"[DouYinCrawler.batch_get_note_comments] 评论抓取模式未开启")
             return
 
         task_list: List[Task] = []
@@ -262,25 +262,25 @@ class DouYinCrawler(AbstractCrawler):
                 )
                 # Sleep after fetching comments
                 await asyncio.sleep(crawl_interval)
-                utils.logger.info(f"[DouYinCrawler.get_comments] Sleeping for {crawl_interval} seconds after fetching comments for aweme {aweme_id}")
-                utils.logger.info(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} comments have all been obtained and filtered ...")
+                utils.logger.info(f"[DouYinCrawler.get_comments] 获取视频 {aweme_id} 评论后休眠 {crawl_interval} 秒")
+                utils.logger.info(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} 所有评论已获取并过滤完成 ...")
             except DataFetchError as e:
-                utils.logger.error(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} get comments failed, error: {e}")
+                utils.logger.error(f"[DouYinCrawler.get_comments] aweme_id: {aweme_id} 获取评论失败，错误: {e}")
 
     async def get_creators_and_videos(self) -> None:
         """
         Get the information and videos of the specified creator from URLs or IDs
         """
-        utils.logger.info("[DouYinCrawler.get_creators_and_videos] Begin get douyin creators")
-        utils.logger.info("[DouYinCrawler.get_creators_and_videos] Parsing creator URLs...")
+        utils.logger.info("[DouYinCrawler.get_creators_and_videos] 开始获取抖音创作者信息")
+        utils.logger.info("[DouYinCrawler.get_creators_and_videos] 正在解析创作者URL ...")
 
         for creator_url in config.DY_CREATOR_ID_LIST:
             try:
                 creator_info_parsed = parse_creator_info_from_url(creator_url)
                 user_id = creator_info_parsed.sec_user_id
-                utils.logger.info(f"[DouYinCrawler.get_creators_and_videos] Parsed sec_user_id: {user_id} from {creator_url}")
+                utils.logger.info(f"[DouYinCrawler.get_creators_and_videos] 从 {creator_url} 解析到 sec_user_id: {user_id}")
             except ValueError as e:
-                utils.logger.error(f"[DouYinCrawler.get_creators_and_videos] Failed to parse creator URL: {e}")
+                utils.logger.error(f"[DouYinCrawler.get_creators_and_videos] 创作者URL解析失败: {e}")
                 continue
 
             creator_info: Dict = await self.dy_client.get_user_info(user_id)
@@ -407,7 +407,7 @@ class DouYinCrawler(AbstractCrawler):
             aweme_item (Dict): 抖音作品详情
         """
         if not config.ENABLE_GET_MEIDAS:
-            utils.logger.info(f"[DouYinCrawler.get_aweme_media] Crawling image mode is not enabled")
+            utils.logger.info(f"[DouYinCrawler.get_aweme_media] 媒体抓取模式未开启")
             return
         # List of note urls. If it is a short video type, an empty list will be returned.
         note_download_url: List[str] = douyin_store._extract_note_image_list(aweme_item)

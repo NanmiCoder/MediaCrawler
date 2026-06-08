@@ -136,7 +136,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             # someday someone maybe will bypass captcha
             verify_type = response.headers["Verifytype"]
             verify_uuid = response.headers["Verifyuuid"]
-            msg = f"CAPTCHA appeared, request failed, Verifytype: {verify_type}, Verifyuuid: {verify_uuid}, Response: {response}"
+            msg = f"出现验证码，请求失败，Verifytype: {verify_type}, Verifyuuid: {verify_uuid}, 响应: {response}"
             utils.logger.error(msg)
             raise Exception(msg)
 
@@ -214,7 +214,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 response.raise_for_status()
                 if not response.reason_phrase == "OK":
                     utils.logger.error(
-                        f"[XiaoHongShuClient.get_note_media] request {url} err, res:{response.text}"
+                        f"[XiaoHongShuClient.get_note_media] 请求 {url} 出错，响应:{response.text}"
                     )
                     return None
                 else:
@@ -247,7 +247,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
             bool: True if logged in, False otherwise
         """
-        utils.logger.info("[XiaoHongShuClient.pong] Begin to check login state...")
+        utils.logger.info("[XiaoHongShuClient.pong] 开始检查登录状态...")
         ping_flag = False
         try:
             self_info: Dict = await self.query_self()
@@ -255,10 +255,10 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 ping_flag = True
         except Exception as e:
             utils.logger.error(
-                f"[XiaoHongShuClient.pong] Check login state failed: {e}, and try to login again..."
+                f"[XiaoHongShuClient.pong] 检查登录状态失败: {e}，尝试重新登录..."
             )
             ping_flag = False
-        utils.logger.info(f"[XiaoHongShuClient.pong] Login state result: {ping_flag}")
+        utils.logger.info(f"[XiaoHongShuClient.pong] 登录状态结果: {ping_flag}")
         return ping_flag
 
     async def update_cookies(self, browser_context: BrowserContext, urls: Optional[list[str]] = None):
@@ -342,7 +342,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             return res_dict
         # When crawling frequently, some notes may have results while others don't
         utils.logger.error(
-            f"[XiaoHongShuClient.get_note_by_id] get note id:{note_id} empty and res:{res}"
+            f"[XiaoHongShuClient.get_note_by_id] 获取笔记 id:{note_id} 结果为空，res:{res}"
         )
         return dict()
 
@@ -434,7 +434,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             comments_cursor = comments_res.get("cursor", "")
             if "comments" not in comments_res:
                 utils.logger.info(
-                    f"[XiaoHongShuClient.get_note_all_comments] No 'comments' key found in response: {comments_res}"
+                    f"[XiaoHongShuClient.get_note_all_comments] 响应中未找到 'comments' 键: {comments_res}"
                 )
                 break
             comments = comments_res["comments"]
@@ -473,7 +473,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         """
         if not config.ENABLE_GET_SUB_COMMENTS:
             utils.logger.info(
-                f"[XiaoHongShuCrawler.get_comments_all_sub_comments] Crawling sub_comment mode is not enabled"
+                f"[XiaoHongShuCrawler.get_comments_all_sub_comments] 子评论抓取模式未开启"
             )
             return []
 
@@ -504,14 +504,14 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
 
                         if comments_res is None:
                             utils.logger.info(
-                                f"[XiaoHongShuClient.get_comments_all_sub_comments] No response found for note_id: {note_id}"
+                                f"[XiaoHongShuClient.get_comments_all_sub_comments] note_id: {note_id} 未找到响应"
                             )
                             break
                         sub_comment_has_more = comments_res.get("has_more", False)
                         sub_comment_cursor = comments_res.get("cursor", "")
                         if "comments" not in comments_res:
                             utils.logger.info(
-                                f"[XiaoHongShuClient.get_comments_all_sub_comments] No 'comments' key found in response: {comments_res}"
+                                f"[XiaoHongShuClient.get_comments_all_sub_comments] 响应中未找到 'comments' 键: {comments_res}"
                             )
                             break
                         comments = comments_res["comments"]
@@ -521,17 +521,17 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                         result.extend(comments)
                     except DataFetchError as e:
                         utils.logger.warning(
-                            f"[XiaoHongShuClient.get_comments_all_sub_comments] Failed to get sub-comments for note_id: {note_id}, root_comment_id: {root_comment_id}, error: {e}. Skipping this comment's sub-comments."
+                            f"[XiaoHongShuClient.get_comments_all_sub_comments] 获取子评论失败 note_id: {note_id}, root_comment_id: {root_comment_id}, 错误: {e}。跳过此评论的子评论。"
                         )
                         break  # Break out of the sub-comment acquisition loop of the current comment and continue processing the next comment
                     except Exception as e:
                         utils.logger.error(
-                            f"[XiaoHongShuClient.get_comments_all_sub_comments] Unexpected error when getting sub-comments for note_id: {note_id}, root_comment_id: {root_comment_id}, error: {e}"
+                            f"[XiaoHongShuClient.get_comments_all_sub_comments] 获取子评论时出现意外错误 note_id: {note_id}, root_comment_id: {root_comment_id}, 错误: {e}"
                         )
                         break
             except Exception as e:
                 utils.logger.error(
-                    f"[XiaoHongShuClient.get_comments_all_sub_comments] Error processing comment: {comment.get('id', 'unknown')}, error: {e}. Continuing with next comment."
+                    f"[XiaoHongShuClient.get_comments_all_sub_comments] 处理评论时出错: {comment.get('id', 'unknown')}, 错误: {e}。继续处理下一条评论。"
                 )
                 continue  # Continue to next comment
         return result
@@ -621,7 +621,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             )
             if not notes_res:
                 utils.logger.error(
-                    f"[XiaoHongShuClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data."
+                    f"[XiaoHongShuClient.get_notes_by_creator] 当前创作者可能已被小红书封禁，无法获取数据。"
                 )
                 break
 
@@ -629,13 +629,13 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             notes_cursor = notes_res.get("cursor", "")
             if "notes" not in notes_res:
                 utils.logger.info(
-                    f"[XiaoHongShuClient.get_all_notes_by_creator] No 'notes' key found in response: {notes_res}"
+                    f"[XiaoHongShuClient.get_all_notes_by_creator] 响应中未找到 'notes' 键: {notes_res}"
                 )
                 break
 
             notes = notes_res["notes"]
             utils.logger.info(
-                f"[XiaoHongShuClient.get_all_notes_by_creator] got user_id:{user_id} notes len : {len(notes)}"
+                f"[XiaoHongShuClient.get_all_notes_by_creator] 获取 user_id:{user_id} 笔记数量: {len(notes)}"
             )
 
             remaining = config.CRAWLER_MAX_NOTES_COUNT - len(result)
@@ -650,7 +650,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             await asyncio.sleep(crawl_interval)
 
         utils.logger.info(
-            f"[XiaoHongShuClient.get_all_notes_by_creator] Finished getting notes for user {user_id}, total: {len(result)}"
+            f"[XiaoHongShuClient.get_all_notes_by_creator] 用户 {user_id} 笔记获取完成，共 {len(result)} 条"
         )
         return result
 

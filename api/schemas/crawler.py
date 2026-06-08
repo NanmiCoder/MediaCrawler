@@ -85,6 +85,7 @@ class CrawlerStatusResponse(BaseModel):
     crawler_type: Optional[str] = None
     started_at: Optional[str] = None
     error_message: Optional[str] = None
+    login_status: Optional[Literal["logged_in", "not_logged_in"]] = None
 
 
 class LogEntry(BaseModel):

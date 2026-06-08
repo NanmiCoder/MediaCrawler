@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "MediaCrawler WebUI",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080"],
+      "port": 8080,
+      "workdir": "D:/0a脚本文件/自建脚本文件/新建文件夹/MediaCrawler"
+    }
+  ]
+}

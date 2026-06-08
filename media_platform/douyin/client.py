@@ -128,7 +128,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
         try:
             if response.text == "" or response.text == "blocked":
-                utils.logger.error(f"request params incrr, response.text: {response.text}")
+                utils.logger.error(f"请求参数异常，响应内容: {response.text}")
                 raise Exception("account blocked")
             return response.json()
         except Exception as e:
@@ -338,7 +338,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
             posts_has_more = aweme_post_res.get("has_more", 0)
             max_cursor = aweme_post_res.get("max_cursor")
             aweme_list = aweme_post_res.get("aweme_list") if aweme_post_res.get("aweme_list") else []
-            utils.logger.info(f"[DouYinClient.get_all_user_aweme_posts] get sec_user_id:{sec_user_id} video len : {len(aweme_list)}")
+            utils.logger.info(f"[DouYinClient.get_all_user_aweme_posts] 获取 sec_user_id:{sec_user_id} 视频数量: {len(aweme_list)}")
             if callback:
                 await callback(aweme_list)
             result.extend(aweme_list)
@@ -350,7 +350,7 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
                 response = await client.request("GET", url, timeout=self.timeout, follow_redirects=True)
                 response.raise_for_status()
                 if not response.reason_phrase == "OK":
-                    utils.logger.error(f"[DouYinClient.get_aweme_media] request {url} err, res:{response.text}")
+                    utils.logger.error(f"[DouYinClient.get_aweme_media] 请求 {url} 出错，响应:{response.text}")
                     return None
                 else:
                     return response.content
@@ -368,17 +368,17 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         """
         async with make_async_client(proxy=self.proxy, follow_redirects=False) as client:
             try:
-                utils.logger.info(f"[DouYinClient.resolve_short_url] Resolving short URL: {short_url}")
+                utils.logger.info(f"[DouYinClient.resolve_short_url] 正在解析短链接: {short_url}")
                 response = await client.get(short_url, timeout=10)
 
                 # Short links usually return a 302 redirect
                 if response.status_code in [301, 302, 303, 307, 308]:
                     redirect_url = response.headers.get("Location", "")
-                    utils.logger.info(f"[DouYinClient.resolve_short_url] Resolved to: {redirect_url}")
+                    utils.logger.info(f"[DouYinClient.resolve_short_url] 解析结果: {redirect_url}")
                     return redirect_url
                 else:
-                    utils.logger.warning(f"[DouYinClient.resolve_short_url] Unexpected status code: {response.status_code}")
+                    utils.logger.warning(f"[DouYinClient.resolve_short_url] 意外的状态码: {response.status_code}")
                     return ""
             except Exception as e:
-                utils.logger.error(f"[DouYinClient.resolve_short_url] Failed to resolve short URL: {e}")
+                utils.logger.error(f"[DouYinClient.resolve_short_url] 短链接解析失败: {e}")
                 return ""

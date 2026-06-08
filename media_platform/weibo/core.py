@@ -76,7 +76,7 @@ class WeiboCrawler(AbstractCrawler):
         async with async_playwright() as playwright:
             # Select launch mode based on configuration
             if config.ENABLE_CDP_MODE:
-                utils.logger.info("[WeiboCrawler] Launching browser with CDP mode")
+                utils.logger.info("[WeiboCrawler] 使用CDP模式启动浏览器")
                 self.browser_context = await self.launch_browser_with_cdp(
                     playwright,
                     playwright_proxy_format,
@@ -84,7 +84,7 @@ class WeiboCrawler(AbstractCrawler):
                     headless=config.CDP_HEADLESS,
                 )
             else:
-                utils.logger.info("[WeiboCrawler] Launching browser with standard mode")
+                utils.logger.info("[WeiboCrawler] 使用标准模式启动浏览器")
                 # Launch a browser context.
                 chromium = playwright.chromium
                 self.browser_context = await self.launch_browser(chromium, None, self.mobile_user_agent, headless=config.HEADLESS)
@@ -111,7 +111,7 @@ class WeiboCrawler(AbstractCrawler):
                 await login_obj.begin()
 
                 # After successful login, redirect to mobile website and update mobile cookies
-                utils.logger.info("[WeiboCrawler.start] redirect weibo mobile homepage and update cookies on mobile platform")
+                utils.logger.info("[WeiboCrawler.start] 跳转到微博移动端首页并更新移动端 Cookie")
                 await self.context_page.goto(self.mobile_index_url)
                 await asyncio.sleep(3)
                 # Only get mobile cookies to avoid confusion between PC and mobile cookies
@@ -132,14 +132,14 @@ class WeiboCrawler(AbstractCrawler):
                 await self.get_creators_and_notes()
             else:
                 pass
-            utils.logger.info("[WeiboCrawler.start] Weibo Crawler finished ...")
+            utils.logger.info("[WeiboCrawler.start] 微博爬虫已完成 ...")
 
     async def search(self):
         """
         search weibo note with keywords
         :return:
         """
-        utils.logger.info("[WeiboCrawler.search] Begin search weibo keywords")
+        utils.logger.info("[WeiboCrawler.search] 开始搜索微博关键词")
         weibo_limit_count = 10  # weibo limit page fixed value
         if config.CRAWLER_MAX_NOTES_COUNT < weibo_limit_count:
             config.CRAWLER_MAX_NOTES_COUNT = weibo_limit_count
@@ -155,19 +155,19 @@ class WeiboCrawler(AbstractCrawler):
         elif config.WEIBO_SEARCH_TYPE == "video":
             search_type = SearchType.VIDEO
         else:
-            utils.logger.error(f"[WeiboCrawler.search] Invalid WEIBO_SEARCH_TYPE: {config.WEIBO_SEARCH_TYPE}")
+            utils.logger.error(f"[WeiboCrawler.search] 无效的 WEIBO_SEARCH_TYPE: {config.WEIBO_SEARCH_TYPE}")
             return
 
         for keyword in config.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
-            utils.logger.info(f"[WeiboCrawler.search] Current search keyword: {keyword}")
+            utils.logger.info(f"[WeiboCrawler.search] 当前搜索关键词: {keyword}")
             page = 1
             while (page - start_page + 1) * weibo_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
-                    utils.logger.info(f"[WeiboCrawler.search] Skip page: {page}")
+                    utils.logger.info(f"[WeiboCrawler.search] 跳过第 {page} 页")
                     page += 1
                     continue
-                utils.logger.info(f"[WeiboCrawler.search] search weibo keyword: {keyword}, page: {page}")
+                utils.logger.info(f"[WeiboCrawler.search] 搜索微博关键词: {keyword}, 页码: {page}")
                 search_res = await self.wb_client.get_note_by_keyword(keyword=keyword, page=page, search_type=search_type)
                 note_id_list: List[str] = []
                 note_list = filter_search_result_card(search_res.get("cards"))
@@ -185,7 +185,7 @@ class WeiboCrawler(AbstractCrawler):
 
                 # Sleep after page navigation
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[WeiboCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
+                utils.logger.info(f"[WeiboCrawler.search] 第 {page-1} 页抓取完成，休眠 {config.CRAWLER_MAX_SLEEP_SEC} 秒")
 
                 await self.batch_get_notes_comments(note_id_list)
 
@@ -215,14 +215,14 @@ class WeiboCrawler(AbstractCrawler):
 
                 # Sleep after fetching note details
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[WeiboCrawler.get_note_info_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching note details {note_id}")
+                utils.logger.info(f"[WeiboCrawler.get_note_info_task] 获取笔记详情 {note_id} 后休眠 {config.CRAWLER_MAX_SLEEP_SEC} 秒")
 
                 return result
             except DataFetchError as ex:
-                utils.logger.error(f"[WeiboCrawler.get_note_info_task] Get note detail error: {ex}")
+                utils.logger.error(f"[WeiboCrawler.get_note_info_task] 获取笔记详情出错: {ex}")
                 return None
             except KeyError as ex:
-                utils.logger.error(f"[WeiboCrawler.get_note_info_task] have not fund note detail note_id:{note_id}, err: {ex}")
+                utils.logger.error(f"[WeiboCrawler.get_note_info_task] 未找到笔记详情 note_id:{note_id}, 错误: {ex}")
                 return None
 
     async def batch_get_notes_comments(self, note_id_list: List[str]):
@@ -232,10 +232,10 @@ class WeiboCrawler(AbstractCrawler):
         :return:
         """
         if not config.ENABLE_GET_COMMENTS:
-            utils.logger.info(f"[WeiboCrawler.batch_get_note_comments] Crawling comment mode is not enabled")
+            utils.logger.info(f"[WeiboCrawler.batch_get_note_comments] 评论抓取模式未开启")
             return
 
-        utils.logger.info(f"[WeiboCrawler.batch_get_notes_comments] note ids:{note_id_list}")
+        utils.logger.info(f"[WeiboCrawler.batch_get_notes_comments] 笔记ID列表:{note_id_list}")
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for note_id in note_id_list:
@@ -252,11 +252,11 @@ class WeiboCrawler(AbstractCrawler):
         """
         async with semaphore:
             try:
-                utils.logger.info(f"[WeiboCrawler.get_note_comments] begin get note_id: {note_id} comments ...")
+                utils.logger.info(f"[WeiboCrawler.get_note_comments] 开始获取笔记 {note_id} 的评论 ...")
 
                 # Sleep before fetching comments
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[WeiboCrawler.get_note_comments] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds before fetching comments for note {note_id}")
+                utils.logger.info(f"[WeiboCrawler.get_note_comments] 获取笔记 {note_id} 评论前休眠 {config.CRAWLER_MAX_SLEEP_SEC} 秒")
 
                 await self.wb_client.get_note_all_comments(
                     note_id=note_id,
@@ -265,9 +265,9 @@ class WeiboCrawler(AbstractCrawler):
                     max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
                 )
             except DataFetchError as ex:
-                utils.logger.error(f"[WeiboCrawler.get_note_comments] get note_id: {note_id} comment error: {ex}")
+                utils.logger.error(f"[WeiboCrawler.get_note_comments] 获取笔记 {note_id} 评论出错: {ex}")
             except Exception as e:
-                utils.logger.error(f"[WeiboCrawler.get_note_comments] may be been blocked, err:{e}")
+                utils.logger.error(f"[WeiboCrawler.get_note_comments] 可能已被封禁，错误:{e}")
 
     async def get_note_images(self, mblog: Dict):
         """
@@ -276,7 +276,7 @@ class WeiboCrawler(AbstractCrawler):
         :return:
         """
         if not config.ENABLE_GET_MEIDAS:
-            utils.logger.info(f"[WeiboCrawler.get_note_images] Crawling image mode is not enabled")
+            utils.logger.info(f"[WeiboCrawler.get_note_images] 图片抓取模式未开启")
             return
 
         pics: List = mblog.get("pics")
@@ -295,7 +295,7 @@ class WeiboCrawler(AbstractCrawler):
                 continue
             content = await self.wb_client.get_note_image(url)
             await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-            utils.logger.info(f"[WeiboCrawler.get_note_images] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching image")
+            utils.logger.info(f"[WeiboCrawler.get_note_images] 获取图片后休眠 {config.CRAWLER_MAX_SLEEP_SEC} 秒")
             if content != None:
                 extension_file_name = url.split(".")[-1]
                 await weibo_store.update_weibo_note_image(pid, content, extension_file_name)
@@ -306,12 +306,12 @@ class WeiboCrawler(AbstractCrawler):
         Returns:
 
         """
-        utils.logger.info("[WeiboCrawler.get_creators_and_notes] Begin get weibo creators")
+        utils.logger.info("[WeiboCrawler.get_creators_and_notes] 开始获取微博创作者信息")
         for user_id in config.WEIBO_CREATOR_ID_LIST:
             createor_info_res: Dict = await self.wb_client.get_creator_info_by_id(creator_id=user_id)
             if createor_info_res:
                 createor_info: Dict = createor_info_res.get("userInfo", {})
-                utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] creator info: {createor_info}")
+                utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] 创作者信息: {createor_info}")
                 if not createor_info:
                     raise DataFetchError("Get creator info error")
                 await weibo_store.save_creator(user_id, user_info=createor_info)
@@ -334,11 +334,11 @@ class WeiboCrawler(AbstractCrawler):
                 await self.batch_get_notes_comments(note_ids)
 
             else:
-                utils.logger.error(f"[WeiboCrawler.get_creators_and_notes] get creator info error, creator_id:{user_id}")
+                utils.logger.error(f"[WeiboCrawler.get_creators_and_notes] 获取创作者信息失败, creator_id:{user_id}")
 
     async def create_weibo_client(self, httpx_proxy: Optional[str]) -> WeiboClient:
         """Create xhs client"""
-        utils.logger.info("[WeiboCrawler.create_weibo_client] Begin create weibo API client ...")
+        utils.logger.info("[WeiboCrawler.create_weibo_client] 开始创建微博API客户端 ...")
         cookie_str, cookie_dict = await utils.convert_browser_context_cookies(
             self.browser_context,
             urls=self.cookie_urls,
@@ -366,7 +366,7 @@ class WeiboCrawler(AbstractCrawler):
         headless: bool = True,
     ) -> BrowserContext:
         """Launch browser and create browser context"""
-        utils.logger.info("[WeiboCrawler.launch_browser] Begin create browser context ...")
+        utils.logger.info("[WeiboCrawler.launch_browser] 开始创建浏览器上下文 ...")
         if config.SAVE_LOGIN_STATE:
             user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
@@ -408,12 +408,12 @@ class WeiboCrawler(AbstractCrawler):
 
             # Display browser information
             browser_info = await self.cdp_manager.get_browser_info()
-            utils.logger.info(f"[WeiboCrawler] CDP browser info: {browser_info}")
+            utils.logger.info(f"[WeiboCrawler] CDP浏览器信息: {browser_info}")
 
             return browser_context
 
         except Exception as e:
-            utils.logger.error(f"[WeiboCrawler] CDP mode startup failed, falling back to standard mode: {e}")
+            utils.logger.error(f"[WeiboCrawler] CDP模式启动失败，回退到标准模式: {e}")
             # Fallback to standard mode
             chromium = playwright.chromium
             return await self.launch_browser(chromium, playwright_proxy, user_agent, headless)
@@ -442,19 +442,19 @@ class WeiboCrawler(AbstractCrawler):
             return note_item
 
         try:
-            utils.logger.info(f"[WeiboCrawler.get_note_full_text] Fetching full text for note: {note_id}")
+            utils.logger.info(f"[WeiboCrawler.get_note_full_text] 正在获取笔记 {note_id} 的完整内容")
             full_note = await self.wb_client.get_note_info_by_id(note_id)
             if full_note and full_note.get("mblog"):
                 # Replace original content with complete content
                 note_item["mblog"] = full_note["mblog"]
-                utils.logger.info(f"[WeiboCrawler.get_note_full_text] Successfully fetched full text for note: {note_id}")
+                utils.logger.info(f"[WeiboCrawler.get_note_full_text] 成功获取笔记 {note_id} 的完整内容")
 
             # Sleep after request to avoid rate limiting
             await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
         except DataFetchError as ex:
-            utils.logger.error(f"[WeiboCrawler.get_note_full_text] Failed to fetch full text for note {note_id}: {ex}")
+            utils.logger.error(f"[WeiboCrawler.get_note_full_text] 获取笔记 {note_id} 完整内容失败: {ex}")
         except Exception as ex:
-            utils.logger.error(f"[WeiboCrawler.get_note_full_text] Unexpected error for note {note_id}: {ex}")
+            utils.logger.error(f"[WeiboCrawler.get_note_full_text] 获取笔记 {note_id} 完整内容时出现意外错误: {ex}")
 
         return note_item
 

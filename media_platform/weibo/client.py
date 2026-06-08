@@ -85,7 +85,7 @@ class WeiboClient(ProxyRefreshMixin):
             data: Dict = response.json()
         except json.decoder.JSONDecodeError:
             # issue: #771 Search API returns error 432, retry multiple times + update h5 cookies
-            utils.logger.error(f"[WeiboClient.request] request {method}:{url} err code: {response.status_code} res:{response.text}")
+            utils.logger.error(f"[WeiboClient.request] 请求 {method}:{url} 错误码: {response.status_code} 响应:{response.text}")
             await self.playwright_page.goto(self._host)
             await asyncio.sleep(2)
             await self.update_cookies(browser_context=self.playwright_page.context)
@@ -117,7 +117,7 @@ class WeiboClient(ProxyRefreshMixin):
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
-        utils.logger.info("[WeiboClient.pong] Begin pong weibo...")
+        utils.logger.info("[WeiboClient.pong] 开始检测微博登录状态...")
         ping_flag = False
         try:
             uri = "/api/config"
@@ -125,9 +125,9 @@ class WeiboClient(ProxyRefreshMixin):
             if resp_data.get("login"):
                 ping_flag = True
             else:
-                utils.logger.error(f"[WeiboClient.pong] cookie may be invalid and again login...")
+                utils.logger.error(f"[WeiboClient.pong] Cookie 可能已失效，需要重新登录...")
         except Exception as e:
-            utils.logger.error(f"[WeiboClient.pong] Pong weibo failed: {e}, and try to login again...")
+            utils.logger.error(f"[WeiboClient.pong] 微博检测失败: {e}，尝试重新登录...")
             ping_flag = False
         return ping_flag
 
@@ -146,7 +146,7 @@ class WeiboClient(ProxyRefreshMixin):
         self.headers["Cookie"] = cookie_str
         self.cookie_dict = cookie_dict
         utils.logger.info(
-            f"[WeiboClient.update_cookies] Cookie updated successfully for {cookie_urls}, total: {len(cookie_dict)} cookies"
+            f"[WeiboClient.update_cookies] Cookie 已成功更新，域名: {cookie_urls}，共 {len(cookie_dict)} 个 Cookie"
         )
 
     async def get_note_by_keyword(
@@ -244,7 +244,7 @@ class WeiboClient(ProxyRefreshMixin):
 
         """
         if not config.ENABLE_GET_SUB_COMMENTS:
-            utils.logger.info(f"[WeiboClient.get_comments_all_sub_comments] Crawling sub_comment mode is not enabled")
+            utils.logger.info(f"[WeiboClient.get_comments_all_sub_comments] 子评论抓取模式未开启")
             return []
 
         res_sub_comments = []
@@ -274,7 +274,7 @@ class WeiboClient(ProxyRefreshMixin):
                 note_item = {"mblog": note_detail}
                 return note_item
             else:
-                utils.logger.info(f"[WeiboClient.get_note_info_by_id] $render_data value not found")
+                utils.logger.info(f"[WeiboClient.get_note_info_by_id] 未找到 $render_data 值")
                 return dict()
 
     async def get_note_image(self, image_url: str) -> bytes:
@@ -297,7 +297,7 @@ class WeiboClient(ProxyRefreshMixin):
                 response = await client.request("GET", final_uri, timeout=self.timeout)
                 response.raise_for_status()
                 if not response.reason_phrase == "OK":
-                    utils.logger.error(f"[WeiboClient.get_note_image] request {final_uri} err, res:{response.text}")
+                    utils.logger.error(f"[WeiboClient.get_note_image] 请求 {final_uri} 出错，响应:{response.text}")
                     return None
                 else:
                     return response.content
@@ -394,15 +394,15 @@ class WeiboClient(ProxyRefreshMixin):
         while notes_has_more:
             notes_res = await self.get_notes_by_creator(creator_id, container_id, since_id)
             if not notes_res:
-                utils.logger.error(f"[WeiboClient.get_notes_by_creator] The current creator may have been banned by Weibo, so they cannot access the data.")
+                utils.logger.error(f"[WeiboClient.get_notes_by_creator] 当前创作者可能已被微博封禁，无法获取数据。")
                 break
             since_id = notes_res.get("cardlistInfo", {}).get("since_id", "0")
             if "cards" not in notes_res:
-                utils.logger.info(f"[WeiboClient.get_all_notes_by_creator] No 'notes' key found in response: {notes_res}")
+                utils.logger.info(f"[WeiboClient.get_all_notes_by_creator] 响应中未找到 'notes' 键: {notes_res}")
                 break
 
             notes = notes_res["cards"]
-            utils.logger.info(f"[WeiboClient.get_all_notes_by_creator] got user_id:{creator_id} notes len : {len(notes)}")
+            utils.logger.info(f"[WeiboClient.get_all_notes_by_creator] 获取 user_id:{creator_id} 笔记数量: {len(notes)}")
             notes = [note for note in notes if note.get("card_type") == 9]
             if callback:
                 await callback(notes)

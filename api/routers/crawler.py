@@ -23,9 +23,37 @@ from ..services import crawler_manager
 
 router = APIRouter(prefix="/crawler", tags=["crawler"])
 
+# 登录状态存储 {platform: "logged_in" | "not_logged_in"}
+_login_status: dict[str, str] = {}
 
-@router.post("/start")
-async def start_crawler(request: CrawlerStartRequest):
+
+@router.post("/login-status")
+async def set_login_status(platform: str = "", status: str = "logged_in"):
+    """设置平台登录状态"""
+    if platform:
+        _login_status[platform] = status
+    return {"status": "ok", "platform": platform, "login_status": status}
+
+
+@router.get("/login-status")
+async def get_login_status(platform: str = ""):
+    """获取平台登录状态"""
+    return {"platform": platform, "login_status": _login_status.get(platform, "not_logged_in")}
+
+
+@router.post("/login")
+async def login_platform(platform: str = ""):
+    """独立登录：启动浏览器仅用于扫码登录，不开始爬取"""
+    if not platform:
+        raise HTTPException(status_code=400, detail="请指定平台")
+    try:
+        success = await crawler_manager.start_login_only(platform)
+        if not success:
+            raise HTTPException(status_code=500, detail="登录启动失败")
+        _login_status[platform] = "logged_in"
+        return {"status": "ok", "message": f"{platform} 登录流程已启动", "platform": platform}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"登录失败：{str(e)}")
     """Start crawler task"""
     success = await crawler_manager.start(request)
     if not success:
@@ -53,7 +81,12 @@ async def stop_crawler():
 @router.get("/status", response_model=CrawlerStatusResponse)
 async def get_crawler_status():
     """Get crawler status"""
-    return crawler_manager.get_status()
+    result = crawler_manager.get_status()
+    # 附加登录状态
+    platform = result.get("platform")
+    if platform:
+        result["login_status"] = _login_status.get(platform, "not_logged_in")
+    return result
 
 
 @router.get("/logs")

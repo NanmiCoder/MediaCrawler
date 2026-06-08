@@ -19,12 +19,14 @@
 import asyncio
 import subprocess
 import signal
+import sys
 import os
+import time
 from typing import Optional, List
 from datetime import datetime
 from pathlib import Path
 
-from ..schemas import CrawlerStartRequest, LogEntry
+from ..schemas import CrawlerStartRequest, LogEntry, PlatformEnum, LoginTypeEnum, CrawlerTypeEnum
 
 
 class CrawlerManager:
@@ -90,6 +92,66 @@ class CrawlerManager:
             return "debug"
         return "info"
 
+    async def start_login_only(self, platform: str) -> bool:
+        """仅启动浏览器扫码登录，不开始爬取"""
+        async with self._lock:
+            if self.process and self.process.poll() is None:
+                return False
+
+            self._logs = []
+            self._log_id = 0
+            if self._log_queue is None:
+                self._log_queue = asyncio.Queue()
+            else:
+                try:
+                    while True:
+                        self._log_queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+
+            # 构建登录专用命令：使用 main.py 的 --type login_only 模式
+            cmd = [
+                sys.executable, "main.py",
+                "--platform", platform,
+                "--lt", "qrcode",
+                "--type", "search",
+                "--keywords", "__login_only__",
+                "--headless", "false",
+                "--crawler_max_notes_count", "0",
+            ]
+
+            entry = self._create_log_entry(f"启动 {platform} 平台扫码登录...", "info")
+            await self._push_log(entry)
+            entry = self._create_log_entry("即将打开浏览器窗口，请扫码登录", "info")
+            await self._push_log(entry)
+
+            try:
+                self.process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    encoding='utf-8',
+                    bufsize=1,
+                    cwd=str(self._project_root),
+                    env={**os.environ, "PYTHONUNBUFFERED": "1", "MEDIACRAWLER_LOGIN_ONLY": "1"}
+                )
+
+                self.status = "running"
+                self.started_at = datetime.now()
+
+                entry = self._create_log_entry(f"请在浏览器中完成 {platform} 的扫码登录", "success")
+                await self._push_log(entry)
+
+                self._read_task = asyncio.create_task(self._read_output())
+
+                return True
+            except Exception as e:
+                self.status = "error"
+                entry = self._create_log_entry(f"登录启动失败：{str(e)}", "error")
+                await self._push_log(entry)
+                return False
+
     async def start(self, config: CrawlerStartRequest) -> bool:
         """Start crawler process"""
         async with self._lock:
@@ -114,7 +176,7 @@ class CrawlerManager:
             cmd = self._build_command(config)
 
             # Log start information
-            entry = self._create_log_entry(f"Starting crawler: {' '.join(cmd)}", "info")
+            entry = self._create_log_entry(f"启动爬虫：{' '.join(cmd)}", "info")
             await self._push_log(entry)
 
             try:
@@ -135,7 +197,7 @@ class CrawlerManager:
                 self.current_config = config
 
                 entry = self._create_log_entry(
-                    f"Crawler started on platform: {config.platform.value}, type: {config.crawler_type.value}",
+                    f"爬虫已启动 | 平台：{config.platform.value} | 类型：{config.crawler_type.value}",
                     "success"
                 )
                 await self._push_log(entry)
@@ -146,7 +208,7 @@ class CrawlerManager:
                 return True
             except Exception as e:
                 self.status = "error"
-                entry = self._create_log_entry(f"Failed to start crawler: {str(e)}", "error")
+                entry = self._create_log_entry(f"爬虫启动失败：{str(e)}", "error")
                 await self._push_log(entry)
                 return False
 
@@ -157,7 +219,7 @@ class CrawlerManager:
                 return False
 
             self.status = "stopping"
-            entry = self._create_log_entry("Sending SIGTERM to crawler process...", "warning")
+            entry = self._create_log_entry("正在停止爬虫进程...", "warning")
             await self._push_log(entry)
 
             try:
@@ -171,15 +233,15 @@ class CrawlerManager:
 
                 # If still not exited, force kill
                 if self.process.poll() is None:
-                    entry = self._create_log_entry("Process not responding, sending SIGKILL...", "warning")
+                    entry = self._create_log_entry("进程未响应，强制终止...", "warning")
                     await self._push_log(entry)
                     self.process.kill()
 
-                entry = self._create_log_entry("Crawler process terminated", "info")
+                entry = self._create_log_entry("爬虫进程已终止", "info")
                 await self._push_log(entry)
 
             except Exception as e:
-                entry = self._create_log_entry(f"Error stopping crawler: {str(e)}", "error")
+                entry = self._create_log_entry(f"停止爬虫时出错：{str(e)}", "error")
                 await self._push_log(entry)
 
             self.status = "idle"
@@ -204,7 +266,7 @@ class CrawlerManager:
 
     def _build_command(self, config: CrawlerStartRequest) -> list:
         """Build main.py command line arguments"""
-        cmd = ["uv", "run", "python", "main.py"]
+        cmd = [sys.executable, "main.py"]
 
         cmd.extend(["--platform", config.platform.value])
         cmd.extend(["--lt", config.login_type.value])
@@ -271,16 +333,16 @@ class CrawlerManager:
             if self.status == "running":
                 exit_code = self.process.returncode if self.process else -1
                 if exit_code == 0:
-                    entry = self._create_log_entry("Crawler completed successfully", "success")
+                    entry = self._create_log_entry("爬虫任务已完成", "success")
                 else:
-                    entry = self._create_log_entry(f"Crawler exited with code: {exit_code}", "warning")
+                    entry = self._create_log_entry(f"爬虫进程异常退出，退出码：{exit_code}", "warning")
                 await self._push_log(entry)
                 self.status = "idle"
 
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            entry = self._create_log_entry(f"Error reading output: {str(e)}", "error")
+            entry = self._create_log_entry(f"读取日志出错：{str(e)}", "error")
             await self._push_log(entry)
 
 

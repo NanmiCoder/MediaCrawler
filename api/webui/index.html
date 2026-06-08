@@ -400,9 +400,19 @@ body {
         <div class="section-title">
           <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
           选择平台
+          <span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);font-weight:400;">点击卡片选中平台 | 选中后可扫码登录 | 登录后即可开始爬取</span>
         </div>
         <div class="platform-grid" id="platformGrid"></div>
         <div id="platformError" class="form-error">请选择一个平台</div>
+        <!-- 登录状态条 -->
+        <div id="loginStatusBar" style="display:none;margin-top:16px;padding:12px 16px;background:var(--bg-elevated);border-radius:var(--radius-sm);border:1px solid var(--border);align-items:center;gap:10px;">
+          <span class="status-dot" id="loginStatusDot" style="background:#9CA3AF;"></span>
+          <span id="loginStatusText" style="font-size:0.85rem;color:var(--text-secondary);">未登录</span>
+          <button class="btn btn-primary btn-sm" id="btnLogin" style="margin-left:auto;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            扫码登录
+          </button>
+        </div>
       </div>
 
       <!-- 爬取配置 -->
@@ -662,6 +672,7 @@ const state = {
   wsReconnectDelay: 3000,
   wsReconnectTimer: null,
   wsLogReconnectTimer: null,
+  loginStatus: {}, // { platform: 'logged_in' | 'not_logged_in' }
 };
 
 // ========== DOM 工具函数 ==========
@@ -756,6 +767,60 @@ function selectPlatform(value) {
     else { c.classList.remove('selected'); }
   });
   $('#platformError').style.display = 'none';
+  // 显示登录状态条
+  updateLoginStatusBar();
+}
+
+// ========== 登录状态条 ==========
+function updateLoginStatusBar() {
+  var bar = $('#loginStatusBar');
+  if (!state.selectedPlatform) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  var platform = state.selectedPlatform;
+  var status = state.loginStatus[platform] || 'not_logged_in';
+  var dot = $('#loginStatusDot');
+  var text = $('#loginStatusText');
+  var btn = $('#btnLogin');
+
+  if (status === 'logged_in') {
+    dot.style.background = '#10B981';
+    text.textContent = '已登录 — 可以直接开始爬取';
+    text.style.color = '#059669';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 已登录';
+    btn.className = 'btn btn-outline btn-sm';
+    btn.disabled = true;
+  } else {
+    dot.style.background = '#9CA3AF';
+    text.textContent = '未登录 — 请先扫码登录再开始爬取';
+    text.style.color = '#6B7280';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> 扫码登录';
+    btn.className = 'btn btn-primary btn-sm';
+    btn.disabled = false;
+  }
+}
+
+async function doLogin() {
+  if (!state.selectedPlatform) return;
+  var btn = $('#btnLogin');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner dark"></span> 启动浏览器...';
+  try {
+    var resp = await apiPost('/api/crawler/login?platform=' + state.selectedPlatform, {});
+    showToast('浏览器已打开，请在浏览器中扫码登录 ' + (PLATFORM_CONFIG[state.selectedPlatform]?.name || state.selectedPlatform), 'success');
+    state.loginStatus[state.selectedPlatform] = 'logged_in';
+    updateLoginStatusBar();
+    // 登录进程超时后自动停
+    setTimeout(function() {
+      apiPost('/api/crawler/stop', {}).catch(function(){});
+    }, 120000); // 2分钟后自动停止
+  } catch (e) {
+    showToast('登录失败：' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> 扫码登录';
+  }
 }
 
 // ========== 模式选择器 ==========
@@ -1125,6 +1190,7 @@ function renderDataFiles() {
 // ========== 按钮事件 ==========
 $('#btnStart').addEventListener('click', startCrawler);
 $('#btnStop').addEventListener('click', stopCrawler);
+$('#btnLogin').addEventListener('click', doLogin);
 
 // ========== 清空日志 ==========
 $('#btnClearLogs').addEventListener('click', function() {
