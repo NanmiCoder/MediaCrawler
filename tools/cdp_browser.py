@@ -317,13 +317,13 @@ class CDPBrowserManager:
         try:
             if config.CDP_CONNECT_EXISTING:
                 # For existing browser (e.g. chrome://inspect/#remote-debugging),
-                # Chrome exposes a WebSocket at /devtools/browser and may show a confirmation
-                # dialog to the user. Use ws:// with a longer timeout to wait for user confirmation.
-                ws_url = f"ws://localhost:{self.debug_port}/devtools/browser"
+                # Chrome exposes a WebSocket at /devtools/browser/{uuid} (NOT the bare
+                # /devtools/browser path -- that returns 404). Get the correct URL from
+                # /json/version, the same way the "launched browser" branch below does.
+                # NOTE: temporary fix for the upstream bug where connect-existing path
+                # hardcoded an invalid ws://.../devtools/browser without the UUID.
+                ws_url = await self._get_browser_websocket_url(self.debug_port)
                 utils.logger.info(f"[CDPBrowserManager] Connecting to existing browser via CDP: {ws_url}")
-                utils.logger.info(
-                    "[CDPBrowserManager] Please check your browser for a confirmation dialog and accept it"
-                )
                 self.browser = await playwright.chromium.connect_over_cdp(
                     ws_url, timeout=config.BROWSER_LAUNCH_TIMEOUT * 1000
                 )
