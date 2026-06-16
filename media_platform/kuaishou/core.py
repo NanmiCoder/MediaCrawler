@@ -160,14 +160,14 @@ class KuaishouCrawler(AbstractCrawler):
                     utils.logger.error(
                         f"[KuaishouCrawler.search] search info by keyword:{keyword} not found data"
                     )
-                    continue
+                    break
 
                 vision_search_photo: Dict = videos_res.get("visionSearchPhoto")
                 if vision_search_photo.get("result") != 1:
                     utils.logger.error(
                         f"[KuaishouCrawler.search] search info by keyword:{keyword} not found data "
                     )
-                    continue
+                    break
                 search_session_id = vision_search_photo.get("searchSessionId", "")
                 for video_detail in vision_search_photo.get("feeds"):
                     video_id_list.append(video_detail.get("photo", {}).get("id"))
