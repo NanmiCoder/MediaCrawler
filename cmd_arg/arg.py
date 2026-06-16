@@ -299,6 +299,14 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Storage Configuration",
             ),
         ] = config.SAVE_DATA_PATH,
+        output_dir: Annotated[
+            str,
+            typer.Option(
+                "--output_dir",
+                help="Output directory for this task's results (will be used as SAVE_DATA_PATH)",
+                rich_help_panel="Storage Configuration",
+            ),
+        ] = "",
         enable_ip_proxy: Annotated[
             str,
             typer.Option(
@@ -361,6 +369,10 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.CRAWLER_MAX_NOTES_COUNT = crawler_max_notes_count
         config.MAX_CONCURRENCY_NUM = max_concurrency_num
         config.SAVE_DATA_PATH = save_data_path
+        # ★ Fix 2: --output_dir 覆盖 SAVE_DATA_PATH（优先级高于 --save_data_path）★
+        if output_dir:
+            config.SAVE_DATA_PATH = output_dir
+            config.TASK_OUTPUT_DIR = output_dir
         config.ENABLE_IP_PROXY = enable_ip_proxy_value
         config.IP_PROXY_POOL_COUNT = ip_proxy_pool_count
         config.IP_PROXY_PROVIDER_NAME = ip_proxy_provider_name
@@ -413,6 +425,8 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             cookies=config.COOKIES,
             specified_id=specified_id,
             creator_id=creator_id,
+            output_dir=config.SAVE_DATA_PATH,
+            task_output_dir=config.TASK_OUTPUT_DIR,
         )
 
     command = typer.main.get_command(app)
