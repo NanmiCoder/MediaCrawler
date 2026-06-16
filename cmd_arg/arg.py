@@ -382,6 +382,8 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 config.TIEBA_SPECIFIED_ID_LIST = [
                     _normalize_tieba_note_id(item) for item in specified_id_list
                 ]
+            elif platform == PlatformEnum.ZHIHU:
+                config.ZHIHU_SPECIFIED_ID_LIST = specified_id_list
 
         if creator_id_list:
             if platform == PlatformEnum.XHS:
