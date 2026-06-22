@@ -1,8 +1,8 @@
-export const DEFAULT_API_BASE = 'http://localhost:8000';
+export const DEFAULT_API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:18080';
 export const API_KEY_HEADER = 'X-API-Key';
 export const API_KEY_STORAGE_KEY = 'mc_api_key';
 export const API_BASE_URL_STORAGE_KEY = 'mc_api_base_url';
-export const WS_BASE = 'ws://localhost:8000';
+export const WS_BASE = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:18080';
 
 export const STATUS_CONFIG = {
   pending:   { color: '#9e9e9e', bg: '#f5f5f5', label: '待执行' },
