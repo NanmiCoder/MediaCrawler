@@ -15,6 +15,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 
 def wait_for_task(tm, task_id: str, timeout: float = 10.0,
@@ -107,8 +108,32 @@ class TestTaskManager:
         from api.tasks import TaskManager
         tm = TaskManager(base_dir=str(tmp_path))
         task = tm.create_task("search")
+        workspace = Path(task.workspace)
+        workspace.mkdir(parents=True)
+        (workspace / "sentinel.txt").write_text("delete me", encoding="utf-8")
         assert tm.delete_task(task.task_id) is True
         assert tm.get_task(task.task_id) is None
+        assert not workspace.exists()
+
+    def test_delete_task_rejects_workspace_escape(self, tmp_path: Path) -> None:
+        """篡改注册表 workspace 时不得删除工作区根目录外的内容。"""
+        from api.tasks import TaskManager
+
+        workspace_root = tmp_path / "workspaces"
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        sentinel = outside / "keep.txt"
+        sentinel.write_text("keep", encoding="utf-8")
+
+        tm = TaskManager(base_dir=str(workspace_root))
+        task = tm.create_task("search")
+        task.workspace = str(outside)
+
+        with pytest.raises(ValueError, match="workspace"):
+            tm.delete_task(task.task_id)
+
+        assert sentinel.read_text(encoding="utf-8") == "keep"
+        assert tm.get_task(task.task_id) is task
 
     def test_persistence(self, tmp_path: Path) -> None:
         """任务持久化到 JSON"""
@@ -309,11 +334,20 @@ class TestAPIRoutes:
     """FastAPI 路由测试"""
 
     @pytest.fixture
-    def client(self, tmp_path: Path) -> Any:
+    def client(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         """创建测试客户端"""
         import os
         # 设置环境变量让 lifespan 使用临时目录
         os.environ["DY_WORKSPACE_DIR"] = str(tmp_path / "workspaces")
+        monkeypatch.delenv("DY_API_KEY", raising=False)
+        monkeypatch.delenv("API_KEY", raising=False)
+        monkeypatch.setenv("DY_API_AUTH_REQUIRED", "0")
+        for name in (
+            "DY_CORS_ALLOW_ORIGINS",
+            "CORS_ALLOW_ORIGINS",
+            "DY_CORS_ORIGINS",
+        ):
+            monkeypatch.delenv(name, raising=False)
 
         from api.main import app
         from api.tasks import TaskManager
@@ -344,6 +378,195 @@ class TestAPIRoutes:
         data = resp.json()
         assert "name" in data
         assert "version" in data
+
+    def test_api_key_protects_http_routes(
+        self,
+        client: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """配置密钥后，业务路由必须携带正确的 X-API-Key。"""
+        monkeypatch.setenv("DY_API_KEY", "test-api-key")
+
+        assert client.get("/").status_code == 200
+        assert client.get("/health").status_code == 200
+        assert client.get("/docs").status_code == 200
+
+        missing = client.get("/scrape/tasks")
+        assert missing.status_code == 401
+        assert missing.json()["detail"] == "Invalid or missing API key"
+
+        invalid = client.get(
+            "/scrape/tasks",
+            headers={"X-API-Key": "wrong-key"},
+        )
+        assert invalid.status_code == 401
+
+        allowed = client.get(
+            "/scrape/tasks",
+            headers={"X-API-Key": "test-api-key"},
+        )
+        assert allowed.status_code == 200
+
+        protected_login = client.get("/login/status")
+        assert protected_login.status_code == 401
+
+    def test_api_key_fallback_environment_name(
+        self,
+        client: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """兼容 API_KEY 环境变量名称。"""
+        monkeypatch.delenv("DY_API_KEY", raising=False)
+        monkeypatch.setenv("API_KEY", "fallback-api-key")
+
+        denied = client.get("/scrape/tasks")
+        assert denied.status_code == 401
+
+        allowed = client.get(
+            "/scrape/tasks",
+            headers={"X-API-Key": "fallback-api-key"},
+        )
+        assert allowed.status_code == 200
+
+    def test_destructive_routes_require_api_key(
+        self,
+        client: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """删除、清理和重置接口均必须通过 API Key。"""
+        monkeypatch.setenv("DY_API_KEY", "destructive-key")
+
+        assert client.delete("/scrape/tasks/aaaaaaaaaaaa").status_code == 401
+        assert client.post("/scrape/cleanup?max_age_hours=1").status_code == 401
+        assert client.post("/scrape/reset", json={
+            "step": "run_search",
+            "clear_dedupe": False,
+        }).status_code == 401
+
+        wrong = client.post(
+            "/scrape/cleanup?max_age_hours=1",
+            headers={"X-API-Key": "wrong"},
+        )
+        assert wrong.status_code == 401
+
+        allowed = client.post(
+            "/scrape/cleanup?max_age_hours=1",
+            headers={"X-API-Key": "destructive-key"},
+        )
+        assert allowed.status_code == 200
+
+    def test_delete_rejects_invalid_task_id(
+        self,
+        client: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """通过鉴权后仍需拒绝非法 task_id。"""
+        monkeypatch.setenv("DY_API_KEY", "delete-key")
+        resp = client.delete(
+            "/scrape/tasks/not-a-task",
+            headers={"X-API-Key": "delete-key"},
+        )
+        assert resp.status_code == 400
+        assert resp.json()["detail"] == "无效任务 ID"
+
+    def test_required_api_key_fails_closed(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """部署要求鉴权时，缺少密钥必须拒绝启动。"""
+        from api.auth import validate_auth_configuration
+
+        monkeypatch.delenv("DY_API_KEY", raising=False)
+        monkeypatch.delenv("API_KEY", raising=False)
+        monkeypatch.setenv("DY_API_AUTH_REQUIRED", "1")
+        with pytest.raises(RuntimeError, match="DY_API_KEY or API_KEY must be set"):
+            validate_auth_configuration()
+
+    def test_api_key_protects_websocket(
+        self,
+        client: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """WebSocket 使用子协议传递密钥，未授权连接以 1008 关闭。"""
+        from api.auth import encode_websocket_api_key
+
+        monkeypatch.setenv("DY_API_KEY", "test-ws-key")
+
+        with pytest.raises(WebSocketDisconnect) as exc_info:
+            with client.websocket_connect("/ws/tasks"):
+                pass
+        assert exc_info.value.code == 1008
+
+        protocol = encode_websocket_api_key("test-ws-key")
+        with client.websocket_connect(
+            "/ws/tasks",
+            subprotocols=[protocol],
+        ) as ws:
+            assert ws.accepted_subprotocol == protocol
+            ws.send_text("ping")
+
+    def test_cors_defaults_are_local_only(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """CORS 默认仅允许固定本地端口，不包含通配符。"""
+        from api.main import DEFAULT_CORS_ALLOW_ORIGINS, get_cors_allow_origins
+
+        for name in (
+            "DY_CORS_ALLOW_ORIGINS",
+            "CORS_ALLOW_ORIGINS",
+            "DY_CORS_ORIGINS",
+        ):
+            monkeypatch.delenv(name, raising=False)
+
+        origins = get_cors_allow_origins()
+        assert origins == list(DEFAULT_CORS_ALLOW_ORIGINS)
+        assert "*" not in origins
+
+    def test_cors_default_middleware_rejects_unknown_origin(
+        self,
+        client: Any,
+    ) -> None:
+        """实际 CORS 中间件允许本地前端并拒绝未知站点。"""
+        allowed = client.options(
+            "/scrape/tasks",
+            headers={
+                "Origin": "http://localhost:15173",
+                "Access-Control-Request-Method": "GET",
+                "Access-Control-Request-Headers": "X-API-Key",
+            },
+        )
+        assert allowed.status_code == 200
+        assert allowed.headers["access-control-allow-origin"] == (
+            "http://localhost:15173"
+        )
+
+        denied = client.options(
+            "/scrape/tasks",
+            headers={
+                "Origin": "https://untrusted.example",
+                "Access-Control-Request-Method": "GET",
+                "Access-Control-Request-Headers": "X-API-Key",
+            },
+        )
+        assert denied.status_code == 400
+        assert "access-control-allow-origin" not in denied.headers
+
+    def test_cors_wildcard_requires_explicit_config_and_warns(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """显式通配符可用，但必须记录风险警告。"""
+        from api.main import get_cors_allow_origins, log_cors_security_posture
+
+        monkeypatch.setenv("CORS_ALLOW_ORIGINS", "*")
+        origins = get_cors_allow_origins()
+        assert origins == ["*"]
+
+        with caplog.at_level("WARNING", logger="douyin_scraper.api"):
+            log_cors_security_posture(origins)
+        assert "internal development only" in caplog.text
 
     def test_search_submit(self, client: Any) -> None:
         """搜索任务提交"""

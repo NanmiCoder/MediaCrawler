@@ -1,7 +1,6 @@
 import ky, { type KyInstance } from 'ky';
 import {
   DEFAULT_API_BASE, API_KEY_HEADER, API_KEY_STORAGE_KEY,
-  API_BASE_URL_STORAGE_KEY,
 } from '../utils/constants';
 import type {
   TaskListResponse, TaskInfo, CreateTaskResponse, HealthResponse,
@@ -32,6 +31,38 @@ function createApiClient(baseUrl?: string): KyInstance {
 }
 
 let _client: KyInstance | null = null;
+
+function getDownloadFilename(disposition: string, fallback: string): string {
+  const encoded = disposition.match(/filename\*=utf-8''([^;]+)/i);
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1]);
+    } catch {
+      return encoded[1];
+    }
+  }
+  const plain = disposition.match(/filename="?([^";]+)"?/i);
+  return plain?.[1] || fallback;
+}
+
+async function downloadAuthenticatedFile(path: string, fallback: string): Promise<void> {
+  const resp = await getClient().get(path, { timeout: false });
+  const blob = await resp.blob();
+  const filename = getDownloadFilename(
+    resp.headers.get('content-disposition') || '',
+    fallback,
+  );
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  setTimeout(() => {
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }, 100);
+}
 
 export function getClient(): KyInstance {
   if (!_client) {
@@ -84,15 +115,17 @@ export const api = {
   createRunAll: (data: RunAllParams) =>
     getClient().post('scrape/run-all', { json: data }).json<CreateTaskResponse>(),
 
-  getResultUrl: (taskId: string) => {
-    const base = localStorage.getItem(API_BASE_URL_STORAGE_KEY) || DEFAULT_API_BASE;
-    return `${base}/scrape/result/${taskId}`;
-  },
+  downloadResult: (taskId: string) =>
+    downloadAuthenticatedFile(
+      `scrape/result/${taskId}`,
+      `${taskId}-result`,
+    ),
 
-  getDataExportUrl: (taskId: string) => {
-    const base = localStorage.getItem(API_BASE_URL_STORAGE_KEY) || DEFAULT_API_BASE;
-    return `${base}/scrape/data/export?task_id=${encodeURIComponent(taskId)}`;
-  },
+  downloadDataFile: (taskId: string) =>
+    downloadAuthenticatedFile(
+      `scrape/data/export?task_id=${encodeURIComponent(taskId)}`,
+      `${taskId}-data`,
+    ),
 
   // ─── 数据管理 ───────────────────────────────────────────────
 

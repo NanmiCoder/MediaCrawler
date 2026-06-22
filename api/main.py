@@ -29,8 +29,18 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from dotenv import load_dotenv
+from fastapi import (
+    Depends,
+    FastAPI,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 
 from douyin_scraper.utils import (
     check_command_exists,
@@ -44,8 +54,52 @@ from .login import router as login_router
 from .tasks import TaskManager
 from .ws import ws_manager
 from .schemas import LogEntry
+from .auth import (
+    get_websocket_api_key,
+    is_api_key_enabled,
+    is_valid_api_key,
+    require_api_key,
+    validate_auth_configuration,
+)
 
 logger = logging.getLogger("douyin_scraper.api")
+
+DEFAULT_CORS_ALLOW_ORIGINS = (
+    "http://localhost:15173",
+    "http://127.0.0.1:15173",
+    "http://localhost:18080",
+    "http://127.0.0.1:18080",
+)
+
+
+def get_cors_allow_origins() -> list[str]:
+    """Resolve CORS origins from current and legacy environment variables."""
+    raw = (
+        os.environ.get("DY_CORS_ALLOW_ORIGINS")
+        or os.environ.get("CORS_ALLOW_ORIGINS")
+        or os.environ.get("DY_CORS_ORIGINS")
+    )
+    if raw is None or not raw.strip():
+        return list(DEFAULT_CORS_ALLOW_ORIGINS)
+
+    origins = list(dict.fromkeys(
+        origin.strip() for origin in raw.split(",") if origin.strip()
+    ))
+    if "*" in origins:
+        return ["*"]
+    return origins or list(DEFAULT_CORS_ALLOW_ORIGINS)
+
+
+def log_cors_security_posture(origins: list[str]) -> None:
+    """Log the effective CORS posture without exposing secrets."""
+    if origins == ["*"]:
+        logger.warning(
+            "CORS_ALLOW_ORIGINS=* enables cross-origin access from any site; "
+            "internal development only"
+        )
+    else:
+        logger.info("CORS restricted to %d configured local origin(s)", len(origins))
+
 
 # ═══════════════════════════════════════════════════════════════
 # 日志广播后台任务（把 crawler_manager 的日志队列推给 WebSocket 前端）
@@ -90,7 +144,7 @@ async def log_broadcaster():
 # 全局配置
 # ═══════════════════════════════════════════════════════════════
 
-API_HOST = os.environ.get("DY_API_HOST", "0.0.0.0")
+API_HOST = os.environ.get("DY_API_HOST", "127.0.0.1")
 API_PUBLIC_PORT = int(os.environ.get("DY_API_PUBLIC_PORT", "18080"))
 API_PORT = int(os.environ.get("DY_API_PORT", str(API_PUBLIC_PORT)))
 WORKSPACE_DIR = os.environ.get("DY_WORKSPACE_DIR", "./workspaces")
@@ -169,6 +223,7 @@ async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     global _task_manager_instance, _start_time
     _start_time = time.time()
+    validate_auth_configuration()
 
     # 启动时初始化
     _setup_logging()
@@ -189,6 +244,14 @@ async def lifespan(app: FastAPI):
         "API 服务就绪: host=%s port=%d workspace=%s",
         API_HOST, API_PORT, WORKSPACE_DIR,
     )
+    if is_api_key_enabled():
+        logger.info("API Key 鉴权已启用")
+    else:
+        logger.warning(
+            "API auth disabled / internal use only; set DY_API_KEY or API_KEY "
+            "before LAN or public exposure"
+        )
+    log_cors_security_posture(_cors_origins)
 
     # 启动日志广播后台任务（把 crawler_manager 的日志推送给 WebSocket 前端）
     global _log_broadcaster_task
@@ -224,19 +287,21 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS（根据环境配置来源列表，allow_credentials=False 与通配符来源兼容）
-_cors_origins = os.environ.get("DY_CORS_ORIGINS", "*").split(",")
+# CORS defaults to the fixed local development and host UI origins.
+_cors_origins = get_cors_allow_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_credentials=False if "*" in _cors_origins else True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-API-Key"],
+    expose_headers=["Content-Disposition"],
 )
 
 # 注册路由
-app.include_router(router)
-app.include_router(login_router)
+protected_dependencies = [Depends(require_api_key)]
+app.include_router(router, dependencies=protected_dependencies)
+app.include_router(login_router, dependencies=protected_dependencies)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -246,7 +311,14 @@ app.include_router(login_router)
 @app.websocket("/ws/tasks")
 async def websocket_tasks(ws: WebSocket):
     """WebSocket 端点：推送任务状态变更"""
-    await ws_manager.connect(ws)
+    candidate, subprotocol = get_websocket_api_key(ws)
+    if not is_valid_api_key(candidate):
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Invalid or missing API key",
+        )
+
+    await ws_manager.connect(ws, subprotocol=subprotocol)
     try:
         while True:
             await ws.receive_text()

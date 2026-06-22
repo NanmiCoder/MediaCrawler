@@ -20,8 +20,8 @@ class WSManager:
     def __init__(self):
         self._connections: Set[WebSocket] = set()
 
-    async def connect(self, ws: WebSocket):
-        await ws.accept()
+    async def connect(self, ws: WebSocket, subprotocol: str | None = None):
+        await ws.accept(subprotocol=subprotocol)
         self._connections.add(ws)
         logger.info("WebSocket 连接建立, 当前连接数: %d", len(self._connections))
 

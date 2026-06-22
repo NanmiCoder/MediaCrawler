@@ -7,6 +7,9 @@ services:
       - "18080:8000"
     env_file:
       - .env
+    environment:
+      DY_API_HOST: "0.0.0.0"
+      DY_API_AUTH_REQUIRED: "1"
     volumes:
       - ./workspaces:/app/workspaces
       - ./data:/app/data

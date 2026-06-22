@@ -593,10 +593,7 @@ export default function DataPage() {
                       <Tooltip title="下载原始文件">
                         <IconButton
                           size="small"
-                          component="a"
-                          href={api.getDataExportUrl(item.task_id)}
-                          target="_blank"
-                          rel="noreferrer"
+                          onClick={() => void api.downloadDataFile(item.task_id)}
                         >
                           <DownloadIcon fontSize="small" />
                         </IconButton>

@@ -292,7 +292,7 @@ export default function TaskListPage() {
                               <Tooltip title="下载结果">
                                 <IconButton
                                   size="small"
-                                  onClick={() => window.open(api.getResultUrl(task.task_id))}
+                                  onClick={() => void api.downloadResult(task.task_id)}
                                 >
                                   <DownloadIcon fontSize="small" />
                                 </IconButton>

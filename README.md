@@ -169,6 +169,10 @@ uv run python -m api.main
 
 启动成功后，访问 `http://localhost:18080/ui/` 即可打开 WebUI 界面。
 
+如果服务通过 `.env` 配置了 `DY_API_KEY`（兼容 `API_KEY`），请在 WebUI 的“设置”页面填写同一个密钥。REST 请求使用 `X-API-Key` 请求头；Docker Compose 默认要求配置密钥，本机直启时留空只适合可信开发环境。
+
+CORS 默认只允许 `15173` Web 开发端口和 `18080` API/WebUI 端口的 localhost/127.0.0.1 来源。局域网或公网部署应显式填写可信来源，不建议使用 `CORS_ALLOW_ORIGINS=*`。如果本地 `.env` 已保存非空 LLM/API Key，建议轮换并改用 secret 注入。完整说明见 [API 安全文档](api/README.md#api-key-鉴权)。
+
 #### WebUI 功能特性
 
 - 可视化配置爬虫参数（平台、登录方式、爬取类型等）

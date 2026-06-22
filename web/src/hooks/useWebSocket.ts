@@ -3,7 +3,7 @@ import { useTaskStore } from '../store/useTaskStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import {
   WS_RECONNECT_BASE_MS, WS_RECONNECT_MAX_MS,
-  WS_MAX_RETRIES, POLLING_INTERVAL_MS, API_KEY_STORAGE_KEY,
+  WS_MAX_RETRIES, POLLING_INTERVAL_MS,
 } from '../utils/constants';
 import type { WSMessage } from '../api/types';
 
@@ -13,6 +13,19 @@ export interface UseWebSocketReturn {
   status: WSStatus;
   logs: Array<{ id: number; timestamp: string; level: string; message: string }>;
   clearLogs: () => void;
+}
+
+function encodeApiKeyProtocol(apiKey: string): string {
+  const bytes = new TextEncoder().encode(apiKey);
+  let binary = '';
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  const encoded = btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  return `mc-api-key.${encoded}`;
 }
 
 export function useWebSocket(): UseWebSocketReturn {
@@ -26,6 +39,7 @@ export function useWebSocket(): UseWebSocketReturn {
   const updateTaskStatus = useTaskStore((s) => s.updateTaskStatus);
   const fetchTasks = useTaskStore((s) => s.fetchTasks);
   const apiBaseUrl = useSettingsStore((s) => s.apiBaseUrl);
+  const apiKey = useSettingsStore((s) => s.apiKey);
 
   const clearTimers = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -45,11 +59,11 @@ export function useWebSocket(): UseWebSocketReturn {
   const connect = useCallback(() => {
     clearTimers();
     const wsUrl = apiBaseUrl.replace(/^http/, 'ws') + '/ws/tasks';
-    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    const fullUrl = apiKey ? `${wsUrl}?api_key=${apiKey}` : wsUrl;
 
     try {
-      const ws = new WebSocket(fullUrl);
+      const ws = apiKey
+        ? new WebSocket(wsUrl, encodeApiKeyProtocol(apiKey))
+        : new WebSocket(wsUrl);
       wsRef.current = ws;
       setStatus('connecting');
 
@@ -104,7 +118,7 @@ export function useWebSocket(): UseWebSocketReturn {
       setStatus('disconnected');
       scheduleReconnect();
     }
-  }, [apiBaseUrl, updateTaskStatus, clearTimers]);
+  }, [apiBaseUrl, apiKey, updateTaskStatus, clearTimers]);
 
   const scheduleReconnect = useCallback(() => {
     if (retriesRef.current >= WS_MAX_RETRIES) {

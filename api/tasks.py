@@ -24,6 +24,7 @@ import atexit
 import json
 import logging
 import os
+import re
 import shutil
 import signal
 import tempfile
@@ -42,6 +43,7 @@ from .ws import ws_manager
 logger = logging.getLogger("douyin_scraper.api")
 
 _CST = timezone(timedelta(hours=8))
+_TASK_ID_RE = re.compile(r"^[0-9a-f]{12}$")
 
 
 def _now_iso() -> str:
@@ -437,23 +439,49 @@ class TaskManager:
         tasks.sort(key=lambda t: t.created_at, reverse=True)
         return tasks[:limit]
 
+    @staticmethod
+    def is_valid_task_id(task_id: str) -> bool:
+        """Task IDs are fixed 12-character lowercase hexadecimal values."""
+        return bool(_TASK_ID_RE.fullmatch(task_id))
+
+    def _validated_workspace_for_delete(self, task: TaskInfo) -> Path:
+        """Return a deletion-safe workspace owned by this TaskManager."""
+        if not self.is_valid_task_id(task.task_id):
+            raise ValueError("invalid task id")
+
+        base_path = Path(os.path.abspath(self._base_dir))
+        expected_path = Path(os.path.abspath(self._base_dir / task.task_id))
+        recorded_path = Path(os.path.abspath(task.workspace))
+        if recorded_path != expected_path:
+            raise ValueError("task workspace does not match task id")
+        if recorded_path == base_path or recorded_path.is_symlink():
+            raise ValueError("unsafe task workspace")
+
+        resolved_base = base_path.resolve()
+        resolved_workspace = recorded_path.resolve()
+        try:
+            resolved_workspace.relative_to(resolved_base)
+        except ValueError as exc:
+            raise ValueError("task workspace escapes workspace root") from exc
+        if resolved_workspace == resolved_base:
+            raise ValueError("refusing to delete workspace root")
+        return recorded_path
+
     def delete_task(self, task_id: str) -> bool:
         """删除任务记录及对应 workspace 目录"""
         with self._lock:
-            if task_id in self._tasks:
-                task = self._tasks[task_id]
-                # 先清理磁盘 workspace
-                workspace_path = Path(task.workspace)
-                if workspace_path.exists():
-                    try:
-                        shutil.rmtree(str(workspace_path), ignore_errors=True)
-                        logger.info("已清理 workspace: %s", workspace_path)
-                    except Exception as e:
-                        logger.warning("清理 workspace 失败: %s: %s", workspace_path, e)
-                del self._tasks[task_id]
-                self._save_registry()
-                return True
-        return False
+            task = self._tasks.get(task_id)
+            if task is None:
+                return False
+
+            workspace_path = self._validated_workspace_for_delete(task)
+            if workspace_path.exists():
+                shutil.rmtree(workspace_path)
+                logger.info("已清理任务 workspace: task_id=%s", task_id)
+
+            del self._tasks[task_id]
+            self._save_registry()
+            return True
 
     def cleanup_old_tasks(self, max_age_hours: int = 72) -> int:
         """

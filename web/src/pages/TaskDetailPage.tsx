@@ -343,8 +343,7 @@ function ResultSection({ task }: { task: any }) {
           variant="contained"
           color="success"
           startIcon={<DownloadIcon />}
-          href={api.getResultUrl(task.task_id)}
-          target="_blank"
+          onClick={() => void api.downloadResult(task.task_id)}
           size="small"
         >
           {isContentAsset ? '下载内容资产表' : '下载结果文件'}

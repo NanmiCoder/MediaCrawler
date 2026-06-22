@@ -639,8 +639,17 @@ async def list_tasks(
 async def delete_task(task_id: str) -> Dict[str, str]:
     """删除任务记录"""
     tm = get_task_manager()
-    if tm.delete_task(task_id):
-        return {"status": "deleted", "task_id": task_id}
+    if not tm.is_valid_task_id(task_id):
+        raise HTTPException(status_code=400, detail="无效任务 ID")
+    try:
+        if tm.delete_task(task_id):
+            return {"status": "deleted", "task_id": task_id}
+    except ValueError:
+        logger.warning("拒绝删除非法任务 workspace: task_id=%s", task_id)
+        raise HTTPException(status_code=400, detail="任务工作目录无效，已拒绝删除")
+    except OSError:
+        logger.exception("删除任务 workspace 失败: task_id=%s", task_id)
+        raise HTTPException(status_code=500, detail="删除任务失败")
     raise HTTPException(status_code=404, detail=f"任务不存在: {task_id}")
 
 
