@@ -102,6 +102,7 @@ class CommentsRequest(BaseModel):
 
 class ScriptsRequest(BaseModel):
     """文案提取请求"""
+    task_id: Optional[str] = Field(None, description="搜索任务 ID（读取其 script_sources 输出）")
     video_jsonl: Optional[str] = Field(None, description="视频 JSONL 路径")
     model: Literal["tiny", "base", "small", "medium", "large"] = Field(
         "small", description="Whisper 模型大小: tiny/base/small/medium/large"
@@ -227,6 +228,15 @@ def _title_clean_result(paths: Dict[str, Any]) -> Dict[str, Any]:
 
 
 
+def _script_source_result(paths: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "script_sources_jsonl": paths.get("script_sources_jsonl", ""),
+        "script_sources_csv": paths.get("script_sources_csv", ""),
+        "script_sources_stats": paths.get("script_sources_stats", {}),
+    }
+
+
+
 def _comments_output_result(
     paths: Dict[str, Any],
     output: Path,
@@ -243,6 +253,24 @@ def _comments_output_result(
     }
 
 
+
+def _script_output_result(
+    paths: Dict[str, Any],
+    output: Path,
+) -> Dict[str, Any]:
+    script_raw_jsonl = paths.get("script_raw_jsonl", str(output))
+    return {
+        "scripts_jsonl": script_raw_jsonl,
+        "script_raw_jsonl": script_raw_jsonl,
+        "script_raw_csv": paths.get("script_raw_csv", ""),
+        "script_raw_stats": paths.get("script_raw_stats", {}),
+        "script_clean_jsonl": paths.get("script_clean_jsonl", ""),
+        "script_clean_csv": paths.get("script_clean_csv", ""),
+        "script_clean_stats": paths.get("script_clean_stats", {}),
+    }
+
+
+# Search endpoint
 
 @router.post("/search", summary="触发搜索采集")
 async def search(req: SearchRequest) -> Dict[str, Any]:
@@ -261,6 +289,7 @@ async def search(req: SearchRequest) -> Dict[str, Any]:
         paths = scraper.get_paths()
         result = _search_output_result(paths, output)
         result.update(_title_clean_result(paths))
+        result.update(_script_source_result(paths))
         result["status"] = scraper.get_status()
         return result
 
@@ -330,6 +359,55 @@ async def extract_scripts(req: ScriptsRequest) -> Dict[str, Any]:
 
     def _do_scripts() -> Dict[str, Any]:
         scraper = _make_scraper(req.project_dir, task.workspace)
+        script_sources_jsonl: Optional[Path] = None
+        script_sources_csv: Optional[Path] = None
+        title_clean_csv: Optional[Path] = None
+        if req.task_id:
+            source_task = tm.get_task(req.task_id)
+            if not source_task:
+                raise NonRetryableError(
+                    f"搜索任务不存在: {req.task_id}",
+                    step="extract_scripts",
+                )
+            source_outputs = Path(source_task.workspace) / "outputs"
+            jsonl_path = source_outputs / "script_sources.jsonl"
+            csv_path = source_outputs / "script_sources.csv"
+            title_clean_path = source_outputs / "search_title_clean.csv"
+            if jsonl_path.exists():
+                script_sources_jsonl = jsonl_path
+            if csv_path.exists():
+                script_sources_csv = csv_path
+            if title_clean_path.exists():
+                title_clean_csv = title_clean_path
+            if not script_sources_jsonl and not script_sources_csv:
+                raise NonRetryableError(
+                    f"搜索任务无可用 script_sources 输出: {req.task_id}",
+                    step="extract_scripts",
+                )
+        else:
+            current_outputs = Path(task.workspace) / "outputs"
+            jsonl_path = current_outputs / "script_sources.jsonl"
+            csv_path = current_outputs / "script_sources.csv"
+            title_clean_path = current_outputs / "search_title_clean.csv"
+            if jsonl_path.exists():
+                script_sources_jsonl = jsonl_path
+            if csv_path.exists():
+                script_sources_csv = csv_path
+            if title_clean_path.exists():
+                title_clean_csv = title_clean_path
+
+        if script_sources_jsonl or script_sources_csv:
+            output = scraper.extract_script_raw(
+                script_sources_jsonl=script_sources_jsonl,
+                script_sources_csv=script_sources_csv,
+                model=req.model,
+                title_clean_csv=title_clean_csv,
+            )
+            paths = scraper.get_paths()
+            result = _script_output_result(paths, output)
+            result["status"] = scraper.get_status()
+            return result
+
         video_path = Path(req.video_jsonl) if req.video_jsonl else None
         if video_path:
             video_path = validate_path_in_workspace(
@@ -338,7 +416,11 @@ async def extract_scripts(req: ScriptsRequest) -> Dict[str, Any]:
         output = scraper.extract_scripts(
             video_jsonl=video_path, model=req.model
         )
-        return {"scripts_jsonl": str(output), "status": scraper.get_status()}
+        paths = scraper.get_paths()
+        result = _script_output_result(paths, output)
+        result["scripts_jsonl"] = str(output)
+        result["status"] = scraper.get_status()
+        return result
 
     tm.submit(task, _do_scripts)
     return {"task_id": task.task_id, "status": "submitted", "type": "scripts"}

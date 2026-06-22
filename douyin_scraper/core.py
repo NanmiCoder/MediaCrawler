@@ -251,6 +251,9 @@ class DouyinScraper:
                 result_csv_path, result_jsonl_path
             )
 
+            self._prepare_script_source_outputs(
+                result_csv_path, result_jsonl_path, title_clean_csv
+            )
 
             self._state.mark_step_completed(
                 step, detail=f"output={output_path}"
@@ -300,6 +303,21 @@ class DouyinScraper:
         self._paths["title_clean_csv"] = clean_csv
         self._paths["title_clean_stats"] = stats
         return clean_csv
+
+
+    def _prepare_script_source_outputs(
+        self,
+        result_csv_path: Path,
+        result_jsonl_path: Path,
+        title_clean_csv: Optional[Path],
+    ) -> None:
+        """Create and register script_sources outputs."""
+        sources_jsonl, sources_csv, stats = self._do_build_script_sources(
+            result_csv_path, result_jsonl_path, title_clean_csv
+        )
+        self._paths["script_sources_jsonl"] = sources_jsonl
+        self._paths["script_sources_csv"] = sources_csv
+        self._paths["script_sources_stats"] = stats
 
 
     def fetch_comments(
@@ -402,6 +420,96 @@ class DouyinScraper:
             self._state.mark_step_failed(step, str(e)[:200], exit_code)
             raise
 
+    def extract_script_raw(
+        self,
+        script_sources_jsonl: Optional[Path] = None,
+        script_sources_csv: Optional[Path] = None,
+        model: str = "small",
+        max_items: Optional[int] = None,
+        title_clean_csv: Optional[Path] = None,
+    ) -> Path:
+        """Build script_raw outputs from standardized script_sources."""
+        step = self.STEP_EXTRACT
+        self._require_step_ready(step)
+
+        output_dir = self._current_task_workspace_dir() / "outputs"
+        if script_sources_jsonl is None:
+            candidate = output_dir / "script_sources.jsonl"
+            if candidate.exists():
+                script_sources_jsonl = candidate
+        if script_sources_csv is None:
+            candidate = output_dir / "script_sources.csv"
+            if candidate.exists():
+                script_sources_csv = candidate
+        if title_clean_csv is None:
+            for source_path in (script_sources_jsonl, script_sources_csv):
+                if source_path is None:
+                    continue
+                candidate = source_path.parent / "search_title_clean.csv"
+                if candidate.exists():
+                    title_clean_csv = candidate
+                    break
+        if title_clean_csv is None:
+            candidate = output_dir / "search_title_clean.csv"
+            if candidate.exists():
+                title_clean_csv = candidate
+
+        if not script_sources_jsonl and not script_sources_csv:
+            raise NonRetryableError(
+                "script_sources.jsonl/csv 不存在，无法生成 script_raw",
+                step=step,
+            )
+
+        setup_env_vars()
+        self._state.mark_step_started(step)
+        try:
+            raw_jsonl, raw_csv, stats = self._do_build_script_raw(
+                script_sources_jsonl=script_sources_jsonl,
+                script_sources_csv=script_sources_csv,
+                model_name=model,
+                max_items=max_items,
+            )
+            clean_jsonl, clean_csv, clean_stats = self._do_build_script_clean(
+                script_sources_jsonl=script_sources_jsonl,
+                script_sources_csv=script_sources_csv,
+                script_raw_jsonl=raw_jsonl,
+                script_raw_csv=raw_csv,
+                title_clean_csv=title_clean_csv,
+            )
+            self._state.mark_step_completed(step, detail=f"output={raw_jsonl}")
+            self._register_script_outputs(
+                raw_jsonl,
+                raw_csv,
+                stats,
+                clean_jsonl,
+                clean_csv,
+                clean_stats,
+            )
+            return raw_jsonl
+        except Exception as e:
+            exit_code = classify_error(e)
+            self._state.mark_step_failed(step, str(e)[:200], exit_code)
+            raise
+
+
+    def _register_script_outputs(
+        self,
+        raw_jsonl: Path,
+        raw_csv: Path,
+        raw_stats: Dict[str, Any],
+        clean_jsonl: Path,
+        clean_csv: Path,
+        clean_stats: Dict[str, Any],
+    ) -> None:
+        """Register script_raw/script_clean outputs for get_paths()."""
+        self._paths["script_raw_jsonl"] = raw_jsonl
+        self._paths["script_raw_csv"] = raw_csv
+        self._paths["script_raw_stats"] = raw_stats
+        self._paths["script_clean_jsonl"] = clean_jsonl
+        self._paths["script_clean_csv"] = clean_csv
+        self._paths["script_clean_stats"] = clean_stats
+
+
     def merge(
         self,
         video_jsonl: Optional[Path] = None,
@@ -497,6 +605,7 @@ class DouyinScraper:
         result.update(self._search_output_paths())
         result.update(self._comments_output_paths())
         result.update(self._title_output_paths())
+        result.update(self._script_output_paths())
         return result
 
 
@@ -540,6 +649,25 @@ class DouyinScraper:
         return self._select_output_values(
             path_keys=("title_clean_jsonl", "title_clean_csv"),
             stats_keys=("title_clean_stats",),
+        )
+
+
+    def _script_output_paths(self) -> Dict[str, Any]:
+        return self._select_output_values(
+            path_keys=(
+                "script_sources_jsonl",
+                "script_sources_csv",
+                "script_raw_jsonl",
+                "script_raw_csv",
+                "script_clean_jsonl",
+                "script_clean_csv",
+                "scripts_jsonl",
+            ),
+            stats_keys=(
+                "script_sources_stats",
+                "script_raw_stats",
+                "script_clean_stats",
+            ),
         )
 
 
@@ -1877,6 +2005,701 @@ class DouyinScraper:
                 stats["clean_csv_generated"] = True
             except Exception as write_error:
                 stats["errors"].append(f"title_clean_write_failed: {str(write_error)[:500]}")
+
+        return clean_jsonl_path, clean_csv_path, stats
+
+
+    @staticmethod
+    def _join_source_text(*parts: Any) -> str:
+        texts: List[str] = []
+        seen: Set[str] = set()
+        for part in parts:
+            text = re.sub(r"\s+", " ", str(part or "")).strip()
+            if not text or text in seen:
+                continue
+            seen.add(text)
+            texts.append(text)
+        return " ".join(texts)
+
+
+    @staticmethod
+    def _script_source_key(rec: Dict[str, Any]) -> str:
+        for key in ("aweme_id", "video_id", "aweme_url"):
+            value = str(rec.get(key, "") or "").strip()
+            if value and value != "None":
+                return value
+        return ""
+
+
+    def _load_title_clean_map(self, title_clean_csv_path: Optional[Path]) -> tuple[Dict[str, Dict[str, Any]], List[str]]:
+        errors: List[str] = []
+        clean_map: Dict[str, Dict[str, Any]] = {}
+        if not title_clean_csv_path or not title_clean_csv_path.exists():
+            return clean_map, errors
+        try:
+            with open(str(title_clean_csv_path), "r", encoding="utf-8-sig", newline="") as f:
+                for row in csv.DictReader(f):
+                    keys = self._dedupe_text_list([
+                        str(row.get("aweme_id", "") or "").strip(),
+                        str(row.get("video_id", "") or "").strip(),
+                        str(row.get("aweme_url", "") or "").strip(),
+                    ])
+                    for key in keys:
+                        if key and key != "None":
+                            clean_map[key] = row
+        except Exception as e:
+            errors.append(f"read_title_clean_failed: {str(e)[:200]}")
+        return clean_map, errors
+
+
+    def _build_script_source_record(
+        self,
+        rec: Dict[str, Any],
+        clean_rec: Optional[Dict[str, Any]],
+        created_at: str,
+    ) -> Dict[str, Any]:
+        raw_title = str(rec.get("title", rec.get("raw_title", "")) or "")
+        raw_desc = str(rec.get("desc", rec.get("raw_desc", "")) or "")
+        clean_title = str((clean_rec or {}).get("clean_title", rec.get("clean_title", "")) or "")
+        clean_desc = str((clean_rec or {}).get("clean_desc", rec.get("clean_desc", "")) or "")
+        video_download_url = str(rec.get("video_download_url", "") or "").strip()
+
+        title_desc_text = self._join_source_text(raw_title, raw_desc)
+        clean_title_text = self._join_source_text(clean_title, clean_desc)
+        title_desc_available = bool(title_desc_text)
+        clean_title_available = bool(clean_title_text)
+        video_download_available = bool(video_download_url)
+        asr_planned = video_download_available
+
+        notes: List[str] = []
+        if clean_title_available:
+            quality = "medium"
+            status = "available"
+            notes.append("clean_title_desc_available")
+        elif title_desc_available:
+            quality = "weak"
+            status = "available"
+            notes.append("raw_title_desc_available")
+        elif video_download_available:
+            quality = "low"
+            status = "planned"
+            notes.append("video_download_available_asr_planned")
+        else:
+            quality = "missing"
+            status = "missing"
+            notes.append("no_text_or_video_source")
+
+        if video_download_available and quality != "low":
+            notes.append("video_download_available")
+        if not video_download_available:
+            notes.append("video_download_missing")
+
+        return {
+            "source_keyword": str(rec.get("source_keyword", "")),
+            "platform": str(rec.get("platform", "douyin") or "douyin"),
+            "video_id": str(rec.get("video_id", "")),
+            "aweme_id": str(rec.get("aweme_id", "")),
+            "aweme_url": str(rec.get("aweme_url", "")),
+            "raw_title": raw_title,
+            "clean_title": clean_title,
+            "raw_desc": raw_desc,
+            "clean_desc": clean_desc,
+            "video_download_url": video_download_url,
+            "source_title_desc_available": title_desc_available,
+            "source_title_desc_text": title_desc_text,
+            "source_clean_title_available": clean_title_available,
+            "source_clean_title_text": clean_title_text,
+            "source_video_download_available": video_download_available,
+            "source_video_download_url": video_download_url,
+            "source_asr_planned": asr_planned,
+            "source_ocr_planned": False,
+            "source_subtitle_planned": False,
+            "script_source_status": status,
+            "script_source_quality": quality,
+            "script_source_notes": "|".join(self._dedupe_text_list(notes)),
+            "created_at": created_at,
+        }
+
+
+    def _do_build_script_sources(
+        self,
+        search_csv_path: Path,
+        search_jsonl_path: Optional[Path] = None,
+        title_clean_csv_path: Optional[Path] = None,
+    ) -> tuple[Path, Path, Dict[str, Any]]:
+        sources_jsonl_path = search_csv_path.with_name("script_sources.jsonl")
+        sources_csv_path = search_csv_path.with_name("script_sources.csv")
+        fieldnames = [
+            "source_keyword",
+            "platform",
+            "video_id",
+            "aweme_id",
+            "aweme_url",
+            "raw_title",
+            "clean_title",
+            "raw_desc",
+            "clean_desc",
+            "video_download_url",
+            "source_title_desc_available",
+            "source_title_desc_text",
+            "source_clean_title_available",
+            "source_clean_title_text",
+            "source_video_download_available",
+            "source_video_download_url",
+            "source_asr_planned",
+            "source_ocr_planned",
+            "source_subtitle_planned",
+            "script_source_status",
+            "script_source_quality",
+            "script_source_notes",
+            "created_at",
+        ]
+        stats: Dict[str, Any] = {
+            "rows_in": 0,
+            "rows_out": 0,
+            "title_desc_available": 0,
+            "clean_title_available": 0,
+            "video_download_available": 0,
+            "asr_planned": 0,
+            "script_sources_csv_generated": False,
+            "errors": [],
+        }
+        rows: List[Dict[str, Any]] = []
+        try:
+            records, load_errors = self._load_search_rows_for_title_clean(search_csv_path, search_jsonl_path)
+            stats["errors"].extend(load_errors)
+            clean_map, clean_errors = self._load_title_clean_map(title_clean_csv_path)
+            stats["errors"].extend(clean_errors)
+            stats["rows_in"] = len(records)
+            created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+            for idx, rec in enumerate(records, start=1):
+                try:
+                    clean_rec = clean_map.get(self._script_source_key(rec))
+                    row = self._build_script_source_record(rec, clean_rec, created_at)
+                    if row["source_title_desc_available"]:
+                        stats["title_desc_available"] += 1
+                    if row["source_clean_title_available"]:
+                        stats["clean_title_available"] += 1
+                    if row["source_video_download_available"]:
+                        stats["video_download_available"] += 1
+                    if row["source_asr_planned"]:
+                        stats["asr_planned"] += 1
+                    rows.append(row)
+                except Exception as e:
+                    stats["errors"].append(f"row_{idx}_failed: {str(e)[:200]}")
+
+            stats["rows_out"] = len(rows)
+            sources_jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(str(sources_jsonl_path), "w", encoding="utf-8") as f:
+                for row in rows:
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+            with open(str(sources_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
+            stats["script_sources_csv_generated"] = True
+        except Exception as e:
+            stats["errors"].append(f"script_sources_failed: {str(e)[:500]}")
+            try:
+                sources_jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+                sources_jsonl_path.write_text("", encoding="utf-8")
+                with open(str(sources_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                    csv.DictWriter(f, fieldnames=fieldnames).writeheader()
+                stats["script_sources_csv_generated"] = True
+            except Exception as write_error:
+                stats["errors"].append(f"script_sources_write_failed: {str(write_error)[:500]}")
+
+        return sources_jsonl_path, sources_csv_path, stats
+
+
+    @staticmethod
+    def _script_raw_fieldnames() -> List[str]:
+        return [
+            "source_keyword",
+            "platform",
+            "video_id",
+            "aweme_id",
+            "aweme_url",
+            "video_download_url",
+            "local_video_path",
+            "download_status",
+            "download_error",
+            "asr_status",
+            "asr_raw_text",
+            "asr_error",
+            "script_raw_quality",
+            "created_at",
+        ]
+
+
+    @staticmethod
+    def _truthy_source_flag(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        text = str(value or "").strip().lower()
+        return text in ("1", "true", "yes", "y", "on")
+
+
+    @staticmethod
+    def _script_raw_video_name(rec: Dict[str, Any], idx: int) -> str:
+        raw = str(rec.get("aweme_id") or rec.get("video_id") or f"row_{idx}")
+        safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", raw).strip("._")
+        return (safe[:80] or f"row_{idx}") + ".mp4"
+
+
+    def _load_script_source_rows(
+        self,
+        script_sources_jsonl: Optional[Path],
+        script_sources_csv: Optional[Path],
+    ) -> tuple[List[Dict[str, Any]], List[str]]:
+        errors: List[str] = []
+        if script_sources_jsonl and script_sources_jsonl.exists():
+            try:
+                return self._load_jsonl(script_sources_jsonl), errors
+            except Exception as e:
+                errors.append(f"read_script_sources_jsonl_failed: {str(e)[:200]}")
+
+        if script_sources_csv and script_sources_csv.exists():
+            try:
+                with open(str(script_sources_csv), "r", encoding="utf-8-sig", newline="") as f:
+                    return list(csv.DictReader(f)), errors
+            except Exception as e:
+                errors.append(f"read_script_sources_csv_failed: {str(e)[:200]}")
+
+        errors.append("script_sources_missing")
+        return [], errors
+
+
+    @staticmethod
+    def _load_script_raw_whisper_model(model_name: str) -> tuple[Optional[Any], str, str]:
+        try:
+            from faster_whisper import WhisperModel
+        except ImportError:
+            return None, "dependency_missing", "faster-whisper 未安装"
+
+        try:
+            return WhisperModel(model_name, device="cpu", compute_type="int8"), "", ""
+        except MemoryError:
+            return None, "failed", "内存不足，无法加载 Whisper 模型"
+        except Exception as e:
+            return None, "failed", f"Whisper 模型加载失败: {str(e)[:300]}"
+
+
+    def _do_build_script_raw(
+        self,
+        script_sources_jsonl: Optional[Path] = None,
+        script_sources_csv: Optional[Path] = None,
+        model_name: str = "small",
+        max_items: Optional[int] = None,
+    ) -> tuple[Path, Path, Dict[str, Any]]:
+        workspace_dir = self._current_task_workspace_dir()
+        output_dir = workspace_dir / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        raw_jsonl_path = output_dir / "script_raw.jsonl"
+        raw_csv_path = output_dir / "script_raw.csv"
+        tmp_video_dir = workspace_dir / "tmp" / "videos"
+        fieldnames = self._script_raw_fieldnames()
+        stats: Dict[str, Any] = {
+            "rows_in": 0,
+            "rows_targeted": 0,
+            "download_success": 0,
+            "download_failed": 0,
+            "asr_success": 0,
+            "asr_failed": 0,
+            "asr_dependency_missing": 0,
+            "asr_empty_text": 0,
+            "rows_out": 0,
+            "script_raw_csv_generated": False,
+            "errors": [],
+        }
+        rows: List[Dict[str, Any]] = []
+
+        try:
+            records, load_errors = self._load_script_source_rows(script_sources_jsonl, script_sources_csv)
+            stats["errors"].extend(load_errors)
+            stats["rows_in"] = len(records)
+            limit = max_items
+            if limit is None:
+                try:
+                    limit = int(getattr(self._config, "max_script_raw_items", 5) or 5)
+                except (TypeError, ValueError):
+                    limit = 5
+            limit = max(0, limit)
+
+            eligible_indexes: List[int] = []
+            for idx, rec in enumerate(records, start=1):
+                planned = self._truthy_source_flag(rec.get("source_asr_planned"))
+                video_available = self._truthy_source_flag(rec.get("source_video_download_available"))
+                video_url = str(
+                    rec.get("video_download_url")
+                    or rec.get("source_video_download_url")
+                    or ""
+                ).strip()
+                if planned and video_available and video_url:
+                    eligible_indexes.append(idx)
+
+            selected_indexes = set(eligible_indexes[:limit])
+            stats["rows_targeted"] = len(selected_indexes)
+            if len(eligible_indexes) > limit:
+                stats["errors"].append(
+                    f"max_script_raw_items_limit: eligible={len(eligible_indexes)} processed={limit}"
+                )
+
+            disk_error = ""
+            if selected_indexes:
+                try:
+                    tmp_video_dir.mkdir(parents=True, exist_ok=True)
+                    check_disk_space_enforced(tmp_video_dir, min_gb=0.5)
+                except Exception as e:
+                    disk_error = str(e)[:300]
+                    stats["errors"].append(f"script_raw_disk_check_failed: {disk_error}")
+
+            whisper_model: Optional[Any] = None
+            model_error_status = ""
+            model_error = ""
+            if selected_indexes and not disk_error:
+                whisper_model, model_error_status, model_error = self._load_script_raw_whisper_model(model_name)
+
+            created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            for idx, rec in enumerate(records, start=1):
+                video_url = str(
+                    rec.get("video_download_url")
+                    or rec.get("source_video_download_url")
+                    or ""
+                ).strip()
+                row: Dict[str, Any] = {
+                    "source_keyword": str(rec.get("source_keyword", "")),
+                    "platform": str(rec.get("platform", "douyin") or "douyin"),
+                    "video_id": str(rec.get("video_id", "")),
+                    "aweme_id": str(rec.get("aweme_id", "")),
+                    "aweme_url": str(rec.get("aweme_url", "")),
+                    "video_download_url": video_url,
+                    "local_video_path": "",
+                    "download_status": "skipped",
+                    "download_error": "",
+                    "asr_status": "skipped",
+                    "asr_raw_text": "",
+                    "asr_error": "",
+                    "script_raw_quality": "missing",
+                    "created_at": created_at,
+                }
+
+                if idx not in selected_indexes:
+                    if idx in eligible_indexes:
+                        row["download_error"] = "max_script_raw_items_limit"
+                    rows.append(row)
+                    continue
+
+                video_file = tmp_video_dir / self._script_raw_video_name(rec, idx)
+                row["local_video_path"] = str(video_file)
+
+                if disk_error:
+                    row["download_status"] = "failed"
+                    row["download_error"] = disk_error
+                    stats["download_failed"] += 1
+                    rows.append(row)
+                    continue
+
+                if model_error_status:
+                    row["asr_status"] = model_error_status
+                    row["asr_error"] = model_error
+                    if model_error_status == "dependency_missing":
+                        stats["asr_dependency_missing"] += 1
+                    else:
+                        stats["asr_failed"] += 1
+                    rows.append(row)
+                    continue
+
+                try:
+                    ok = self._download_video(video_url, str(video_file))
+                except Exception as e:
+                    ok = False
+                    row["download_error"] = str(e)[:500]
+
+                if not ok:
+                    row["download_status"] = "failed"
+                    if not row["download_error"]:
+                        row["download_error"] = "download_failed"
+                    stats["download_failed"] += 1
+                    rows.append(row)
+                    continue
+
+                row["download_status"] = "success"
+                stats["download_success"] += 1
+
+                try:
+                    script_text = self._transcribe_video(str(video_file), whisper_model)
+                    if script_text:
+                        row["asr_status"] = "success"
+                        row["asr_raw_text"] = script_text
+                        row["script_raw_quality"] = "high"
+                        stats["asr_success"] += 1
+                    else:
+                        row["asr_status"] = "empty_text"
+                        row["script_raw_quality"] = "low"
+                        stats["asr_empty_text"] += 1
+                except Exception as e:
+                    row["asr_status"] = "failed"
+                    row["asr_error"] = str(e)[:500]
+                    row["script_raw_quality"] = "low"
+                    stats["asr_failed"] += 1
+                finally:
+                    if not self._config.keep_videos and video_file.exists():
+                        try:
+                            video_file.unlink()
+                        except OSError as e:
+                            stats["errors"].append(f"cleanup_failed: {video_file}: {str(e)[:120]}")
+
+                rows.append(row)
+
+            stats["rows_out"] = len(rows)
+            with open(str(raw_jsonl_path), "w", encoding="utf-8") as f:
+                for row in rows:
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+            with open(str(raw_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
+            stats["script_raw_csv_generated"] = True
+        except Exception as e:
+            stats["errors"].append(f"script_raw_failed: {str(e)[:500]}")
+            try:
+                raw_jsonl_path.write_text("", encoding="utf-8")
+                with open(str(raw_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                    csv.DictWriter(f, fieldnames=fieldnames).writeheader()
+                stats["script_raw_csv_generated"] = True
+            except Exception as write_error:
+                stats["errors"].append(f"script_raw_write_failed: {str(write_error)[:500]}")
+
+        return raw_jsonl_path, raw_csv_path, stats
+
+
+    @staticmethod
+    def _script_clean_fieldnames() -> List[str]:
+        return [
+            "source_keyword",
+            "platform",
+            "video_id",
+            "aweme_id",
+            "aweme_url",
+            "script_clean_text",
+            "script_clean_source",
+            "script_clean_status",
+            "script_clean_quality",
+            "script_clean_notes",
+            "asr_status",
+            "asr_raw_text",
+            "script_raw_quality",
+            "source_clean_title_available",
+            "source_clean_title_text",
+            "source_title_desc_available",
+            "source_title_desc_text",
+            "created_at",
+        ]
+
+
+    def _load_script_raw_rows(
+        self,
+        script_raw_jsonl: Optional[Path],
+        script_raw_csv: Optional[Path],
+    ) -> tuple[List[Dict[str, Any]], List[str]]:
+        errors: List[str] = []
+        if script_raw_jsonl and script_raw_jsonl.exists():
+            try:
+                return self._load_jsonl(script_raw_jsonl), errors
+            except Exception as e:
+                errors.append(f"read_script_raw_jsonl_failed: {str(e)[:200]}")
+
+        if script_raw_csv and script_raw_csv.exists():
+            try:
+                with open(str(script_raw_csv), "r", encoding="utf-8-sig", newline="") as f:
+                    return list(csv.DictReader(f)), errors
+            except Exception as e:
+                errors.append(f"read_script_raw_csv_failed: {str(e)[:200]}")
+
+        errors.append("script_raw_missing")
+        return [], errors
+
+
+    def _build_script_clean_record(
+        self,
+        source_rec: Dict[str, Any],
+        raw_rec: Optional[Dict[str, Any]],
+        title_clean_rec: Optional[Dict[str, Any]],
+        created_at: str,
+    ) -> Dict[str, Any]:
+        raw_rec = raw_rec or {}
+        title_clean_rec = title_clean_rec or {}
+
+        asr_text = str(raw_rec.get("asr_raw_text", "") or "").strip()
+        source_clean_text = str(source_rec.get("source_clean_title_text", "") or "").strip()
+        if not source_clean_text:
+            source_clean_text = self._join_source_text(
+                title_clean_rec.get("clean_title", ""),
+                title_clean_rec.get("clean_desc", ""),
+            )
+        if not source_clean_text:
+            source_clean_text = self._join_source_text(
+                source_rec.get("clean_title", ""),
+                source_rec.get("clean_desc", ""),
+            )
+
+        source_title_desc_text = str(source_rec.get("source_title_desc_text", "") or "").strip()
+        if not source_title_desc_text:
+            source_title_desc_text = self._join_source_text(
+                source_rec.get("raw_title", source_rec.get("title", "")),
+                source_rec.get("raw_desc", source_rec.get("desc", "")),
+            )
+
+        notes: List[str] = []
+        if asr_text:
+            clean_text = asr_text
+            clean_source = "asr_raw"
+            clean_status = "available"
+            clean_quality = "high"
+            notes.append("asr_raw_text_available")
+        elif source_clean_text:
+            clean_text = source_clean_text
+            clean_source = "source_clean_title"
+            clean_status = "available"
+            clean_quality = "medium"
+            notes.append("fallback_source_clean_title")
+        elif source_title_desc_text:
+            clean_text = source_title_desc_text
+            clean_source = "source_title_desc"
+            clean_status = "available"
+            clean_quality = "weak"
+            notes.append("fallback_source_title_desc")
+        else:
+            clean_text = ""
+            clean_source = "missing"
+            clean_status = "missing"
+            clean_quality = "missing"
+            notes.append("script_text_missing")
+
+        asr_status = str(raw_rec.get("asr_status", "") or "").strip()
+        if asr_status and asr_status != "success":
+            notes.append(f"asr_status_{asr_status}")
+
+        source_clean_available = bool(source_clean_text)
+        source_title_desc_available = bool(source_title_desc_text)
+        return {
+            "source_keyword": str(source_rec.get("source_keyword", raw_rec.get("source_keyword", "")) or ""),
+            "platform": str(source_rec.get("platform", raw_rec.get("platform", "douyin")) or "douyin"),
+            "video_id": str(source_rec.get("video_id", raw_rec.get("video_id", "")) or ""),
+            "aweme_id": str(source_rec.get("aweme_id", raw_rec.get("aweme_id", "")) or ""),
+            "aweme_url": str(source_rec.get("aweme_url", raw_rec.get("aweme_url", "")) or ""),
+            "script_clean_text": clean_text,
+            "script_clean_source": clean_source,
+            "script_clean_status": clean_status,
+            "script_clean_quality": clean_quality,
+            "script_clean_notes": "|".join(self._dedupe_text_list(notes)),
+            "asr_status": asr_status,
+            "asr_raw_text": asr_text,
+            "script_raw_quality": str(raw_rec.get("script_raw_quality", "") or ""),
+            "source_clean_title_available": source_clean_available,
+            "source_clean_title_text": source_clean_text,
+            "source_title_desc_available": source_title_desc_available,
+            "source_title_desc_text": source_title_desc_text,
+            "created_at": created_at,
+        }
+
+
+    def _do_build_script_clean(
+        self,
+        script_sources_jsonl: Optional[Path] = None,
+        script_sources_csv: Optional[Path] = None,
+        script_raw_jsonl: Optional[Path] = None,
+        script_raw_csv: Optional[Path] = None,
+        title_clean_csv: Optional[Path] = None,
+    ) -> tuple[Path, Path, Dict[str, Any]]:
+        output_dir = self._current_task_workspace_dir() / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        clean_jsonl_path = output_dir / "script_clean.jsonl"
+        clean_csv_path = output_dir / "script_clean.csv"
+        fieldnames = self._script_clean_fieldnames()
+        stats: Dict[str, Any] = {
+            "rows_in": 0,
+            "script_raw_rows": 0,
+            "rows_out": 0,
+            "asr_text_used": 0,
+            "clean_title_used": 0,
+            "title_desc_used": 0,
+            "missing": 0,
+            "script_clean_csv_generated": False,
+            "errors": [],
+        }
+        rows: List[Dict[str, Any]] = []
+
+        try:
+            source_records, source_errors = self._load_script_source_rows(
+                script_sources_jsonl,
+                script_sources_csv,
+            )
+            raw_records, raw_errors = self._load_script_raw_rows(
+                script_raw_jsonl,
+                script_raw_csv,
+            )
+            title_clean_map, title_clean_errors = self._load_title_clean_map(title_clean_csv)
+            stats["errors"].extend(source_errors)
+            stats["errors"].extend(raw_errors)
+            stats["errors"].extend(title_clean_errors)
+            stats["script_raw_rows"] = len(raw_records)
+
+            records = source_records or raw_records
+            stats["rows_in"] = len(records)
+            raw_map = {
+                self._script_source_key(rec): rec
+                for rec in raw_records
+                if self._script_source_key(rec)
+            }
+            created_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+            for idx, rec in enumerate(records, start=1):
+                try:
+                    key = self._script_source_key(rec)
+                    raw_rec = raw_map.get(key, rec if not source_records else {})
+                    title_clean_rec = title_clean_map.get(key)
+                    row = self._build_script_clean_record(
+                        rec,
+                        raw_rec,
+                        title_clean_rec,
+                        created_at,
+                    )
+                    if row["script_clean_source"] == "asr_raw":
+                        stats["asr_text_used"] += 1
+                    elif row["script_clean_source"] == "source_clean_title":
+                        stats["clean_title_used"] += 1
+                    elif row["script_clean_source"] == "source_title_desc":
+                        stats["title_desc_used"] += 1
+                    else:
+                        stats["missing"] += 1
+                    rows.append(row)
+                except Exception as e:
+                    stats["errors"].append(f"row_{idx}_failed: {str(e)[:200]}")
+
+            stats["rows_out"] = len(rows)
+            with open(str(clean_jsonl_path), "w", encoding="utf-8") as f:
+                for row in rows:
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+            with open(str(clean_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
+            stats["script_clean_csv_generated"] = True
+        except Exception as e:
+            stats["errors"].append(f"script_clean_failed: {str(e)[:500]}")
+            try:
+                clean_jsonl_path.write_text("", encoding="utf-8")
+                with open(str(clean_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                    csv.DictWriter(f, fieldnames=fieldnames).writeheader()
+                stats["script_clean_csv_generated"] = True
+            except Exception as write_error:
+                stats["errors"].append(f"script_clean_write_failed: {str(write_error)[:500]}")
 
         return clean_jsonl_path, clean_csv_path, stats
 

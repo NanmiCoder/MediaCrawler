@@ -501,6 +501,18 @@ class TaskManager:
         )
 
 
+    @staticmethod
+    def _scripts_result_names() -> tuple[str, ...]:
+        return (
+            "script_clean.csv",
+            "script_clean.jsonl",
+            "script_raw.csv",
+            "script_raw.jsonl",
+            "script_sources.csv",
+            "script_sources.jsonl",
+        )
+
+
     @classmethod
     def _preferred_result_names(cls, task_type: str) -> tuple[str, ...]:
         selector = getattr(cls, f"_{task_type}_result_names", None)
