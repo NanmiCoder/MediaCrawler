@@ -42,6 +42,12 @@ dependencies = [
     "xhshow>=0.1.9",
 ]
 
+[project.optional-dependencies]
+whisper = [
+    "faster-whisper>=0.9",
+    "imageio-ffmpeg>=0.4",
+]
+
 [[tool.uv.index]]
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 default = true
