@@ -27,12 +27,14 @@ import json
 import logging
 import os
 import random
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import threading
 import time
+import unicodedata
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -284,6 +286,9 @@ class DouyinScraper:
     def fetch_comments(
         self,
         video_jsonl: Optional[Path] = None,
+        video_ids: Optional[List[str]] = None,
+        source_task_id: Optional[str] = None,
+        max_comments_per_video: int = 200,
     ) -> Path:
         """
         对已有视频采集评论，返回评论 JSONL 路径。
@@ -292,24 +297,55 @@ class DouyinScraper:
         self._require_step_ready(step)
 
         input_path = video_jsonl or self._paths.get("video_jsonl")
-        if not input_path or not input_path.exists():
+        if input_path and not input_path.exists():
             raise NonRetryableError(
                 f"视频 JSONL 不存在: {input_path}",
+                step=step,
+            )
+        if not input_path and not video_ids:
+            raise NonRetryableError(
+                "评论采集缺少输入：请提供 task_id/search_result 文件或 video_ids",
                 step=step,
             )
 
         self._state.mark_step_started(step)
         try:
-            output_path = self._do_fetch_comments(input_path)
+            output_path = self._do_fetch_comments(
+                input_path=input_path,
+                video_ids=video_ids,
+                source_task_id=source_task_id,
+                max_comments_per_video=max_comments_per_video,
+            )
+            clean_jsonl_path, clean_csv_path, clean_stats = self._do_clean_comments(output_path)
             self._state.mark_step_completed(
                 step, detail=f"output={output_path}"
             )
-            self._paths["comments_jsonl"] = output_path
+            self._register_comments_outputs(
+                output_path,
+                clean_jsonl_path,
+                clean_csv_path,
+                clean_stats,
+            )
             return output_path
         except Exception as e:
             exit_code = classify_error(e)
             self._state.mark_step_failed(step, str(e)[:200], exit_code)
             raise
+
+    def _register_comments_outputs(
+        self,
+        raw_jsonl: Path,
+        clean_jsonl: Path,
+        clean_csv: Path,
+        clean_stats: Dict[str, Any],
+    ) -> None:
+        """Register comments_raw/comments_clean outputs for get_paths()."""
+        self._paths["comments_jsonl"] = raw_jsonl
+        self._paths["comments_raw_jsonl"] = raw_jsonl
+        self._paths["comments_clean_jsonl"] = clean_jsonl
+        self._paths["comments_clean_csv"] = clean_csv
+        self._paths["clean_stats"] = clean_stats
+
 
     def extract_scripts(
         self,
@@ -440,6 +476,7 @@ class DouyinScraper:
         """Return output paths grouped by release feature."""
         result: Dict[str, Any] = {}
         result.update(self._search_output_paths())
+        result.update(self._comments_output_paths())
         return result
 
 
@@ -463,6 +500,19 @@ class DouyinScraper:
         return self._select_output_values(
             path_keys=("video_jsonl", "video_csv"),
             stats_keys=("csv_stats",),
+        )
+
+
+    def _comments_output_paths(self) -> Dict[str, Any]:
+        return self._select_output_values(
+            path_keys=(
+                "comments_jsonl",
+                "comments_raw_jsonl",
+                "comments_raw_csv",
+                "comments_clean_jsonl",
+                "comments_clean_csv",
+            ),
+            stats_keys=("comments_stats", "clean_stats"),
         )
 
 
@@ -690,48 +740,81 @@ class DouyinScraper:
                     lines.append(line)
         return lines
 
-    def _do_fetch_comments(self, input_path: Path) -> Path:
-        """
-        对已有视频采集评论。
-        v5: 内置评论采集逻辑，不再依赖外部脚本。
-        """
-        output_dir = self._config.jsonl_dir
-        actual_dir = ensure_dir_writable(output_dir, self._config.fallback_dir)
-        output_path = actual_dir / "search_comments.jsonl"
+    def _do_fetch_comments(
+        self,
+        input_path: Optional[Path],
+        video_ids: Optional[List[str]] = None,
+        source_task_id: Optional[str] = None,
+        max_comments_per_video: int = 200,
+    ) -> Path:
+        """Collect comments and write standard comments_raw outputs."""
+        workspace_dir = self._current_task_workspace_dir()
+        output_dir = workspace_dir / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "comments_raw.jsonl"
+        csv_path = output_dir / "comments_raw.csv"
+        output_path.touch(exist_ok=True)
 
-        # 读取视频列表
-        videos = self._load_jsonl(input_path)
-        video_ids = [str(v.get("aweme_id", "")) for v in videos if v.get("aweme_id")]
+        videos_in = len(self._load_comment_video_records(input_path, video_ids))
+        if videos_in <= 0:
+            raise NonRetryableError("评论采集输入中没有可用视频 ID", step=self.STEP_COMMENTS)
 
-        # 断点续传
-        done_ids = self._state.load_completed_ids_from_jsonl(output_path, "aweme_id")
-
-        logger.info("视频 %d 个, 已完成评论 %d 个", len(video_ids), len(done_ids))
-
-        # 这里只是占位：实际评论采集需要 Chrome CDP 交互
-        # MediaCrawler 的 crawl_comments_v2.py 负责实际采集
-        # v5 通过子进程调用
         venv_python = self._get_venv_python()
         comments_script = self._config.project_dir / "crawl_comments_v2.py"
+        if not comments_script.exists():
+            raise NonRetryableError(
+                f"评论采集脚本不存在: {comments_script}",
+                step=self.STEP_COMMENTS,
+            )
 
-        if comments_script.exists():
-            logger.info("调用评论采集子进程: %s", comments_script)
-            try:
-                subprocess.run(
-                    [str(venv_python), str(comments_script)],
-                    cwd=str(self._config.project_dir),
-                    check=True, timeout=3600,
-                )
-            except subprocess.CalledProcessError as exc:
-                logger.error(
-                    "评论采集子进程失败 (exit %d): %s",
-                    exc.returncode, exc,
-                )
-                raise NonRetryableError(
-                    f"评论采集子进程失败 (exit {exc.returncode}): {exc}",
-                    step="fetch_comments",
-                ) from exc
+        cmd = [
+            str(venv_python),
+            str(comments_script),
+            "--output",
+            str(output_path),
+            "--max-comments",
+            str(max_comments_per_video),
+            "--skip-existing",
+        ]
+        if input_path:
+            cmd.extend(["--input", str(input_path)])
+        if video_ids:
+            cmd.extend(["--video-ids", ",".join(str(v) for v in video_ids)])
+        if source_task_id:
+            cmd.extend(["--source-task-id", source_task_id])
 
+        env = os.environ.copy()
+        env["PYTHONUTF8"] = "1"
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["LANG"] = "C.UTF-8"
+        env["LC_ALL"] = "C.UTF-8"
+
+        logger.info("调用评论采集子进程: %s", " ".join(cmd))
+        subprocess_error: Optional[str] = None
+        try:
+            subprocess.run(
+                cmd,
+                cwd=str(self._config.project_dir),
+                check=True,
+                timeout=3600,
+                env=env,
+            )
+        except subprocess.CalledProcessError as exc:
+            logger.error("评论采集子进程失败 (exit %d): %s", exc.returncode, exc)
+            subprocess_error = f"评论采集子进程失败 (exit {exc.returncode}): {exc}"
+        except subprocess.TimeoutExpired as exc:
+            logger.error("评论采集子进程超时: %s", exc)
+            subprocess_error = f"评论采集子进程超时: {exc}"
+
+        comments_stats = self._convert_comments_jsonl_to_csv(
+            jsonl_path=output_path,
+            csv_path=csv_path,
+            videos_in=videos_in,
+        )
+        if subprocess_error:
+            comments_stats["errors"].append(subprocess_error)
+        self._paths["comments_raw_csv"] = csv_path
+        self._paths["comments_stats"] = comments_stats
         return output_path
 
     def _do_extract_scripts(self, input_path: Path, model: str) -> Path:
@@ -1085,6 +1168,46 @@ class DouyinScraper:
         return self._config.project_dir / state_parent
 
 
+    @staticmethod
+    def _comment_video_id(record: Dict[str, Any]) -> str:
+        for key in ("aweme_id", "video_id", "note_id", "item_id"):
+            value = record.get(key)
+            if value is not None and str(value).strip() and str(value).strip() != "None":
+                return str(value).strip()
+        return ""
+
+
+    def _load_comment_video_records(
+        self,
+        input_path: Optional[Path],
+        video_ids: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        records: List[Dict[str, Any]] = []
+
+        if input_path:
+            if input_path.suffix.lower() == ".csv":
+                with open(str(input_path), "r", encoding="utf-8-sig", newline="") as f:
+                    reader = csv.DictReader(f)
+                    records.extend(dict(row) for row in reader)
+            else:
+                records.extend(self._load_jsonl(input_path))
+
+        for video_id in video_ids or []:
+            value = str(video_id).strip()
+            if value:
+                records.append({"aweme_id": value, "video_id": value})
+
+        seen: Set[str] = set()
+        unique_records: List[Dict[str, Any]] = []
+        for record in records:
+            aweme_id = self._comment_video_id(record)
+            if not aweme_id or aweme_id in seen:
+                continue
+            seen.add(aweme_id)
+            unique_records.append(record)
+        return unique_records
+
+
     def _get_venv_python(self) -> Path:
         """获取 venv 中的 Python 路径，不存在时回退到当前 Python"""
         project_dir = self._config.project_dir
@@ -1117,6 +1240,310 @@ class DouyinScraper:
                         filepath, line_num, str(e)[:100],
                     )
         return records
+
+    @staticmethod
+    def _safe_int(value: Any) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 0
+
+
+    def _convert_comments_jsonl_to_csv(
+        self,
+        jsonl_path: Path,
+        csv_path: Path,
+        videos_in: int,
+    ) -> Dict[str, Any]:
+        fieldnames = [
+            "source_keyword",
+            "platform",
+            "source_task_id",
+            "video_id",
+            "aweme_id",
+            "aweme_url",
+            "comment_id",
+            "parent_comment_id",
+            "user_id",
+            "nickname",
+            "content",
+            "liked_count",
+            "reply_count",
+            "create_time",
+            "ip_location",
+            "crawl_time",
+        ]
+        stats: Dict[str, Any] = {
+            "videos_in": videos_in,
+            "videos_success": 0,
+            "comments_out": 0,
+            "comments_csv_generated": False,
+            "errors": [],
+        }
+        rows: List[Dict[str, Any]] = []
+        success_video_ids: Set[str] = set()
+
+        if jsonl_path.exists():
+            with open(str(jsonl_path), "r", encoding="utf-8") as f:
+                for line_num, line in enumerate(f, 1):
+                    if not line.strip():
+                        continue
+                    try:
+                        rec = json.loads(line)
+                    except json.JSONDecodeError as exc:
+                        stats["errors"].append(f"line {line_num}: {str(exc)[:120]}")
+                        continue
+
+                    liked_count = self._safe_int(rec.get("liked_count", 0))
+                    reply_count = self._safe_int(rec.get("reply_count", 0))
+                    aweme_id = str(rec.get("aweme_id") or rec.get("video_id") or "").strip()
+                    video_id = str(rec.get("video_id") or aweme_id).strip()
+                    if aweme_id or video_id:
+                        success_video_ids.add(aweme_id or video_id)
+
+                    rows.append({
+                        "source_keyword": str(rec.get("source_keyword", "")),
+                        "platform": str(rec.get("platform") or "douyin"),
+                        "source_task_id": str(rec.get("source_task_id", "")),
+                        "video_id": video_id,
+                        "aweme_id": aweme_id,
+                        "aweme_url": str(rec.get("aweme_url", "")),
+                        "comment_id": str(rec.get("comment_id", "")),
+                        "parent_comment_id": str(rec.get("parent_comment_id", "")),
+                        "user_id": str(rec.get("user_id", "")),
+                        "nickname": str(rec.get("nickname", "")),
+                        "content": str(rec.get("content", "")),
+                        "liked_count": liked_count,
+                        "reply_count": reply_count,
+                        "create_time": str(rec.get("create_time", "")),
+                        "ip_location": str(rec.get("ip_location", "")),
+                        "crawl_time": str(rec.get("crawl_time", "")),
+                    })
+
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(csv_path), "w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+        stats["videos_success"] = len(success_video_ids)
+        stats["comments_out"] = len(rows)
+        stats["comments_csv_generated"] = True
+        return stats
+
+
+    @staticmethod
+    def _normalize_comment_text(value: Any) -> str:
+        text = "" if value is None else str(value)
+        text = unicodedata.normalize("NFKC", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        text = re.sub(r"([!?！？。,.，、~～])\1{2,}", r"\1\1", text)
+        return text
+
+
+    @staticmethod
+    def _comment_compact_key(text: str) -> str:
+        return re.sub(r"[\W_]+", "", text, flags=re.UNICODE).lower()
+
+
+    @staticmethod
+    def _is_emoji_only(text: str) -> bool:
+        compact = text.strip()
+        if not compact:
+            return False
+        meaningful = re.search(r"[\u4e00-\u9fffA-Za-z0-9]", compact)
+        if meaningful:
+            return False
+        return any(unicodedata.category(ch).startswith("S") for ch in compact)
+
+
+    @staticmethod
+    def _extract_pain_tags(text: str) -> List[str]:
+        rules = [
+            ("压线", r"压线|压到线|轧线|踩线"),
+            ("30公分", r"30\s*公分|三十\s*公分|30\s*厘米|三十\s*厘米"),
+            ("看点不准", r"看不准|看点|点位|点不准|找不准"),
+            ("后视镜", r"后视镜|镜子|倒车镜"),
+            ("方向盘", r"方向盘|打方向|回方向"),
+            ("靠边太宽", r"太宽|靠边.*宽|离边.*远|距离.*宽"),
+            ("挂科", r"挂科|挂了|挂的|没过|不过|不合格"),
+            ("紧张", r"紧张|一紧张|慌|心态|害怕|怕"),
+            ("考试忘步骤", r"忘步骤|忘了|忘记|想不起来|流程|顺序"),
+            ("教练讲不清", r"教练.*没讲|教练.*讲不清|没讲清|讲不清|不清楚"),
+            ("想要方法", r"方法|技巧|教程|怎么练|求教|教一下|有没有.*办法"),
+        ]
+        tags: List[str] = []
+        for tag, pattern in rules:
+            if re.search(pattern, text, flags=re.IGNORECASE):
+                tags.append(tag)
+        return tags
+
+
+    @staticmethod
+    def _infer_comment_intent(text: str, pain_tags: List[str], invalid_reason: str) -> str:
+        if invalid_reason:
+            if invalid_reason in {"ad_spam", "contact_spam"}:
+                return "spam"
+            if invalid_reason == "irrelevant":
+                return "irrelevant"
+            return "meaningless"
+        if re.search(r"怎么|咋|如何|怎么看|怎么.*看|吗|么|哪里|到底|[?？]", text):
+            return "question"
+        if re.search(r"求|想要|有没有.*方法|教一下|详细|展开", text):
+            return "request_more_detail"
+        if re.search(r"不对|不是|没用|不同意|反而|但是", text):
+            return "objection"
+        if pain_tags:
+            return "pain"
+        if re.search(r"我也|同感|确实|对对|一样|赞同", text):
+            return "agreement"
+        if re.search(r"我|自己|考试|练车|教练|科目|挂|总是|老是", text):
+            return "experience"
+        return "experience"
+
+
+    def _classify_clean_comment(
+        self,
+        rec: Dict[str, Any],
+        seen_content: Set[str],
+    ) -> Dict[str, Any]:
+        raw_content = str(rec.get("content", ""))
+        clean_content = self._normalize_comment_text(raw_content)
+        compact = self._comment_compact_key(clean_content)
+        pain_tags = self._extract_pain_tags(clean_content)
+        invalid_reason = ""
+
+        if not clean_content:
+            invalid_reason = "empty_comment"
+        elif self._is_emoji_only(clean_content):
+            invalid_reason = "emoji_only"
+        elif compact in seen_content:
+            invalid_reason = "duplicate"
+        elif re.search(r"(微信|加v|加V|加微|v信|vx|VX|qq|QQ|电话|手机号|联系我)", clean_content):
+            invalid_reason = "contact_spam"
+        elif re.search(r"(包过|代考|办证|引流|优惠|推广|广告|招生|私教|直播间)", clean_content):
+            invalid_reason = "ad_spam"
+        elif re.search(r"(傻逼|sb|SB|滚|去死|脑残)", clean_content):
+            invalid_reason = "attack_or_abuse"
+        elif not pain_tags and re.fullmatch(r"(6+|哈+|哈哈+|笑死+|路过|打卡|赞+|牛+|666+)", compact):
+            invalid_reason = "meaningless"
+        elif not pain_tags and len(compact) <= 2:
+            invalid_reason = "too_short"
+        elif not pain_tags and re.search(r"(音乐|衣服|美女|帅哥|主播|bgm|BGM|哪里买)", clean_content):
+            invalid_reason = "irrelevant"
+
+        if compact and invalid_reason != "duplicate":
+            seen_content.add(compact)
+
+        is_valid = not invalid_reason
+        intent_type = self._infer_comment_intent(clean_content, pain_tags, invalid_reason)
+        confidence = 0.9 if is_valid and pain_tags else 0.8 if is_valid else 0.75
+
+        return {
+            "source_keyword": str(rec.get("source_keyword", "")),
+            "platform": str(rec.get("platform") or "douyin"),
+            "source_task_id": str(rec.get("source_task_id", "")),
+            "video_id": str(rec.get("video_id") or rec.get("aweme_id") or ""),
+            "aweme_id": str(rec.get("aweme_id") or rec.get("video_id") or ""),
+            "aweme_url": str(rec.get("aweme_url", "")),
+            "comment_id": str(rec.get("comment_id", "")),
+            "raw_content": raw_content,
+            "clean_content": clean_content,
+            "is_valid": is_valid,
+            "invalid_reason": invalid_reason,
+            "pain_tags": pain_tags,
+            "intent_type": intent_type,
+            "confidence": confidence,
+            "liked_count": self._safe_int(rec.get("liked_count", 0)),
+            "reply_count": self._safe_int(rec.get("reply_count", 0)),
+            "create_time": str(rec.get("create_time", "")),
+            "crawl_time": str(rec.get("crawl_time", "")),
+        }
+
+
+    def _do_clean_comments(self, raw_jsonl_path: Path) -> tuple[Path, Path, Dict[str, Any]]:
+        clean_jsonl_path = raw_jsonl_path.with_name("comments_clean.jsonl")
+        clean_csv_path = raw_jsonl_path.with_name("comments_clean.csv")
+        fieldnames = [
+            "source_keyword",
+            "platform",
+            "source_task_id",
+            "video_id",
+            "aweme_id",
+            "aweme_url",
+            "comment_id",
+            "raw_content",
+            "clean_content",
+            "is_valid",
+            "invalid_reason",
+            "pain_tags",
+            "intent_type",
+            "confidence",
+            "liked_count",
+            "reply_count",
+            "create_time",
+            "crawl_time",
+        ]
+        stats: Dict[str, Any] = {
+            "comments_in": 0,
+            "comments_valid": 0,
+            "comments_invalid": 0,
+            "duplicates_removed": 0,
+            "clean_csv_generated": False,
+            "errors": [],
+        }
+        rows: List[Dict[str, Any]] = []
+        seen_content: Set[str] = set()
+
+        if raw_jsonl_path.exists():
+            with open(str(raw_jsonl_path), "r", encoding="utf-8") as f:
+                for line_num, line in enumerate(f, 1):
+                    if not line.strip():
+                        continue
+                    try:
+                        rec = json.loads(line)
+                    except json.JSONDecodeError as exc:
+                        stats["errors"].append(f"line {line_num}: {str(exc)[:120]}")
+                        continue
+                    stats["comments_in"] += 1
+                    row = self._classify_clean_comment(rec, seen_content)
+                    if row["is_valid"]:
+                        stats["comments_valid"] += 1
+                    else:
+                        stats["comments_invalid"] += 1
+                        if row["invalid_reason"] == "duplicate":
+                            stats["duplicates_removed"] += 1
+                    rows.append(row)
+
+        clean_jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(clean_jsonl_path), "w", encoding="utf-8") as f:
+            for row in rows:
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+        with open(str(clean_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                csv_row = dict(row)
+                csv_row["pain_tags"] = "|".join(row["pain_tags"])
+                writer.writerow(csv_row)
+
+        stats["clean_csv_generated"] = True
+        return clean_jsonl_path, clean_csv_path, stats
+
+
+    @staticmethod
+    def _dedupe_text_list(items: Sequence[str]) -> List[str]:
+        result: List[str] = []
+        seen: Set[str] = set()
+        for item in items:
+            text = str(item or "").strip()
+            if not text or text in seen:
+                continue
+            seen.add(text)
+            result.append(text)
+        return result
+
 
     def _convert_jsonl_to_standard_csv(
         self,

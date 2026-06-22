@@ -491,6 +491,16 @@ class TaskManager:
         return ("search_result.csv", "search_result.jsonl")
 
 
+    @staticmethod
+    def _comments_result_names() -> tuple[str, ...]:
+        return (
+            "comments_clean.csv",
+            "comments_clean.jsonl",
+            "comments_raw.csv",
+            "comments_raw.jsonl",
+        )
+
+
     @classmethod
     def _preferred_result_names(cls, task_type: str) -> tuple[str, ...]:
         selector = getattr(cls, f"_{task_type}_result_names", None)

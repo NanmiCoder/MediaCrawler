@@ -91,6 +91,11 @@ class SearchRequest(BaseModel):
 
 class CommentsRequest(BaseModel):
     """评论采集请求"""
+    task_id: Optional[str] = Field(None, description="搜索任务 ID")
+    video_ids: Optional[List[str]] = Field(None, description="直接指定视频 ID 列表")
+    max_comments_per_video: int = Field(
+        50, description="每个视频最多采集评论数", ge=1, le=5000
+    )
     video_jsonl: Optional[str] = Field(None, description="视频 JSONL 路径")
     project_dir: Optional[str] = Field(None, description="工作目录")
 
@@ -213,6 +218,23 @@ def _search_output_result(paths: Dict[str, Any], output: Path) -> Dict[str, Any]
 
 
 
+def _comments_output_result(
+    paths: Dict[str, Any],
+    output: Path,
+) -> Dict[str, Any]:
+    comments_raw_jsonl = paths.get("comments_raw_jsonl", str(output))
+    return {
+        "comments_jsonl": comments_raw_jsonl,
+        "comments_raw_jsonl": comments_raw_jsonl,
+        "comments_raw_csv": paths.get("comments_raw_csv", ""),
+        "comments_clean_jsonl": paths.get("comments_clean_jsonl", ""),
+        "comments_clean_csv": paths.get("comments_clean_csv", ""),
+        "comments_stats": paths.get("comments_stats", {}),
+        "clean_stats": paths.get("clean_stats", {}),
+    }
+
+
+
 @router.post("/search", summary="触发搜索采集")
 async def search(req: SearchRequest) -> Dict[str, Any]:
     """
@@ -247,13 +269,41 @@ async def fetch_comments(req: CommentsRequest) -> Dict[str, Any]:
 
     def _do_comments() -> Dict[str, Any]:
         scraper = _make_scraper(req.project_dir, task.workspace)
-        video_path = Path(req.video_jsonl) if req.video_jsonl else None
-        if video_path:
+        source_task_id = req.task_id
+        video_path: Optional[Path] = None
+        if req.task_id:
+            source_task = tm.get_task(req.task_id)
+            if not source_task:
+                raise NonRetryableError(
+                    f"搜索任务不存在: {req.task_id}",
+                    step="fetch_comments",
+                )
+            source_outputs = (Path(source_task.workspace) / "outputs").resolve()
+            csv_path = source_outputs / "search_result.csv"
+            jsonl_path = source_outputs / "search_result.jsonl"
+            if csv_path.exists():
+                video_path = validate_path_in_workspace(str(csv_path.resolve()), source_outputs)
+            elif jsonl_path.exists():
+                video_path = validate_path_in_workspace(str(jsonl_path.resolve()), source_outputs)
+            else:
+                raise NonRetryableError(
+                    f"搜索任务无可用输出: {req.task_id}",
+                    step="fetch_comments",
+                )
+        elif req.video_jsonl:
             video_path = validate_path_in_workspace(
                 req.video_jsonl, Path(task.workspace)
             )
-        output = scraper.fetch_comments(video_jsonl=video_path)
-        return {"comments_jsonl": str(output), "status": scraper.get_status()}
+        output = scraper.fetch_comments(
+            video_jsonl=video_path,
+            video_ids=req.video_ids,
+            source_task_id=source_task_id,
+            max_comments_per_video=req.max_comments_per_video,
+        )
+        paths = scraper.get_paths()
+        result = _comments_output_result(paths, output)
+        result["status"] = scraper.get_status()
+        return result
 
     tm.submit(task, _do_comments)
     return {"task_id": task.task_id, "status": "submitted", "type": "comments"}
