@@ -47,7 +47,18 @@ whisper = [
     "faster-whisper>=0.9",
     "imageio-ffmpeg>=0.4",
 ]
+dev = [
+    "pytest-mock>=3.10",
+    "ruff>=0.4",
+    "bandit>=1.7",
+]
 
 [[tool.uv.index]]
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 default = true
+
+[tool.pytest.ini_options]
+testpaths = ["douyin_scraper/tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+# API regression tests: pytest api/tests.py

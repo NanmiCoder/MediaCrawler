@@ -180,3 +180,12 @@ debug_tools
 
 database/*.db
 .omx/
+
+# Local frontend dependencies and workspace artifacts
+web/node_modules/
+*.tsbuildinfo
+/workspaces/
+state/
+workspace_default/
+.env.local
+.env.*.local
