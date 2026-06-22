@@ -539,6 +539,54 @@ class DouyinScraper:
             self._state.mark_step_failed(step, str(e)[:200], exit_code)
             raise
 
+    def build_content_asset(
+        self,
+        search_outputs_dir: Path,
+        comments_outputs_dir: Optional[Path] = None,
+        scripts_outputs_dir: Optional[Path] = None,
+    ) -> tuple[Path, Path, Dict[str, Any]]:
+        """Build content_asset outputs in the current task workspace."""
+        from douyin_scraper.content_asset import build_content_asset
+
+        step = self.STEP_MERGE
+        self._state.mark_step_started(step)
+        try:
+            output_dir = self._current_task_workspace_dir() / "outputs"
+            jsonl_path, csv_path, stats = build_content_asset(
+                search_result_csv=search_outputs_dir / "search_result.csv",
+                search_title_clean_csv=search_outputs_dir / "search_title_clean.csv",
+                comments_clean_csv=(
+                    comments_outputs_dir / "comments_clean.csv"
+                    if comments_outputs_dir is not None
+                    else None
+                ),
+                script_sources_csv=(
+                    scripts_outputs_dir / "script_sources.csv"
+                    if scripts_outputs_dir is not None
+                    else None
+                ),
+                script_raw_csv=(
+                    scripts_outputs_dir / "script_raw.csv"
+                    if scripts_outputs_dir is not None
+                    else None
+                ),
+                script_clean_csv=(
+                    scripts_outputs_dir / "script_clean.csv"
+                    if scripts_outputs_dir is not None
+                    else None
+                ),
+                output_dir=output_dir,
+            )
+            self._state.mark_step_completed(step, detail=f"output={csv_path}")
+            self._paths["content_asset_jsonl"] = jsonl_path
+            self._paths["content_asset_csv"] = csv_path
+            self._paths["content_asset_stats"] = stats
+            return jsonl_path, csv_path, stats
+        except Exception as e:
+            exit_code = classify_error(e)
+            self._state.mark_step_failed(step, str(e)[:200], exit_code)
+            raise
+
     def run_all(
         self,
         steps: Optional[List[str]] = None,
@@ -606,6 +654,7 @@ class DouyinScraper:
         result.update(self._comments_output_paths())
         result.update(self._title_output_paths())
         result.update(self._script_output_paths())
+        result.update(self._content_asset_output_paths())
         return result
 
 
@@ -668,6 +717,12 @@ class DouyinScraper:
                 "script_raw_stats",
                 "script_clean_stats",
             ),
+        )
+
+    def _content_asset_output_paths(self) -> Dict[str, Any]:
+        return self._select_output_values(
+            path_keys=("content_asset_jsonl", "content_asset_csv"),
+            stats_keys=("content_asset_stats",),
         )
 
 

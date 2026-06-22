@@ -112,6 +112,9 @@ class ScriptsRequest(BaseModel):
 
 class MergeRequest(BaseModel):
     """合并数据请求"""
+    search_task_id: Optional[str] = Field(None, description="搜索任务 ID（生成 content_asset）")
+    comments_task_id: Optional[str] = Field(None, description="评论任务 ID（可选）")
+    scripts_task_id: Optional[str] = Field(None, description="文案任务 ID（可选）")
     video_jsonl: Optional[str] = Field(None, description="视频 JSONL 路径")
     comments_jsonl: Optional[str] = Field(None, description="评论 JSONL 路径")
     scripts_jsonl: Optional[str] = Field(None, description="文案 JSONL 路径")
@@ -437,6 +440,53 @@ async def merge(req: MergeRequest) -> Dict[str, Any]:
 
     def _do_merge() -> Dict[str, Any]:
         scraper = _make_scraper(req.project_dir, task.workspace)
+        if req.search_task_id:
+            search_task = tm.get_task(req.search_task_id)
+            if not search_task or search_task.status != "completed":
+                raise NonRetryableError(
+                    f"搜索任务不可用: {req.search_task_id}",
+                    step="merge_csv",
+                )
+            search_outputs = Path(search_task.workspace) / "outputs"
+            search_csv = search_outputs / "search_result.csv"
+            if not search_csv.exists():
+                raise NonRetryableError(
+                    f"搜索任务无 search_result.csv: {req.search_task_id}",
+                    step="merge_csv",
+                )
+
+            comments_outputs: Optional[Path] = None
+            if req.comments_task_id:
+                comments_task = tm.get_task(req.comments_task_id)
+                if not comments_task or comments_task.status != "completed":
+                    raise NonRetryableError(
+                        f"评论任务不可用: {req.comments_task_id}",
+                        step="merge_csv",
+                    )
+                comments_outputs = Path(comments_task.workspace) / "outputs"
+
+            scripts_outputs: Optional[Path] = None
+            if req.scripts_task_id:
+                scripts_task = tm.get_task(req.scripts_task_id)
+                if not scripts_task or scripts_task.status != "completed":
+                    raise NonRetryableError(
+                        f"文案任务不可用: {req.scripts_task_id}",
+                        step="merge_csv",
+                    )
+                scripts_outputs = Path(scripts_task.workspace) / "outputs"
+
+            jsonl_path, csv_path, stats = scraper.build_content_asset(
+                search_outputs_dir=search_outputs,
+                comments_outputs_dir=comments_outputs,
+                scripts_outputs_dir=scripts_outputs,
+            )
+            return {
+                "content_asset_jsonl": str(jsonl_path),
+                "content_asset_csv": str(csv_path),
+                "content_asset_stats": stats,
+                "status": scraper.get_status(),
+            }
+
         workspace = Path(task.workspace)
         v_path = Path(req.video_jsonl) if req.video_jsonl else None
         c_path = Path(req.comments_jsonl) if req.comments_jsonl else None
