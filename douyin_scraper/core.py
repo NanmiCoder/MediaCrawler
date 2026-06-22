@@ -838,7 +838,7 @@ class DouyinScraper:
             if self._config.enable_cdp_mode:
                 raise RetryableError(
                     f"Chrome CDP 端口 {self._config.chrome_debugging_port} 未就绪，"
-                    "请先启动 Chrome: chrome.exe --remote-debugging-port=9222",
+                    "请先启动 Chrome: chrome.exe --remote-debugging-port=19222",
                     step=self.STEP_SEARCH,
                 )
             else:

@@ -4,10 +4,12 @@ douyin_scraper.api.main — FastAPI 应用入口
 v6 新增：Web API 服务入口。
 
 启动方式：
-  uvicorn api.main:app --host 0.0.0.0 --port 8000
+  uvicorn api.main:app --host 0.0.0.0 --port 18080
 
 或通过环境变量配置：
-  DY_API_HOST=0.0.0.0 DY_API_PORT=8000 uvicorn api.main:app
+  DY_API_HOST=0.0.0.0 DY_API_PORT=18080 uvicorn api.main:app
+
+Docker/compose 宿主访问端口固定为 18080，容器内部 API 端口保持 8000。
 
 我实际执行时踩过的坑：
   - 直接在 HTTP handler 中跑采集 → 请求超时
@@ -89,9 +91,10 @@ async def log_broadcaster():
 # ═══════════════════════════════════════════════════════════════
 
 API_HOST = os.environ.get("DY_API_HOST", "0.0.0.0")
-API_PORT = int(os.environ.get("DY_API_PORT", "8000"))
+API_PUBLIC_PORT = int(os.environ.get("DY_API_PUBLIC_PORT", "18080"))
+API_PORT = int(os.environ.get("DY_API_PORT", str(API_PUBLIC_PORT)))
 WORKSPACE_DIR = os.environ.get("DY_WORKSPACE_DIR", "./workspaces")
-CHROME_PORT = int(os.environ.get("DY_CHROME_PORT", "9222"))
+CHROME_PORT = int(os.environ.get("DY_CHROME_PORT", "19222"))
 LOG_LEVEL = os.environ.get("DY_LOG_LEVEL", "INFO")
 
 

@@ -1,0 +1,40 @@
+[Unit]
+Description=Douyin Scraper API Service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=douyin
+Group=douyin
+WorkingDirectory=/opt/douyin-scraper
+
+# 环境变量
+EnvironmentFile=/opt/douyin-scraper/.env
+
+# 虚拟环境中的 uvicorn
+ExecStart=/opt/douyin-scraper/.venv/bin/uvicorn api.main:app \
+    --host 0.0.0.0 \
+    --port 18080 \
+    --workers 1 \
+    --log-level info \
+    --access-log
+
+# 崩溃重启
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# 资源限制
+LimitNOFILE=65536
+MemoryMax=2G
+CPUQuota=200%
+
+# 日志输出到 journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=douyin-scraper
+
+[Install]
+WantedBy=multi-user.target
