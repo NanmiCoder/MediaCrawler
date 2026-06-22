@@ -481,78 +481,66 @@ class TaskManager:
         logger.info("清理 %d 个过期任务", removed)
         return removed
 
+    @staticmethod
+    def _search_result_names() -> tuple[str, ...]:
+        return ("search_result.csv", "search_result.jsonl")
+
+
+    @staticmethod
+    def _run_all_result_names() -> tuple[str, ...]:
+        return ("search_result.csv", "search_result.jsonl")
+
+
+    @classmethod
+    def _preferred_result_names(cls, task_type: str) -> tuple[str, ...]:
+        selector = getattr(cls, f"_{task_type}_result_names", None)
+        if selector is None:
+            return ()
+        return selector()
+
+
     def get_result_path(self, task_id: str) -> Optional[Path]:
-        """获取任务的结果文件路径（已验证符号链接安全）"""
+        """Return the primary result file without changing task-specific semantics."""
         task = self.get_task(task_id)
         if not task or task.status != "completed":
             return None
 
         workspace = Path(task.workspace)
-
-        # ★ Fix 5: 优先路径 — workspace/outputs/search_result.jsonl ★
-        preferred = workspace / "outputs" / "search_result.jsonl"
-        if preferred.exists():
+        outputs_dir = workspace / "outputs"
+        for name in self._preferred_result_names(task.task_type):
+            preferred = outputs_dir / name
+            if not preferred.exists():
+                continue
             try:
                 validate_no_symlink(preferred)
                 return preferred
             except HTTPException:
                 logger.warning("结果路径含符号链接，拒绝访问: %s", preferred)
 
-        # 次选：workspace/outputs/ 下任意 jsonl（按修改时间倒序）
-        outputs_dir = workspace / "outputs"
+        # Compatibility fallback for legacy/custom outputs.
         if outputs_dir.exists():
-            jsonl_files = sorted(
-                outputs_dir.rglob("*.jsonl"),
-                key=lambda p: p.stat().st_mtime,
-                reverse=True,
-            )
-            for p in jsonl_files:
-                try:
-                    validate_no_symlink(p)
-                    return p
-                except HTTPException:
-                    continue
-
-        # 根据任务类型查找结果文件
-        result_path: Optional[Path] = None
-        if task.task_type == "merge":
-            # CSV 文件 — 只搜索前 2 层深度
-            csv_files = [
-                p for p in workspace.rglob("*.csv")
-                if len(p.relative_to(workspace).parts) <= 2
-            ]
-            if csv_files:
-                result_path = csv_files[0]
-        elif task.task_type in ("search", "comments", "scripts", "run_all"):
-            # JSONL 文件 — 只搜索前 2 层深度（旧版兼容兜底）
-            jsonl_files = [
-                p for p in workspace.rglob("*.jsonl")
-                if len(p.relative_to(workspace).parts) <= 2
-            ]
-            if jsonl_files:
-                # 优先返回最新文件（忽略已被删除的）
-                valid_files = []
-                for p in jsonl_files:
+            for pattern in ("*.csv", "*.jsonl"):
+                candidates = sorted(
+                    outputs_dir.rglob(pattern),
+                    key=lambda p: p.stat().st_mtime,
+                    reverse=True,
+                )
+                for candidate in candidates:
                     try:
-                        valid_files.append((p, p.stat().st_mtime))
-                    except FileNotFoundError:
+                        validate_no_symlink(candidate)
+                        return candidate
+                    except HTTPException:
                         continue
-                if valid_files:
-                    result_path = sorted(valid_files, key=lambda x: x[1])[-1][0]
 
-        # 兜底：返回 workspace 目录
-        if result_path is None and workspace.exists():
-            result_path = workspace
-
-        if result_path is not None:
-            # 符号链接安全检查
+        if workspace.exists():
             try:
-                validate_no_symlink(result_path)
+                validate_no_symlink(workspace)
+                return workspace
             except HTTPException:
-                logger.warning("结果路径含符号链接，拒绝访问: %s", result_path)
+                logger.warning("结果路径含符号链接，拒绝访问: %s", workspace)
                 return None
 
-        return result_path
+        return None
 
     def get_stats(self) -> Dict[str, Any]:
         """获取任务统计（修复：枚举成员转字符串）"""

@@ -241,15 +241,45 @@ class DouyinScraper:
         self._state.mark_step_started(step)
         try:
             output_path = self._do_search()
+            result_jsonl_path, result_csv_path = self._prepare_standard_search_outputs(
+                output_path
+            )
+
+
             self._state.mark_step_completed(
                 step, detail=f"output={output_path}"
             )
-            self._paths["video_jsonl"] = output_path
             return output_path
         except Exception as e:
             exit_code = classify_error(e)
             self._state.mark_step_failed(step, str(e)[:200], exit_code)
             raise
+
+    def _prepare_standard_search_outputs(self, output_path: Path) -> tuple[Path, Path]:
+        """Create and register the standard search_result JSONL/CSV outputs."""
+        outputs_dir = self._current_task_workspace_dir() / "outputs"
+        outputs_dir.mkdir(parents=True, exist_ok=True)
+        result_jsonl_path = outputs_dir / "search_result.jsonl"
+        result_csv_path = outputs_dir / "search_result.csv"
+
+        if Path(output_path).resolve() != result_jsonl_path.resolve():
+            shutil.copy2(output_path, result_jsonl_path)
+
+        source_keyword = (
+            self._config.keywords[0] if self._config.keywords else "unknown"
+        )
+        csv_stats = self._convert_jsonl_to_standard_csv(
+            jsonl_path=str(result_jsonl_path),
+            csv_path=str(result_csv_path),
+            source_keyword=source_keyword,
+        )
+        logger.info("CSV conversion stats: %s", csv_stats)
+
+        self._paths["video_jsonl"] = result_jsonl_path
+        self._paths["video_csv"] = result_csv_path
+        self._paths["csv_stats"] = csv_stats
+        return result_jsonl_path, result_csv_path
+
 
     def fetch_comments(
         self,
@@ -405,6 +435,36 @@ class DouyinScraper:
     # ═══════════════════════════════════════════════════════════════
     # 内部实现
     # ═══════════════════════════════════════════════════════════════
+
+    def get_paths(self) -> Dict[str, Any]:
+        """Return output paths grouped by release feature."""
+        result: Dict[str, Any] = {}
+        result.update(self._search_output_paths())
+        return result
+
+
+    def _select_output_values(
+        self,
+        path_keys: Sequence[str] = (),
+        stats_keys: Sequence[str] = (),
+    ) -> Dict[str, Any]:
+        selected: Dict[str, Any] = {}
+        for key in path_keys:
+            value = self._paths.get(key)
+            if value is not None:
+                selected[key] = str(value)
+        for key in stats_keys:
+            if key in self._paths:
+                selected[key] = self._paths[key]
+        return selected
+
+
+    def _search_output_paths(self) -> Dict[str, Any]:
+        return self._select_output_values(
+            path_keys=("video_jsonl", "video_csv"),
+            stats_keys=("csv_stats",),
+        )
+
 
     def _require_step_ready(self, step: str) -> None:
         """检查步骤是否可执行，否则抛异常"""
@@ -1015,6 +1075,16 @@ class DouyinScraper:
     # 辅助方法
     # ═══════════════════════════════════════════════════════════════
 
+    def _current_task_workspace_dir(self) -> Path:
+        """Return the current API task workspace from project_dir/state_dir_name."""
+        state_parent = Path(self._config.state_dir_name).parent
+        if str(state_parent) in ("", "."):
+            return self._config.project_dir
+        if self._config.project_dir.name == state_parent.name:
+            return self._config.project_dir
+        return self._config.project_dir / state_parent
+
+
     def _get_venv_python(self) -> Path:
         """获取 venv 中的 Python 路径，不存在时回退到当前 Python"""
         project_dir = self._config.project_dir
@@ -1047,6 +1117,144 @@ class DouyinScraper:
                         filepath, line_num, str(e)[:100],
                     )
         return records
+
+    def _convert_jsonl_to_standard_csv(
+        self,
+        jsonl_path: str,
+        csv_path: str,
+        source_keyword: str,
+    ) -> dict:
+        """
+        将 search_result.jsonl 转换为标准 CSV（T016）。
+
+        返回: {
+            "rows_in": int,
+            "rows_out": int,
+            "duplicates_removed": int,
+            "csv_generated": bool,
+            "csv_error": str or None
+        }
+        """
+        import csv as csv_module
+
+        jsonl_f = Path(jsonl_path)
+        csv_f = Path(csv_path)
+        stats = {
+            "rows_in": 0,
+            "rows_out": 0,
+            "duplicates_removed": 0,
+            "csv_generated": False,
+            "csv_error": None,
+        }
+
+        try:
+            # 读取 JSONL
+            records = self._load_jsonl(jsonl_f)
+            stats["rows_in"] = len(records)
+            if not records:
+                stats["csv_error"] = "JSONL 文件为空"
+                return stats
+
+            # 去重（按 aweme_id 或 aweme_url，保留第一条）
+            seen_ids: set = set()
+            seen_urls: set = set()
+            deduped = []
+            for rec in records:
+                aid = str(rec.get("aweme_id", "")).strip()
+                aurl = str(rec.get("aweme_url", "")).strip()
+                if aid and aid != "None":
+                    if aid in seen_ids:
+                        continue
+                    seen_ids.add(aid)
+                elif aurl:
+                    if aurl in seen_urls:
+                        continue
+                    seen_urls.add(aurl)
+                # 如果既没有 aid 也没有 url，保留（无法去重）
+                deduped.append(rec)
+
+            stats["duplicates_removed"] = stats["rows_in"] - len(deduped)
+
+            # 转换为标准行
+            rows = []
+            for rec in deduped:
+                aid = str(rec.get("aweme_id", "")).strip()
+                aurl = str(rec.get("aweme_url", "")).strip()
+                video_id = aid if aid and aid != "None" else ""
+
+                # 整数转换（失败则 0）
+                def _safe_int(val):
+                    try:
+                        return int(val)
+                    except (ValueError, TypeError):
+                        return 0
+
+                likes = _safe_int(rec.get("liked_count", 0))
+                collected = _safe_int(rec.get("collected_count", 0))
+                comments = _safe_int(rec.get("comment_count", 0))
+                shares = _safe_int(rec.get("share_count", 0))
+                total_engagement = likes + collected + comments + shares
+
+                rows.append({
+                    "source_keyword": source_keyword,
+                    "platform": "douyin",
+                    "video_id": video_id,
+                    "aweme_id": aid if aid and aid != "None" else "",
+                    "title": str(rec.get("title", "")),
+                    "desc": str(rec.get("desc", "")),
+                    "nickname": str(rec.get("nickname", "")),
+                    "liked_count": likes,
+                    "collected_count": collected,
+                    "comment_count": comments,
+                    "share_count": shares,
+                    "total_engagement": total_engagement,
+                    "aweme_url": aurl,
+                    "cover_url": str(rec.get("cover_url", "")),
+                    "video_download_url": str(rec.get("video_download_url", "")),
+                    "music_download_url": str(rec.get("music_download_url", "")),
+                    "create_time": str(rec.get("create_time", "")),
+                    "last_modify_ts": str(rec.get("last_modify_ts", "")),
+                })
+
+            stats["rows_out"] = len(rows)
+
+            # 写入 CSV（UTF-8-SIG 编码，Excel 兼容）
+            csv_f.parent.mkdir(parents=True, exist_ok=True)
+            fieldnames = [
+                "source_keyword",
+                "platform",
+                "video_id",
+                "aweme_id",
+                "title",
+                "desc",
+                "nickname",
+                "liked_count",
+                "collected_count",
+                "comment_count",
+                "share_count",
+                "total_engagement",
+                "aweme_url",
+                "cover_url",
+                "video_download_url",
+                "music_download_url",
+                "create_time",
+                "last_modify_ts",
+            ]
+            with open(str(csv_f), "w", encoding="utf-8-sig", newline="") as f:
+                writer = csv_module.DictWriter(f, fieldnames=fieldnames, quoting=csv_module.QUOTE_ALL)
+                writer.writeheader()
+                writer.writerows(rows)
+
+            stats["csv_generated"] = True
+            logger.info(
+                "CSV 转换完成: %s (%d 行, 去重 %d)", csv_f, len(rows), stats["duplicates_removed"]
+            )
+        except Exception as e:
+            stats["csv_error"] = str(e)[:500]
+            logger.error("CSV 转换失败: %s", e)
+
+        return stats
+
 
     def _deduplicate(self, records: list, key: str = "aweme_id") -> list:
         """

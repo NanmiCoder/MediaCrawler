@@ -204,6 +204,15 @@ def _error_response(e: Exception) -> HTTPException:
 # API 端点
 # ═══════════════════════════════════════════════════════════════
 
+def _search_output_result(paths: Dict[str, Any], output: Path) -> Dict[str, Any]:
+    return {
+        "video_jsonl": paths.get("video_jsonl", str(output)),
+        "video_csv": paths.get("video_csv", ""),
+        "csv_stats": paths.get("csv_stats", {}),
+    }
+
+
+
 @router.post("/search", summary="触发搜索采集")
 async def search(req: SearchRequest) -> Dict[str, Any]:
     """
@@ -218,7 +227,10 @@ async def search(req: SearchRequest) -> Dict[str, Any]:
         logger.info("API search request task_id=%s keywords=%r", task.task_id, req.keywords)
         scraper = _make_scraper(req.project_dir, task.workspace)
         output = scraper.search(keywords=req.keywords, max_count=req.max_count)
-        return {"video_jsonl": str(output), "status": scraper.get_status()}
+        paths = scraper.get_paths()
+        result = _search_output_result(paths, output)
+        result["status"] = scraper.get_status()
+        return result
 
     tm.submit(task, _do_search)
     return {"task_id": task.task_id, "status": "submitted", "type": "search"}
