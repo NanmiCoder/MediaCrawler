@@ -581,9 +581,16 @@ async def get_result(task_id: str):
             filename=filename,
         )
     elif result_path.is_dir():
-        # 返回目录下所有文件列表
-        files = [f.name for f in result_path.rglob("*") if f.is_file()]
-        return JSONResponse(content={"task_id": task_id, "files": files})
+        # T016: 优先列出 CSV 和 JSONL 文件
+        all_files = [f for f in result_path.rglob("*") if f.is_file()]
+        csv_files = [f for f in all_files if f.suffix == ".csv"]
+        jsonl_files = [f for f in all_files if f.suffix == ".jsonl"]
+        return JSONResponse(content={
+            "task_id": task_id,
+            "files": [f.name for f in all_files],
+            "csv_files": [str(f) for f in csv_files],
+            "jsonl_files": [str(f) for f in jsonl_files],
+        })
 
     raise HTTPException(status_code=404, detail="结果路径无效")
 
