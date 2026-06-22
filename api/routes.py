@@ -719,14 +719,25 @@ def _read_csv_rows(path: Path, limit: int = MAX_EXPORT_ROWS) -> List[Dict[str, A
 
 def _normalize_row(row: Dict[str, Any]) -> Dict[str, Any]:
     """规范化一行数据，确保关键字段存在"""
+    def first_value(*keys: str, default: str = "") -> str:
+        for key in keys:
+            value = row.get(key)
+            if value not in (None, ""):
+                return str(value)
+        return default
+
     return {
-        "video_id": str(row.get("video_id", row.get("id", ""))),
-        "platform": str(row.get("platform", "douyin")),
-        "script_text": str(row.get("script_text", row.get("script", row.get("text", "")))),
-        "likes": str(row.get("likes", row.get("like_count", ""))),
-        "favorites": str(row.get("favorites", row.get("collect_count", ""))),
-        "shares": str(row.get("shares", row.get("share_count", ""))),
-        "comments": str(row.get("comments", row.get("comment_count", ""))),
+        "video_id": first_value("video_id", "aweme_id", "id"),
+        "platform": first_value("platform", default="douyin"),
+        "script_text": first_value(
+            "script_text", "script_clean_text", "script", "text"
+        ),
+        "likes": first_value("likes", "liked_count", "like_count"),
+        "favorites": first_value(
+            "favorites", "collected_count", "collect_count"
+        ),
+        "shares": first_value("shares", "share_count"),
+        "comments": first_value("comments", "comment_count"),
     }
 
 
@@ -766,35 +777,43 @@ async def list_data_files() -> Dict[str, Any]:
     return {"items": items, "total": len(items)}
 
 
-@router.get("/data/preview/{task_id}", summary="预览任务结果数据（前 20 行）")
-async def preview_data(task_id: str) -> Dict[str, Any]:
-    """返回任务结果文件的前 20 行数据"""
+@router.get("/data/preview/{task_id}", summary="预览任务结果数据")
+async def preview_data(
+    task_id: str,
+    limit: int = Query(100, ge=1, le=1000, description="返回行数上限"),
+) -> Dict[str, Any]:
+    """Preview the same primary result selected by /scrape/result."""
     tm = get_task_manager()
     task = tm.get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail=f"任务不存在: {task_id}")
     if task.status != "completed":
-        raise HTTPException(status_code=400, detail=f"任务未完成，当前状态: {task.status}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"任务未完成，当前状态: {task.status}",
+        )
 
-    workspace = Path(task.workspace)
-    files = _find_result_files(workspace)
-    if not files:
-        raise HTTPException(status_code=404, detail="未找到结果文件")
-
-    # 优先 CSV，其次 JSONL
-    target = next((f for f in files if f.suffix == ".csv"), files[0])
+    target = tm.get_result_path(task_id)
+    if not target or not target.is_file():
+        raise HTTPException(status_code=404, detail="无可用预览数据")
 
     if target.suffix == ".csv":
-        rows = _read_csv_rows(target, limit=20)
+        rows = _read_csv_rows(target, limit=limit)
+        total_rows = max(_count_file_rows(target) - 1, 0)
+        file_format = "csv"
+    elif target.suffix == ".jsonl":
+        rows = _read_jsonl_rows(target, limit=limit)
+        total_rows = _count_file_rows(target)
+        file_format = "jsonl"
     else:
-        raw_rows = _read_jsonl_rows(target, limit=20)
-        rows = [_normalize_row(r) for r in raw_rows]
+        raise HTTPException(status_code=404, detail="无可用预览数据")
 
     return {
         "task_id": task_id,
         "file_name": target.name,
         "rows": rows,
-        "total_rows": _count_file_rows(target),
+        "format": file_format,
+        "total_rows": total_rows,
     }
 
 
@@ -814,7 +833,39 @@ class ExportRequest(BaseModel):
         return v
 
 
-@router.post("/data/export", summary="导出数据（CSV 或 TXT）")
+@router.get("/data/export", summary="导出任务结果文件（直接下载）")
+async def data_export_download(
+    task_id: str = Query(..., description="任务 ID"),
+):
+    """Download the same primary result selected by /scrape/result."""
+    tm = get_task_manager()
+    task = tm.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"任务不存在: {task_id}")
+    if task.status != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail=f"任务未完成，当前状态: {task.status}",
+        )
+
+    target = tm.get_result_path(task_id)
+    if not target or not target.is_file():
+        raise HTTPException(status_code=404, detail="无可用导出数据")
+
+    media_type = "application/octet-stream"
+    if target.suffix == ".csv":
+        media_type = "text/csv"
+    elif target.suffix == ".jsonl":
+        media_type = "application/jsonl"
+
+    return FileResponse(
+        path=str(target),
+        media_type=media_type,
+        filename=target.name,
+    )
+
+
+@router.post("/data/export", summary="批量导出数据（CSV 或 TXT）")
 async def export_data(req: ExportRequest):
     """
     批量导出多个任务的结果数据。
@@ -831,16 +882,13 @@ async def export_data(req: ExportRequest):
         task = tm.get_task(task_id)
         if not task or task.status != "completed":
             continue
-        workspace = Path(task.workspace)
-        files = _find_result_files(workspace)
-        if not files:
+        target = tm.get_result_path(task_id)
+        if not target or not target.is_file():
             continue
-        target = next((f for f in files if f.suffix == ".csv"), files[0])
         if target.suffix == ".csv":
             rows = _read_csv_rows(target, limit=req.limit)
         else:
-            raw_rows = _read_jsonl_rows(target, limit=req.limit)
-            rows = [_normalize_row(r) for r in raw_rows]
+            rows = _read_jsonl_rows(target, limit=req.limit)
         all_rows.extend(rows)
         if len(all_rows) >= req.limit:
             all_rows = all_rows[:req.limit]
@@ -864,7 +912,7 @@ async def export_data(req: ExportRequest):
             size = output.tell()
             if size >= MAX_EXPORT_BYTES:
                 break
-        content = output.getvalue().encode("utf-8")
+        content = output.getvalue().encode("utf-8-sig")
         media_type = "text/csv; charset=utf-8"
         filename = f"export_{len(req.task_ids)}tasks_{written}rows.csv"
 

@@ -512,6 +512,13 @@ class TaskManager:
             "script_sources.jsonl",
         )
 
+    @staticmethod
+    def _merge_result_names() -> tuple[str, ...]:
+        return (
+            "content_asset.csv",
+            "content_asset.jsonl",
+            "douyin_koubo_data.csv",
+        )
 
     @classmethod
     def _preferred_result_names(cls, task_type: str) -> tuple[str, ...]:

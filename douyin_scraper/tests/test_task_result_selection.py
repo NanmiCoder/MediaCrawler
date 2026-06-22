@@ -27,3 +27,26 @@ def test_fallback_selector_uses_supported_file(tmp_path: Path) -> None:
     result = _selected_result(tmp_path, "custom", ("fallback.csv",))
     assert result is not None
     assert result.name == "fallback.csv"
+
+
+@pytest.mark.parametrize(
+    ("files", "expected"),
+    [
+        (
+            ("douyin_koubo_data.csv", "content_asset.jsonl", "content_asset.csv"),
+            "content_asset.csv",
+        ),
+        (
+            ("legacy.csv", "douyin_koubo_data.csv"),
+            "douyin_koubo_data.csv",
+        ),
+    ],
+)
+def test_merge_selector_prefers_content_asset(
+    tmp_path: Path,
+    files: tuple[str, ...],
+    expected: str,
+) -> None:
+    result = _selected_result(tmp_path, "merge", files)
+    assert result is not None
+    assert result.name == expected
