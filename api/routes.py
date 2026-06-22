@@ -218,6 +218,15 @@ def _search_output_result(paths: Dict[str, Any], output: Path) -> Dict[str, Any]
 
 
 
+def _title_clean_result(paths: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "title_clean_jsonl": paths.get("title_clean_jsonl", ""),
+        "title_clean_csv": paths.get("title_clean_csv", ""),
+        "title_clean_stats": paths.get("title_clean_stats", {}),
+    }
+
+
+
 def _comments_output_result(
     paths: Dict[str, Any],
     output: Path,
@@ -251,6 +260,7 @@ async def search(req: SearchRequest) -> Dict[str, Any]:
         output = scraper.search(keywords=req.keywords, max_count=req.max_count)
         paths = scraper.get_paths()
         result = _search_output_result(paths, output)
+        result.update(_title_clean_result(paths))
         result["status"] = scraper.get_status()
         return result
 

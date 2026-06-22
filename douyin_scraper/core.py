@@ -247,6 +247,10 @@ class DouyinScraper:
                 output_path
             )
 
+            title_clean_csv = self._prepare_title_clean_outputs(
+                result_csv_path, result_jsonl_path
+            )
+
 
             self._state.mark_step_completed(
                 step, detail=f"output={output_path}"
@@ -281,6 +285,21 @@ class DouyinScraper:
         self._paths["video_csv"] = result_csv_path
         self._paths["csv_stats"] = csv_stats
         return result_jsonl_path, result_csv_path
+
+
+    def _prepare_title_clean_outputs(
+        self,
+        result_csv_path: Path,
+        result_jsonl_path: Path,
+    ) -> Path:
+        """Create and register search_title_clean outputs."""
+        clean_jsonl, clean_csv, stats = self._do_clean_search_titles(
+            result_csv_path, result_jsonl_path
+        )
+        self._paths["title_clean_jsonl"] = clean_jsonl
+        self._paths["title_clean_csv"] = clean_csv
+        self._paths["title_clean_stats"] = stats
+        return clean_csv
 
 
     def fetch_comments(
@@ -477,6 +496,7 @@ class DouyinScraper:
         result: Dict[str, Any] = {}
         result.update(self._search_output_paths())
         result.update(self._comments_output_paths())
+        result.update(self._title_output_paths())
         return result
 
 
@@ -513,6 +533,13 @@ class DouyinScraper:
                 "comments_clean_csv",
             ),
             stats_keys=("comments_stats", "clean_stats"),
+        )
+
+
+    def _title_output_paths(self) -> Dict[str, Any]:
+        return self._select_output_values(
+            path_keys=("title_clean_jsonl", "title_clean_csv"),
+            stats_keys=("title_clean_stats",),
         )
 
 
@@ -1543,6 +1570,315 @@ class DouyinScraper:
             seen.add(text)
             result.append(text)
         return result
+
+
+    @staticmethod
+    def _is_noise_title_hashtag(tag: str) -> bool:
+        text = str(tag or "").strip().lower()
+        if not text:
+            return True
+        noise_exact = {
+            "学车",
+            "驾考",
+            "驾校",
+            "热门",
+            "上热门",
+            "抖音热门",
+            "dou小助手",
+            "dou+",
+            "热点",
+            "挑战",
+            "日常",
+            "同城",
+            "流量",
+            "汽车",
+            "干货分享",
+            "知识分享",
+        }
+        if text in noise_exact:
+            return True
+        return any(token in text for token in ("上热门", "抖音热门", "dou", "热点挑战"))
+
+
+    def _extract_title_hashtags(self, *texts: str) -> tuple[List[str], List[str]]:
+        hashtags: List[str] = []
+        noise_removed: List[str] = []
+        seen: Set[str] = set()
+        pattern = re.compile(r"#([^#\s，,。；;！!？?\r\n]+)")
+        for text in texts:
+            for match in pattern.findall(str(text or "")):
+                tag = match.strip(" #\t\r\n,，.。!！?？;；:：、")
+                if not tag:
+                    continue
+                label = f"#{tag}"
+                if tag in seen:
+                    noise_removed.append(label)
+                    continue
+                seen.add(tag)
+                if self._is_noise_title_hashtag(tag):
+                    noise_removed.append(label)
+                    continue
+                hashtags.append(tag)
+        return hashtags, self._dedupe_text_list(noise_removed)
+
+
+    def _normalize_title_text(self, value: str, noise_removed: List[str]) -> str:
+        text = str(value or "")
+        text = re.sub(r"#[^#\s，,。；;！!？?\r\n]+", " ", text)
+        noise_terms = [
+            "点击头像",
+            "主页还有",
+            "主页看合集",
+            "关注我",
+            "记得关注",
+            "点赞关注",
+            "点赞",
+            "收藏起来",
+            "建议收藏",
+            "收藏转发",
+            "转发收藏",
+            "评论区",
+            "蹲后续",
+            "看完再走",
+            "快来看看",
+            "上热门",
+            "热门推荐",
+            "DOU小助手",
+            "抖音热点",
+            "抖音热门",
+        ]
+        for term in noise_terms:
+            if term in text:
+                noise_removed.append(term)
+                text = text.replace(term, " ")
+
+        core_terms = [
+            "科目三",
+            "科三",
+            "靠边停车",
+            "直线行驶",
+            "30公分",
+            "压线",
+            "挂科",
+            "找点",
+            "看点",
+            "后视镜",
+            "方向盘",
+            "一把过",
+            "考试紧张",
+        ]
+        for term in core_terms:
+            separated = re.compile(
+                rf"({re.escape(term)})(?:[\s,，、/|]+{re.escape(term)})+"
+            )
+            compact = re.compile(rf"({re.escape(term)})(?:{re.escape(term)})+")
+            if separated.search(text) or compact.search(text):
+                noise_removed.append(term)
+            text = separated.sub(term, text)
+            text = compact.sub(term, text)
+
+        text = re.sub(r"[ \t\r\n　]+", " ", text)
+        text = re.sub(r"[，,。；;！!？?、|]{2,}", "，", text)
+        return text.strip(" \t\r\n　,，。；;！!？?、|")
+
+
+    @staticmethod
+    def _infer_title_topic(haystack: str) -> str:
+        text = str(haystack or "")
+        if "靠边停车" in text or ("靠边" in text and "停车" in text):
+            return "靠边停车"
+        if "直线行驶" in text or "直线跑偏" in text:
+            return "直线行驶"
+        if "科目三" in text or "科三" in text:
+            if any(token in text for token in ("流程", "全流程", "步骤")):
+                return "科目三全流程"
+            return "科目三"
+        return ""
+
+
+    @staticmethod
+    def _infer_title_pain_point(haystack: str) -> str:
+        text = str(haystack or "")
+        has_30cm = bool(re.search(r"(30\s*公分|三十公分|30cm|30厘米)", text, re.I))
+        if has_30cm and any(token in text for token in ("看不准", "找不准", "不准", "不会看", "看不清", "怎么看")):
+            return "30公分看不准"
+        if "压线" in text:
+            return "压线"
+        if "跑偏" in text:
+            return "直线跑偏"
+        if "紧张" in text:
+            return "考试紧张"
+        if "挂科" in text or "挂的" in text:
+            return "挂科"
+        if has_30cm:
+            return "30公分"
+        return ""
+
+
+    @staticmethod
+    def _infer_title_teaching_angle(haystack: str, pain_point: str) -> str:
+        text = str(haystack or "")
+        if any(token in text for token in ("找点", "点位", "看点")) or pain_point == "30公分看不准":
+            return "找点方法"
+        if "压线" in text or pain_point == "压线":
+            return "防压线技巧"
+        if any(token in text for token in ("流程", "步骤")):
+            return "考试流程讲解"
+        if "后视镜" in text:
+            return "后视镜观察方法"
+        if "方向盘" in text:
+            return "方向盘控制"
+        if any(token in text for token in ("保姆级", "教学", "技巧", "一把过")):
+            return "技巧讲解"
+        return ""
+
+
+    def _clean_search_title_record(self, rec: Dict[str, Any]) -> Dict[str, Any]:
+        raw_title = str(rec.get("title", rec.get("raw_title", "")) or "")
+        raw_desc = str(rec.get("desc", rec.get("raw_desc", "")) or "")
+        hashtags, hashtag_noise = self._extract_title_hashtags(raw_title, raw_desc)
+        noise_removed = list(hashtag_noise)
+        clean_title = self._normalize_title_text(raw_title, noise_removed)
+        clean_desc = self._normalize_title_text(raw_desc, noise_removed)
+        if not clean_title:
+            clean_title = clean_desc or " ".join(hashtags[:2]) or str(rec.get("source_keyword", "")).strip()
+
+        haystack = " ".join([raw_title, raw_desc, clean_title, clean_desc, " ".join(hashtags)])
+        topic = self._infer_title_topic(haystack)
+        pain_point = self._infer_title_pain_point(haystack)
+        teaching_angle = self._infer_title_teaching_angle(haystack, pain_point)
+
+        def _safe_int(value: Any) -> int:
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return 0
+
+        liked_count = _safe_int(rec.get("liked_count", 0))
+        collected_count = _safe_int(rec.get("collected_count", 0))
+        comment_count = _safe_int(rec.get("comment_count", 0))
+        share_count = _safe_int(rec.get("share_count", 0))
+        total_engagement = _safe_int(
+            rec.get("total_engagement", liked_count + collected_count + comment_count + share_count)
+        )
+
+        return {
+            "source_keyword": str(rec.get("source_keyword", "")),
+            "platform": str(rec.get("platform", "douyin") or "douyin"),
+            "video_id": str(rec.get("video_id", "")),
+            "aweme_id": str(rec.get("aweme_id", "")),
+            "raw_title": raw_title,
+            "clean_title": clean_title,
+            "raw_desc": raw_desc,
+            "clean_desc": clean_desc,
+            "hashtags": hashtags,
+            "topic": topic,
+            "pain_point": pain_point,
+            "teaching_angle": teaching_angle,
+            "title_noise_removed": self._dedupe_text_list(noise_removed),
+            "aweme_url": str(rec.get("aweme_url", "")),
+            "liked_count": liked_count,
+            "collected_count": collected_count,
+            "comment_count": comment_count,
+            "share_count": share_count,
+            "total_engagement": total_engagement,
+        }
+
+
+    def _load_search_rows_for_title_clean(
+        self, search_csv_path: Path, search_jsonl_path: Optional[Path]
+    ) -> tuple[List[Dict[str, Any]], List[str]]:
+        errors: List[str] = []
+        if search_csv_path.exists():
+            try:
+                with open(str(search_csv_path), "r", encoding="utf-8-sig", newline="") as f:
+                    return list(csv.DictReader(f)), errors
+            except Exception as e:
+                errors.append(f"read_csv_failed: {str(e)[:200]}")
+
+        if search_jsonl_path and search_jsonl_path.exists():
+            try:
+                return self._load_jsonl(search_jsonl_path), errors
+            except Exception as e:
+                errors.append(f"read_jsonl_failed: {str(e)[:200]}")
+
+        if not search_csv_path.exists():
+            errors.append(f"search_csv_missing: {search_csv_path}")
+        if search_jsonl_path and not search_jsonl_path.exists():
+            errors.append(f"search_jsonl_missing: {search_jsonl_path}")
+        return [], errors
+
+
+    def _do_clean_search_titles(
+        self, search_csv_path: Path, search_jsonl_path: Optional[Path] = None
+    ) -> tuple[Path, Path, Dict[str, Any]]:
+        clean_jsonl_path = search_csv_path.with_name("search_title_clean.jsonl")
+        clean_csv_path = search_csv_path.with_name("search_title_clean.csv")
+        fieldnames = [
+            "source_keyword",
+            "platform",
+            "video_id",
+            "aweme_id",
+            "raw_title",
+            "clean_title",
+            "raw_desc",
+            "clean_desc",
+            "hashtags",
+            "topic",
+            "pain_point",
+            "teaching_angle",
+            "title_noise_removed",
+            "aweme_url",
+            "liked_count",
+            "collected_count",
+            "comment_count",
+            "share_count",
+            "total_engagement",
+        ]
+        stats: Dict[str, Any] = {
+            "rows_in": 0,
+            "rows_out": 0,
+            "clean_csv_generated": False,
+            "errors": [],
+        }
+        rows: List[Dict[str, Any]] = []
+        try:
+            records, load_errors = self._load_search_rows_for_title_clean(search_csv_path, search_jsonl_path)
+            stats["errors"].extend(load_errors)
+            stats["rows_in"] = len(records)
+            for idx, rec in enumerate(records, start=1):
+                try:
+                    rows.append(self._clean_search_title_record(rec))
+                except Exception as e:
+                    stats["errors"].append(f"row_{idx}_failed: {str(e)[:200]}")
+
+            stats["rows_out"] = len(rows)
+            clean_jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(str(clean_jsonl_path), "w", encoding="utf-8") as f:
+                for row in rows:
+                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+            with open(str(clean_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                for row in rows:
+                    csv_row = dict(row)
+                    csv_row["hashtags"] = "|".join(row["hashtags"])
+                    csv_row["title_noise_removed"] = "|".join(row["title_noise_removed"])
+                    writer.writerow(csv_row)
+            stats["clean_csv_generated"] = True
+        except Exception as e:
+            stats["errors"].append(f"title_clean_failed: {str(e)[:500]}")
+            try:
+                clean_jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+                clean_jsonl_path.write_text("", encoding="utf-8")
+                with open(str(clean_csv_path), "w", encoding="utf-8-sig", newline="") as f:
+                    csv.DictWriter(f, fieldnames=fieldnames).writeheader()
+                stats["clean_csv_generated"] = True
+            except Exception as write_error:
+                stats["errors"].append(f"title_clean_write_failed: {str(write_error)[:500]}")
+
+        return clean_jsonl_path, clean_csv_path, stats
 
 
     def _convert_jsonl_to_standard_csv(
