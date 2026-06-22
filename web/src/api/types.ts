@@ -122,6 +122,7 @@ export interface DataListResponse {
 export interface DataPreviewResponse {
   task_id: string;
   file_name: string;
+  format?: 'csv' | 'jsonl' | string;
   rows: Record<string, string>[];
   total_rows: number;
 }

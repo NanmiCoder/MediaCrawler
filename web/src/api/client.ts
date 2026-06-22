@@ -89,13 +89,20 @@ export const api = {
     return `${base}/scrape/result/${taskId}`;
   },
 
+  getDataExportUrl: (taskId: string) => {
+    const base = localStorage.getItem(API_BASE_URL_STORAGE_KEY) || DEFAULT_API_BASE;
+    return `${base}/scrape/data/export?task_id=${encodeURIComponent(taskId)}`;
+  },
+
   // ─── 数据管理 ───────────────────────────────────────────────
 
   listDataFiles: () =>
     getClient().get('scrape/data/list').json<DataListResponse>(),
 
-  previewData: (taskId: string) =>
-    getClient().get(`scrape/data/preview/${taskId}`).json<DataPreviewResponse>(),
+  previewData: (taskId: string, limit?: number) =>
+    getClient().get(`scrape/data/preview/${taskId}`, {
+      searchParams: limit ? { limit } : undefined,
+    }).json<DataPreviewResponse>(),
 
   /** 导出数据，返回 Blob 供前端触发下载 */
   exportData: async (req: ExportRequest): Promise<{ blob: Blob; filename: string }> => {

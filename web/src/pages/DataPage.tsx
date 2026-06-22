@@ -37,12 +37,90 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArticleIcon from '@mui/icons-material/Article';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 
 import { api } from '../api/client';
 import type { DataFileItem, DataPreviewResponse } from '../api/types';
 import { formatDateTime, formatFileSize } from '../utils/format';
 import TaskTypeIcon from '../components/task/TaskTypeIcon';
 import ErrorAlert from '../components/shared/ErrorAlert';
+
+const PRIMARY_FILE_PRIORITY = [
+  'content_asset.csv',
+  'script_clean.csv',
+  'comments_clean.csv',
+  'search_result.csv',
+  'content_asset.jsonl',
+  'script_clean.jsonl',
+  'comments_clean.jsonl',
+  'search_result.jsonl',
+];
+
+const CONTENT_ASSET_CORE_COLUMNS = [
+  'source_keyword',
+  'platform',
+  'aweme_id',
+  'clean_title',
+  'topic',
+  'pain_point',
+  'teaching_angle',
+  'nickname',
+  'liked_count',
+  'collected_count',
+  'comment_count',
+  'share_count',
+  'total_engagement',
+  'valid_comment_count',
+  'comment_data_status',
+  'asr_data_status',
+  'asset_quality',
+];
+
+const LONG_TEXT_COLUMNS = new Set([
+  'script_text',
+  'script_clean_text',
+  'top_valid_comments',
+  'comment_pain_tags',
+  'desc',
+  'clean_desc',
+]);
+
+function filePriority(item: DataFileItem): number {
+  const exact = PRIMARY_FILE_PRIORITY.indexOf(item.file_name);
+  if (exact >= 0) return exact;
+  if (item.file_name.endsWith('.csv')) return PRIMARY_FILE_PRIORITY.length;
+  if (item.file_name.endsWith('.jsonl')) return PRIMARY_FILE_PRIORITY.length + 1;
+  return PRIMARY_FILE_PRIORITY.length + 2;
+}
+
+function selectPrimaryFiles(items: DataFileItem[]): DataFileItem[] {
+  const grouped = new Map<string, DataFileItem[]>();
+  items
+    .filter((item) => item.file_name !== 'execution_log.jsonl')
+    .forEach((item) => {
+      const group = grouped.get(item.task_id) || [];
+      group.push(item);
+      grouped.set(item.task_id, group);
+    });
+
+  return Array.from(grouped.values()).map((files) =>
+    [...files].sort((a, b) => filePriority(a) - filePriority(b))[0]
+  );
+}
+
+function fileLabel(item: DataFileItem): string {
+  if (item.file_name.startsWith('content_asset.') || item.task_type === 'merge') {
+    return '内容资产表';
+  }
+  if (item.file_name.startsWith('search_result.')) return '搜索结果表';
+  if (item.file_name.startsWith('comments_clean.')) return '评论清洗表';
+  if (item.file_name.startsWith('script_clean.')) return '文案清洗表';
+  return '结果文件';
+}
+
+function fileFormat(fileName: string): string {
+  return fileName.split('.').pop()?.toUpperCase() || 'FILE';
+}
 
 // ─── 预览对话框 ────────────────────────────────────────────────
 
@@ -52,18 +130,25 @@ function PreviewDialog({
   const [data, setData] = useState<DataPreviewResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [showAllColumns, setShowAllColumns] = useState(false);
 
   useEffect(() => {
     if (!open || !taskId) return;
     setLoading(true);
     setErr('');
-    api.previewData(taskId)
+    setData(null);
+    setShowAllColumns(false);
+    api.previewData(taskId, 20)
       .then(setData)
       .catch((e) => setErr(e.message || '预览失败'))
       .finally(() => setLoading(false));
   }, [open, taskId]);
 
-  const columns = data?.rows?.[0] ? Object.keys(data.rows[0]) : [];
+  const allColumns = data?.rows?.[0] ? Object.keys(data.rows[0]) : [];
+  const isContentAsset = data?.file_name.startsWith('content_asset.') ?? false;
+  const columns = isContentAsset && !showAllColumns
+    ? CONTENT_ASSET_CORE_COLUMNS.filter((column) => allColumns.includes(column))
+    : allColumns;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth scroll="paper">
@@ -72,12 +157,31 @@ function PreviewDialog({
           <PreviewIcon color="primary" />
           <span>数据预览</span>
           {data && (
-            <Chip
-              label={`${data.file_name}  ·  共 ${data.total_rows} 行`}
+            <>
+              <Chip
+                label={isContentAsset ? '内容资产表' : data.file_name}
+                size="small"
+                color={isContentAsset ? 'primary' : 'default'}
+                variant="outlined"
+                sx={{ ml: 1 }}
+              />
+              <Chip
+                label={`${data.format?.toUpperCase() || fileFormat(data.file_name)} · 共 ${data.total_rows} 行`}
+                size="small"
+                variant="outlined"
+              />
+            </>
+          )}
+          <Box sx={{ flex: 1 }} />
+          {isContentAsset && data && (
+            <Button
               size="small"
               variant="outlined"
-              sx={{ ml: 1 }}
-            />
+              startIcon={<ViewColumnIcon />}
+              onClick={() => setShowAllColumns((value) => !value)}
+            >
+              {showAllColumns ? '只看核心字段' : '查看全部字段'}
+            </Button>
           )}
         </Box>
       </DialogTitle>
@@ -103,7 +207,8 @@ function PreviewDialog({
                       <TableCell
                         key={col}
                         sx={{
-                          maxWidth: col === 'script_text' ? 320 : 160,
+                          minWidth: LONG_TEXT_COLUMNS.has(col) ? 240 : 110,
+                          maxWidth: LONG_TEXT_COLUMNS.has(col) ? 360 : 180,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
@@ -297,7 +402,7 @@ export default function DataPage() {
     setErr('');
     try {
       const resp = await api.listDataFiles();
-      setItems(resp.items);
+      setItems(selectPrimaryFiles(resp.items));
     } catch (e: any) {
       setErr(e.message || '获取数据列表失败');
     } finally {
@@ -353,7 +458,7 @@ export default function DataPage() {
           disabled={selected.size === 0}
           onClick={() => setExportOpen(true)}
         >
-          导出选中 {selected.size > 0 && `(${selected.size})`}
+          批量导出旧七字段 {selected.size > 0 && `(${selected.size})`}
         </Button>
       </Box>
 
@@ -412,7 +517,8 @@ export default function DataPage() {
                   </TableCell>
                   <TableCell width={100}>Task ID</TableCell>
                   <TableCell width={130}>类型</TableCell>
-                  <TableCell>关键词</TableCell>
+                  <TableCell>主结果文件</TableCell>
+                  <TableCell width={80}>格式</TableCell>
                   <TableCell width={100} align="right">行数</TableCell>
                   <TableCell width={100} align="right">文件大小</TableCell>
                   <TableCell width={140}>完成时间</TableCell>
@@ -422,7 +528,7 @@ export default function DataPage() {
               <TableBody>
                 {items.map((item) => (
                   <TableRow
-                    key={item.task_id}
+                    key={`${item.task_id}:${item.file_path}`}
                     hover
                     selected={selected.has(item.task_id)}
                     sx={{
@@ -448,20 +554,19 @@ export default function DataPage() {
                       <TaskTypeIcon type={item.task_type} />
                     </TableCell>
                     <TableCell>
-                      {item.keywords && item.keywords.length > 0 ? (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {item.keywords.slice(0, 3).map((kw) => (
-                            <Chip key={kw} label={kw} size="small" variant="outlined" sx={{ height: 20, fontSize: 11 }} />
-                          ))}
-                          {item.keywords.length > 3 && (
-                            <Chip label={`+${item.keywords.length - 3}`} size="small" sx={{ height: 20, fontSize: 11 }} />
-                          )}
-                        </Box>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          {item.file_name}
-                        </Typography>
-                      )}
+                      <Typography variant="body2" fontWeight={600}>
+                        {fileLabel(item)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {item.file_name}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={fileFormat(item.file_name)}
+                        size="small"
+                        variant="outlined"
+                      />
                     </TableCell>
                     <TableCell align="right">
                       <Typography variant="body2" fontWeight={600}>
@@ -485,13 +590,13 @@ export default function DataPage() {
                           <PreviewIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="单独导出">
+                      <Tooltip title="下载原始文件">
                         <IconButton
                           size="small"
-                          onClick={() => {
-                            setSelected(new Set([item.task_id]));
-                            setExportOpen(true);
-                          }}
+                          component="a"
+                          href={api.getDataExportUrl(item.task_id)}
+                          target="_blank"
+                          rel="noreferrer"
                         >
                           <DownloadIcon fontSize="small" />
                         </IconButton>
@@ -505,10 +610,15 @@ export default function DataPage() {
         </CardContent>
       </Card>
 
+      <Alert severity="info" sx={{ mt: 2 }}>
+        “下载原始文件”会保留 content_asset.csv 的完整字段；“批量导出旧七字段”会统一导出
+        video_id、platform、script_text、likes、favorites、shares、comments。
+      </Alert>
+
       {/* 格式说明卡片 */}
       <Card sx={{ mt: 2 }}>
         <CardContent>
-          <Typography variant="subtitle2" gutterBottom>导出格式说明</Typography>
+          <Typography variant="subtitle2" gutterBottom>批量旧格式说明</Typography>
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             <Box sx={{ flex: 1, minWidth: 260 }}>

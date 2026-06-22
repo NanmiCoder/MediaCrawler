@@ -11,6 +11,8 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import Collapse from '@mui/material/Collapse';
+import Paper from '@mui/material/Paper';
+import Alert from '@mui/material/Alert';
 import DownloadIcon from '@mui/icons-material/Download';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -249,9 +251,26 @@ function ResultSection({ task }: { task: any }) {
   if (task.status !== 'completed') return null;
 
   const result = task.result;
+  const isContentAsset = task.task_type === 'merge' || Boolean(
+    result?.content_asset_csv || result?.content_asset_jsonl || result?.content_asset_stats
+  );
+  const contentAssetStats = result?.content_asset_stats;
   const resultEntries = result
-    ? Object.entries(result).filter(([k]) => k !== 'status')
+    ? Object.entries(result).filter(([k]) =>
+        k !== 'status' && k !== 'content_asset_stats'
+      )
     : [];
+  const statsFields = [
+    ['rows_in', '输入行数'],
+    ['rows_out', '输出行数'],
+    ['comments_available', '有评论数据'],
+    ['scripts_available', '有文案数据'],
+    ['valid_comments_total', '有效评论数'],
+    ['asr_available', '真实 ASR 可用'],
+    ['fallback_script_total', '降级文案数'],
+    ['missing_script_total', '缺失文案数'],
+    ['content_asset_csv_generated', 'CSV 已生成'],
+  ] as const;
 
   return (
     <Card sx={{ border: '1px solid #43a047', bgcolor: '#f1f8e9' }}>
@@ -260,6 +279,17 @@ function ResultSection({ task }: { task: any }) {
           <CheckCircleOutlineIcon color="success" />
           <Typography variant="h6" color="success.dark">任务已完成</Typography>
         </Box>
+
+        {isContentAsset && (
+          <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: '#fff' }}>
+            <Typography variant="body2" fontWeight={700}>
+              主结果：内容资产表
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              content_asset.csv
+            </Typography>
+          </Paper>
+        )}
 
         {resultEntries.length > 0 && (
           <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -274,6 +304,41 @@ function ResultSection({ task }: { task: any }) {
           </Box>
         )}
 
+        {contentAssetStats && typeof contentAssetStats === 'object' && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              内容资产统计
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: 1,
+              }}
+            >
+              {statsFields.map(([key, label]) => (
+                contentAssetStats[key] !== undefined && (
+                  <Paper key={key} variant="outlined" sx={{ p: 1, bgcolor: '#fff' }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {label}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {typeof contentAssetStats[key] === 'boolean'
+                        ? (contentAssetStats[key] ? '是' : '否')
+                        : String(contentAssetStats[key])}
+                    </Typography>
+                  </Paper>
+                )
+              ))}
+            </Box>
+            {Array.isArray(contentAssetStats.errors) && contentAssetStats.errors.length > 0 && (
+              <Alert severity="warning" sx={{ mt: 1 }}>
+                {contentAssetStats.errors.join('；')}
+              </Alert>
+            )}
+          </Box>
+        )}
+
         <Button
           variant="contained"
           color="success"
@@ -282,7 +347,7 @@ function ResultSection({ task }: { task: any }) {
           target="_blank"
           size="small"
         >
-          下载结果文件
+          {isContentAsset ? '下载内容资产表' : '下载结果文件'}
         </Button>
       </CardContent>
     </Card>
