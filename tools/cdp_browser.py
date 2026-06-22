@@ -320,13 +320,29 @@ class CDPBrowserManager:
         """
         try:
             if config.CDP_CONNECT_EXISTING:
-                # For existing browser (e.g. chrome://inspect/#remote-debugging),
-                # Get the actual WebSocket URL from the browser's /json/version endpoint
-                ws_url = await self._get_browser_websocket_url(self.debug_port)
+                # Existing browser remote debugging in Chrome 136+ does not expose
+                # /json/version. Connect directly and wait for user confirmation.
+                ws_url = f"ws://localhost:{self.debug_port}/devtools/browser"
                 utils.logger.info(f"[CDPBrowserManager] Connecting to existing browser via CDP: {ws_url}")
-                self.browser = await playwright.chromium.connect_over_cdp(
-                    ws_url, timeout=config.BROWSER_LAUNCH_TIMEOUT * 1000
+                utils.logger.info(
+                    "[CDPBrowserManager] Please check your browser for a confirmation dialog and accept it"
                 )
+                try:
+                    self.browser = await playwright.chromium.connect_over_cdp(
+                        ws_url, timeout=config.BROWSER_LAUNCH_TIMEOUT * 1000
+                    )
+                except Exception as direct_error:
+                    utils.logger.warning(
+                        "[CDPBrowserManager] Direct existing-browser CDP connection failed: "
+                        f"{direct_error}. Trying /json/version discovery..."
+                    )
+                    ws_url = await self._get_browser_websocket_url(self.debug_port)
+                    utils.logger.info(
+                        f"[CDPBrowserManager] Connecting to existing browser via discovered CDP: {ws_url}"
+                    )
+                    self.browser = await playwright.chromium.connect_over_cdp(
+                        ws_url, timeout=config.BROWSER_LAUNCH_TIMEOUT * 1000
+                    )
             else:
                 # For launched browser, get WebSocket URL first
                 ws_url = await self._get_browser_websocket_url(self.debug_port)
