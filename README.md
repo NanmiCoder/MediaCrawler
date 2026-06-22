@@ -241,6 +241,12 @@ python main.py --help
 
 MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel、SQLite 和 MySQL 数据库。
 
+### Content Asset 内容资产表
+
+T017-5 提供 `content_asset.jsonl` 和 `content_asset.csv`，用于汇总搜索、标题清洗、评论和文案数据，并通过状态字段标明可用性与 fallback 来源。
+
+完整字段、接口和验收说明：[Content Asset 数据字典与验收说明](docs/CONTENT_ASSET.md)
+
 📖 **详细使用说明请查看：[数据存储指南](docs/data_storage_guide.md)**
 
 
