@@ -232,7 +232,7 @@ class CDPBrowserManager:
             # Simple socket connection test
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(5)
-                result = s.connect_ex(("localhost", debug_port))
+                result = s.connect_ex(("127.0.0.1", debug_port))
                 if result == 0:
                     utils.logger.info(
                         f"[CDPBrowserManager] CDP port {debug_port} is accessible"
@@ -290,9 +290,9 @@ class CDPBrowserManager:
         Get browser WebSocket connection URL
         """
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(trust_env=False) as client:
                 response = await client.get(
-                    f"http://localhost:{debug_port}/json/version", timeout=10
+                    f"http://127.0.0.1:{debug_port}/json/version", timeout=10
                 )
                 if response.status_code == 200:
                     data = response.json()
@@ -307,8 +307,12 @@ class CDPBrowserManager:
                 else:
                     raise RuntimeError(f"HTTP {response.status_code}: {response.text}")
         except Exception as e:
-            utils.logger.error(f"[CDPBrowserManager] Failed to get WebSocket URL: {e}")
-            raise
+            message = (
+                f"Cannot read Chrome CDP endpoint "
+                f"http://127.0.0.1:{debug_port}/json/version: {e}"
+            )
+            utils.logger.error(f"[CDPBrowserManager] {message}")
+            raise RuntimeError(message) from e
 
     async def _connect_via_cdp(self, playwright: Playwright):
         """
@@ -317,13 +321,9 @@ class CDPBrowserManager:
         try:
             if config.CDP_CONNECT_EXISTING:
                 # For existing browser (e.g. chrome://inspect/#remote-debugging),
-                # Chrome exposes a WebSocket at /devtools/browser and may show a confirmation
-                # dialog to the user. Use ws:// with a longer timeout to wait for user confirmation.
-                ws_url = f"ws://localhost:{self.debug_port}/devtools/browser"
+                # Get the actual WebSocket URL from the browser's /json/version endpoint
+                ws_url = await self._get_browser_websocket_url(self.debug_port)
                 utils.logger.info(f"[CDPBrowserManager] Connecting to existing browser via CDP: {ws_url}")
-                utils.logger.info(
-                    "[CDPBrowserManager] Please check your browser for a confirmation dialog and accept it"
-                )
                 self.browser = await playwright.chromium.connect_over_cdp(
                     ws_url, timeout=config.BROWSER_LAUNCH_TIMEOUT * 1000
                 )

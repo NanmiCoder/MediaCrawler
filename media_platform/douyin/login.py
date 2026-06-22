@@ -88,7 +88,7 @@ class DouYinLogin(AbstractLogin):
         utils.logger.info(f"[DouYinLogin.begin] Login successful then wait for {wait_redirect_seconds} seconds redirect ...")
         await asyncio.sleep(wait_redirect_seconds)
 
-    @retry(stop=stop_after_attempt(600), wait=wait_fixed(1), retry=retry_if_result(lambda value: value is False))
+    @retry(stop=stop_after_attempt(20), wait=wait_fixed(2), retry=retry_if_result(lambda value: value is False))
     async def check_login_state(self):
         """Check if the current login status is successful and return True otherwise return False"""
         current_cookie = await self.browser_context.cookies()
@@ -106,10 +106,21 @@ class DouYinLogin(AbstractLogin):
         if cookie_dict.get("LOGIN_STATUS") == "1":
             return True
 
+        # Cookie 登录模式：sessionid 存在即视为已登录（不需要 LOGIN_STATUS cookie）
+        if config.LOGIN_TYPE == "cookie" and cookie_dict.get("sessionid"):
+            utils.logger.info("[DouYinLogin.check_login_state] cookie 模式下检测到 sessionid，视为已登录")
+            return True
+
         return False
 
     async def popup_login_dialog(self):
         """If the login dialog box does not pop up automatically, we will manually click the login button"""
+        if config.LOGIN_TYPE == "cookie":
+            utils.logger.info(
+                "[DouYinLogin.popup_login_dialog] cookie login mode, skipping login dialog"
+            )
+            return
+
         dialog_selector = "xpath=//div[@id='login-panel-new']"
         try:
             # check dialog box is auto popup and wait for 10 seconds
@@ -117,9 +128,12 @@ class DouYinLogin(AbstractLogin):
         except Exception as e:
             utils.logger.error(f"[DouYinLogin.popup_login_dialog] login dialog box does not pop up automatically, error: {e}")
             utils.logger.info("[DouYinLogin.popup_login_dialog] login dialog box does not pop up automatically, we will manually click the login button")
-            login_button_ele = self.context_page.locator("xpath=//p[text() = '登录']")
-            await login_button_ele.click()
-            await asyncio.sleep(0.5)
+            try:
+                login_button_ele = self.context_page.locator("xpath=//p[text() = '登录']")
+                await login_button_ele.click()
+                await asyncio.sleep(0.5)
+            except Exception as click_e:
+                utils.logger.warning("[DouYinLogin.popup_login_dialog] could not click login button: %s", click_e)
 
     async def login_by_qrcode(self):
         utils.logger.info("[DouYinLogin.login_by_qrcode] Begin login douyin by qrcode...")

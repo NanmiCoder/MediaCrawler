@@ -1023,6 +1023,13 @@ class DouyinScraper:
         )
         if subprocess_error:
             comments_stats["errors"].append(subprocess_error)
+            comments_stats["collection_status"] = (
+                "pending_cdp" if comments_stats["comments_out"] <= 0 else "partial"
+            )
+        else:
+            comments_stats["collection_status"] = (
+                "available" if comments_stats["comments_out"] > 0 else "empty"
+            )
         self._paths["comments_raw_csv"] = csv_path
         self._paths["comments_stats"] = comments_stats
         return output_path
