@@ -61,4 +61,14 @@ default = true
 testpaths = ["douyin_scraper/tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+markers = [
+    "core: stable core regression tests required for the merge gate",
+    "legacy: legacy compatibility tests tracked outside the merge gate",
+    "external: tests requiring explicitly enabled external services",
+    "redis: tests requiring a Redis service",
+    "mongo: tests requiring a MongoDB service",
+    "proxy: tests requiring an external proxy provider",
+    "playwright: tests requiring a real Playwright browser environment",
+    "known_fail: known failing tests tracked by T021",
+]
 # API regression tests: pytest api/tests.py

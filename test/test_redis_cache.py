@@ -27,7 +27,16 @@
 import time
 import unittest
 
+import pytest
+
 from cache.redis_cache import RedisCache
+
+
+pytestmark = [
+    pytest.mark.external,
+    pytest.mark.redis,
+    pytest.mark.known_fail,
+]
 
 
 class TestRedisCache(unittest.TestCase):

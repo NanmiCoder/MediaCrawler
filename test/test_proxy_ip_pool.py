@@ -26,11 +26,17 @@ import time
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from proxy.proxy_ip_pool import create_ip_pool, ProxyIpPool
 from proxy.types import IpInfoModel
 
 
 class TestIpPool(IsolatedAsyncioTestCase):
+    @pytest.mark.external
+    @pytest.mark.redis
+    @pytest.mark.proxy
+    @pytest.mark.known_fail
     async def test_ip_pool(self):
         pool = await create_ip_pool(ip_pool_count=1, enable_validate_ip=True)
         print("\n")
@@ -39,6 +45,10 @@ class TestIpPool(IsolatedAsyncioTestCase):
             print(ip_proxy_info)
             self.assertIsNotNone(ip_proxy_info.ip, msg="Verify if IP is obtained successfully")
 
+    @pytest.mark.external
+    @pytest.mark.redis
+    @pytest.mark.proxy
+    @pytest.mark.known_fail
     async def test_ip_expiration(self):
         """Test IP proxy expiration detection functionality"""
         print("\n=== Starting IP proxy expiration detection test ===")
@@ -91,6 +101,10 @@ class TestIpPool(IsolatedAsyncioTestCase):
 
         print("\n=== IP proxy expiration detection test completed ===")
 
+    @pytest.mark.external
+    @pytest.mark.redis
+    @pytest.mark.proxy
+    @pytest.mark.known_fail
     async def test_proxy_pool_auto_refresh(self):
         """Test proxy pool auto-refresh expired proxy functionality"""
         print("\n=== Starting proxy pool auto-refresh test ===")

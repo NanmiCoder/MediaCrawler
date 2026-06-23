@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Test (pytest)
+  core-tests:
+    name: Core regression gate (89 tests)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,8 +31,33 @@ jobs:
           pip install -r requirements-test.txt
           pip install -r api/requirements.txt
 
-      - name: Run douyin_scraper tests
-        run: pytest douyin_scraper/tests/ -q
+      - name: Run stable core regression
+        run: pytest douyin_scraper/tests/ api/tests.py -q
 
-      - name: Run API tests
-        run: pytest api/tests.py -q
+  legacy-baseline:
+    name: Legacy baseline (known failures, non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+          pip install -r api/requirements.txt
+
+      - name: Run visible legacy baseline
+        run: pytest tests/ test/ -q
