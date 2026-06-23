@@ -300,6 +300,9 @@ app.add_middleware(
 
 # 注册路由
 protected_dependencies = [Depends(require_api_key)]
+# `/scrape` is the only supported crawler API. The legacy `/crawler` router
+# remains intentionally unmounted; clients must migrate instead of relying on
+# a permanent dual-route compatibility layer.
 app.include_router(router, dependencies=protected_dependencies)
 app.include_router(login_router, dependencies=protected_dependencies)
 

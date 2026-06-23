@@ -10,7 +10,7 @@ The repository contains 165 collected tests:
 | Layer | Paths | Baseline |
 | --- | --- | --- |
 | Core regression | `douyin_scraper/tests`, `api/tests.py` | 89 passed |
-| Legacy regression | `tests`, `test` | 53 passed, 9 code failures, 14 external skips by default |
+| Legacy regression | `tests`, `test` | 61 passed, 1 code failure, 14 external skips by default |
 | External integration | Selected tests under `test` | 14 tests, opt-in |
 
 Before external tests were isolated and Redis defaults were aligned, the full
@@ -20,12 +20,12 @@ observed baseline was:
 142 passed / 15 failed / 8 skipped
 ```
 
-With the T021-1 default external-service policy, the same 165 tests are
-collected, but Redis/proxy integrations are skipped unless their environment is
-explicitly enabled:
+With the T021-3 contract migration and the default external-service policy,
+the same 165 tests are collected, but Redis/proxy integrations are skipped
+unless their environment is explicitly enabled:
 
 ```text
-142 passed / 9 failed / 14 skipped
+150 passed / 1 failed / 14 skipped
 ```
 
 No failing test is deleted or converted to `xfail`.
@@ -133,13 +133,20 @@ The original 15-failure baseline was:
 
 | Group | Count | Follow-up |
 | --- | ---: | --- |
-| Legacy `/api/crawler` contract returns 404 | 8 | T021-3 |
+| Legacy `/api/crawler` contract returns 404 | 8 | Resolved by T021-3 test migration |
 | Redis authentication mismatch | 6 | Resolved by T021-2 configuration alignment |
 | Excel Store Factory implementation mismatch | 1 | Separate T021-x or P2 |
 
 After T021-2, the three pure Redis cache tests are no longer marked
 `known_fail`. The three proxy-pool tests remain tracked because their real
 provider dependency is not part of the default CI environment.
+
+After T021-3, the eight legacy route tests target the supported
+`POST /scrape/search` and `POST /scrape/comments` limit contracts. The
+unmounted `/api/crawler/start` path is explicitly asserted to remain 404.
+`/scrape` is the only supported crawler API; the legacy router is not restored
+as a compatibility route. The tracked `known_fail` set is now four tests:
+three opt-in proxy-provider integrations and one Store Factory mismatch.
 
 The API suite also emits closed-stream logging errors during shutdown without
 failing pytest. The combined full-suite run also reports pending
