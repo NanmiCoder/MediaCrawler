@@ -648,7 +648,7 @@ async def delete_task(task_id: str) -> Dict[str, str]:
         logger.warning("拒绝删除非法任务 workspace: task_id=%s", task_id)
         raise HTTPException(status_code=400, detail="任务工作目录无效，已拒绝删除")
     except OSError:
-        logger.exception("删除任务 workspace 失败: task_id=%s", task_id)
+        logger.warning("删除任务 workspace 失败: task_id=%s", task_id)
         raise HTTPException(status_code=500, detail="删除任务失败")
     raise HTTPException(status_code=404, detail=f"任务不存在: {task_id}")
 

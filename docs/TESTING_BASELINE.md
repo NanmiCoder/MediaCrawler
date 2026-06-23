@@ -9,7 +9,7 @@ The repository contains 165 collected tests:
 
 | Layer | Paths | Baseline |
 | --- | --- | --- |
-| Core regression | `douyin_scraper/tests`, `api/tests.py` | 89 passed |
+| Core regression | `douyin_scraper/tests`, `api/tests.py` | 91 passed |
 | Legacy regression | `tests`, `test` | 61 passed, 1 code failure, 14 external skips by default |
 | External integration | Selected tests under `test` | 14 tests, opt-in |
 
@@ -40,7 +40,7 @@ The blocking `core-tests` job runs:
 pytest douyin_scraper/tests/ api/tests.py -q
 ```
 
-These 89 tests are the pull-request merge gate and do not require Redis,
+These 91 tests are the pull-request merge gate and do not require Redis,
 MongoDB, a proxy provider, or a real browser.
 
 ### Legacy baseline
@@ -148,10 +148,11 @@ unmounted `/api/crawler/start` path is explicitly asserted to remain 404.
 as a compatibility route. The tracked `known_fail` set is now four tests:
 three opt-in proxy-provider integrations and one Store Factory mismatch.
 
-The API suite also emits closed-stream logging errors during shutdown without
-failing pytest. The combined full-suite run also reports pending
-`ExpiringLocalCache` cleanup tasks. These lifecycle issues remain assigned to
-T021-5.
+The API suite previously emitted closed-stream logging errors during pytest
+shutdown without failing tests. T021-5 resolves TaskManager shutdown,
+execution log handler release, and atexit registration so `api/tests.py`
+exits cleanly. The combined full-suite run may still report pending
+`ExpiringLocalCache` cleanup tasks outside this scope.
 
 T021-4 aligns the health response contract on `checks.disk.free_gb`. The
 frontend type and dashboard now consume the backend field directly, and the
@@ -175,4 +176,4 @@ tracked failures remain. This is intentional visibility, not a merge gate.
 
 1. T021-3: reconcile the legacy crawler route contract.
 2. T021-4: align health response fields.
-3. T021-5: repair test shutdown and logging lifecycle.
+3. T021-5: repair test shutdown and logging lifecycle. (resolved)

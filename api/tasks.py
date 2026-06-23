@@ -27,10 +27,12 @@ import os
 import re
 import shutil
 import signal
+import sys
 import tempfile
 import threading
 import time as _time
 import uuid
+import weakref
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -44,10 +46,33 @@ logger = logging.getLogger("douyin_scraper.api")
 
 _CST = timezone(timedelta(hours=8))
 _TASK_ID_RE = re.compile(r"^[0-9a-f]{12}$")
+_REGISTERED_MANAGERS: "weakref.WeakSet[TaskManager]" = weakref.WeakSet()
+_ATEXIT_REGISTERED_GLOBALLY = False
+_WINDOWS_DELETE_RETRIES = (0.0, 0.1, 0.25)
 
 
 def _now_iso() -> str:
     return datetime.now(_CST).isoformat()
+
+
+def _safe_log(level: str, msg: str, *args: Any) -> None:
+    """Best-effort logging for shutdown/atexit paths after pytest closes streams."""
+    stream = getattr(sys, "stdout", None)
+    if stream is None or getattr(stream, "closed", False):
+        return
+    try:
+        getattr(logger, level)(msg, *args)
+    except (ValueError, OSError, AttributeError):
+        pass
+
+
+def shutdown_all_task_managers() -> None:
+    """Shut down every live TaskManager instance (atexit / signal safety net)."""
+    for manager in list(_REGISTERED_MANAGERS):
+        try:
+            manager.shutdown()
+        except Exception:
+            pass
 
 
 def _atomic_write_json(filepath: Path, data: dict) -> None:
@@ -155,14 +180,19 @@ class TaskManager:
         # 内存任务注册表
         self._tasks: Dict[str, TaskInfo] = {}
         self._lock = threading.Lock()
+        self._lifecycle_lock = threading.Lock()
+        self._worker_threads: Dict[str, threading.Thread] = {}
 
         # 优雅关闭：收到 SIGTERM 后等待任务完成的超时时间（秒）
         self.GRACEFUL_SHUTDOWN_TIMEOUT: int = 60
         # 关闭信号标志（信号处理器设置，工作线程/轮询循环检查）
         self._shutdown_flag = threading.Event()
+        self._shutdown_done = False
 
         # 持久化文件
         self._state_file = self._base_dir / "tasks_registry.json"
+
+        _REGISTERED_MANAGERS.add(self)
 
         # 从持久化文件恢复
         self._load_registry()
@@ -172,6 +202,111 @@ class TaskManager:
 
         # 启动时清理残留的 running 任务（上次进程异常退出遗留）
         self.cleanup_stale_tasks()
+
+    def shutdown(self) -> None:
+        """Stop background workers and release resources. Safe to call multiple times."""
+        with self._lifecycle_lock:
+            if self._shutdown_done:
+                return
+            self._shutdown_done = True
+
+        self._shutdown_flag.set()
+        self._mark_running_tasks_interrupted("shutdown")
+
+        with self._lock:
+            threads = list(self._worker_threads.values())
+        for thread in threads:
+            if thread.is_alive():
+                thread.join(timeout=self.GRACEFUL_SHUTDOWN_TIMEOUT)
+
+        self._release_all_task_log_handlers()
+
+    def _mark_running_tasks_interrupted(self, source: str) -> None:
+        with self._lock:
+            running = [t for t in self._tasks.values() if t.status == "running"]
+            if not running:
+                _safe_log("info", "[%s] 没有运行中任务，直接退出", source)
+                return
+
+        _safe_log(
+            "warning",
+            "[%s] 优雅关闭开始：等待 %d 个运行中任务完成（最多 %ds）...",
+            source,
+            len(running),
+            self.GRACEFUL_SHUTDOWN_TIMEOUT,
+        )
+
+        deadline = _time.monotonic() + self.GRACEFUL_SHUTDOWN_TIMEOUT
+        while _time.monotonic() < deadline:
+            with self._lock:
+                still_running = [
+                    t for t in self._tasks.values() if t.status == "running"
+                ]
+            if not still_running:
+                break
+            _time.sleep(0.5)
+
+        with self._lock:
+            killed = 0
+            finished = 0
+            for task in self._tasks.values():
+                if task.status == "running":
+                    task.status = "failed"
+                    task.completed_at = _now_iso()
+                    task.error = "任务被中断：服务正在关闭（容器重启/进程退出）"
+                    task.exit_code = 4
+                    killed += 1
+                elif task.status == "completed":
+                    finished += 1
+            if killed > 0:
+                self._save_registry()
+            if killed > 0 or finished > 0:
+                _safe_log(
+                    "info",
+                    "[%s] 优雅关闭完成 — %d 完成, %d 被中断",
+                    source,
+                    finished,
+                    killed,
+                )
+
+    def _release_task_log_handlers(self, task: TaskInfo) -> None:
+        from douyin_scraper.utils import close_log_handlers_under
+
+        try:
+            close_log_handlers_under(Path(task.workspace))
+        except OSError:
+            pass
+
+    def _release_all_task_log_handlers(self) -> None:
+        from douyin_scraper.utils import close_all_log_handlers
+
+        try:
+            close_all_log_handlers()
+        except OSError:
+            pass
+
+    def _remove_workspace_dir(self, workspace_path: Path) -> None:
+        self._release_task_log_handlers_for_path(workspace_path)
+        delays = _WINDOWS_DELETE_RETRIES if os.name == "nt" else (0.0,)
+        last_error: Optional[OSError] = None
+        for delay in delays:
+            if delay:
+                _time.sleep(delay)
+            try:
+                shutil.rmtree(workspace_path)
+                return
+            except OSError as exc:
+                last_error = exc
+        if last_error is not None:
+            raise last_error
+
+    def _release_task_log_handlers_for_path(self, workspace_path: Path) -> None:
+        from douyin_scraper.utils import close_log_handlers_under
+
+        try:
+            close_log_handlers_under(workspace_path)
+        except OSError:
+            pass
 
     def _register_shutdown_handlers(self) -> None:
         """
@@ -184,70 +319,22 @@ class TaskManager:
         4. 超时后仍未结束的标记为 failed (exit_code=4, "被中断")
         5. atexit 兜底：进程崩溃/非正常退出时仍然会标记残留任务
         """
-        if self._atexit_registered:
+        global _ATEXIT_REGISTERED_GLOBALLY
+        if self._atexit_registered or _ATEXIT_REGISTERED_GLOBALLY:
+            self._atexit_registered = True
             return
         self._atexit_registered = True
-
-        def _do_graceful_shutdown(source: str) -> None:
-            """核心优雅关闭逻辑，信号处理器和 atexit 兜底共用"""
-            # 防止重复执行（SIGTERM + atexit 可能同时触发）
-            if self._shutdown_flag.is_set():
-                return
-            self._shutdown_flag.set()
-
-            running_count = sum(
-                1 for t in self._tasks.values() if t.status == "running"
-            )
-            if running_count == 0:
-                logger.info("[%s] 没有运行中任务，直接退出", source)
-                return
-
-            logger.warning(
-                "[%s] 优雅关闭开始：等待 %d 个运行中任务完成（最多 %ds）...",
-                source, running_count, self.GRACEFUL_SHUTDOWN_TIMEOUT,
-            )
-
-            deadline = _time.monotonic() + self.GRACEFUL_SHUTDOWN_TIMEOUT
-            while _time.monotonic() < deadline:
-                with self._lock:
-                    still_running = [
-                        t for t in self._tasks.values()
-                        if t.status == "running"
-                    ]
-                if not still_running:
-                    break
-                _time.sleep(0.5)
-
-            # 检查结果
-            with self._lock:
-                killed = 0
-                finished = 0
-                for task in self._tasks.values():
-                    if task.status == "running":
-                        task.status = "failed"
-                        task.completed_at = _now_iso()
-                        task.error = "任务被中断：服务正在关闭（容器重启/进程退出）"
-                        task.exit_code = 4  # 被外部中断（区别于 3=致命错误）
-                        killed += 1
-                    elif task.status == "completed":
-                        finished += 1
-                if killed > 0:
-                    self._save_registry()
-                logger.info(
-                    "[%s] 优雅关闭完成 — %d 完成, %d 被中断",
-                    source, finished, killed,
-                )
+        _ATEXIT_REGISTERED_GLOBALLY = True
 
         # ── SIGTERM 处理器（Docker stop / docker-compose restart）──
         def _sigterm_handler(signum: int, frame: Any) -> None:
-            _do_graceful_shutdown("SIGTERM")
-            # 恢复默认行为让进程自然退出
+            shutdown_all_task_managers()
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             os.kill(os.getpid(), signal.SIGTERM)
 
         # ── SIGINT 处理器（Ctrl+C）──
         def _sigint_handler(signum: int, frame: Any) -> None:
-            _do_graceful_shutdown("SIGINT")
+            shutdown_all_task_managers()
             signal.signal(signal.SIGINT, signal.SIG_DFL)
             os.kill(os.getpid(), signal.SIGINT)
 
@@ -255,10 +342,8 @@ class TaskManager:
         signal.signal(signal.SIGINT, _sigint_handler)
         logger.debug("已注册 SIGTERM/SIGINT 优雅关闭处理器")
 
-        # ── atexit 兜底：进程崩溃/非正常退出时仍然会触发 ──
         def _atexit_safety_net() -> None:
-            if not self._shutdown_flag.is_set():
-                _do_graceful_shutdown("atexit（异常退出）")
+            shutdown_all_task_managers()
 
         atexit.register(_atexit_safety_net)
 
@@ -376,43 +461,50 @@ class TaskManager:
         线程安全：所有对 TaskInfo 属性的修改都在 self._lock 下进行。
         """
         def _worker() -> None:
-            with self._lock:
-                task.status = "running"
-                task.started_at = _now_iso()
-                self._save_registry()
-
-            self._broadcast("task_started", task)
-
             try:
-                result = func(*args, **kwargs)
                 with self._lock:
-                    task.status = "completed"
-                    task.completed_at = _now_iso()
-                    task.result = result if isinstance(result, dict) else {"output": str(result)}
+                    task.status = "running"
+                    task.started_at = _now_iso()
                     self._save_registry()
-                logger.info("任务完成: %s", task.task_id)
-                self._broadcast("task_completed", task)
-            except Exception as e:
-                with self._lock:
-                    task.status = "failed"
-                    task.completed_at = _now_iso()
-                    task.error = str(e)[:500]
 
-                    # 分类退出码
-                    from douyin_scraper.utils import classify_error
-                    task.exit_code = classify_error(e)
-                    self._save_registry()
-                logger.error(
-                    "任务失败: %s (exit_code=%d): %s",
-                    task.task_id, task.exit_code, task.error,
-                )
-                self._broadcast("task_failed", task)
+                self._broadcast("task_started", task)
+
+                try:
+                    result = func(*args, **kwargs)
+                    with self._lock:
+                        task.status = "completed"
+                        task.completed_at = _now_iso()
+                        task.result = result if isinstance(result, dict) else {"output": str(result)}
+                        self._save_registry()
+                    logger.info("任务完成: %s", task.task_id)
+                    self._broadcast("task_completed", task)
+                except Exception as e:
+                    with self._lock:
+                        task.status = "failed"
+                        task.completed_at = _now_iso()
+                        task.error = str(e)[:500]
+
+                        # 分类退出码
+                        from douyin_scraper.utils import classify_error
+                        task.exit_code = classify_error(e)
+                        self._save_registry()
+                    logger.error(
+                        "任务失败: %s (exit_code=%d): %s",
+                        task.task_id, task.exit_code, task.error,
+                    )
+                    self._broadcast("task_failed", task)
+            finally:
+                self._release_task_log_handlers(task)
+                with self._lock:
+                    self._worker_threads.pop(task.task_id, None)
 
         thread = threading.Thread(
             target=_worker,
             name=f"task-{task.task_id}",
             daemon=False,
         )
+        with self._lock:
+            self._worker_threads[task.task_id] = thread
         thread.start()
         # 注册优雅关闭处理器：收到 SIGTERM 后等待任务完成
         self._register_shutdown_handlers()
@@ -475,8 +567,9 @@ class TaskManager:
                 return False
 
             workspace_path = self._validated_workspace_for_delete(task)
+            self._release_task_log_handlers(task)
             if workspace_path.exists():
-                shutil.rmtree(workspace_path)
+                self._remove_workspace_dir(workspace_path)
                 logger.info("已清理任务 workspace: task_id=%s", task_id)
 
             del self._tasks[task_id]

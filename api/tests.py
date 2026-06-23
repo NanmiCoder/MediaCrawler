@@ -8,6 +8,7 @@ import asyncio
 import csv
 import io
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any, Dict
@@ -16,6 +17,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
+
+
+@pytest.fixture(autouse=True)
+def _shutdown_task_managers_after_test() -> Any:
+    """Ensure workers and log handlers are released before pytest closes streams."""
+    yield
+    from api.tasks import shutdown_all_task_managers
+
+    shutdown_all_task_managers()
 
 
 def wait_for_task(tm, task_id: str, timeout: float = 10.0,
@@ -114,6 +124,54 @@ class TestTaskManager:
         assert tm.delete_task(task.task_id) is True
         assert tm.get_task(task.task_id) is None
         assert not workspace.exists()
+
+    def test_shutdown_is_idempotent(self, tmp_path: Path) -> None:
+        """shutdown() 可重复调用且会回收 worker 线程引用。"""
+        from api.tasks import TaskManager
+
+        tm = TaskManager(base_dir=str(tmp_path))
+        task = tm.create_task("search")
+
+        def _quick_search() -> Dict[str, Any]:
+            return {"ok": True}
+
+        with patch.object(TaskManager, "_register_shutdown_handlers"):
+            tm.submit(task, _quick_search)
+        wait_for_task(tm, task.task_id)
+
+        tm.shutdown()
+        tm.shutdown()
+        with tm._lock:
+            assert not tm._worker_threads
+
+    def test_delete_after_failed_task_releases_execution_log(
+        self, tmp_path: Path
+    ) -> None:
+        """失败任务立即删除时不得因 execution_log.jsonl 文件锁失败。"""
+        from logging.handlers import RotatingFileHandler
+
+        from api.tasks import TaskManager
+        from douyin_scraper.utils import setup_log_rotation
+
+        tm = TaskManager(base_dir=str(tmp_path))
+        task = tm.create_task("search")
+        workspace = Path(task.workspace)
+        state_dir = workspace / "state"
+        state_dir.mkdir(parents=True, exist_ok=True)
+        log_path = state_dir / "execution_log.jsonl"
+        setup_log_rotation(log_path)
+        log_path.write_text('{"msg":"test"}\n', encoding="utf-8")
+
+        task.status = "failed"
+        task.completed_at = "2026-06-23T10:00:00+08:00"
+        tm._save_registry()
+
+        assert tm.delete_task(task.task_id) is True
+        assert not workspace.exists()
+        assert not any(
+            isinstance(h, RotatingFileHandler)
+            for h in logging.getLogger("douyin_scraper").handlers
+        )
 
     def test_delete_task_rejects_workspace_escape(self, tmp_path: Path) -> None:
         """篡改注册表 workspace 时不得删除工作区根目录外的内容。"""
@@ -361,6 +419,7 @@ class TestAPIRoutes:
         with patch.object(TaskManager, "_register_shutdown_handlers"):
             with TestClient(app) as c:
                 yield c
+        tm.shutdown()
 
     def test_health_check(self, client: Any) -> None:
         """健康检查"""

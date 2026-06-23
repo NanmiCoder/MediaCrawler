@@ -479,6 +479,71 @@ def ensure_dir_writable(dir_path: Path, fallback_dir: Path) -> Path:
 # 5. 日志轮转
 # ═══════════════════════════════════════════════════════════════════
 
+def _douyin_scraper_logger() -> logging.Logger:
+    return logging.getLogger("douyin_scraper")
+
+
+def _rotating_handler_path(handler: RotatingFileHandler) -> Optional[Path]:
+    base = getattr(handler, "baseFilename", None)
+    if not base:
+        return None
+    try:
+        return Path(base).resolve()
+    except OSError:
+        return None
+
+
+def close_log_handler(log_path: Path) -> None:
+    """Close and remove the RotatingFileHandler for a specific execution log."""
+    target = Path(log_path).resolve()
+    lib_logger = _douyin_scraper_logger()
+    for handler in list(lib_logger.handlers):
+        if not isinstance(handler, RotatingFileHandler):
+            continue
+        handler_path = _rotating_handler_path(handler)
+        if handler_path is None or handler_path != target:
+            continue
+        try:
+            handler.close()
+        except OSError:
+            pass
+        lib_logger.removeHandler(handler)
+
+
+def close_log_handlers_under(workspace: Path) -> None:
+    """Close execution log handlers whose files live under a task workspace."""
+    root = Path(workspace).resolve()
+    lib_logger = _douyin_scraper_logger()
+    for handler in list(lib_logger.handlers):
+        if not isinstance(handler, RotatingFileHandler):
+            continue
+        handler_path = _rotating_handler_path(handler)
+        if handler_path is None:
+            continue
+        try:
+            handler_path.relative_to(root)
+        except ValueError:
+            continue
+        try:
+            handler.close()
+        except OSError:
+            pass
+        lib_logger.removeHandler(handler)
+
+
+def close_all_log_handlers() -> None:
+    """Close every RotatingFileHandler attached to the douyin_scraper logger."""
+    lib_logger = _douyin_scraper_logger()
+    for handler in list(lib_logger.handlers):
+        if not isinstance(handler, RotatingFileHandler):
+            continue
+        try:
+            handler.close()
+        except OSError:
+            pass
+        lib_logger.removeHandler(handler)
+
+
 def setup_log_rotation(
     log_path: Path,
     max_bytes: int = 10 * 1024 * 1024,
@@ -488,7 +553,10 @@ def setup_log_rotation(
     配置日志文件自动轮转。
     我实际执行时：execution_log.jsonl 增长到几百 MB，占满磁盘。
     """
+    log_path = Path(log_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
+    close_log_handler(log_path)
+
     handler = RotatingFileHandler(
         str(log_path),
         maxBytes=max_bytes,
@@ -497,9 +565,8 @@ def setup_log_rotation(
     )
     handler.setFormatter(logging.Formatter("%(message)s"))
 
-    lib_logger = logging.getLogger("douyin_scraper")
+    lib_logger = _douyin_scraper_logger()
     lib_logger.setLevel(logging.DEBUG)
-    if not any(isinstance(h, RotatingFileHandler) for h in lib_logger.handlers):
-        lib_logger.addHandler(handler)
+    lib_logger.addHandler(handler)
 
     return handler

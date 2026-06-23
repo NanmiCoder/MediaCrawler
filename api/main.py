@@ -267,6 +267,8 @@ async def lifespan(app: FastAPI):
             await _log_broadcaster_task
         except asyncio.CancelledError:
             pass
+    if _task_manager_instance is not None:
+        _task_manager_instance.shutdown()
     logger.info("API 服务已关闭")
 
 
