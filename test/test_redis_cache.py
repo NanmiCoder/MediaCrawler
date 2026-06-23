@@ -35,7 +35,6 @@ from cache.redis_cache import RedisCache
 pytestmark = [
     pytest.mark.external,
     pytest.mark.redis,
-    pytest.mark.known_fail,
 ]
 
 

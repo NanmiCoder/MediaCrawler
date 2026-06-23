@@ -10,6 +10,10 @@ services:
     environment:
       DY_API_HOST: "0.0.0.0"
       DY_API_AUTH_REQUIRED: "1"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+      REDIS_DB: "${REDIS_DB:-0}"
     volumes:
       - ./workspaces:/app/workspaces
       - ./data:/app/data
@@ -24,9 +28,20 @@ services:
 
   redis:
     image: redis:7-alpine
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    # Internal-only, passwordless development default. Do not publish port 6379.
+    # Secured deployments must set the same injected password on both services.
+    command:
+      - sh
+      - -c
+      - |
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+        fi
+        exec redis-server --appendonly yes
     restart: unless-stopped
 
 volumes:
