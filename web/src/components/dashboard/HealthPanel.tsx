@@ -23,7 +23,7 @@ export default function HealthPanel({ health }: Props) {
       label: '磁盘空间',
       status: health.checks?.disk?.status,
       detail: health.checks?.disk?.detail,
-      value: health.checks?.disk?.available_gb,
+      value: health.checks?.disk?.free_gb,
     },
     {
       label: 'FFmpeg',
@@ -46,7 +46,7 @@ export default function HealthPanel({ health }: Props) {
               )}
               <Typography variant="body2" sx={{ minWidth: 80 }}>{check.label}</Typography>
               <Typography variant="body2" color="text.secondary">
-                {check.value ? `${check.value} GB 可用` : check.status || '未知'}
+                {check.value != null ? `${check.value} GB 可用` : check.status || '未知'}
               </Typography>
               {check.detail && (
                 <Typography variant="caption" color="text.secondary">({check.detail})</Typography>

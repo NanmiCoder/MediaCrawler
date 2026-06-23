@@ -370,6 +370,9 @@ class TestAPIRoutes:
         assert "status" in data
         assert "checks" in data
         assert "system" in data
+        disk = data["checks"]["disk"]
+        assert isinstance(disk["free_gb"], (int, float))
+        assert "available_gb" not in disk
 
     def test_root(self, client: Any) -> None:
         """根路径"""

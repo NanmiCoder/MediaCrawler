@@ -40,7 +40,7 @@ export interface HealthResponse {
   uptime_seconds: number;
   checks: {
     chrome_cdp: { status: string; detail?: string };
-    disk: { status: string; available_gb?: number; detail?: string };
+    disk: { status: string; free_gb: number; detail?: string };
     ffmpeg: { status: string; detail?: string };
   };
   system: Record<string, any>;

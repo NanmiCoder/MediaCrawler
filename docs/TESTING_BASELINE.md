@@ -153,8 +153,10 @@ failing pytest. The combined full-suite run also reports pending
 `ExpiringLocalCache` cleanup tasks. These lifecycle issues remain assigned to
 T021-5.
 
-The backend `free_gb` and frontend `available_gb` health-field mismatch has no
-current failing test and remains assigned to T021-4.
+T021-4 aligns the health response contract on `checks.disk.free_gb`. The
+frontend type and dashboard now consume the backend field directly, and the
+API regression suite verifies that `free_gb` is numeric and the obsolete
+`available_gb` field is absent.
 
 ## Local commands
 
