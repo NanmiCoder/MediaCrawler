@@ -450,3 +450,68 @@ class ZhihuCreator(Base):
     get_voteup_count = Column(Integer, default=0, comment='获赞数')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
+
+
+class TiktokAweme(Base):
+    __tablename__ = 'tiktok_aweme'
+    id = Column(Integer, primary_key=True, comment='主键ID')
+    user_id = Column(String(255), comment='用户ID')
+    nickname = Column(Text, comment='用户昵称')
+    avatar = Column(Text, comment='用户头像')
+    user_signature = Column(Text, comment='用户签名')
+    ip_location = Column(Text, comment='IP地址位置')
+    add_ts = Column(BigInteger, comment='添加时间戳')
+    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
+    aweme_id = Column(String(255), index=True, comment='作品ID')
+    aweme_type = Column(Text, comment='作品类型')
+    title = Column(Text, comment='作品标题')
+    desc = Column(Text, comment='作品描述')
+    create_time = Column(BigInteger, index=True, comment='创建时间戳')
+    liked_count = Column(Text, comment='点赞数')
+    comment_count = Column(Text, comment='评论数')
+    share_count = Column(Text, comment='分享数')
+    collected_count = Column(Text, comment='收藏数')
+    aweme_url = Column(Text, comment='作品URL')
+    cover_url = Column(Text, comment='封面URL')
+    video_download_url = Column(Text, comment='视频下载URL')
+    music_download_url = Column(Text, comment='音乐下载URL')
+    note_download_url = Column(Text, comment='笔记下载URL')
+    source_keyword = Column(Text, default='', comment='来源关键词')
+
+
+class TiktokAwemeComment(Base):
+    __tablename__ = 'tiktok_aweme_comment'
+    id = Column(Integer, primary_key=True, comment='主键ID')
+    user_id = Column(String(255), comment='用户ID')
+    nickname = Column(Text, comment='用户昵称')
+    avatar = Column(Text, comment='用户头像')
+    user_signature = Column(Text, comment='用户签名')
+    ip_location = Column(Text, comment='IP地址位置')
+    add_ts = Column(BigInteger, comment='添加时间戳')
+    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
+    comment_id = Column(String(255), index=True, comment='评论ID')
+    aweme_id = Column(String(255), index=True, comment='作品ID')
+    content = Column(Text, comment='评论内容')
+    create_time = Column(BigInteger, comment='创建时间戳')
+    sub_comment_count = Column(Text, comment='子评论数')
+    parent_comment_id = Column(String(255), comment='父评论ID')
+    like_count = Column(Text, default='0', comment='点赞数')
+    pictures = Column(Text, default='', comment='图片')
+
+
+class TiktokCreator(Base):
+    __tablename__ = 'tiktok_creator'
+    id = Column(Integer, primary_key=True, comment='主键ID')
+    user_id = Column(String(255), comment='用户ID')
+    nickname = Column(Text, comment='用户昵称')
+    avatar = Column(Text, comment='用户头像')
+    ip_location = Column(Text, comment='IP地址位置')
+    add_ts = Column(BigInteger, comment='添加时间戳')
+    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
+    desc = Column(Text, comment='描述')
+    gender = Column(Text, comment='性别')
+    follows = Column(Text, comment='关注数')
+    fans = Column(Text, comment='粉丝数')
+    interaction = Column(Text, comment='互动数')
+    videos_count = Column(String(255), comment='视频数量')
+

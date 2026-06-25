@@ -42,6 +42,3 @@ dependencies = [
     "xhshow>=0.1.9",
 ]
 
-[[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-default = true
