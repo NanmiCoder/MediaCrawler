@@ -220,10 +220,11 @@ async def get_data_stats():
 
                 # Statistics by platform (inferred from path)
                 rel_path = str(file_path.relative_to(DATA_DIR))
-                for platform in ["xhs", "dy", "ks", "bili", "wb", "tieba", "zhihu"]:
+                for platform in ["xhs", "dy", "ks", "bili", "wb", "tieba", "zhihu", "tiktok"]:
                     if platform in rel_path.lower():
                         stats["by_platform"][platform] = stats["by_platform"].get(platform, 0) + 1
                         break
+
             except Exception:
                 continue
 
