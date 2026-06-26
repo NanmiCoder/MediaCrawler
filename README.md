@@ -164,6 +164,9 @@ uv run main.py --platform xhs --lt qrcode --type search
 # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
 uv run main.py --platform xhs --lt qrcode --type detail
 
+# 只维护登录态，不进入抓取流程
+uv run main.py --platform xhs --lt qrcode --type login
+
 # 打开对应APP扫二维码登录
 
 # 其他平台爬虫使用示例，执行下面的命令查看
@@ -210,6 +213,18 @@ uv run uvicorn api.main:app --port 8080 --reload
 ```
 
 然后访问 `http://localhost:8080` 即可。
+
+#### 多实例调度器
+
+启动同一个 API 服务后，访问 `http://localhost:8080/scheduler` 可打开多实例调度器。调度器支持创建多个独立账号实例，每个实例拥有独立浏览器 Profile、CDP 端口、登录态、默认爬取参数和任务队列。
+
+调度器运行数据默认保存在 `data/scheduler/`：
+
+- `scheduler.db`：实例、任务、日志和产物索引
+- `profiles/{instance_id}/`：实例独立浏览器 Profile
+- `artifacts/{instance_id}/{task_id}/`：任务抓取产物
+
+详细说明请查看：[多实例调度器使用指南](docs/多实例调度器使用指南.md)
 
 #### WebUI 功能特性
 

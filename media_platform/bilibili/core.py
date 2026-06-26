@@ -23,7 +23,6 @@
 # @Desc    : Bilibili Crawler
 
 import asyncio
-import os
 # import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple, Union
@@ -45,6 +44,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import bilibili as bilibili_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.profile import get_browser_profile_dir
 from var import crawler_type_var, source_keyword_var
 
 from .client import BilibiliClient
@@ -129,6 +129,8 @@ class BilibiliCrawler(AbstractCrawler):
                             continue
                 else:
                     await self.get_all_creator_details(config.BILI_CREATOR_ID_LIST)
+            elif config.CRAWLER_TYPE == "login":
+                utils.logger.info("[BilibiliCrawler.start] Login state is ready, skip crawling ...")
             else:
                 pass
             utils.logger.info("[BilibiliCrawler.start] Bilibili Crawler finished ...")
@@ -504,7 +506,7 @@ class BilibiliCrawler(AbstractCrawler):
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
-            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
+            user_data_dir = get_browser_profile_dir()
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,

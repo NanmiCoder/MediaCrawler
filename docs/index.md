@@ -3,6 +3,7 @@
 ## 项目文档
 
 - [项目架构文档](项目架构文档.md) - 系统架构、模块设计、数据流向（含 Mermaid 图表）
+- [多实例调度器使用指南](多实例调度器使用指南.md) - 多账号实例、任务队列、调度器 WebUI 和 API
 
 ## 推荐：使用 uv 管理依赖
 
@@ -46,6 +47,16 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 # 其他平台示例
 uv run main.py --help
 ```
+
+## 多实例调度器
+
+如需管理多个独立账号实例，可启动 API 服务后访问调度器页面：
+
+```shell
+uv run uvicorn api.main:app --port 8080 --reload
+```
+
+访问 `http://localhost:8080/scheduler` 创建实例、维护登录态、投递任务并查看日志和产物。详细说明见 [多实例调度器使用指南](多实例调度器使用指南.md)。
 
 ## 备选：Python 原生 venv（不推荐）
 > 如果爬取抖音或知乎，需要提前安装 Node.js，版本 `>= 16`。

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediaCrawler 多实例调度器</title>
+    <link rel="stylesheet" href="/scheduler/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>MediaCrawler 多实例调度器</h1>
+          <p id="summary">正在读取调度状态...</p>
+        </div>
+        <button id="refreshBtn" type="button">刷新</button>
+      </header>
+
+      <section class="layout">
+        <aside class="panel sidebar">
+          <h2>新建实例</h2>
+          <form id="instanceForm" class="stack">
+            <label>
+              实例名称
+              <input name="name" required placeholder="小红书账号 A" />
+            </label>
+            <label>
+              平台
+              <select name="platform">
+                <option value="xhs">小红书</option>
+                <option value="dy">抖音</option>
+                <option value="ks">快手</option>
+                <option value="bili">B站</option>
+                <option value="wb">微博</option>
+                <option value="tieba">贴吧</option>
+                <option value="zhihu">知乎</option>
+              </select>
+            </label>
+            <label>
+              登录方式
+              <select name="login_type">
+                <option value="qrcode">二维码</option>
+                <option value="cookie">Cookie</option>
+                <option value="phone">手机号</option>
+              </select>
+            </label>
+            <label>
+              保存格式
+              <select name="save_option">
+                <option value="jsonl">JSONL</option>
+                <option value="json">JSON</option>
+                <option value="csv">CSV</option>
+                <option value="excel">Excel</option>
+                <option value="sqlite">SQLite</option>
+              </select>
+            </label>
+            <label>
+              CDP 端口
+              <input name="cdp_debug_port" type="number" min="1000" max="65535" placeholder="自动分配" />
+            </label>
+            <label>
+              浏览器 Profile 目录
+              <input name="browser_profile_dir" placeholder="默认自动隔离" />
+            </label>
+            <label>
+              默认参数 JSON
+              <textarea name="default_params" rows="5" placeholder='{"enable_comments": true, "max_notes_count": 20}'></textarea>
+            </label>
+            <label class="checkline">
+              <input name="headless" type="checkbox" />
+              无头模式
+            </label>
+            <button type="submit">创建实例</button>
+          </form>
+        </aside>
+
+        <section class="content stack">
+          <section class="panel">
+            <div class="section-title">
+              <h2>实例</h2>
+              <span id="instanceHint"></span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>平台</th>
+                    <th>状态</th>
+                    <th>端口</th>
+                    <th>当前任务</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="instancesBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>新建任务</h2>
+            <form id="taskForm" class="task-grid">
+              <label>
+                实例
+                <select name="instance_id" id="taskInstanceSelect"></select>
+              </label>
+              <label>
+                类型
+                <select name="crawler_type">
+                  <option value="search">搜索</option>
+                  <option value="detail">详情</option>
+                  <option value="creator">创作者</option>
+                </select>
+              </label>
+              <label class="wide">
+                目标
+                <input name="target_text" placeholder="关键词 / ID / 创作者主页，多个用英文逗号分隔" />
+              </label>
+              <label class="wide">
+                任务参数 JSON
+                <textarea name="params" rows="4" placeholder='{"enable_comments": true, "max_comments_count": 10}'></textarea>
+              </label>
+              <button type="submit">加入队列</button>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="section-title">
+              <h2>任务</h2>
+              <span id="taskHint"></span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>任务</th>
+                    <th>实例</th>
+                    <th>类型</th>
+                    <th>状态</th>
+                    <th>目标</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tasksBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="detail-grid">
+            <section class="panel log-panel">
+              <h2>日志</h2>
+              <pre id="logsBox">选择一个任务查看日志。</pre>
+            </section>
+            <section class="panel artifact-panel">
+              <h2>产物</h2>
+              <ul id="artifactsList"></ul>
+            </section>
+          </section>
+        </section>
+      </section>
+    </main>
+    <script src="/scheduler/static/app.js"></script>
+  </body>
+</html>

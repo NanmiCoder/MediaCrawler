@@ -18,7 +18,6 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 import asyncio
-import os
 import random
 from asyncio import Task
 from typing import Any, Dict, List, Optional, Tuple
@@ -37,6 +36,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import douyin as douyin_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.profile import get_browser_profile_dir
 from var import crawler_type_var, source_keyword_var
 
 from .client import DouYinClient
@@ -121,6 +121,8 @@ class DouYinCrawler(AbstractCrawler):
             elif config.CRAWLER_TYPE == "creator":
                 # Get the information and comments of the specified creator
                 await self.get_creators_and_videos()
+            elif config.CRAWLER_TYPE == "login":
+                utils.logger.info("[DouYinCrawler.start] Login state is ready, skip crawling ...")
 
             utils.logger.info("[DouYinCrawler.start] Douyin Crawler finished ...")
 
@@ -337,7 +339,7 @@ class DouYinCrawler(AbstractCrawler):
     ) -> BrowserContext:
         """Launch browser and create browser context"""
         if config.SAVE_LOGIN_STATE:
-            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
+            user_data_dir = get_browser_profile_dir()
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,

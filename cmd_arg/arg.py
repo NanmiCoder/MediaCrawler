@@ -63,6 +63,7 @@ class CrawlerTypeEnum(str, Enum):
     SEARCH = "search"
     DETAIL = "detail"
     CREATOR = "creator"
+    LOGIN = "login"
 
 
 class SaveDataOptionEnum(str, Enum):
@@ -178,7 +179,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             CrawlerTypeEnum,
             typer.Option(
                 "--type",
-                help="Crawler type (search=Search | detail=Detail | creator=Creator)",
+                help="Crawler type (search=Search | detail=Detail | creator=Creator | login=Login only)",
                 rich_help_panel="Basic Configuration",
             ),
         ] = _coerce_enum(CrawlerTypeEnum, config.CRAWLER_TYPE, CrawlerTypeEnum.SEARCH),
@@ -332,6 +333,39 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Proxy Configuration",
             ),
         ] = config.STATIC_PROXY_URL,
+        instance_id: Annotated[
+            str,
+            typer.Option(
+                "--instance_id",
+                help="Scheduler instance ID for multi-instance runs",
+                rich_help_panel="Scheduler Configuration",
+            ),
+        ] = config.INSTANCE_ID,
+        browser_profile_dir: Annotated[
+            str,
+            typer.Option(
+                "--browser_profile_dir",
+                help="Browser profile directory for this crawler instance",
+                rich_help_panel="Scheduler Configuration",
+            ),
+        ] = config.BROWSER_PROFILE_DIR,
+        cdp_debug_port: Annotated[
+            int,
+            typer.Option(
+                "--cdp_debug_port",
+                help="CDP debug port for this crawler instance",
+                rich_help_panel="Scheduler Configuration",
+            ),
+        ] = config.CDP_DEBUG_PORT,
+        cdp_connect_existing: Annotated[
+            str,
+            typer.Option(
+                "--cdp_connect_existing",
+                help="Whether CDP mode connects to an existing browser",
+                rich_help_panel="Scheduler Configuration",
+                show_default=True,
+            ),
+        ] = str(config.CDP_CONNECT_EXISTING),
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
@@ -339,6 +373,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         enable_sub_comment = _to_bool(get_sub_comment)
         enable_headless = _to_bool(headless)
         enable_ip_proxy_value = _to_bool(enable_ip_proxy)
+        cdp_connect_existing_value = _to_bool(cdp_connect_existing)
         init_db_value = init_db.value if init_db else None
 
         # Parse specified_id and creator_id into lists
@@ -365,6 +400,10 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.IP_PROXY_POOL_COUNT = ip_proxy_pool_count
         config.IP_PROXY_PROVIDER_NAME = ip_proxy_provider_name
         config.STATIC_PROXY_URL = static_proxy_url
+        config.INSTANCE_ID = instance_id
+        config.BROWSER_PROFILE_DIR = browser_profile_dir
+        config.CDP_DEBUG_PORT = cdp_debug_port
+        config.CDP_CONNECT_EXISTING = cdp_connect_existing_value
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:
@@ -415,6 +454,10 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             cookies=config.COOKIES,
             specified_id=specified_id,
             creator_id=creator_id,
+            instance_id=config.INSTANCE_ID,
+            browser_profile_dir=config.BROWSER_PROFILE_DIR,
+            cdp_debug_port=config.CDP_DEBUG_PORT,
+            cdp_connect_existing=config.CDP_CONNECT_EXISTING,
         )
 
     command = typer.main.get_command(app)

@@ -30,6 +30,7 @@ from playwright.async_api import Browser, BrowserContext, Playwright
 import config
 from tools.browser_launcher import BrowserLauncher
 from tools import utils
+from tools.profile import get_browser_profile_dir
 
 
 class CDPBrowserManager:
@@ -254,11 +255,7 @@ class CDPBrowserManager:
         # Set user data directory (if save login state is enabled)
         user_data_dir = None
         if config.SAVE_LOGIN_STATE:
-            user_data_dir = os.path.join(
-                os.getcwd(),
-                "browser_data",
-                f"cdp_{config.USER_DATA_DIR % config.PLATFORM}",
-            )
+            user_data_dir = get_browser_profile_dir(cdp=True)
             os.makedirs(user_data_dir, exist_ok=True)
             utils.logger.info(f"[CDPBrowserManager] User data directory: {user_data_dir}")
 
