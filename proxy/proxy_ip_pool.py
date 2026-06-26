@@ -202,11 +202,17 @@ async def create_ip_pool(ip_pool_count: int, enable_validate_ip: bool) -> ProxyI
     :param enable_validate_ip: Whether to enable IP proxy validation
     :return:
     """
+    ip_provider = IpProxyProvider.get(config.IP_PROXY_PROVIDER_NAME)
+    if ip_provider is None:
+        raise ValueError(
+            f"Unknown proxy provider: '{config.IP_PROXY_PROVIDER_NAME}'. "
+            f"Valid options: {list(IpProxyProvider.keys())}"
+        )
     is_static = config.IP_PROXY_PROVIDER_NAME == ProviderNameEnum.STATIC_PROVIDER.value
     pool = ProxyIpPool(
         ip_pool_count=ip_pool_count,
         enable_validate_ip=False if is_static else enable_validate_ip,
-        ip_provider=IpProxyProvider.get(config.IP_PROXY_PROVIDER_NAME),
+        ip_provider=ip_provider,
     )
     await pool.load_proxies()
     return pool
