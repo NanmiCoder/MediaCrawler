@@ -31,6 +31,7 @@ import typer
 from typing_extensions import Annotated
 
 import config
+from tools.content_filter import ContentFilterError, normalize_content_filters
 from tools.utils import str2bool
 
 
@@ -284,6 +285,14 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Basic Configuration",
             ),
         ] = config.CRAWLER_MAX_NOTES_COUNT,
+        content_filters: Annotated[
+            str,
+            typer.Option(
+                "--content_filters",
+                help='Content metric filters JSON, for example {"liked_count":{"min":1000}}',
+                rich_help_panel="Basic Configuration",
+            ),
+        ] = "",
         max_concurrency_num: Annotated[
             int,
             typer.Option(
@@ -375,6 +384,10 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         enable_ip_proxy_value = _to_bool(enable_ip_proxy)
         cdp_connect_existing_value = _to_bool(cdp_connect_existing)
         init_db_value = init_db.value if init_db else None
+        try:
+            content_filters_value = normalize_content_filters(platform.value, content_filters or config.CONTENT_FILTERS)
+        except ContentFilterError as exc:
+            raise typer.BadParameter(str(exc)) from exc
 
         # Parse specified_id and creator_id into lists
         specified_id_list = [id.strip() for id in specified_id.split(",") if id.strip()] if specified_id else []
@@ -394,6 +407,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.COOKIES = cookies
         config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = max_comments_count_singlenotes
         config.CRAWLER_MAX_NOTES_COUNT = crawler_max_notes_count
+        config.CONTENT_FILTERS = content_filters_value
         config.MAX_CONCURRENCY_NUM = max_concurrency_num
         config.SAVE_DATA_PATH = save_data_path
         config.ENABLE_IP_PROXY = enable_ip_proxy_value
@@ -454,6 +468,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             cookies=config.COOKIES,
             specified_id=specified_id,
             creator_id=creator_id,
+            content_filters=config.CONTENT_FILTERS,
             instance_id=config.INSTANCE_ID,
             browser_profile_dir=config.BROWSER_PROFILE_DIR,
             cdp_debug_port=config.CDP_DEBUG_PORT,

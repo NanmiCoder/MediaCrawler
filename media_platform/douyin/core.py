@@ -36,6 +36,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import douyin as douyin_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.content_filter import filter_content_items, log_filter_result
 from tools.profile import get_browser_profile_dir
 from var import crawler_type_var, source_keyword_var
 
@@ -164,13 +165,21 @@ class DouYinCrawler(AbstractCrawler):
                     break
                 dy_search_id = posts_res.get("extra", {}).get("logid", "")
                 page_aweme_list = []
+                page_aweme_items = []
                 for post_item in posts_res.get("data"):
                     try:
                         aweme_info: Dict = (post_item.get("aweme_info") or post_item.get("aweme_mix_info", {}).get("mix_items")[0])
                     except TypeError:
                         continue
-                    aweme_list.append(aweme_info.get("aweme_id", ""))
-                    page_aweme_list.append(aweme_info.get("aweme_id", ""))
+                    page_aweme_items.append(aweme_info)
+
+                kept_aweme_items = filter_content_items("dy", page_aweme_items)
+                log_filter_result("dy", "search", len(page_aweme_items), len(kept_aweme_items), utils.logger)
+                for aweme_info in kept_aweme_items:
+                    aweme_id = aweme_info.get("aweme_id", "")
+                    if aweme_id:
+                        aweme_list.append(aweme_id)
+                        page_aweme_list.append(aweme_id)
                     await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
                     await self.get_aweme_media(aweme_item=aweme_info)
                 
@@ -211,11 +220,17 @@ class DouYinCrawler(AbstractCrawler):
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [self.get_aweme_detail(aweme_id=aweme_id, semaphore=semaphore) for aweme_id in aweme_id_list]
         aweme_details = await asyncio.gather(*task_list)
-        for aweme_detail in aweme_details:
-            if aweme_detail is not None:
-                await douyin_store.update_douyin_aweme(aweme_item=aweme_detail)
-                await self.get_aweme_media(aweme_item=aweme_detail)
-        await self.batch_get_note_comments(aweme_id_list)
+        valid_aweme_details = [aweme_detail for aweme_detail in aweme_details if aweme_detail is not None]
+        kept_aweme_details = filter_content_items("dy", valid_aweme_details)
+        log_filter_result("dy", "detail", len(valid_aweme_details), len(kept_aweme_details), utils.logger)
+        kept_aweme_ids = []
+        for aweme_detail in kept_aweme_details:
+            aweme_id = aweme_detail.get("aweme_id")
+            if aweme_id:
+                kept_aweme_ids.append(aweme_id)
+            await douyin_store.update_douyin_aweme(aweme_item=aweme_detail)
+            await self.get_aweme_media(aweme_item=aweme_detail)
+        await self.batch_get_note_comments(kept_aweme_ids)
 
     async def get_aweme_detail(self, aweme_id: str, semaphore: asyncio.Semaphore) -> Any:
         """Get note detail"""
@@ -290,12 +305,16 @@ class DouYinCrawler(AbstractCrawler):
                 await douyin_store.save_creator(user_id, creator=creator_info)
 
             # Get all video information of the creator
-            all_video_list = await self.dy_client.get_all_user_aweme_posts(sec_user_id=user_id, callback=self.fetch_creator_video_detail)
+            accepted_aweme_ids: List[str] = []
 
-            video_ids = [video_item.get("aweme_id") for video_item in all_video_list]
-            await self.batch_get_note_comments(video_ids)
+            async def fetch_and_collect(video_list: List[Dict]):
+                accepted_aweme_ids.extend(await self.fetch_creator_video_detail(video_list))
 
-    async def fetch_creator_video_detail(self, video_list: List[Dict]):
+            await self.dy_client.get_all_user_aweme_posts(sec_user_id=user_id, callback=fetch_and_collect)
+
+            await self.batch_get_note_comments(accepted_aweme_ids)
+
+    async def fetch_creator_video_detail(self, video_list: List[Dict]) -> List[str]:
         """
         Concurrently obtain the specified post list and save the data
         """
@@ -303,10 +322,17 @@ class DouYinCrawler(AbstractCrawler):
         task_list = [self.get_aweme_detail(post_item.get("aweme_id"), semaphore) for post_item in video_list]
 
         note_details = await asyncio.gather(*task_list)
-        for aweme_item in note_details:
-            if aweme_item is not None:
-                await douyin_store.update_douyin_aweme(aweme_item=aweme_item)
-                await self.get_aweme_media(aweme_item=aweme_item)
+        valid_note_details = [aweme_item for aweme_item in note_details if aweme_item is not None]
+        kept_note_details = filter_content_items("dy", valid_note_details)
+        log_filter_result("dy", "creator", len(valid_note_details), len(kept_note_details), utils.logger)
+        kept_aweme_ids = []
+        for aweme_item in kept_note_details:
+            aweme_id = aweme_item.get("aweme_id")
+            if aweme_id:
+                kept_aweme_ids.append(aweme_id)
+            await douyin_store.update_douyin_aweme(aweme_item=aweme_item)
+            await self.get_aweme_media(aweme_item=aweme_item)
+        return kept_aweme_ids
 
     async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DouYinClient:
         """Create douyin client"""

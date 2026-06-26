@@ -241,6 +241,7 @@ class SchedulerManager:
             "enable_sub_comments": "--get_sub_comment",
             "max_notes_count": "--crawler_max_notes_count",
             "max_comments_count": "--max_comments_count_singlenotes",
+            "content_filters": "--content_filters",
             "max_concurrency_num": "--max_concurrency_num",
             "cookies": "--cookies",
             "enable_ip_proxy": "--enable_ip_proxy",
@@ -254,6 +255,8 @@ class SchedulerManager:
             value = params[key]
             if isinstance(value, bool):
                 value = self._bool_arg(value)
+            elif isinstance(value, (dict, list)):
+                value = json.dumps(value, ensure_ascii=False)
             cmd.extend([flag, str(value)])
         return cmd
 

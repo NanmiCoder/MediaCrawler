@@ -17,8 +17,10 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 from enum import Enum
-from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from typing import Any, Optional, Literal
+from pydantic import BaseModel, Field, model_validator
+
+from tools.content_filter import ContentFilterError, normalize_content_filters
 
 
 MAX_API_LIMIT_COUNT = 10000
@@ -77,6 +79,15 @@ class CrawlerStartRequest(BaseModel):
     headless: bool = False
     max_notes_count: Optional[int] = Field(default=None, ge=1, le=MAX_API_LIMIT_COUNT)
     max_comments_count: Optional[int] = Field(default=None, ge=1, le=MAX_API_LIMIT_COUNT)
+    content_filters: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_content_filters(self):
+        try:
+            self.content_filters = normalize_content_filters(self.platform.value, self.content_filters)
+        except ContentFilterError as exc:
+            raise ValueError(str(exc)) from exc
+        return self
 
 
 class CrawlerStatusResponse(BaseModel):

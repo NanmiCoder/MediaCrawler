@@ -107,6 +107,10 @@ START_PAGE = 1
 # Control the number of crawled videos/posts
 CRAWLER_MAX_NOTES_COUNT = 15
 
+# Content metric filters applied before storing media/comments.
+# Example: {"liked_count": {"min": 1000}, "comment_count": {"max": 500}}
+CONTENT_FILTERS = {}
+
 # Controlling the number of concurrent crawlers
 MAX_CONCURRENCY_NUM = 1
 

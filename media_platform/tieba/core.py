@@ -37,6 +37,7 @@ from proxy.proxy_ip_pool import IpInfoModel, ProxyIpPool, create_ip_pool
 from store import tieba as tieba_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.content_filter import filter_content_items, log_filter_result
 from tools.profile import get_browser_profile_dir
 from var import crawler_type_var, source_keyword_var
 
@@ -266,10 +267,12 @@ class TieBaCrawler(AbstractCrawler):
         ]
         note_details = await asyncio.gather(*task_list)
         note_details_model: List[TiebaNote] = []
-        for note_detail in note_details:
-            if note_detail is not None:
-                note_details_model.append(note_detail)
-                await tieba_store.update_tieba_note(note_detail)
+        valid_note_details = [note_detail for note_detail in note_details if note_detail is not None]
+        kept_note_details = filter_content_items("tieba", valid_note_details)
+        log_filter_result("tieba", "detail", len(valid_note_details), len(kept_note_details), utils.logger)
+        for note_detail in kept_note_details:
+            note_details_model.append(note_detail)
+            await tieba_store.update_tieba_note(note_detail)
         await self.batch_get_note_comments(note_details_model)
 
     async def get_note_detail_async_task(
@@ -383,18 +386,23 @@ class TieBaCrawler(AbstractCrawler):
                     raise Exception("Get creator info error")
 
                 await tieba_store.save_creator(user_info=creator_info)
+                accepted_notes: List[TiebaNote] = []
+
+                async def save_filtered_notes(note_list: List[TiebaNote]):
+                    kept_note_list = filter_content_items("tieba", note_list)
+                    log_filter_result("tieba", "creator", len(note_list), len(kept_note_list), utils.logger)
+                    accepted_notes.extend(kept_note_list)
+                    await tieba_store.batch_update_tieba_notes(kept_note_list)
 
                 # Get all note information of the creator
-                all_notes_list = (
-                    await self.tieba_client.get_all_notes_by_creator_url(
-                        creator_url=creator_url,
-                        crawl_interval=0,
-                        callback=tieba_store.batch_update_tieba_notes,
-                        max_note_count=config.CRAWLER_MAX_NOTES_COUNT,
-                    )
+                await self.tieba_client.get_all_notes_by_creator_url(
+                    creator_url=creator_url,
+                    crawl_interval=0,
+                    callback=save_filtered_notes,
+                    max_note_count=config.CRAWLER_MAX_NOTES_COUNT,
                 )
 
-                await self.batch_get_note_comments(all_notes_list)
+                await self.batch_get_note_comments(accepted_notes)
 
             else:
                 utils.logger.error(

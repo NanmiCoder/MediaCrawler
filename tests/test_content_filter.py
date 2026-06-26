@@ -1,0 +1,68 @@
+# -*- coding: utf-8 -*-
+
+import pytest
+
+from model.m_baidu_tieba import TiebaNote
+from model.m_zhihu import ZhihuContent
+from tools.content_filter import (
+    ContentFilterError,
+    filter_content_items,
+    normalize_content_filters,
+)
+
+
+def test_content_filters_parse_units_and_aliases():
+    filters = normalize_content_filters(
+        "xhs",
+        {"liked_count": {"min": "1万"}, "collect_count": {"max": "2万"}},
+    )
+
+    assert filters == {
+        "liked_count": {"min": 10000.0},
+        "collected_count": {"max": 20000.0},
+    }
+
+
+def test_content_filters_filter_dict_platform_items():
+    items = [
+        {"interact_info": {"liked_count": "9999", "collected_count": 10}},
+        {"interact_info": {"liked_count": "1.2万", "collected_count": 5}},
+    ]
+
+    kept = filter_content_items("xhs", items, {"liked_count": {"min": 10000}})
+
+    assert kept == [items[1]]
+
+
+def test_content_filters_filter_bilibili_nested_metrics():
+    items = [
+        {"View": {"stat": {"like": 100, "favorite": 20}}},
+        {"View": {"stat": {"like": 500, "favorite": 100}}},
+    ]
+
+    kept = filter_content_items(
+        "bili",
+        items,
+        {"liked_count": {"min": 300}, "favorite_count": {"min": 50}},
+    )
+
+    assert kept == [items[1]]
+
+
+def test_content_filters_filter_model_platform_items():
+    tieba_items = [
+        TiebaNote(note_id="1", title="a", note_url="u", tieba_name="t", tieba_link="l", total_replay_num=9),
+        TiebaNote(note_id="2", title="b", note_url="u", tieba_name="t", tieba_link="l", total_replay_num=10),
+    ]
+    zhihu_items = [
+        ZhihuContent(content_id="a", voteup_count=99, comment_count=10),
+        ZhihuContent(content_id="b", voteup_count=100, comment_count=20),
+    ]
+
+    assert filter_content_items("tieba", tieba_items, {"reply_count": {"min": 10}}) == [tieba_items[1]]
+    assert filter_content_items("zhihu", zhihu_items, {"voteup_count": {"min": 100}}) == [zhihu_items[1]]
+
+
+def test_content_filters_reject_unsupported_field():
+    with pytest.raises(ContentFilterError):
+        normalize_content_filters("dy", {"view_count": {"min": 1}})

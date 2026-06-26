@@ -50,7 +50,8 @@ def test_crawler_manager_build_command():
         crawler_type=CrawlerTypeEnum.SEARCH,
         keywords="test",
         max_notes_count=50,
-        max_comments_count=5
+        max_comments_count=5,
+        content_filters={"liked_count": {"min": 1000}},
     )
     cmd2 = cm._build_command(req2)
     # Check that they are correctly added
@@ -61,6 +62,10 @@ def test_crawler_manager_build_command():
     assert "--max_comments_count_singlenotes" in cmd2
     idx_comments = cmd2.index("--max_comments_count_singlenotes")
     assert cmd2[idx_comments + 1] == "5"
+
+    assert "--content_filters" in cmd2
+    idx_filters = cmd2.index("--content_filters")
+    assert cmd2[idx_filters + 1] == '{"liked_count": {"min": 1000.0}}'
 
 def test_api_start_crawler_with_limits():
     client = TestClient(app)
@@ -75,7 +80,8 @@ def test_api_start_crawler_with_limits():
             "crawler_type": "search",
             "keywords": "test",
             "max_notes_count": 50,
-            "max_comments_count": 5
+            "max_comments_count": 5,
+            "content_filters": {"liked_count": {"min": 1000}},
         })
 
         assert response.status_code == 200
@@ -86,6 +92,7 @@ def test_api_start_crawler_with_limits():
         assert called_request.platform == PlatformEnum.XHS
         assert called_request.max_notes_count == 50
         assert called_request.max_comments_count == 5
+        assert called_request.content_filters == {"liked_count": {"min": 1000.0}}
 
 def test_api_start_crawler_without_limits():
     client = TestClient(app)
@@ -128,6 +135,23 @@ def test_api_rejects_invalid_limits(field_name, value):
         "crawler_type": "search",
         "keywords": "test",
         field_name: value,
+    }
+
+    with patch("api.routers.crawler.crawler_manager.start", new_callable=AsyncMock) as mock_start:
+        response = client.post("/api/crawler/start", json=payload)
+
+    assert response.status_code == 422
+    mock_start.assert_not_called()
+
+
+def test_api_rejects_invalid_content_filter_field():
+    client = TestClient(app)
+    payload = {
+        "platform": "dy",
+        "login_type": "qrcode",
+        "crawler_type": "search",
+        "keywords": "test",
+        "content_filters": {"view_count": {"min": 1}},
     }
 
     with patch("api.routers.crawler.crawler_manager.start", new_callable=AsyncMock) as mock_start:

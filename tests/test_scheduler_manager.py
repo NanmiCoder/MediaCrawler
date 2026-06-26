@@ -21,7 +21,7 @@ def test_scheduler_manager_builds_isolated_command(tmp_path):
             "instance_id": instance["id"],
             "crawler_type": "search",
             "target_text": "AI 工具",
-            "params": {"enable_sub_comments": True},
+            "params": {"enable_sub_comments": True, "content_filters": {"liked_count": {"min": 1000}}},
         },
         str(tmp_path / "artifacts" / "task-a"),
     )
@@ -37,6 +37,7 @@ def test_scheduler_manager_builds_isolated_command(tmp_path):
     assert cmd[cmd.index("--get_comment") + 1] == "false"
     assert cmd[cmd.index("--get_sub_comment") + 1] == "true"
     assert cmd[cmd.index("--crawler_max_notes_count") + 1] == "8"
+    assert cmd[cmd.index("--content_filters") + 1] == '{"liked_count": {"min": 1000}}'
 
 
 def test_scheduler_manager_scans_artifacts(tmp_path):

@@ -39,6 +39,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import kuaishou as kuaishou_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.content_filter import filter_content_items, log_filter_result
 from tools.profile import get_browser_profile_dir
 from var import comment_tasks_var, crawler_type_var, source_keyword_var
 
@@ -171,8 +172,13 @@ class KuaishouCrawler(AbstractCrawler):
                     )
                     break
                 search_session_id = vision_search_photo.get("searchSessionId", "")
-                for video_detail in vision_search_photo.get("feeds"):
-                    video_id_list.append(video_detail.get("photo", {}).get("id"))
+                feeds = vision_search_photo.get("feeds") or []
+                kept_feeds = filter_content_items("ks", feeds)
+                log_filter_result("ks", "search", len(feeds), len(kept_feeds), utils.logger)
+                for video_detail in kept_feeds:
+                    video_id = video_detail.get("photo", {}).get("id")
+                    if video_id:
+                        video_id_list.append(video_id)
                     await kuaishou_store.update_kuaishou_video(video_item=video_detail)
 
                 # batch fetch video comments
@@ -203,10 +209,16 @@ class KuaishouCrawler(AbstractCrawler):
             for video_id in video_ids
         ]
         video_details = await asyncio.gather(*task_list)
-        for video_detail in video_details:
-            if video_detail is not None:
-                await kuaishou_store.update_kuaishou_video(video_detail)
-        await self.batch_get_video_comments(video_ids)
+        valid_video_details = [video_detail for video_detail in video_details if video_detail is not None]
+        kept_video_details = filter_content_items("ks", valid_video_details)
+        log_filter_result("ks", "detail", len(valid_video_details), len(kept_video_details), utils.logger)
+        kept_video_ids = []
+        for video_detail in kept_video_details:
+            video_id = video_detail.get("photo", {}).get("id")
+            if video_id:
+                kept_video_ids.append(video_id)
+            await kuaishou_store.update_kuaishou_video(video_detail)
+        await self.batch_get_video_comments(kept_video_ids)
 
     async def get_video_info_task(
         self, video_id: str, semaphore: asyncio.Semaphore
@@ -414,18 +426,20 @@ class KuaishouCrawler(AbstractCrawler):
                 continue
 
             # Get all video information of the creator
-            all_video_list = await self.ks_client.get_all_videos_by_creator(
+            accepted_video_ids: List[str] = []
+
+            async def fetch_and_collect(video_list: List[Dict]):
+                accepted_video_ids.extend(await self.fetch_creator_video_detail(video_list))
+
+            await self.ks_client.get_all_videos_by_creator(
                 user_id=user_id,
                 crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
-                callback=self.fetch_creator_video_detail,
+                callback=fetch_and_collect,
             )
 
-            video_ids = [
-                video_item.get("photo", {}).get("id") for video_item in all_video_list
-            ]
-            await self.batch_get_video_comments(video_ids)
+            await self.batch_get_video_comments(accepted_video_ids)
 
-    async def fetch_creator_video_detail(self, video_list: List[Dict]):
+    async def fetch_creator_video_detail(self, video_list: List[Dict]) -> List[str]:
         """
         Concurrently obtain the specified post list and save the data
         """
@@ -436,9 +450,16 @@ class KuaishouCrawler(AbstractCrawler):
         ]
 
         video_details = await asyncio.gather(*task_list)
-        for video_detail in video_details:
-            if video_detail is not None:
-                await kuaishou_store.update_kuaishou_video(video_detail)
+        valid_video_details = [video_detail for video_detail in video_details if video_detail is not None]
+        kept_video_details = filter_content_items("ks", valid_video_details)
+        log_filter_result("ks", "creator", len(valid_video_details), len(kept_video_details), utils.logger)
+        kept_video_ids = []
+        for video_detail in kept_video_details:
+            video_id = video_detail.get("photo", {}).get("id")
+            if video_id:
+                kept_video_ids.append(video_id)
+            await kuaishou_store.update_kuaishou_video(video_detail)
+        return kept_video_ids
 
     async def close(self):
         """Close browser context"""

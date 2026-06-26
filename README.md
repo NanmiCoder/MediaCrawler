@@ -161,6 +161,9 @@ uv run playwright install
 # 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
 uv run main.py --platform xhs --lt qrcode --type search
 
+# 按互动指标过滤爬取目标，例如只保存点赞数不低于 1000 的内容
+uv run main.py --platform xhs --lt qrcode --type search --content_filters '{"liked_count":{"min":1000}}'
+
 # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
 uv run main.py --platform xhs --lt qrcode --type detail
 
@@ -172,6 +175,8 @@ uv run main.py --platform xhs --lt qrcode --type login
 # 其他平台爬虫使用示例，执行下面的命令查看
 uv run main.py --help
 ```
+
+内容过滤支持不同平台的点赞、收藏、转发、评论等字段，详见 [内容过滤使用指南](docs/内容过滤使用指南.md)。
 
 <details>
 <summary>🖥️ <strong>WebUI 可视化操作界面</strong></summary>
