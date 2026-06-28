@@ -55,6 +55,14 @@ button.danger {
   background: var(--red);
 }
 
+button.icon-button {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -129,7 +137,7 @@ th {
 
 .layout {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-columns: 400px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -149,6 +157,27 @@ th {
 .stack {
   display: grid;
   gap: 14px;
+}
+
+.form-section {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.form-section h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.form-grid,
+.task-params-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .sidebar {
@@ -196,6 +225,35 @@ th {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
   gap: 16px;
+}
+
+.filter-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.2fr) minmax(92px, 0.8fr) minmax(92px, 0.8fr) 36px;
+  gap: 8px;
+  align-items: end;
+}
+
+.sidebar .filter-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) 36px;
+}
+
+.sidebar .filter-row label:first-child {
+  grid-column: 1 / -1;
+}
+
+.empty-note {
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  padding: 10px;
+  font-size: 13px;
 }
 
 .log-panel pre {
@@ -271,11 +329,23 @@ th {
 @media (max-width: 980px) {
   .layout,
   .detail-grid,
-  .task-grid {
+  .task-grid,
+  .task-params-grid {
     grid-template-columns: 1fr;
   }
 
   .sidebar {
     position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .form-grid,
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  button.icon-button {
+    width: 100%;
   }
 }

@@ -62,10 +62,94 @@
               浏览器 Profile 目录
               <input name="browser_profile_dir" placeholder="默认自动隔离" />
             </label>
-            <label>
-              默认参数 JSON
-              <textarea name="default_params" rows="5" placeholder='{"enable_comments": true, "max_notes_count": 20}'></textarea>
-            </label>
+
+            <section class="form-section">
+              <h3>默认抓取参数</h3>
+              <div class="form-grid">
+                <label>
+                  起始页
+                  <input name="default_start_page" type="number" min="1" placeholder="1" />
+                </label>
+                <label>
+                  最大内容数
+                  <input name="default_max_notes_count" type="number" min="1" placeholder="20" />
+                </label>
+                <label>
+                  单条评论数
+                  <input name="default_max_comments_count" type="number" min="1" placeholder="10" />
+                </label>
+                <label>
+                  并发数
+                  <input name="default_max_concurrency_num" type="number" min="1" placeholder="1" />
+                </label>
+                <label>
+                  评论
+                  <select name="default_enable_comments">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+                <label>
+                  二级评论
+                  <select name="default_enable_sub_comments">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section class="form-section">
+              <h3>内容过滤</h3>
+              <div id="instanceFilterRows" class="filter-rows"></div>
+              <button class="secondary" type="button" data-action="add-filter" data-scope="instance">添加过滤条件</button>
+            </section>
+
+            <section class="form-section">
+              <h3>登录与代理</h3>
+              <label>
+                Cookie
+                <textarea name="default_cookies" rows="3" placeholder="a=b; c=d"></textarea>
+              </label>
+              <div class="form-grid">
+                <label>
+                  连接已有浏览器
+                  <select name="default_cdp_connect_existing">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+                <label>
+                  IP 代理
+                  <select name="default_enable_ip_proxy">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+                <label>
+                  代理池数量
+                  <input name="default_ip_proxy_pool_count" type="number" min="1" placeholder="2" />
+                </label>
+                <label>
+                  代理服务
+                  <select name="default_ip_proxy_provider_name">
+                    <option value="">默认</option>
+                    <option value="static">固定代理</option>
+                    <option value="kuaidaili">快代理</option>
+                    <option value="wandouhttp">豌豆 HTTP</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                固定代理地址
+                <input name="default_static_proxy_url" placeholder="http://user:pass@host:port" />
+              </label>
+            </section>
+
             <label class="checkline">
               <input name="headless" type="checkbox" />
               无头模式
@@ -116,10 +200,88 @@
                 目标
                 <input name="target_text" placeholder="关键词 / ID / 创作者主页，多个用英文逗号分隔" />
               </label>
-              <label class="wide">
-                任务参数 JSON
-                <textarea name="params" rows="4" placeholder='{"enable_comments": true, "max_comments_count": 10}'></textarea>
-              </label>
+              <section class="form-section wide">
+                <h3>任务覆盖参数</h3>
+                <div class="task-params-grid">
+                  <label>
+                    评论
+                    <select name="task_enable_comments">
+                      <option value="">沿用实例默认</option>
+                      <option value="true">开启</option>
+                      <option value="false">关闭</option>
+                    </select>
+                  </label>
+                  <label>
+                    二级评论
+                    <select name="task_enable_sub_comments">
+                      <option value="">沿用实例默认</option>
+                      <option value="true">开启</option>
+                      <option value="false">关闭</option>
+                    </select>
+                  </label>
+                  <label>
+                    起始页
+                    <input name="task_start_page" type="number" min="1" placeholder="沿用" />
+                  </label>
+                  <label>
+                    最大内容数
+                    <input name="task_max_notes_count" type="number" min="1" placeholder="沿用" />
+                  </label>
+                  <label>
+                    单条评论数
+                    <input name="task_max_comments_count" type="number" min="1" placeholder="沿用" />
+                  </label>
+                  <label>
+                    并发数
+                    <input name="task_max_concurrency_num" type="number" min="1" placeholder="沿用" />
+                  </label>
+                </div>
+                <h3>内容过滤</h3>
+                <div id="taskFilterRows" class="filter-rows"></div>
+                <button class="secondary" type="button" data-action="add-filter" data-scope="task">添加过滤条件</button>
+              </section>
+              <section class="form-section wide">
+                <h3>任务登录与代理</h3>
+                <div class="task-params-grid">
+                  <label>
+                    连接已有浏览器
+                    <select name="task_cdp_connect_existing">
+                      <option value="">沿用实例默认</option>
+                      <option value="true">开启</option>
+                      <option value="false">关闭</option>
+                    </select>
+                  </label>
+                  <label>
+                    IP 代理
+                    <select name="task_enable_ip_proxy">
+                      <option value="">沿用实例默认</option>
+                      <option value="true">开启</option>
+                      <option value="false">关闭</option>
+                    </select>
+                  </label>
+                  <label>
+                    代理池数量
+                    <input name="task_ip_proxy_pool_count" type="number" min="1" placeholder="沿用" />
+                  </label>
+                  <label>
+                    代理服务
+                    <select name="task_ip_proxy_provider_name">
+                      <option value="">沿用实例默认</option>
+                      <option value="static">固定代理</option>
+                      <option value="kuaidaili">快代理</option>
+                      <option value="wandouhttp">豌豆 HTTP</option>
+                    </select>
+                  </label>
+                </div>
+                <label>
+                  Cookie
+                  <textarea name="task_cookies" rows="3" placeholder="沿用实例默认"></textarea>
+                </label>
+                <label>
+                  固定代理地址
+                  <input name="task_static_proxy_url" placeholder="沿用实例默认" />
+                </label>
+              </section>
               <button type="submit">加入队列</button>
             </form>
           </section>
