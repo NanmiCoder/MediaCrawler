@@ -112,7 +112,7 @@ th {
 }
 
 .app-shell {
-  width: min(1440px, 100%);
+  width: min(1040px, 100%);
   margin: 0 auto;
   padding: 22px;
 }
@@ -172,13 +172,13 @@ th {
 .form-grid,
 .task-params-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
 .instance-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -216,7 +216,7 @@ th {
 
 .task-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -226,7 +226,7 @@ th {
 
 .detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 
@@ -237,17 +237,9 @@ th {
 
 .filter-row {
   display: grid;
-  grid-template-columns: minmax(150px, 1.2fr) minmax(92px, 0.8fr) minmax(92px, 0.8fr) 36px;
+  grid-template-columns: 1fr;
   gap: 8px;
   align-items: end;
-}
-
-.new-instance-panel .filter-row {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) 36px;
-}
-
-.new-instance-panel .filter-row label:first-child {
-  grid-column: 1 / -1;
 }
 
 .empty-note {
@@ -330,11 +322,7 @@ th {
 }
 
 @media (max-width: 980px) {
-  .layout,
-  .detail-grid,
-  .task-grid,
-  .instance-grid,
-  .task-params-grid {
+  .layout {
     grid-template-columns: 1fr;
   }
 }
