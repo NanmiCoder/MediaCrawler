@@ -39,6 +39,7 @@ button {
   color: #fff;
   padding: 0 14px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 button:hover {
@@ -137,9 +138,9 @@ th {
 
 .layout {
   display: grid;
-  grid-template-columns: 400px minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-items: stretch;
 }
 
 .panel {
@@ -152,11 +153,6 @@ th {
 .panel h2 {
   margin: 0 0 12px;
   font-size: 16px;
-}
-
-.stack {
-  display: grid;
-  gap: 14px;
 }
 
 .form-section {
@@ -180,9 +176,16 @@ th {
   gap: 10px;
 }
 
-.sidebar {
-  position: sticky;
-  top: 16px;
+.instance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.instance-grid .form-section,
+.instance-grid .checkline,
+.instance-grid button[type="submit"] {
+  grid-column: 1 / -1;
 }
 
 .section-title {
@@ -239,11 +242,11 @@ th {
   align-items: end;
 }
 
-.sidebar .filter-row {
+.new-instance-panel .filter-row {
   grid-template-columns: repeat(2, minmax(0, 1fr)) 36px;
 }
 
-.sidebar .filter-row label:first-child {
+.new-instance-panel .filter-row label:first-child {
   grid-column: 1 / -1;
 }
 
@@ -330,12 +333,9 @@ th {
   .layout,
   .detail-grid,
   .task-grid,
+  .instance-grid,
   .task-params-grid {
     grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
   }
 }
 
