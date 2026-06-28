@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import asyncio
+
+import pytest
+
 from api.scheduler.manager import SchedulerManager
-from api.scheduler.schemas import InstanceCreateRequest
+from api.scheduler.schemas import InstanceCreateRequest, JobCreateRequest
 from api.scheduler.store import SchedulerStore
 
 
@@ -51,3 +55,38 @@ def test_scheduler_manager_scans_artifacts(tmp_path):
 
     assert artifacts[0]["type"] == "jsonl"
     assert artifacts[0]["record_count"] == 2
+
+
+def test_scheduler_manager_runs_job_without_queue(monkeypatch, tmp_path):
+    store = SchedulerStore(tmp_path / "scheduler.db")
+    manager = SchedulerManager(store=store, project_root=tmp_path)
+    job = manager.create_job(
+        JobCreateRequest(
+            name="小红书作业",
+            platform="xhs",
+            crawler_type="search",
+            target_text="AI 工具",
+            params={"max_notes_count": 3},
+        )
+    )
+
+    async def fake_start(task):
+        store.update_task(task["id"], status="running", pid=123)
+        store.update_instance(
+            task["instance_id"],
+            status="running",
+            current_task_id=task["id"],
+            last_task_id=task["id"],
+            pid=123,
+        )
+
+    monkeypatch.setattr(manager, "_start_task_locked", fake_start)
+
+    task = asyncio.run(manager.run_job(job["id"]))
+
+    assert task["crawler_type"] == "search"
+    assert task["target_text"] == "AI 工具"
+    assert task["params"] == {"max_notes_count": 3}
+    assert store.get_instance(job["id"])["last_task_id"] == task["id"]
+    with pytest.raises(RuntimeError, match="already running"):
+        asyncio.run(manager.run_job(job["id"]))

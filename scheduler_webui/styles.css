@@ -169,22 +169,21 @@ th {
   line-height: 1.3;
 }
 
-.form-grid,
-.task-params-grid {
+.form-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
 }
 
-.instance-grid {
+.job-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
 }
 
-.instance-grid .form-section,
-.instance-grid .checkline,
-.instance-grid button[type="submit"] {
+.job-grid .form-section,
+.job-grid .checkline,
+.job-grid .form-actions {
   grid-column: 1 / -1;
 }
 
@@ -214,14 +213,10 @@ th {
   width: auto;
 }
 
-.task-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.task-grid .wide {
-  grid-column: 1 / -1;
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .detail-grid {

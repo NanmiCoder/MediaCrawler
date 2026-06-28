@@ -3,24 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MediaCrawler 多实例调度器</title>
+    <title>MediaCrawler 调度器</title>
     <link rel="stylesheet" href="/scheduler/static/styles.css" />
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar">
         <div>
-          <h1>MediaCrawler 多实例调度器</h1>
+          <h1>MediaCrawler 调度器</h1>
           <p id="summary">正在读取调度状态...</p>
         </div>
         <button id="refreshBtn" type="button">刷新</button>
       </header>
 
       <section class="layout">
-        <section class="panel instances-panel">
+        <section class="panel">
           <div class="section-title">
-            <h2>实例</h2>
-            <span id="instanceHint"></span>
+            <h2>作业</h2>
+            <span id="jobHint"></span>
           </div>
           <div class="table-wrap">
             <table>
@@ -28,22 +28,23 @@
                 <tr>
                   <th>名称</th>
                   <th>平台</th>
+                  <th>类型</th>
                   <th>状态</th>
-                  <th>端口</th>
-                  <th>当前任务</th>
+                  <th>目标</th>
+                  <th>最近运行</th>
                   <th>操作</th>
                 </tr>
               </thead>
-              <tbody id="instancesBody"></tbody>
+              <tbody id="jobsBody"></tbody>
             </table>
           </div>
         </section>
 
-        <section class="panel new-instance-panel">
-          <h2>新建实例</h2>
-          <form id="instanceForm" class="instance-grid">
+        <section class="panel">
+          <h2 id="formTitle">新建作业</h2>
+          <form id="jobForm" class="job-grid">
             <label>
-              实例名称
+              作业名称
               <input name="name" required placeholder="小红书账号 A" />
             </label>
             <label>
@@ -77,6 +78,18 @@
               </select>
             </label>
             <label>
+              爬取类型
+              <select name="crawler_type">
+                <option value="search">搜索</option>
+                <option value="detail">详情</option>
+                <option value="creator">创作者</option>
+              </select>
+            </label>
+            <label>
+              目标
+              <input name="target_text" placeholder="关键词 / ID / 创作者主页，多个用英文逗号分隔" />
+            </label>
+            <label>
               CDP 端口
               <input name="cdp_debug_port" type="number" min="1000" max="65535" placeholder="自动分配" />
             </label>
@@ -86,27 +99,27 @@
             </label>
 
             <section class="form-section">
-              <h3>默认抓取参数</h3>
+              <h3>抓取参数</h3>
               <div class="form-grid">
                 <label>
                   起始页
-                  <input name="default_start_page" type="number" min="1" placeholder="1" />
+                  <input name="start_page" type="number" min="1" placeholder="1" />
                 </label>
                 <label>
                   最大内容数
-                  <input name="default_max_notes_count" type="number" min="1" placeholder="20" />
+                  <input name="max_notes_count" type="number" min="1" placeholder="20" />
                 </label>
                 <label>
                   单条评论数
-                  <input name="default_max_comments_count" type="number" min="1" placeholder="10" />
+                  <input name="max_comments_count" type="number" min="1" placeholder="10" />
                 </label>
                 <label>
                   并发数
-                  <input name="default_max_concurrency_num" type="number" min="1" placeholder="1" />
+                  <input name="max_concurrency_num" type="number" min="1" placeholder="1" />
                 </label>
                 <label>
                   评论
-                  <select name="default_enable_comments">
+                  <select name="enable_comments">
                     <option value="">项目默认</option>
                     <option value="true">开启</option>
                     <option value="false">关闭</option>
@@ -114,7 +127,7 @@
                 </label>
                 <label>
                   二级评论
-                  <select name="default_enable_sub_comments">
+                  <select name="enable_sub_comments">
                     <option value="">项目默认</option>
                     <option value="true">开启</option>
                     <option value="false">关闭</option>
@@ -125,20 +138,20 @@
 
             <section class="form-section">
               <h3>内容过滤</h3>
-              <div id="instanceFilterRows" class="filter-rows"></div>
-              <button class="secondary" type="button" data-action="add-filter" data-scope="instance">添加过滤条件</button>
+              <div id="jobFilterRows" class="filter-rows"></div>
+              <button class="secondary" type="button" data-action="add-filter" data-scope="job">添加过滤条件</button>
             </section>
 
             <section class="form-section">
               <h3>登录与代理</h3>
               <label>
                 Cookie
-                <textarea name="default_cookies" rows="3" placeholder="a=b; c=d"></textarea>
+                <textarea name="cookies" rows="3" placeholder="a=b; c=d"></textarea>
               </label>
               <div class="form-grid">
                 <label>
                   连接已有浏览器
-                  <select name="default_cdp_connect_existing">
+                  <select name="cdp_connect_existing">
                     <option value="">项目默认</option>
                     <option value="true">开启</option>
                     <option value="false">关闭</option>
@@ -146,7 +159,7 @@
                 </label>
                 <label>
                   IP 代理
-                  <select name="default_enable_ip_proxy">
+                  <select name="enable_ip_proxy">
                     <option value="">项目默认</option>
                     <option value="true">开启</option>
                     <option value="false">关闭</option>
@@ -154,11 +167,11 @@
                 </label>
                 <label>
                   代理池数量
-                  <input name="default_ip_proxy_pool_count" type="number" min="1" placeholder="2" />
+                  <input name="ip_proxy_pool_count" type="number" min="1" placeholder="2" />
                 </label>
                 <label>
                   代理服务
-                  <select name="default_ip_proxy_provider_name">
+                  <select name="ip_proxy_provider_name">
                     <option value="">默认</option>
                     <option value="static">固定代理</option>
                     <option value="kuaidaili">快代理</option>
@@ -168,7 +181,7 @@
               </div>
               <label>
                 固定代理地址
-                <input name="default_static_proxy_url" placeholder="http://user:pass@host:port" />
+                <input name="static_proxy_url" placeholder="http://user:pass@host:port" />
               </label>
             </section>
 
@@ -176,141 +189,17 @@
               <input name="headless" type="checkbox" />
               无头模式
             </label>
-            <button type="submit">创建实例</button>
+            <div class="form-actions">
+              <button id="jobSubmitBtn" type="submit">创建作业</button>
+              <button id="cancelEditBtn" class="secondary" type="button" hidden>取消编辑</button>
+            </div>
           </form>
         </section>
 
-        <section class="panel tasks-panel">
-          <div class="section-title">
-            <h2>任务</h2>
-            <span id="taskHint"></span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>任务</th>
-                  <th>实例</th>
-                  <th>类型</th>
-                  <th>状态</th>
-                  <th>目标</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="tasksBody"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="panel new-task-panel">
-          <h2>新建任务</h2>
-          <form id="taskForm" class="task-grid">
-            <label>
-              实例
-              <select name="instance_id" id="taskInstanceSelect"></select>
-            </label>
-            <label>
-              类型
-              <select name="crawler_type">
-                <option value="search">搜索</option>
-                <option value="detail">详情</option>
-                <option value="creator">创作者</option>
-              </select>
-            </label>
-            <label class="wide">
-              目标
-              <input name="target_text" placeholder="关键词 / ID / 创作者主页，多个用英文逗号分隔" />
-            </label>
-            <section class="form-section wide">
-              <h3>任务覆盖参数</h3>
-              <div class="task-params-grid">
-                <label>
-                  评论
-                  <select name="task_enable_comments">
-                    <option value="">沿用实例默认</option>
-                    <option value="true">开启</option>
-                    <option value="false">关闭</option>
-                  </select>
-                </label>
-                <label>
-                  二级评论
-                  <select name="task_enable_sub_comments">
-                    <option value="">沿用实例默认</option>
-                    <option value="true">开启</option>
-                    <option value="false">关闭</option>
-                  </select>
-                </label>
-                <label>
-                  起始页
-                  <input name="task_start_page" type="number" min="1" placeholder="沿用" />
-                </label>
-                <label>
-                  最大内容数
-                  <input name="task_max_notes_count" type="number" min="1" placeholder="沿用" />
-                </label>
-                <label>
-                  单条评论数
-                  <input name="task_max_comments_count" type="number" min="1" placeholder="沿用" />
-                </label>
-                <label>
-                  并发数
-                  <input name="task_max_concurrency_num" type="number" min="1" placeholder="沿用" />
-                </label>
-              </div>
-              <h3>内容过滤</h3>
-              <div id="taskFilterRows" class="filter-rows"></div>
-              <button class="secondary" type="button" data-action="add-filter" data-scope="task">添加过滤条件</button>
-            </section>
-            <section class="form-section wide">
-              <h3>任务登录与代理</h3>
-              <div class="task-params-grid">
-                <label>
-                  连接已有浏览器
-                  <select name="task_cdp_connect_existing">
-                    <option value="">沿用实例默认</option>
-                    <option value="true">开启</option>
-                    <option value="false">关闭</option>
-                  </select>
-                </label>
-                <label>
-                  IP 代理
-                  <select name="task_enable_ip_proxy">
-                    <option value="">沿用实例默认</option>
-                    <option value="true">开启</option>
-                    <option value="false">关闭</option>
-                  </select>
-                </label>
-                <label>
-                  代理池数量
-                  <input name="task_ip_proxy_pool_count" type="number" min="1" placeholder="沿用" />
-                </label>
-                <label>
-                  代理服务
-                  <select name="task_ip_proxy_provider_name">
-                    <option value="">沿用实例默认</option>
-                    <option value="static">固定代理</option>
-                    <option value="kuaidaili">快代理</option>
-                    <option value="wandouhttp">豌豆 HTTP</option>
-                  </select>
-                </label>
-              </div>
-              <label>
-                Cookie
-                <textarea name="task_cookies" rows="3" placeholder="沿用实例默认"></textarea>
-              </label>
-              <label>
-                固定代理地址
-                <input name="task_static_proxy_url" placeholder="沿用实例默认" />
-              </label>
-            </section>
-            <button type="submit">加入队列</button>
-          </form>
-        </section>
-
-        <section class="detail-grid details-panel">
+        <section class="detail-grid">
           <section class="panel log-panel">
             <h2>日志</h2>
-            <pre id="logsBox">选择一个任务查看日志。</pre>
+            <pre id="logsBox">选择一个作业查看日志。</pre>
           </section>
           <section class="panel artifact-panel">
             <h2>产物</h2>

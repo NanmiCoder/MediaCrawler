@@ -44,6 +44,9 @@ class InstanceCreateRequest(BaseModel):
     browser_profile_dir: str = ""
     cdp_debug_port: Optional[int] = Field(default=None, ge=1000, le=65535)
     default_params: Dict[str, Any] = Field(default_factory=dict)
+    crawler_type: CrawlerTypeEnum = CrawlerTypeEnum.SEARCH
+    target_text: str = ""
+    params: Dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("name")
     @classmethod
@@ -58,12 +61,16 @@ class InstanceUpdateRequest(BaseModel):
     """Update mutable crawler instance settings."""
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    platform: Optional[PlatformEnum] = None
     login_type: Optional[LoginTypeEnum] = None
     headless: Optional[bool] = None
     save_option: Optional[SaveDataOptionEnum] = None
     browser_profile_dir: Optional[str] = None
     cdp_debug_port: Optional[int] = Field(default=None, ge=1000, le=65535)
     default_params: Optional[Dict[str, Any]] = None
+    crawler_type: Optional[CrawlerTypeEnum] = None
+    target_text: Optional[str] = None
+    params: Optional[Dict[str, Any]] = None
     status: Optional[InstanceStatusEnum] = None
 
     @field_validator("name")
@@ -87,12 +94,28 @@ class InstanceResponse(BaseModel):
     browser_profile_dir: str
     cdp_debug_port: int
     default_params: Dict[str, Any]
+    crawler_type: str
+    target_text: str
+    params: Dict[str, Any]
     status: str
     current_task_id: Optional[str] = None
+    last_task_id: Optional[str] = None
     pid: Optional[int] = None
     last_error: str = ""
     created_at: str
     updated_at: str
+
+
+class JobCreateRequest(InstanceCreateRequest):
+    """Create a scheduler job."""
+
+
+class JobUpdateRequest(InstanceUpdateRequest):
+    """Update a scheduler job."""
+
+
+class JobResponse(InstanceResponse):
+    """Scheduler job configuration with current run status."""
 
 
 class TaskCreateRequest(BaseModel):

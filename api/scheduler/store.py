@@ -59,8 +59,12 @@ class SchedulerStore:
                     browser_profile_dir TEXT NOT NULL,
                     cdp_debug_port INTEGER NOT NULL,
                     default_params_json TEXT NOT NULL,
+                    crawler_type TEXT NOT NULL DEFAULT 'search',
+                    target_text TEXT NOT NULL DEFAULT '',
+                    params_json TEXT NOT NULL DEFAULT '{}',
                     status TEXT NOT NULL,
                     current_task_id TEXT,
+                    last_task_id TEXT,
                     pid INTEGER,
                     last_error TEXT NOT NULL DEFAULT '',
                     created_at TEXT NOT NULL,
@@ -106,9 +110,22 @@ class SchedulerStore:
                 );
                 """
             )
+            self._ensure_instance_columns(conn)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_instance_status ON tasks(instance_id, status, created_at)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_task_logs_task ON task_logs(task_id, id)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_task ON artifacts(task_id)")
+
+    def _ensure_instance_columns(self, conn: sqlite3.Connection) -> None:
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(instances)").fetchall()}
+        additions = {
+            "crawler_type": "ALTER TABLE instances ADD COLUMN crawler_type TEXT NOT NULL DEFAULT 'search'",
+            "target_text": "ALTER TABLE instances ADD COLUMN target_text TEXT NOT NULL DEFAULT ''",
+            "params_json": "ALTER TABLE instances ADD COLUMN params_json TEXT NOT NULL DEFAULT '{}'",
+            "last_task_id": "ALTER TABLE instances ADD COLUMN last_task_id TEXT",
+        }
+        for column, statement in additions.items():
+            if column not in columns:
+                conn.execute(statement)
 
     def create_instance(
         self,
@@ -125,9 +142,10 @@ class SchedulerStore:
                 INSERT INTO instances (
                     id, name, platform, login_type, headless, save_option,
                     browser_profile_dir, cdp_debug_port, default_params_json,
-                    status, current_task_id, pid, last_error, created_at, updated_at
+                    crawler_type, target_text, params_json,
+                    status, current_task_id, last_task_id, pid, last_error, created_at, updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, NULL, '', ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, NULL, NULL, '', ?, ?)
                 """,
                 (
                     instance_id,
@@ -139,6 +157,9 @@ class SchedulerStore:
                     profile_dir,
                     cdp_debug_port,
                     _json_dumps(payload.get("default_params")),
+                    payload.get("crawler_type", "search"),
+                    payload.get("target_text", ""),
+                    _json_dumps(payload.get("params")),
                     now,
                     now,
                 ),
@@ -160,14 +181,19 @@ class SchedulerStore:
             return self.get_instance(instance_id)
         allowed = {
             "name",
+            "platform",
             "login_type",
             "headless",
             "save_option",
             "browser_profile_dir",
             "cdp_debug_port",
             "default_params_json",
+            "crawler_type",
+            "target_text",
+            "params_json",
             "status",
             "current_task_id",
+            "last_task_id",
             "pid",
             "last_error",
         }
@@ -252,6 +278,19 @@ class SchedulerStore:
                 SELECT * FROM tasks
                 WHERE instance_id = ? AND status = 'queued'
                 ORDER BY created_at ASC
+                LIMIT 1
+                """,
+                (instance_id,),
+            ).fetchone()
+        return self._task_from_row(row) if row else None
+
+    def get_latest_task(self, instance_id: str) -> Optional[dict[str, Any]]:
+        with self._lock, self._connect() as conn:
+            row = conn.execute(
+                """
+                SELECT * FROM tasks
+                WHERE instance_id = ?
+                ORDER BY created_at DESC
                 LIMIT 1
                 """,
                 (instance_id,),
@@ -365,6 +404,7 @@ class SchedulerStore:
         data = dict(row)
         data["headless"] = bool(data["headless"])
         data["default_params"] = _json_loads(data.pop("default_params_json", None))
+        data["params"] = _json_loads(data.pop("params_json", None))
         return data
 
     def _task_from_row(self, row: sqlite3.Row) -> dict[str, Any]:

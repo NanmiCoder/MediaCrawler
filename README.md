@@ -221,13 +221,13 @@ uv run uvicorn api.main:app --port 8080 --reload
 
 #### 多实例调度器
 
-启动同一个 API 服务后，访问 `http://localhost:8080/scheduler` 可打开多实例调度器。调度器支持创建多个独立账号实例，每个实例拥有独立浏览器 Profile、CDP 端口、登录态、默认爬取参数和任务队列。实例默认参数、任务覆盖参数、内容过滤、Cookie 和代理都可以在页面中通过输入框、下拉菜单配置，无需手写 JSON。
+启动同一个 API 服务后，访问 `http://localhost:8080/scheduler` 可打开多实例调度器。调度器支持创建多个独立作业，每个作业拥有独立浏览器 Profile、CDP 端口、登录态、爬取目标和爬取参数。作业参数、内容过滤、Cookie 和代理都可以在页面中通过输入框、下拉菜单配置，无需手写 JSON。
 
 调度器运行数据默认保存在 `data/scheduler/`：
 
-- `scheduler.db`：实例、任务、日志和产物索引
-- `profiles/{instance_id}/`：实例独立浏览器 Profile
-- `artifacts/{instance_id}/{task_id}/`：任务抓取产物
+- `scheduler.db`：作业配置、运行记录、日志和产物索引
+- `profiles/{job_id}/`：作业独立浏览器 Profile
+- `artifacts/{job_id}/{task_id}/`：单次运行抓取产物
 
 详细说明请查看：[多实例调度器使用指南](docs/多实例调度器使用指南.md)
 

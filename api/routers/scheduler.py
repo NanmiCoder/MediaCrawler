@@ -8,6 +8,9 @@ from api.scheduler.schemas import (
     InstanceCreateRequest,
     InstanceResponse,
     InstanceUpdateRequest,
+    JobCreateRequest,
+    JobResponse,
+    JobUpdateRequest,
     SchedulerStatusResponse,
     TaskCreateRequest,
     TaskLogResponse,
@@ -20,6 +23,90 @@ router = APIRouter(prefix="/scheduler", tags=["scheduler"])
 @router.get("/status", response_model=SchedulerStatusResponse)
 async def scheduler_status():
     return scheduler_manager.status()
+
+
+@router.get("/jobs", response_model=list[JobResponse])
+async def list_jobs():
+    return scheduler_manager.list_jobs()
+
+
+@router.post("/jobs", response_model=JobResponse)
+async def create_job(request: JobCreateRequest):
+    return scheduler_manager.create_job(request)
+
+
+@router.get("/jobs/{job_id}", response_model=JobResponse)
+async def get_job(job_id: str):
+    job = scheduler_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.patch("/jobs/{job_id}", response_model=JobResponse)
+async def update_job(job_id: str, request: JobUpdateRequest):
+    try:
+        job = await scheduler_manager.update_job(job_id, request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.delete("/jobs/{job_id}")
+async def delete_job(job_id: str):
+    try:
+        deleted = await scheduler_manager.delete_job(job_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"status": "ok", "message": "Job deleted"}
+
+
+@router.post("/jobs/{job_id}/login", response_model=TaskResponse)
+async def login_job(job_id: str):
+    try:
+        return await scheduler_manager.login_job(job_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Job not found") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/jobs/{job_id}/run", response_model=TaskResponse)
+async def run_job(job_id: str):
+    try:
+        return await scheduler_manager.run_job(job_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Job not found") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/jobs/{job_id}/stop", response_model=JobResponse)
+async def stop_job(job_id: str):
+    job = await scheduler_manager.stop_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.get("/jobs/{job_id}/logs", response_model=list[TaskLogResponse])
+async def list_job_logs(job_id: str, limit: int = Query(default=300, ge=1, le=1000)):
+    try:
+        return scheduler_manager.list_job_logs(job_id, limit=limit)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Job not found") from exc
+
+
+@router.get("/jobs/{job_id}/artifacts", response_model=list[ArtifactResponse])
+async def list_job_artifacts(job_id: str):
+    try:
+        return scheduler_manager.list_job_artifacts(job_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Job not found") from exc
 
 
 @router.get("/instances", response_model=list[InstanceResponse])

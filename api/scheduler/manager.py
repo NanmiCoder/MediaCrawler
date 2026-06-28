@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from api.schemas.crawler import CrawlerTypeEnum
-from .schemas import InstanceCreateRequest, InstanceUpdateRequest, TaskCreateRequest
+from .schemas import JobCreateRequest, JobUpdateRequest, InstanceCreateRequest, InstanceUpdateRequest, TaskCreateRequest
 from .store import PROJECT_ROOT, SchedulerStore, _json_dumps, utc_now
 
 
@@ -45,8 +45,14 @@ class SchedulerManager:
     def list_instances(self) -> list[dict[str, Any]]:
         return self.store.list_instances()
 
+    def list_jobs(self) -> list[dict[str, Any]]:
+        return self.store.list_instances()
+
     def get_instance(self, instance_id: str) -> Optional[dict[str, Any]]:
         return self.store.get_instance(instance_id)
+
+    def get_job(self, job_id: str) -> Optional[dict[str, Any]]:
+        return self.store.get_instance(job_id)
 
     def create_instance(self, request: InstanceCreateRequest) -> dict[str, Any]:
         payload = request.model_dump(mode="json")
@@ -60,6 +66,9 @@ class SchedulerManager:
             if not profile_path.is_absolute():
                 profile_dir = str(self.project_root / profile_path)
         return self.store.create_instance(payload, profile_dir, cdp_debug_port, instance_id=instance_id)
+
+    def create_job(self, request: JobCreateRequest) -> dict[str, Any]:
+        return self.create_instance(request)
 
     async def update_instance(self, instance_id: str, request: InstanceUpdateRequest) -> Optional[dict[str, Any]]:
         async with self._lock:
@@ -78,7 +87,12 @@ class SchedulerManager:
             fields = request.model_dump(mode="json", exclude_unset=True)
             if "default_params" in fields:
                 fields["default_params_json"] = _json_dumps(fields.pop("default_params"))
+            if "params" in fields:
+                fields["params_json"] = _json_dumps(fields.pop("params"))
             return self.store.update_instance(instance_id, **fields)
+
+    async def update_job(self, job_id: str, request: JobUpdateRequest) -> Optional[dict[str, Any]]:
+        return await self.update_instance(job_id, request)
 
     async def delete_instance(self, instance_id: str) -> bool:
         async with self._lock:
@@ -88,6 +102,9 @@ class SchedulerManager:
             if instance["status"] in {"running", "stopping"}:
                 raise RuntimeError("running instance cannot be deleted")
             return self.store.delete_instance(instance_id)
+
+    async def delete_job(self, job_id: str) -> bool:
+        return await self.delete_instance(job_id)
 
     def list_tasks(self, instance_id: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         return self.store.list_tasks(instance_id=instance_id, limit=limit)
@@ -100,21 +117,37 @@ class SchedulerManager:
             instance = self.store.get_instance(request.instance_id)
             if not instance:
                 raise KeyError("instance not found")
-            if instance["status"] == "disabled":
-                raise RuntimeError("instance is disabled")
-            artifact_dir = self.artifact_dir / request.instance_id
-            payload = request.model_dump(mode="json")
-            task = self.store.create_task(payload, str(artifact_dir / "pending"))
-            real_artifact_dir = artifact_dir / task["id"]
-            task = self.store.update_task(task["id"], artifact_dir=str(real_artifact_dir))
-            if instance["status"] in {"idle", "error"} and request.instance_id not in self._runtimes:
-                await self._start_task_locked(task)
-                task = self.store.get_task(task["id"])
+            self._ensure_can_run(instance)
+            task = self._create_task_record(
+                request.instance_id,
+                request.crawler_type,
+                request.target_text,
+                request.params,
+            )
+            self.store.update_instance(instance["id"], last_task_id=task["id"])
+            await self._start_task_locked(task)
+            task = self.store.get_task(task["id"])
             return task
 
     async def create_login_task(self, instance_id: str) -> dict[str, Any]:
         request = TaskCreateRequest(instance_id=instance_id, crawler_type=CrawlerTypeEnum.LOGIN, target_text="")
         return await self.create_task(request)
+
+    async def run_job(self, job_id: str, crawler_type: CrawlerTypeEnum | None = None) -> dict[str, Any]:
+        async with self._lock:
+            job = self.store.get_instance(job_id)
+            if not job:
+                raise KeyError("job not found")
+            self._ensure_can_run(job)
+            run_type = crawler_type or CrawlerTypeEnum(job["crawler_type"])
+            target_text = "" if run_type == CrawlerTypeEnum.LOGIN else job.get("target_text", "")
+            task = self._create_task_record(job_id, run_type, target_text, job.get("params", {}))
+            self.store.update_instance(job_id, last_task_id=task["id"])
+            await self._start_task_locked(task)
+            return self.store.get_task(task["id"])
+
+    async def login_job(self, job_id: str) -> dict[str, Any]:
+        return await self.run_job(job_id, CrawlerTypeEnum.LOGIN)
 
     async def start_task(self, task_id: str) -> Optional[dict[str, Any]]:
         async with self._lock:
@@ -123,6 +156,10 @@ class SchedulerManager:
                 return None
             if task["status"] != "queued":
                 raise RuntimeError("only queued tasks can be started")
+            instance = self.store.get_instance(task["instance_id"])
+            if not instance:
+                raise KeyError("instance not found")
+            self._ensure_can_run(instance)
             await self._start_task_locked(task)
             return self.store.get_task(task_id)
 
@@ -147,14 +184,82 @@ class SchedulerManager:
                     pass
             return self.store.update_task(task_id, status="canceled", finished_at=utc_now())
 
+    async def stop_job(self, job_id: str) -> Optional[dict[str, Any]]:
+        async with self._lock:
+            job = self.store.get_instance(job_id)
+            if not job:
+                return None
+            task_id = job.get("current_task_id")
+            if not task_id:
+                return job
+            task = self.store.get_task(task_id)
+            if not task or task["status"] != "running":
+                return job
+            runtime = self._runtimes.get(job_id)
+            if runtime and runtime.task_id == task_id:
+                runtime.canceled = True
+                self.store.append_log(task_id, "Stopping crawler subprocess ...", "warning")
+                self.store.update_instance(job_id, status="stopping")
+                try:
+                    runtime.process.terminate()
+                except ProcessLookupError:
+                    pass
+            self.store.update_task(task_id, status="canceled", finished_at=utc_now())
+            return self.store.get_instance(job_id)
+
     def list_logs(self, task_id: str, limit: int = 300) -> list[dict[str, Any]]:
         return self.store.list_logs(task_id, limit)
+
+    def list_job_logs(self, job_id: str, limit: int = 300) -> list[dict[str, Any]]:
+        job = self.store.get_instance(job_id)
+        if not job:
+            raise KeyError("job not found")
+        task_id = self._job_task_id(job)
+        return self.store.list_logs(task_id, limit) if task_id else []
 
     def list_artifacts(self, task_id: str) -> list[dict[str, Any]]:
         return self.store.list_artifacts(task_id)
 
+    def list_job_artifacts(self, job_id: str) -> list[dict[str, Any]]:
+        job = self.store.get_instance(job_id)
+        if not job:
+            raise KeyError("job not found")
+        task_id = self._job_task_id(job)
+        return self.store.list_artifacts(task_id) if task_id else []
+
     def status(self) -> dict[str, int]:
         return self.store.scheduler_counts()
+
+    def _create_task_record(
+        self,
+        instance_id: str,
+        crawler_type: CrawlerTypeEnum | str,
+        target_text: str,
+        params: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        artifact_dir = self.artifact_dir / instance_id
+        payload = {
+            "instance_id": instance_id,
+            "crawler_type": str(crawler_type.value if isinstance(crawler_type, CrawlerTypeEnum) else crawler_type),
+            "target_text": target_text or "",
+            "params": params or {},
+        }
+        task = self.store.create_task(payload, str(artifact_dir / "pending"))
+        real_artifact_dir = artifact_dir / task["id"]
+        return self.store.update_task(task["id"], artifact_dir=str(real_artifact_dir))
+
+    def _ensure_can_run(self, instance: dict[str, Any]) -> None:
+        if instance["status"] == "disabled":
+            raise RuntimeError("job is disabled")
+        if instance["status"] in {"running", "stopping"} or instance["id"] in self._runtimes:
+            raise RuntimeError("job is already running")
+
+    def _job_task_id(self, job: dict[str, Any]) -> str:
+        task_id = job.get("current_task_id") or job.get("last_task_id")
+        if task_id:
+            return task_id
+        latest_task = self.store.get_latest_task(job["id"])
+        return latest_task["id"] if latest_task else ""
 
     async def _start_task_locked(self, task: dict[str, Any]) -> None:
         instance = self.store.get_instance(task["instance_id"])
@@ -184,7 +289,14 @@ class SchedulerManager:
             message = f"Failed to start crawler: {type(exc).__name__}: {exc}"
             self.store.append_log(task["id"], message, "error")
             self.store.update_task(task["id"], status="failed", error_message=message, finished_at=utc_now())
-            self.store.update_instance(instance["id"], status="error", current_task_id=None, pid=None, last_error=message)
+            self.store.update_instance(
+                instance["id"],
+                status="error",
+                current_task_id=None,
+                last_task_id=task["id"],
+                pid=None,
+                last_error=message,
+            )
             return
 
         runtime = InstanceRuntime(instance_id=instance["id"], task_id=task["id"], process=process)
@@ -197,13 +309,14 @@ class SchedulerManager:
             instance["id"],
             status="running",
             current_task_id=task["id"],
+            last_task_id=task["id"],
             pid=process.pid,
             last_error="",
         )
         self.store.append_log(task["id"], f"Crawler subprocess started, pid={process.pid}", "success")
 
     def _build_command(self, instance: dict[str, Any], task: dict[str, Any]) -> list[str]:
-        params = {**instance.get("default_params", {}), **task.get("params", {})}
+        params = {**instance.get("default_params", {}), **instance.get("params", {}), **task.get("params", {})}
         crawler_type = task["crawler_type"]
         save_option = str(params.get("save_option", instance["save_option"]))
         headless = self._as_bool(params.get("headless", instance["headless"]))
@@ -324,16 +437,12 @@ class SchedulerManager:
                 runtime.instance_id,
                 status=instance_status,
                 current_task_id=None,
+                last_task_id=task["id"],
                 pid=None,
                 last_error=error_message,
             )
             self.store.append_log(task["id"], message, level)
             self._runtimes.pop(runtime.instance_id, None)
-
-            if task_status in {"succeeded", "canceled"}:
-                next_task = self.store.get_next_queued_task(runtime.instance_id)
-                if next_task:
-                    await self._start_task_locked(next_task)
 
     def _scan_artifacts(self, root: Path) -> list[dict[str, Any]]:
         if not root.exists():
