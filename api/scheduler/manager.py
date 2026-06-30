@@ -275,8 +275,6 @@ class SchedulerManager:
                 continue
             name = path.name.lower()
             if "content" in name:
-                if len(works) >= work_limit:
-                    continue
                 for record in self._iter_artifact_records(path):
                     item = self._work_item(job["platform"], record)
                     key = item.get("url") or item.get("id")
@@ -284,14 +282,13 @@ class SchedulerManager:
                         continue
                     seen_works.add(key)
                     works.append(item)
-                    if len(works) >= work_limit:
-                        break
             elif "comment" in name:
                 for record in self._iter_artifact_records(path):
                     words.update(self._comment_words(record))
 
+        works.sort(key=lambda item: self._metric_number(item.get("metrics", {}).get("点赞")), reverse=True)
         word_cloud = [{"text": word, "weight": count} for word, count in words.most_common(word_limit)]
-        return {"works": works, "word_cloud": word_cloud}
+        return {"works": works[:work_limit], "word_cloud": word_cloud}
 
     def open_job_artifact(self, job_id: str, artifact_id: str) -> dict[str, str]:
         _, artifact, path = self._job_artifact(job_id, artifact_id)
@@ -676,6 +673,20 @@ class SchedulerManager:
             if value not in (None, ""):
                 return value
         return ""
+
+    def _metric_number(self, value: Any) -> float:
+        if isinstance(value, (int, float)):
+            return float(value)
+        text = str(value or "").replace(",", "").strip()
+        match = re.search(r"-?\d+(?:\.\d+)?", text)
+        if not match:
+            return 0.0
+        number = float(match.group())
+        if "亿" in text:
+            return number * 100000000
+        if "万" in text or "w" in text.lower():
+            return number * 10000
+        return number
 
     def _default_work_url(self, platform: str, work_id: Any, record: dict[str, Any] | None = None) -> str:
         if not work_id:

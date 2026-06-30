@@ -65,7 +65,9 @@ def test_scheduler_manager_builds_artifact_summary(tmp_path):
     artifact_dir = tmp_path / "artifacts" / "task-a"
     artifact_dir.mkdir(parents=True)
     (artifact_dir / "search_contents.jsonl").write_text(
-        '{"aweme_id":"1","title":"郑州作品","nickname":"作者","liked_count":"10","aweme_url":"https://www.douyin.com/video/1"}\n',
+        '{"aweme_id":"1","title":"郑州作品","nickname":"作者","liked_count":"10","aweme_url":"https://www.douyin.com/video/1"}\n'
+        '{"aweme_id":"2","title":"高赞作品","nickname":"作者","liked_count":"1.2万","aweme_url":"https://www.douyin.com/video/2"}\n'
+        '{"aweme_id":"3","title":"中赞作品","nickname":"作者","liked_count":"200","aweme_url":"https://www.douyin.com/video/3"}\n',
         encoding="utf-8",
     )
     (artifact_dir / "search_comments.jsonl").write_text(
@@ -79,10 +81,10 @@ def test_scheduler_manager_builds_artifact_summary(tmp_path):
     store.update_instance(job["id"], last_task_id=task["id"])
     store.replace_artifacts(task["id"], manager._scan_artifacts(artifact_dir))
 
-    summary = manager.list_job_artifact_summary(job["id"])
+    summary = manager.list_job_artifact_summary(job["id"], work_limit=2)
 
-    assert summary["works"][0]["title"] == "郑州作品"
-    assert summary["works"][0]["url"] == "https://www.douyin.com/video/1"
+    assert [work["title"] for work in summary["works"]] == ["高赞作品", "中赞作品"]
+    assert summary["works"][0]["url"] == "https://www.douyin.com/video/2"
     assert {"text": "郑州", "weight": 2} in summary["word_cloud"]
 
 
