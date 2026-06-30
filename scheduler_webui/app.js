@@ -492,6 +492,12 @@ els.refreshBtn.addEventListener("click", () => {
 
 els.cancelEditBtn.addEventListener("click", resetForm);
 
+els.jobsBody.addEventListener("click", async (event) => {
+  if (event.target.closest("button[data-action]")) return;
+  const item = event.target.closest("[data-job-id]");
+  if (item) await selectJob(item.dataset.jobId).catch((err) => alert(err.message));
+});
+
 els.jobForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
@@ -521,11 +527,7 @@ document.addEventListener("change", (event) => {
 
 document.addEventListener("click", async (event) => {
   const target = event.target.closest("button[data-action]");
-  if (!target) {
-    const item = event.target.closest("[data-job-id]");
-    if (item) await selectJob(item.dataset.jobId).catch((err) => alert(err.message));
-    return;
-  }
+  if (!target) return;
   const action = target.dataset.action;
   const id = target.dataset.id;
   try {

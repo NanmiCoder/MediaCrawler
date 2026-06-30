@@ -144,7 +144,7 @@ th {
 }
 
 .scheduler-grid {
-  grid-template-columns: minmax(420px, 0.95fr) minmax(520px, 1.05fr);
+  grid-template-columns: minmax(300px, 0.9fr) minmax(360px, 1.1fr);
   align-items: start;
 }
 
@@ -243,7 +243,8 @@ th {
 
 .job-item.selected {
   border-color: var(--teal);
-  box-shadow: inset 3px 0 0 var(--teal);
+  background: #eefbf7;
+  box-shadow: inset 4px 0 0 var(--teal), 0 0 0 1px rgba(15, 118, 110, 0.16);
 }
 
 .job-main {
@@ -402,7 +403,7 @@ th {
   gap: 8px;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 760px) {
   .scheduler-grid {
     grid-template-columns: 1fr;
   }
