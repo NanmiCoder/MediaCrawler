@@ -387,6 +387,10 @@ class SchedulerStore:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def delete_artifact(self, artifact_id: str) -> None:
+        with self._lock, self._connect() as conn:
+            conn.execute("DELETE FROM artifacts WHERE id = ?", (artifact_id,))
+
     def scheduler_counts(self) -> dict[str, int]:
         with self._lock, self._connect() as conn:
             instances_total = conn.execute("SELECT COUNT(*) FROM instances").fetchone()[0]

@@ -6,6 +6,7 @@ import asyncio
 import json
 import os
 import subprocess
+import sys
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -227,6 +228,27 @@ class SchedulerManager:
         task_id = self._job_task_id(job)
         return self.store.list_artifacts(task_id) if task_id else []
 
+    def open_job_artifact(self, job_id: str, artifact_id: str) -> dict[str, str]:
+        _, artifact, path = self._job_artifact(job_id, artifact_id)
+        if not path.is_file():
+            raise RuntimeError("artifact file not found")
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif sys.platform.startswith("win"):
+            os.startfile(str(path))  # type: ignore[attr-defined]
+        else:
+            subprocess.Popen(["xdg-open", str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return {"status": "ok", "message": "Artifact opened"}
+
+    def delete_job_artifact(self, job_id: str, artifact_id: str) -> dict[str, str]:
+        _, _, path = self._job_artifact(job_id, artifact_id)
+        if path.exists():
+            if not path.is_file():
+                raise RuntimeError("artifact path is not a file")
+            path.unlink()
+        self.store.delete_artifact(artifact_id)
+        return {"status": "ok", "message": "Artifact deleted"}
+
     def status(self) -> dict[str, int]:
         return self.store.scheduler_counts()
 
@@ -260,6 +282,31 @@ class SchedulerManager:
             return task_id
         latest_task = self.store.get_latest_task(job["id"])
         return latest_task["id"] if latest_task else ""
+
+    def _job_artifact(self, job_id: str, artifact_id: str) -> tuple[str, dict[str, Any], Path]:
+        job = self.store.get_instance(job_id)
+        if not job:
+            raise KeyError("job not found")
+        task_id = self._job_task_id(job)
+        if not task_id:
+            raise KeyError("artifact not found")
+        artifact = next((item for item in self.store.list_artifacts(task_id) if item["id"] == artifact_id), None)
+        if not artifact:
+            raise KeyError("artifact not found")
+        path = self._safe_artifact_path(task_id, artifact["path"])
+        return task_id, artifact, path
+
+    def _safe_artifact_path(self, task_id: str, artifact_path: str) -> Path:
+        task = self.store.get_task(task_id)
+        if not task:
+            raise KeyError("task not found")
+        root = Path(task["artifact_dir"]).resolve()
+        path = Path(artifact_path).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise RuntimeError("artifact path is outside task directory") from exc
+        return path
 
     async def _start_task_locked(self, task: dict[str, Any]) -> None:
         instance = self.store.get_instance(task["instance_id"])

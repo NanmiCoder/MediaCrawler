@@ -341,6 +341,18 @@ th {
   word-break: break-all;
 }
 
+.artifact-item {
+  display: grid;
+  gap: 10px;
+}
+
+.artifact-info {
+  min-width: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;

@@ -57,6 +57,29 @@ def test_scheduler_manager_scans_artifacts(tmp_path):
     assert artifacts[0]["record_count"] == 2
 
 
+def test_scheduler_manager_deletes_job_artifact(tmp_path):
+    store = SchedulerStore(tmp_path / "scheduler.db")
+    manager = SchedulerManager(store=store, project_root=tmp_path)
+    job = manager.create_job(JobCreateRequest(name="小红书作业", platform="xhs"))
+    artifact_dir = tmp_path / "artifacts" / "task-a"
+    artifact_dir.mkdir(parents=True)
+    artifact_file = artifact_dir / "data.jsonl"
+    artifact_file.write_text('{"id": 1}\n', encoding="utf-8")
+    task = store.create_task(
+        {"instance_id": job["id"], "crawler_type": "search", "target_text": "", "params": {}},
+        str(artifact_dir),
+    )
+    store.update_instance(job["id"], last_task_id=task["id"])
+    store.replace_artifacts(task["id"], manager._scan_artifacts(artifact_dir))
+    artifact = store.list_artifacts(task["id"])[0]
+
+    result = manager.delete_job_artifact(job["id"], artifact["id"])
+
+    assert result["status"] == "ok"
+    assert not artifact_file.exists()
+    assert store.list_artifacts(task["id"]) == []
+
+
 def test_scheduler_manager_runs_job_without_queue(monkeypatch, tmp_path):
     store = SchedulerStore(tmp_path / "scheduler.db")
     manager = SchedulerManager(store=store, project_root=tmp_path)

@@ -87,3 +87,31 @@ def test_scheduler_api_creates_and_runs_job(monkeypatch, tmp_path):
     assert refreshed_job["last_task_id"] == task["id"]
     assert client.get(f"/api/scheduler/jobs/{job['id']}/logs").status_code == 200
     assert client.get(f"/api/scheduler/jobs/{job['id']}/artifacts").status_code == 200
+
+
+def test_scheduler_api_deletes_job_artifact(monkeypatch, tmp_path):
+    manager = SchedulerManager(store=SchedulerStore(tmp_path / "scheduler.db"), project_root=tmp_path)
+    monkeypatch.setattr(scheduler_router, "scheduler_manager", manager)
+
+    client = TestClient(app)
+    job = client.post(
+        "/api/scheduler/jobs",
+        json={"name": "小红书作业 A", "platform": "xhs", "save_option": "jsonl"},
+    ).json()
+    artifact_dir = tmp_path / "artifacts" / "task-a"
+    artifact_dir.mkdir(parents=True)
+    artifact_file = artifact_dir / "data.jsonl"
+    artifact_file.write_text('{"id": 1}\n', encoding="utf-8")
+    task = manager.store.create_task(
+        {"instance_id": job["id"], "crawler_type": "search", "target_text": "", "params": {}},
+        str(artifact_dir),
+    )
+    manager.store.update_instance(job["id"], last_task_id=task["id"])
+    manager.store.replace_artifacts(task["id"], manager._scan_artifacts(artifact_dir))
+    artifact = manager.store.list_artifacts(task["id"])[0]
+
+    response = client.delete(f"/api/scheduler/jobs/{job['id']}/artifacts/{artifact['id']}")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    assert not artifact_file.exists()

@@ -399,7 +399,18 @@ async function loadJobDetail(jobId) {
         .map((item) => {
           const sizeKb = (item.size / 1024).toFixed(1);
           const count = item.record_count == null ? "" : `，${item.record_count} 条`;
-          return `<li><strong>${escapeHtml(item.type)}</strong> ${escapeHtml(sizeKb)} KB${count}<br>${escapeHtml(item.path)}</li>`;
+          return `
+            <li class="artifact-item">
+              <div class="artifact-info">
+                <strong>${escapeHtml(item.type)}</strong> ${escapeHtml(sizeKb)} KB${count}
+                <br>${escapeHtml(item.path)}
+              </div>
+              <div class="actions">
+                <button class="secondary" data-action="open-artifact" data-id="${escapeHtml(item.id)}">打开文件</button>
+                <button class="danger" data-action="delete-artifact" data-id="${escapeHtml(item.id)}">删除文件</button>
+              </div>
+            </li>
+          `;
         })
         .join("")
     : "<li>暂无产物。</li>";
@@ -480,6 +491,15 @@ document.addEventListener("click", async (event) => {
       if (state.selectedJobId === id) state.selectedJobId = "";
       if (state.editingJobId === id) resetForm();
       await refreshAll();
+    }
+    if (action === "open-artifact") {
+      if (!state.selectedJobId) return;
+      await api.post(`/api/scheduler/jobs/${state.selectedJobId}/artifacts/${id}/open`);
+    }
+    if (action === "delete-artifact") {
+      if (!state.selectedJobId || !confirm("确定删除这个产物文件？")) return;
+      await api.delete(`/api/scheduler/jobs/${state.selectedJobId}/artifacts/${id}`);
+      await loadJobDetail(state.selectedJobId);
     }
   } catch (err) {
     alert(err.message);

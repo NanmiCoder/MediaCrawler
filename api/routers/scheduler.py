@@ -109,6 +109,26 @@ async def list_job_artifacts(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found") from exc
 
 
+@router.post("/jobs/{job_id}/artifacts/{artifact_id}/open")
+async def open_job_artifact(job_id: str, artifact_id: str):
+    try:
+        return scheduler_manager.open_job_artifact(job_id, artifact_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Artifact not found") from exc
+    except (RuntimeError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.delete("/jobs/{job_id}/artifacts/{artifact_id}")
+async def delete_job_artifact(job_id: str, artifact_id: str):
+    try:
+        return scheduler_manager.delete_job_artifact(job_id, artifact_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Artifact not found") from exc
+    except (RuntimeError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @router.get("/instances", response_model=list[InstanceResponse])
 async def list_instances():
     return scheduler_manager.list_instances()
