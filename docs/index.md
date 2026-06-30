@@ -4,7 +4,7 @@
 
 - [项目架构文档](项目架构文档.md) - 系统架构、模块设计、数据流向（含 Mermaid 图表）
 - [多实例调度器使用指南](多实例调度器使用指南.md) - 多账号作业、运行记录、调度器 WebUI 和 API
-- [内容过滤使用指南](内容过滤使用指南.md) - 按点赞、收藏、转发、评论等互动指标筛选爬取目标
+- [内容过滤使用指南](内容过滤使用指南.md) - 按发布时间、点赞、收藏、转发、评论等条件筛选爬取目标
 
 ## 推荐：使用 uv 管理依赖
 
@@ -36,8 +36,8 @@ uv run playwright install
 # 从配置中读取关键词搜索并爬取帖子与评论
 uv run main.py --platform xhs --lt qrcode --type search
 
-# 只保存点赞数不低于 1000 的搜索结果
-uv run main.py --platform xhs --lt qrcode --type search --content_filters '{"liked_count":{"min":1000}}'
+# 只保存 2024-07-01 之后且点赞数不低于 1000 的搜索结果
+uv run main.py --platform xhs --lt qrcode --type search --content_filters '{"publish_time":{"min":"2024-07-01"},"liked_count":{"min":1000}}'
 
 # 从配置中读取指定帖子ID列表并爬取帖子与评论
 uv run main.py --platform xhs --lt qrcode --type detail

@@ -41,43 +41,50 @@ let state = {
 
 const filterFields = {
   xhs: [
-    ["liked_count", "点赞数"],
-    ["collected_count", "收藏数"],
-    ["comment_count", "评论数"],
-    ["share_count", "转发数"],
+    ["publish_time", "发布时间", "date"],
+    ["liked_count", "点赞数", "number"],
+    ["collected_count", "收藏数", "number"],
+    ["comment_count", "评论数", "number"],
+    ["share_count", "转发数", "number"],
   ],
   dy: [
-    ["liked_count", "点赞数"],
-    ["collected_count", "收藏数"],
-    ["comment_count", "评论数"],
-    ["share_count", "转发数"],
+    ["publish_time", "发布时间", "date"],
+    ["liked_count", "点赞数", "number"],
+    ["collected_count", "收藏数", "number"],
+    ["comment_count", "评论数", "number"],
+    ["share_count", "转发数", "number"],
   ],
   ks: [
-    ["liked_count", "点赞数"],
-    ["view_count", "播放数"],
+    ["publish_time", "发布时间", "date"],
+    ["liked_count", "点赞数", "number"],
+    ["view_count", "播放数", "number"],
   ],
   bili: [
-    ["liked_count", "点赞数"],
-    ["disliked_count", "点踩数"],
-    ["play_count", "播放数"],
-    ["favorite_count", "收藏数"],
-    ["share_count", "分享数"],
-    ["coin_count", "投币数"],
-    ["danmaku_count", "弹幕数"],
-    ["comment_count", "评论数"],
+    ["publish_time", "发布时间", "date"],
+    ["liked_count", "点赞数", "number"],
+    ["disliked_count", "点踩数", "number"],
+    ["play_count", "播放数", "number"],
+    ["favorite_count", "收藏数", "number"],
+    ["share_count", "分享数", "number"],
+    ["coin_count", "投币数", "number"],
+    ["danmaku_count", "弹幕数", "number"],
+    ["comment_count", "评论数", "number"],
   ],
   wb: [
-    ["liked_count", "点赞数"],
-    ["comment_count", "评论数"],
-    ["share_count", "转发数"],
+    ["publish_time", "发布时间", "date"],
+    ["liked_count", "点赞数", "number"],
+    ["comment_count", "评论数", "number"],
+    ["share_count", "转发数", "number"],
   ],
   tieba: [
-    ["reply_count", "回复数"],
-    ["reply_page_count", "回复页数"],
+    ["publish_time", "发布时间", "date"],
+    ["reply_count", "回复数", "number"],
+    ["reply_page_count", "回复页数", "number"],
   ],
   zhihu: [
-    ["voteup_count", "赞同数"],
-    ["comment_count", "评论数"],
+    ["publish_time", "发布时间", "date"],
+    ["voteup_count", "赞同数", "number"],
+    ["comment_count", "评论数", "number"],
   ],
 };
 
@@ -182,33 +189,55 @@ function renderFilterRows(scope) {
   const rows = state.filterRows[scope];
   els.jobFilterRows.innerHTML = rows.length
     ? rows
-        .map((row, index) => `
-          <div class="filter-row" data-scope="${scope}" data-index="${index}">
-            <label>
-              指标
-              <select data-field="metric">
-                ${metricOptions(platform, row.metric)}
-              </select>
-            </label>
-            <label>
-              最小值
-              <input data-field="min" inputmode="numeric" placeholder="不限，可填 1万" value="${escapeHtml(row.min)}" />
-            </label>
-            <label>
-              最大值
-              <input data-field="max" inputmode="numeric" placeholder="不限，可填 1万" value="${escapeHtml(row.max)}" />
-            </label>
-            <button class="secondary icon-button" type="button" data-action="remove-filter" data-scope="${scope}" data-index="${index}" aria-label="删除过滤条件">×</button>
-          </div>
-        `)
+        .map((row, index) => renderFilterRow(scope, platform, row, index))
         .join("")
     : `<p class="empty-note">未设置过滤条件</p>`;
+}
+
+function renderFilterRow(scope, platform, row, index) {
+  const type = filterFieldType(platform, row.metric);
+  const isDate = type === "date";
+  const minControl = isDate
+    ? `
+      <label>
+        不早于
+        <input data-field="min" type="date" value="${escapeHtml(dateInputValue(row.min))}" />
+      </label>
+    `
+    : `
+      <label>
+        最小值
+        <input data-field="min" inputmode="numeric" placeholder="不限，可填 1万" value="${escapeHtml(row.min)}" />
+      </label>
+      <label>
+        最大值
+        <input data-field="max" inputmode="numeric" placeholder="不限，可填 1万" value="${escapeHtml(row.max)}" />
+      </label>
+    `;
+  return `
+    <div class="filter-row ${isDate ? "time-filter-row" : ""}" data-scope="${scope}" data-index="${index}">
+      <label>
+        指标
+        <select data-field="metric">
+          ${metricOptions(platform, row.metric)}
+        </select>
+      </label>
+      ${minControl}
+      <button class="secondary icon-button" type="button" data-action="remove-filter" data-scope="${scope}" data-index="${index}" aria-label="删除过滤条件">×</button>
+    </div>
+  `;
 }
 
 function metricOptions(platform, selectedMetric) {
   return (filterFields[platform] || filterFields.xhs)
     .map(([value, label]) => `<option value="${value}" ${value === selectedMetric ? "selected" : ""}>${label}</option>`)
     .join("");
+}
+
+function filterFieldType(platform, metric) {
+  const fields = filterFields[platform] || filterFields.xhs;
+  const field = fields.find(([value]) => value === metric) || fields[0];
+  return field[2] || "number";
 }
 
 function currentPlatform() {
@@ -242,13 +271,21 @@ function updateFilterValue(target) {
   if (!rowEl) return;
   const row = state.filterRows[rowEl.dataset.scope]?.[Number(rowEl.dataset.index)];
   if (!row) return;
+  if (target.dataset.field === "metric" && row.metric !== target.value) {
+    row.metric = target.value;
+    row.min = "";
+    row.max = "";
+    renderFilterRows(rowEl.dataset.scope);
+    return;
+  }
   row[target.dataset.field] = target.value;
 }
 
 function collectFilters() {
   return state.filterRows.job.reduce((filters, row) => {
+    const type = filterFieldType(currentPlatform(), row.metric);
     const min = String(row.min || "").trim();
-    const max = String(row.max || "").trim();
+    const max = type === "date" ? "" : String(row.max || "").trim();
     if (!row.metric || (!min && !max)) return filters;
     filters[row.metric] = {};
     if (min) filters[row.metric].min = min;
@@ -310,6 +347,21 @@ function collectJobBody(data) {
 
 function setSelect(name, value) {
   els.jobForm.elements[name].value = value == null ? "" : String(value);
+}
+
+function dateInputValue(value) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+
+  const timestamp = Number(text);
+  if (!Number.isFinite(timestamp)) return "";
+  const date = new Date((timestamp > 10_000_000_000 ? timestamp : timestamp * 1000));
+  if (Number.isNaN(date.getTime())) return "";
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function setParamFields(params) {

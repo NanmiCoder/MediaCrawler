@@ -2,6 +2,8 @@
 import json
 import re
 from collections.abc import Callable
+from datetime import datetime
+from email.utils import parsedate_to_datetime
 from typing import Any, Iterable, TypeVar
 
 
@@ -13,6 +15,7 @@ class ContentFilterError(ValueError):
 
 
 MetricGetter = Callable[[Any], Any]
+PUBLISH_TIME_METRIC = "publish_time"
 
 
 def _dig(item: Any, *path: str) -> Any:
@@ -38,24 +41,42 @@ def _first_value(*getters: MetricGetter) -> MetricGetter:
     return getter
 
 
+def _publish_time_getter(*getters: MetricGetter) -> MetricGetter:
+    return _first_value(
+        *getters,
+        lambda item: _dig(item, "publish_time"),
+        lambda item: _dig(item, "time"),
+        lambda item: _dig(item, "create_time"),
+        lambda item: _dig(item, "created_time"),
+        lambda item: _dig(item, "created_at"),
+        lambda item: _dig(item, "published_at"),
+        lambda item: _dig(item, "pubdate"),
+        lambda item: _dig(item, "ctime"),
+    )
+
+
 METRIC_GETTERS: dict[str, dict[str, MetricGetter]] = {
     "xhs": {
+        "publish_time": _publish_time_getter(lambda item: _dig(item, "time"), lambda item: _dig(item, "last_update_time")),
         "liked_count": _first_value(lambda item: _dig(item, "interact_info", "liked_count"), lambda item: _dig(item, "liked_count")),
         "collected_count": _first_value(lambda item: _dig(item, "interact_info", "collected_count"), lambda item: _dig(item, "collected_count")),
         "comment_count": _first_value(lambda item: _dig(item, "interact_info", "comment_count"), lambda item: _dig(item, "comment_count")),
         "share_count": _first_value(lambda item: _dig(item, "interact_info", "share_count"), lambda item: _dig(item, "share_count")),
     },
     "dy": {
+        "publish_time": _publish_time_getter(lambda item: _dig(item, "aweme_info", "create_time")),
         "liked_count": _first_value(lambda item: _dig(item, "statistics", "digg_count"), lambda item: _dig(item, "liked_count")),
         "collected_count": _first_value(lambda item: _dig(item, "statistics", "collect_count"), lambda item: _dig(item, "collected_count")),
         "comment_count": _first_value(lambda item: _dig(item, "statistics", "comment_count"), lambda item: _dig(item, "comment_count")),
         "share_count": _first_value(lambda item: _dig(item, "statistics", "share_count"), lambda item: _dig(item, "share_count")),
     },
     "ks": {
+        "publish_time": _publish_time_getter(lambda item: _dig(item, "photo", "timestamp")),
         "liked_count": _first_value(lambda item: _dig(item, "photo", "realLikeCount"), lambda item: _dig(item, "liked_count")),
         "view_count": _first_value(lambda item: _dig(item, "photo", "viewCount"), lambda item: _dig(item, "view_count"), lambda item: _dig(item, "viewd_count")),
     },
     "bili": {
+        "publish_time": _publish_time_getter(lambda item: _dig(item, "View", "pubdate"), lambda item: _dig(item, "View", "ctime")),
         "liked_count": _first_value(lambda item: _dig(item, "View", "stat", "like"), lambda item: _dig(item, "liked_count")),
         "disliked_count": _first_value(lambda item: _dig(item, "View", "stat", "dislike"), lambda item: _dig(item, "disliked_count")),
         "play_count": _first_value(lambda item: _dig(item, "View", "stat", "view"), lambda item: _dig(item, "video_play_count"), lambda item: _dig(item, "play_count")),
@@ -66,15 +87,18 @@ METRIC_GETTERS: dict[str, dict[str, MetricGetter]] = {
         "comment_count": _first_value(lambda item: _dig(item, "View", "stat", "reply"), lambda item: _dig(item, "video_comment"), lambda item: _dig(item, "comment_count")),
     },
     "wb": {
+        "publish_time": _publish_time_getter(lambda item: _dig(item, "mblog", "created_at")),
         "liked_count": _first_value(lambda item: _dig(item, "mblog", "attitudes_count"), lambda item: _dig(item, "liked_count")),
         "comment_count": _first_value(lambda item: _dig(item, "mblog", "comments_count"), lambda item: _dig(item, "comments_count"), lambda item: _dig(item, "comment_count")),
         "share_count": _first_value(lambda item: _dig(item, "mblog", "reposts_count"), lambda item: _dig(item, "shared_count"), lambda item: _dig(item, "share_count")),
     },
     "tieba": {
+        "publish_time": _publish_time_getter(),
         "reply_count": _first_value(lambda item: _dig(item, "total_replay_num"), lambda item: _dig(item, "total_reply_num"), lambda item: _dig(item, "reply_count")),
         "reply_page_count": _first_value(lambda item: _dig(item, "total_replay_page"), lambda item: _dig(item, "total_reply_page"), lambda item: _dig(item, "reply_page_count")),
     },
     "zhihu": {
+        "publish_time": _publish_time_getter(),
         "voteup_count": _first_value(lambda item: _dig(item, "voteup_count")),
         "comment_count": _first_value(lambda item: _dig(item, "comment_count")),
     },
@@ -131,7 +155,7 @@ def normalize_content_filters(platform: str, filters: Any) -> dict[str, dict[str
         if metric not in platform_getters:
             supported = ", ".join(sorted(platform_getters))
             raise ContentFilterError(f"unsupported content filter field for {platform}: {raw_name}. Supported: {supported}")
-        normalized[metric] = _normalize_rule(raw_rule, raw_name)
+        normalized[metric] = _normalize_rule(raw_rule, raw_name, metric)
     return normalized
 
 
@@ -149,7 +173,7 @@ def match_content_filter(platform: str, item: Any, filters: Any = None) -> bool:
 
     getters = METRIC_GETTERS[platform]
     for metric, rule in rules.items():
-        value = _parse_number(getters[metric](item))
+        value = _parse_metric_value(metric, getters[metric](item))
         if value is None:
             return False
         if "min" in rule and value < rule["min"]:
@@ -175,9 +199,9 @@ def _current_filters() -> Any:
     return getattr(config, "CONTENT_FILTERS", {})
 
 
-def _normalize_rule(rule: Any, field_name: str) -> dict[str, float]:
+def _normalize_rule(rule: Any, field_name: str, metric: str) -> dict[str, float]:
     if isinstance(rule, (int, float, str)) and not isinstance(rule, bool):
-        value = _parse_number(rule)
+        value = _parse_metric_value(metric, rule)
         if value is None:
             raise ContentFilterError(f"content filter field {field_name} has invalid value: {rule}")
         return {"min": value}
@@ -188,7 +212,7 @@ def _normalize_rule(rule: Any, field_name: str) -> dict[str, float]:
     for bound in ("min", "max"):
         if bound not in rule or rule[bound] in (None, ""):
             continue
-        value = _parse_number(rule[bound])
+        value = _parse_metric_value(metric, rule[bound])
         if value is None:
             raise ContentFilterError(f"content filter field {field_name}.{bound} has invalid value: {rule[bound]}")
         normalized[bound] = value
@@ -197,6 +221,12 @@ def _normalize_rule(rule: Any, field_name: str) -> dict[str, float]:
     if "min" in normalized and "max" in normalized and normalized["min"] > normalized["max"]:
         raise ContentFilterError(f"content filter field {field_name} min cannot exceed max")
     return normalized
+
+
+def _parse_metric_value(metric: str, value: Any) -> float | None:
+    if metric == PUBLISH_TIME_METRIC:
+        return _parse_time(value)
+    return _parse_number(value)
 
 
 def _parse_number(value: Any) -> float | None:
@@ -216,3 +246,37 @@ def _parse_number(value: Any) -> float | None:
     unit = match.group(2).lower()
     multiplier = {"万": 10_000, "亿": 100_000_000, "w": 10_000, "k": 1_000}.get(unit, 1)
     return number * multiplier
+
+
+def _parse_time(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return _normalize_timestamp(float(value))
+
+    text = str(value).strip()
+    if not text:
+        return None
+    if re.fullmatch(r"\d+(?:\.\d+)?", text):
+        return _normalize_timestamp(float(text))
+
+    normalized = text.replace("/", "-").replace("Z", "+00:00")
+    if re.fullmatch(r"\d{4}-\d{1,2}-\d{1,2}", normalized):
+        normalized = f"{normalized} 00:00:00"
+
+    for candidate in (normalized, normalized.replace(" ", "T", 1)):
+        try:
+            return datetime.fromisoformat(candidate).timestamp()
+        except ValueError:
+            continue
+
+    try:
+        return parsedate_to_datetime(text).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_timestamp(value: float) -> float:
+    if value > 10_000_000_000:
+        return value / 1000
+    return value

@@ -186,6 +186,10 @@ th {
   gap: 10px;
 }
 
+.param-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .job-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -298,9 +302,13 @@ th {
 
 .filter-row {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(150px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) 36px;
   gap: 8px;
   align-items: end;
+}
+
+.time-filter-row {
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) 36px;
 }
 
 .empty-note {
@@ -403,6 +411,7 @@ th {
 @media (max-width: 560px) {
   .job-grid,
   .form-grid,
+  .param-grid,
   .filter-row {
     grid-template-columns: 1fr;
   }

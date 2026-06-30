@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+
 import pytest
 
 from model.m_baidu_tieba import TiebaNote
@@ -49,10 +51,29 @@ def test_content_filters_filter_bilibili_nested_metrics():
     assert kept == [items[1]]
 
 
+def test_content_filters_parse_publish_time_filter():
+    filters = normalize_content_filters("dy", {"publish_time": {"min": "2024-07-01"}})
+
+    assert filters == {"publish_time": {"min": datetime(2024, 7, 1).timestamp()}}
+
+
+def test_content_filters_filter_publish_time_dict_items():
+    start_time = datetime(2024, 7, 1).timestamp()
+    items = [
+        {"time": start_time - 1},
+        {"time": start_time},
+        {"time": int((start_time + 1) * 1000)},
+    ]
+
+    kept = filter_content_items("xhs", items, {"publish_time": {"min": "2024-07-01"}})
+
+    assert kept == items[1:]
+
+
 def test_content_filters_filter_model_platform_items():
     tieba_items = [
-        TiebaNote(note_id="1", title="a", note_url="u", tieba_name="t", tieba_link="l", total_replay_num=9),
-        TiebaNote(note_id="2", title="b", note_url="u", tieba_name="t", tieba_link="l", total_replay_num=10),
+        TiebaNote(note_id="1", title="a", note_url="u", tieba_name="t", tieba_link="l", total_replay_num=9, publish_time="2024-06-30 23:59:59"),
+        TiebaNote(note_id="2", title="b", note_url="u", tieba_name="t", tieba_link="l", total_replay_num=10, publish_time="2024-07-01 00:00:00"),
     ]
     zhihu_items = [
         ZhihuContent(content_id="a", voteup_count=99, comment_count=10),
@@ -60,6 +81,7 @@ def test_content_filters_filter_model_platform_items():
     ]
 
     assert filter_content_items("tieba", tieba_items, {"reply_count": {"min": 10}}) == [tieba_items[1]]
+    assert filter_content_items("tieba", tieba_items, {"publish_time": {"min": "2024-07-01"}}) == [tieba_items[1]]
     assert filter_content_items("zhihu", zhihu_items, {"voteup_count": {"min": 100}}) == [zhihu_items[1]]
 
 
