@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MediaCrawler 调度器</title>
-    <link rel="stylesheet" href="/scheduler/static/styles.css?v=20260630-summary" />
+    <link rel="stylesheet" href="/scheduler/static/styles.css?v=20260630-right-artifacts" />
   </head>
   <body>
     <main class="app-shell">
@@ -31,18 +31,12 @@
             <pre id="logsBox">选择一个作业查看日志。</pre>
           </section>
 
-          <section class="panel artifact-panel">
-            <h2>产物列表</h2>
-            <ul id="artifactsList"></ul>
-            <div class="subsection-title">
-              <h3>作品列表</h3>
+          <section class="panel works-panel">
+            <div class="section-title">
+              <h2>作品列表</h2>
               <span id="worksHint"></span>
             </div>
             <ul id="worksList" class="works-list"></ul>
-            <div class="subsection-title">
-              <h3>评论词云</h3>
-            </div>
-            <div id="wordCloud" class="word-cloud"></div>
           </section>
         </section>
 
@@ -205,9 +199,18 @@
             </form>
           </section>
 
+          <section class="panel word-panel">
+            <h2>评论词云</h2>
+            <div id="wordCloud" class="word-cloud"></div>
+          </section>
+
+          <section class="panel artifact-panel">
+            <h2>产物列表</h2>
+            <ul id="artifactsList"></ul>
+          </section>
         </section>
       </section>
     </main>
-    <script src="/scheduler/static/app.js?v=20260630-summary"></script>
+    <script src="/scheduler/static/app.js?v=20260630-right-artifacts"></script>
   </body>
 </html>

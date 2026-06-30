@@ -351,7 +351,8 @@ th {
   word-break: break-word;
 }
 
-.artifact-panel ul {
+.artifact-panel ul,
+.works-panel ul {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -359,7 +360,8 @@ th {
   list-style: none;
 }
 
-.artifact-panel li {
+.artifact-panel li,
+.works-panel li {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 10px;
