@@ -58,6 +58,54 @@ def test_scheduler_manager_scans_artifacts(tmp_path):
     assert artifacts[0]["record_count"] == 2
 
 
+def test_scheduler_manager_builds_artifact_summary(tmp_path):
+    store = SchedulerStore(tmp_path / "scheduler.db")
+    manager = SchedulerManager(store=store, project_root=tmp_path)
+    job = manager.create_job(JobCreateRequest(name="抖音作业", platform="dy"))
+    artifact_dir = tmp_path / "artifacts" / "task-a"
+    artifact_dir.mkdir(parents=True)
+    (artifact_dir / "search_contents.jsonl").write_text(
+        '{"aweme_id":"1","title":"郑州作品","nickname":"作者","liked_count":"10","aweme_url":"https://www.douyin.com/video/1"}\n',
+        encoding="utf-8",
+    )
+    (artifact_dir / "search_comments.jsonl").write_text(
+        '{"content":"郑州 城市 郑州"}\n{"content":"城市 交通"}\n',
+        encoding="utf-8",
+    )
+    task = store.create_task(
+        {"instance_id": job["id"], "crawler_type": "search", "target_text": "", "params": {}},
+        str(artifact_dir),
+    )
+    store.update_instance(job["id"], last_task_id=task["id"])
+    store.replace_artifacts(task["id"], manager._scan_artifacts(artifact_dir))
+
+    summary = manager.list_job_artifact_summary(job["id"])
+
+    assert summary["works"][0]["title"] == "郑州作品"
+    assert summary["works"][0]["url"] == "https://www.douyin.com/video/1"
+    assert {"text": "郑州", "weight": 2} in summary["word_cloud"]
+
+
+def test_scheduler_manager_builds_platform_work_urls(tmp_path):
+    manager = SchedulerManager(store=SchedulerStore(tmp_path / "scheduler.db"), project_root=tmp_path)
+
+    cases = [
+        ("xhs", "abc", {"xsec_token": "token"}, "https://www.xiaohongshu.com/explore/abc?xsec_token=token&xsec_source=pc_search"),
+        ("dy", "123", {}, "https://www.douyin.com/video/123"),
+        ("ks", "123", {}, "https://www.kuaishou.com/short-video/123"),
+        ("bili", "456", {}, "https://www.bilibili.com/video/av456"),
+        ("bili", "BV1xx", {}, "https://www.bilibili.com/video/BV1xx"),
+        ("wb", "123", {}, "https://m.weibo.cn/detail/123"),
+        ("tieba", "123", {}, "https://tieba.baidu.com/p/123"),
+        ("zhihu", "789", {"question_id": "456"}, "https://www.zhihu.com/question/456/answer/789"),
+        ("zhihu", "789", {"content_type": "zvideo"}, "https://www.zhihu.com/zvideo/789"),
+        ("zhihu", "789", {"content_type": "article"}, "https://zhuanlan.zhihu.com/p/789"),
+    ]
+
+    for platform, work_id, record, expected in cases:
+        assert manager._default_work_url(platform, work_id, record) == expected
+
+
 def test_scheduler_manager_deletes_job_artifact(tmp_path):
     store = SchedulerStore(tmp_path / "scheduler.db")
     manager = SchedulerManager(store=store, project_root=tmp_path)

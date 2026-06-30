@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from api.scheduler.manager import scheduler_manager
 from api.scheduler.schemas import (
+    ArtifactSummaryResponse,
     ArtifactResponse,
     InstanceCreateRequest,
     InstanceResponse,
@@ -105,6 +106,18 @@ async def list_job_logs(job_id: str, limit: int = Query(default=300, ge=1, le=10
 async def list_job_artifacts(job_id: str):
     try:
         return scheduler_manager.list_job_artifacts(job_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Job not found") from exc
+
+
+@router.get("/jobs/{job_id}/artifact-summary", response_model=ArtifactSummaryResponse)
+async def list_job_artifact_summary(
+    job_id: str,
+    work_limit: int = Query(default=200, ge=1, le=500),
+    word_limit: int = Query(default=80, ge=1, le=200),
+):
+    try:
+        return scheduler_manager.list_job_artifact_summary(job_id, work_limit=work_limit, word_limit=word_limit)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Job not found") from exc
 

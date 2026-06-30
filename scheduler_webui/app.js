@@ -99,6 +99,9 @@ const els = {
   cancelEditBtn: document.querySelector("#cancelEditBtn"),
   logsBox: document.querySelector("#logsBox"),
   artifactsList: document.querySelector("#artifactsList"),
+  worksList: document.querySelector("#worksList"),
+  worksHint: document.querySelector("#worksHint"),
+  wordCloud: document.querySelector("#wordCloud"),
   jobFilterRows: document.querySelector("#jobFilterRows"),
 };
 
@@ -113,6 +116,15 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function safeHttpUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
 }
 
 async function errorText(res) {
@@ -436,6 +448,9 @@ async function selectJob(jobId) {
 function clearJobDetail() {
   els.logsBox.textContent = "选择一个作业查看日志。";
   els.artifactsList.innerHTML = "<li>选择一个作业查看产物。</li>";
+  els.worksHint.textContent = "";
+  els.worksList.innerHTML = "<li>选择一个作业查看作品。</li>";
+  els.wordCloud.innerHTML = `<p class="empty-note">选择一个作业查看评论词云。</p>`;
 }
 
 async function withButtonFeedback(button, pendingText, doneText, action) {
@@ -457,9 +472,10 @@ async function withButtonFeedback(button, pendingText, doneText, action) {
 }
 
 async function loadJobDetail(jobId) {
-  const [logs, artifacts] = await Promise.all([
+  const [logs, artifacts, summary] = await Promise.all([
     api.get(`/api/scheduler/jobs/${jobId}/logs?limit=300`),
     api.get(`/api/scheduler/jobs/${jobId}/artifacts`),
+    api.get(`/api/scheduler/jobs/${jobId}/artifact-summary?work_limit=100&word_limit=60`),
   ]);
   els.logsBox.textContent = logs.length
     ? logs.map((log) => `[${log.timestamp}] [${log.level}] ${log.message}`).join("\n")
@@ -484,6 +500,50 @@ async function loadJobDetail(jobId) {
         })
         .join("")
     : "<li>暂无产物。</li>";
+  renderWorks(summary.works || []);
+  renderWordCloud(summary.word_cloud || []);
+}
+
+function renderWorks(works) {
+  els.worksHint.textContent = works.length ? `${works.length} 个作品` : "";
+  els.worksList.innerHTML = works.length
+    ? works.map((item) => {
+      const url = safeHttpUrl(item.url);
+      const title = escapeHtml(item.title || item.id || "未命名作品");
+      const metrics = Object.entries(item.metrics || {})
+        .filter(([, value]) => value !== "" && value != null)
+        .map(([key, value]) => `${escapeHtml(key)} ${escapeHtml(value)}`)
+        .join(" · ");
+      const openLink = url
+        ? `<a class="secondary link-button" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">打开作品</a>`
+        : "";
+      return `
+        <li class="work-item">
+          <strong class="work-title">${title}</strong>
+          <div class="work-meta">
+            ${escapeHtml(item.author || "未知作者")}
+            ${item.publish_time ? ` · ${escapeHtml(item.publish_time)}` : ""}
+            ${item.source_keyword ? ` · ${escapeHtml(item.source_keyword)}` : ""}
+          </div>
+          ${metrics ? `<div class="work-meta">${metrics}</div>` : ""}
+          ${openLink ? `<div class="actions">${openLink}</div>` : ""}
+        </li>
+      `;
+    }).join("")
+    : "<li>暂无符合条件的作品。</li>";
+}
+
+function renderWordCloud(words) {
+  if (!words.length) {
+    els.wordCloud.innerHTML = `<p class="empty-note">暂无评论词云。</p>`;
+    return;
+  }
+  const maxWeight = Math.max(...words.map((item) => item.weight || 1));
+  els.wordCloud.innerHTML = words.map((item) => {
+    const ratio = Math.max(0.7, (item.weight || 1) / maxWeight);
+    const size = Math.round(13 + ratio * 20);
+    return `<span class="word-token" style="font-size:${size}px" title="${escapeHtml(item.weight)} 次">${escapeHtml(item.text)}</span>`;
+  }).join("");
 }
 
 els.refreshBtn.addEventListener("click", () => {

@@ -3,18 +3,48 @@
 from __future__ import annotations
 
 import asyncio
+import csv
 import json
 import os
+import re
 import subprocess
 import sys
 import uuid
+from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
 from api.schemas.crawler import CrawlerTypeEnum
 from .schemas import JobCreateRequest, JobUpdateRequest, InstanceCreateRequest, InstanceUpdateRequest, TaskCreateRequest
 from .store import PROJECT_ROOT, SchedulerStore, _json_dumps, utc_now
+
+try:
+    import jieba
+except ImportError:  # pragma: no cover - dependency exists in normal project env
+    jieba = None
+
+
+COMMENT_STOP_WORDS = {
+    "一个",
+    "不是",
+    "什么",
+    "这个",
+    "就是",
+    "还是",
+    "可以",
+    "没有",
+    "真的",
+    "怎么",
+    "哈哈",
+    "哈哈哈",
+    "感觉",
+    "我们",
+    "你们",
+    "他们",
+    "自己",
+}
 
 
 @dataclass
@@ -227,6 +257,41 @@ class SchedulerManager:
             raise KeyError("job not found")
         task_id = self._job_task_id(job)
         return self.store.list_artifacts(task_id) if task_id else []
+
+    def list_job_artifact_summary(self, job_id: str, work_limit: int = 200, word_limit: int = 80) -> dict[str, Any]:
+        job = self.store.get_instance(job_id)
+        if not job:
+            raise KeyError("job not found")
+        task_id = self._job_task_id(job)
+        if not task_id:
+            return {"works": [], "word_cloud": []}
+
+        works: list[dict[str, Any]] = []
+        seen_works: set[str] = set()
+        words: Counter[str] = Counter()
+        for artifact in self.store.list_artifacts(task_id):
+            path = self._safe_artifact_path(task_id, artifact["path"])
+            if not path.is_file():
+                continue
+            name = path.name.lower()
+            if "content" in name:
+                if len(works) >= work_limit:
+                    continue
+                for record in self._iter_artifact_records(path):
+                    item = self._work_item(job["platform"], record)
+                    key = item.get("url") or item.get("id")
+                    if not key or key in seen_works:
+                        continue
+                    seen_works.add(key)
+                    works.append(item)
+                    if len(works) >= work_limit:
+                        break
+            elif "comment" in name:
+                for record in self._iter_artifact_records(path):
+                    words.update(self._comment_words(record))
+
+        word_cloud = [{"text": word, "weight": count} for word, count in words.most_common(word_limit)]
+        return {"works": works, "word_cloud": word_cloud}
 
     def open_job_artifact(self, job_id: str, artifact_id: str) -> dict[str, str]:
         _, artifact, path = self._job_artifact(job_id, artifact_id)
@@ -534,6 +599,123 @@ class SchedulerManager:
         except Exception:
             return None
         return None
+
+    def _iter_artifact_records(self, path: Path, limit: int = 5000):
+        try:
+            if path.suffix == ".jsonl":
+                with path.open("r", encoding="utf-8") as f:
+                    for index, line in enumerate(f):
+                        if index >= limit:
+                            break
+                        if line.strip():
+                            yield json.loads(line)
+            elif path.suffix == ".json":
+                with path.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                rows = data if isinstance(data, list) else data.get("data", []) if isinstance(data, dict) else []
+                for record in rows[:limit]:
+                    if isinstance(record, dict):
+                        yield record
+            elif path.suffix == ".csv":
+                with path.open("r", encoding="utf-8") as f:
+                    for index, record in enumerate(csv.DictReader(f)):
+                        if index >= limit:
+                            break
+                        yield record
+        except Exception:
+            return
+
+    def _work_item(self, platform: str, record: dict[str, Any]) -> dict[str, Any]:
+        work_id = self._first_record_value(record, "aweme_id", "note_id", "video_id", "bvid", "content_id", "id")
+        url = self._first_record_value(
+            record,
+            "aweme_url",
+            "note_url",
+            "video_url",
+            "content_url",
+            "source_url",
+            "url",
+            "web_url",
+            "link",
+        )
+        if not url:
+            url = self._default_work_url(platform, work_id, record)
+        return {
+            "id": str(work_id or ""),
+            "title": self._first_record_value(record, "title", "desc", "note_title", "content", "content_text", "text") or "未命名作品",
+            "url": url,
+            "author": self._first_record_value(record, "nickname", "user_nickname", "author_name", "author", "screen_name") or "",
+            "publish_time": self._format_record_time(self._first_record_value(record, "create_time", "publish_time", "time", "created_time")),
+            "source_keyword": self._first_record_value(record, "source_keyword", "keyword") or "",
+            "metrics": {
+                "点赞": self._first_record_value(record, "liked_count", "like_count", "voteup_count"),
+                "收藏": self._first_record_value(record, "collected_count", "favorite_count", "video_favorite_count"),
+                "评论": self._first_record_value(record, "comment_count", "comments_count", "video_comment"),
+                "转发": self._first_record_value(record, "share_count", "shared_count", "video_share_count"),
+            },
+        }
+
+    def _comment_words(self, record: dict[str, Any]) -> list[str]:
+        text = self._first_record_value(record, "content", "comment_content", "text", "desc")
+        if not text:
+            return []
+        tokens = jieba.lcut(str(text)) if jieba else re.findall(r"[\u4e00-\u9fff]{2,}|[A-Za-z0-9]{2,}", str(text))
+        words: list[str] = []
+        for token in tokens:
+            word = token.strip().lower()
+            if len(word) < 2 or word in COMMENT_STOP_WORDS or re.fullmatch(r"\d+", word):
+                continue
+            if not re.search(r"[\u4e00-\u9fffA-Za-z]", word):
+                continue
+            words.append(word)
+        return words
+
+    def _first_record_value(self, record: dict[str, Any], *keys: str) -> Any:
+        for key in keys:
+            value = record.get(key)
+            if value not in (None, ""):
+                return value
+        return ""
+
+    def _default_work_url(self, platform: str, work_id: Any, record: dict[str, Any] | None = None) -> str:
+        if not work_id:
+            return ""
+        record = record or {}
+        work_id = str(work_id)
+        if platform == "xhs":
+            token = self._first_record_value(record, "xsec_token")
+            suffix = f"?xsec_token={token}&xsec_source=pc_search" if token else ""
+            return f"https://www.xiaohongshu.com/explore/{work_id}{suffix}"
+        if platform == "dy":
+            return f"https://www.douyin.com/video/{work_id}"
+        if platform == "bili":
+            return f"https://www.bilibili.com/video/{work_id if work_id.upper().startswith('BV') else f'av{work_id}'}"
+        if platform == "ks":
+            return f"https://www.kuaishou.com/short-video/{work_id}"
+        if platform == "wb":
+            return f"https://m.weibo.cn/detail/{work_id}"
+        if platform == "tieba":
+            return f"https://tieba.baidu.com/p/{work_id}"
+        if platform == "zhihu":
+            question_id = self._first_record_value(record, "question_id")
+            content_type = str(self._first_record_value(record, "content_type")).lower()
+            if question_id:
+                return f"https://www.zhihu.com/question/{question_id}/answer/{work_id}"
+            if content_type == "zvideo":
+                return f"https://www.zhihu.com/zvideo/{work_id}"
+            return f"https://zhuanlan.zhihu.com/p/{work_id}"
+        return ""
+
+    def _format_record_time(self, value: Any) -> str:
+        if value in (None, ""):
+            return ""
+        try:
+            timestamp = float(value)
+        except (TypeError, ValueError):
+            return str(value)
+        if timestamp > 10_000_000_000:
+            timestamp /= 1000
+        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M")
 
     def _append_process_log(self, task_id: str, line: str) -> None:
         line = line.strip()

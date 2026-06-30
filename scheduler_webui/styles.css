@@ -42,13 +42,29 @@ button {
   white-space: nowrap;
 }
 
+button,
+.link-button {
+  text-decoration: none;
+}
+
 button:hover {
   background: var(--teal-strong);
 }
 
-button.secondary {
+button.secondary,
+.link-button.secondary {
   background: #fff;
   color: var(--teal);
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border: 1px solid var(--teal);
+  border-radius: 6px;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 button.danger {
@@ -360,6 +376,54 @@ th {
   color: var(--text);
   font-size: 13px;
   line-height: 1.45;
+}
+
+.subsection-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.subsection-title h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.subsection-title span,
+.work-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.work-item {
+  display: grid;
+  gap: 6px;
+}
+
+.work-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.word-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-height: 72px;
+}
+
+.word-token {
+  color: var(--teal);
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 .pill {

@@ -115,3 +115,34 @@ def test_scheduler_api_deletes_job_artifact(monkeypatch, tmp_path):
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert not artifact_file.exists()
+
+
+def test_scheduler_api_returns_artifact_summary(monkeypatch, tmp_path):
+    manager = SchedulerManager(store=SchedulerStore(tmp_path / "scheduler.db"), project_root=tmp_path)
+    monkeypatch.setattr(scheduler_router, "scheduler_manager", manager)
+
+    client = TestClient(app)
+    job = client.post(
+        "/api/scheduler/jobs",
+        json={"name": "抖音作业 A", "platform": "dy", "save_option": "jsonl"},
+    ).json()
+    artifact_dir = tmp_path / "artifacts" / "task-a"
+    artifact_dir.mkdir(parents=True)
+    (artifact_dir / "search_contents.jsonl").write_text(
+        '{"aweme_id":"1","title":"作品 A","aweme_url":"https://www.douyin.com/video/1"}\n',
+        encoding="utf-8",
+    )
+    (artifact_dir / "search_comments.jsonl").write_text('{"content":"郑州 郑州"}\n', encoding="utf-8")
+    task = manager.store.create_task(
+        {"instance_id": job["id"], "crawler_type": "search", "target_text": "", "params": {}},
+        str(artifact_dir),
+    )
+    manager.store.update_instance(job["id"], last_task_id=task["id"])
+    manager.store.replace_artifacts(task["id"], manager._scan_artifacts(artifact_dir))
+
+    response = client.get(f"/api/scheduler/jobs/{job['id']}/artifact-summary")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["works"][0]["title"] == "作品 A"
+    assert data["word_cloud"][0] == {"text": "郑州", "weight": 2}

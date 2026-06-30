@@ -162,6 +162,26 @@ class ArtifactResponse(BaseModel):
     record_count: Optional[int] = None
 
 
+class WorkItemResponse(BaseModel):
+    id: str = ""
+    title: str
+    url: str = ""
+    author: str = ""
+    publish_time: str = ""
+    source_keyword: str = ""
+    metrics: Dict[str, Any] = Field(default_factory=dict)
+
+
+class WordCloudTermResponse(BaseModel):
+    text: str
+    weight: int
+
+
+class ArtifactSummaryResponse(BaseModel):
+    works: list[WorkItemResponse] = Field(default_factory=list)
+    word_cloud: list[WordCloudTermResponse] = Field(default_factory=list)
+
+
 class SchedulerStatusResponse(BaseModel):
     instances_total: int
     running_instances: int
