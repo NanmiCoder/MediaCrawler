@@ -1,4 +1,4 @@
-const WORKS_PAGE_SIZE = 5;
+const WORKS_PAGE_SIZE = 8;
 
 const api = {
   async get(path) {
