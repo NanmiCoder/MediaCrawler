@@ -386,6 +386,24 @@ function clearJobDetail() {
   els.artifactsList.innerHTML = "<li>选择一个作业查看产物。</li>";
 }
 
+async function withButtonFeedback(button, pendingText, doneText, action) {
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = pendingText;
+  try {
+    await action();
+    button.textContent = doneText;
+    setTimeout(() => {
+      button.textContent = originalText;
+      button.disabled = false;
+    }, 1500);
+  } catch (err) {
+    button.textContent = originalText;
+    button.disabled = false;
+    throw err;
+  }
+}
+
 async function loadJobDetail(jobId) {
   const [logs, artifacts] = await Promise.all([
     api.get(`/api/scheduler/jobs/${jobId}/logs?limit=300`),
@@ -494,7 +512,9 @@ document.addEventListener("click", async (event) => {
     }
     if (action === "open-artifact") {
       if (!state.selectedJobId) return;
-      await api.post(`/api/scheduler/jobs/${state.selectedJobId}/artifacts/${id}/open`);
+      await withButtonFeedback(target, "打开中...", "已打开", () =>
+        api.post(`/api/scheduler/jobs/${state.selectedJobId}/artifacts/${id}/open`)
+      );
     }
     if (action === "delete-artifact") {
       if (!state.selectedJobId || !confirm("确定删除这个产物文件？")) return;

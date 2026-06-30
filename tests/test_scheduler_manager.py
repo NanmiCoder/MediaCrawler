@@ -4,6 +4,7 @@ import asyncio
 
 import pytest
 
+from api.scheduler import manager as scheduler_manager_module
 from api.scheduler.manager import SchedulerManager
 from api.scheduler.schemas import InstanceCreateRequest, JobCreateRequest
 from api.scheduler.store import SchedulerStore
@@ -78,6 +79,36 @@ def test_scheduler_manager_deletes_job_artifact(tmp_path):
     assert result["status"] == "ok"
     assert not artifact_file.exists()
     assert store.list_artifacts(task["id"]) == []
+
+
+def test_scheduler_manager_opens_job_artifact(monkeypatch, tmp_path):
+    store = SchedulerStore(tmp_path / "scheduler.db")
+    manager = SchedulerManager(store=store, project_root=tmp_path)
+    job = manager.create_job(JobCreateRequest(name="小红书作业", platform="xhs"))
+    artifact_dir = tmp_path / "artifacts" / "task-a"
+    artifact_dir.mkdir(parents=True)
+    artifact_file = artifact_dir / "data.jsonl"
+    artifact_file.write_text('{"id": 1}\n', encoding="utf-8")
+    task = store.create_task(
+        {"instance_id": job["id"], "crawler_type": "search", "target_text": "", "params": {}},
+        str(artifact_dir),
+    )
+    store.update_instance(job["id"], last_task_id=task["id"])
+    store.replace_artifacts(task["id"], manager._scan_artifacts(artifact_dir))
+    artifact = store.list_artifacts(task["id"])[0]
+    calls = []
+
+    def fake_run(cmd, check, capture_output, text):
+        calls.append((cmd, check, capture_output, text))
+
+    monkeypatch.setattr(scheduler_manager_module.sys, "platform", "darwin")
+    monkeypatch.setattr(scheduler_manager_module.subprocess, "run", fake_run)
+
+    result = manager.open_job_artifact(job["id"], artifact["id"])
+
+    assert result["status"] == "ok"
+    assert result["path"] == str(artifact_file)
+    assert calls == [(["open", "-t", str(artifact_file)], True, True, True)]
 
 
 def test_scheduler_manager_runs_job_without_queue(monkeypatch, tmp_path):

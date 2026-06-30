@@ -232,13 +232,21 @@ class SchedulerManager:
         _, artifact, path = self._job_artifact(job_id, artifact_id)
         if not path.is_file():
             raise RuntimeError("artifact file not found")
-        if sys.platform == "darwin":
-            subprocess.Popen(["open", str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        elif sys.platform.startswith("win"):
-            os.startfile(str(path))  # type: ignore[attr-defined]
-        else:
-            subprocess.Popen(["xdg-open", str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return {"status": "ok", "message": "Artifact opened"}
+        try:
+            if sys.platform == "darwin":
+                cmd = (
+                    ["open", "-t", str(path)]
+                    if path.suffix.lower() in {".jsonl", ".json", ".csv", ".txt", ".log"}
+                    else ["open", str(path)]
+                )
+                subprocess.run(cmd, check=True, capture_output=True, text=True)
+            elif sys.platform.startswith("win"):
+                os.startfile(str(path))  # type: ignore[attr-defined]
+            else:
+                subprocess.run(["xdg-open", str(path)], check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError(exc.stderr.strip() or exc.stdout.strip() or "failed to open artifact") from exc
+        return {"status": "ok", "message": "Artifact opened", "path": artifact["path"]}
 
     def delete_job_artifact(self, job_id: str, artifact_id: str) -> dict[str, str]:
         _, _, path = self._job_artifact(job_id, artifact_id)
