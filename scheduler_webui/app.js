@@ -33,6 +33,7 @@ let state = {
   jobs: [],
   selectedJobId: "",
   editingJobId: "",
+  formDirty: false,
   filterRows: {
     job: [],
   },
@@ -124,7 +125,15 @@ async function refreshAll() {
   state.jobs = jobs;
   renderStatus(status);
   renderJobs();
-  if (state.selectedJobId) await loadJobDetail(state.selectedJobId);
+  if (state.selectedJobId && !state.jobs.some((job) => job.id === state.selectedJobId)) {
+    resetForm();
+  }
+  syncSelectedJobForm();
+  if (state.selectedJobId) {
+    await loadJobDetail(state.selectedJobId);
+  } else {
+    clearJobDetail();
+  }
 }
 
 function renderStatus(status) {
@@ -133,33 +142,39 @@ function renderStatus(status) {
 
 function renderJobs() {
   els.jobHint.textContent = `${state.jobs.length} 个作业`;
-  els.jobsBody.innerHTML = state.jobs
+  els.jobsBody.innerHTML = state.jobs.length
+    ? state.jobs
     .map((job) => {
       const canRun = !["running", "stopping"].includes(job.status);
       const target = job.target_text || "-";
       const taskId = job.current_task_id || job.last_task_id || "-";
+      const selected = job.id === state.selectedJobId ? " selected" : "";
       return `
-        <tr>
-          <td><strong>${escapeHtml(job.name)}</strong><br><small>${escapeHtml(job.id)}</small></td>
-          <td>${escapeHtml(job.platform)}</td>
-          <td>${escapeHtml(job.crawler_type)}</td>
-          <td>${statusPill(job.status)}</td>
-          <td>${escapeHtml(target)}</td>
-          <td>${escapeHtml(taskId === "-" ? "-" : taskId.slice(0, 8))}</td>
-          <td>
-            <div class="actions">
-              <button class="secondary" data-action="view-job" data-id="${escapeHtml(job.id)}">查看</button>
-              <button class="secondary" data-action="edit-job" data-id="${escapeHtml(job.id)}" ${canRun ? "" : "disabled"}>编辑</button>
-              <button class="secondary" data-action="login-job" data-id="${escapeHtml(job.id)}" ${canRun ? "" : "disabled"}>登录</button>
-              <button data-action="run-job" data-id="${escapeHtml(job.id)}" ${canRun ? "" : "disabled"}>运行</button>
-              <button class="danger" data-action="stop-job" data-id="${escapeHtml(job.id)}" ${canRun ? "disabled" : ""}>停止</button>
-              <button class="danger" data-action="delete-job" data-id="${escapeHtml(job.id)}" ${canRun ? "" : "disabled"}>删除</button>
+        <article class="job-item${selected}" data-job-id="${escapeHtml(job.id)}" role="button" tabindex="0" aria-pressed="${selected ? "true" : "false"}">
+          <div class="job-main">
+            <div class="job-name">
+              <strong>${escapeHtml(job.name)}</strong>
+              <small>${escapeHtml(job.id)}</small>
             </div>
-          </td>
-        </tr>
+            ${statusPill(job.status)}
+          </div>
+          <div class="job-meta">
+            <span>${escapeHtml(job.platform)}</span>
+            <span>${escapeHtml(job.crawler_type)}</span>
+            <span>运行 ${escapeHtml(taskId === "-" ? "-" : taskId.slice(0, 8))}</span>
+          </div>
+          <div class="job-target">${escapeHtml(target)}</div>
+          <div class="actions">
+            <button class="secondary" data-action="login-job" data-id="${escapeHtml(job.id)}" ${canRun ? "" : "disabled"}>登录</button>
+            <button data-action="run-job" data-id="${escapeHtml(job.id)}" ${canRun ? "" : "disabled"}>运行</button>
+            <button class="danger" data-action="stop-job" data-id="${escapeHtml(job.id)}" ${canRun ? "disabled" : ""}>停止</button>
+            <button class="danger" data-action="delete-job" data-id="${escapeHtml(job.id)}" ${canRun ? "" : "disabled"}>删除</button>
+          </div>
+        </article>
       `;
     })
-    .join("");
+    .join("")
+    : `<p class="empty-note">暂无作业。</p>`;
 }
 
 function renderFilterRows(scope) {
@@ -319,11 +334,11 @@ function setParamFields(params) {
   syncFilterRowsWithPlatform();
 }
 
-function editJob(job) {
+function fillJobForm(job) {
   const form = els.jobForm.elements;
   state.editingJobId = job.id;
-  els.formTitle.textContent = "编辑作业";
-  els.jobSubmitBtn.textContent = "保存作业";
+  els.formTitle.textContent = "作业配置";
+  els.jobSubmitBtn.textContent = "保存更改";
   els.cancelEditBtn.hidden = false;
   form.name.value = job.name;
   form.platform.value = job.platform;
@@ -335,17 +350,40 @@ function editJob(job) {
   form.browser_profile_dir.value = job.browser_profile_dir || "";
   form.headless.checked = Boolean(job.headless);
   setParamFields(job.params || {});
-  els.jobForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  state.formDirty = false;
 }
 
 function resetForm() {
+  state.selectedJobId = "";
   state.editingJobId = "";
+  state.formDirty = false;
   els.formTitle.textContent = "新建作业";
   els.jobSubmitBtn.textContent = "创建作业";
   els.cancelEditBtn.hidden = true;
   els.jobForm.reset();
   state.filterRows.job = [];
   renderFilterRows("job");
+  clearJobDetail();
+  renderJobs();
+}
+
+function syncSelectedJobForm() {
+  if (!state.selectedJobId || state.formDirty) return;
+  const job = state.jobs.find((item) => item.id === state.selectedJobId);
+  if (job) fillJobForm(job);
+}
+
+async function selectJob(jobId) {
+  const job = state.jobs.find((item) => item.id === jobId) || await api.get(`/api/scheduler/jobs/${jobId}`);
+  state.selectedJobId = job.id;
+  fillJobForm(job);
+  renderJobs();
+  await loadJobDetail(job.id);
+}
+
+function clearJobDetail() {
+  els.logsBox.textContent = "选择一个作业查看日志。";
+  els.artifactsList.innerHTML = "<li>选择一个作业查看产物。</li>";
 }
 
 async function loadJobDetail(jobId) {
@@ -377,50 +415,59 @@ els.jobForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
   const body = collectJobBody(data);
+  let job;
   if (state.editingJobId) {
-    await api.patch(`/api/scheduler/jobs/${state.editingJobId}`, body);
+    job = await api.patch(`/api/scheduler/jobs/${state.editingJobId}`, body);
   } else {
-    await api.post("/api/scheduler/jobs", body);
+    job = await api.post("/api/scheduler/jobs", body);
   }
-  resetForm();
+  state.selectedJobId = job.id;
+  state.editingJobId = job.id;
+  state.formDirty = false;
   await refreshAll();
 });
 
 els.jobForm.elements.platform.addEventListener("change", syncFilterRowsWithPlatform);
 
-document.addEventListener("input", (event) => updateFilterValue(event.target));
-document.addEventListener("change", (event) => updateFilterValue(event.target));
+document.addEventListener("input", (event) => {
+  updateFilterValue(event.target);
+  if (event.target.closest("#jobForm")) state.formDirty = true;
+});
+document.addEventListener("change", (event) => {
+  updateFilterValue(event.target);
+  if (event.target.closest("#jobForm")) state.formDirty = true;
+});
 
 document.addEventListener("click", async (event) => {
   const target = event.target.closest("button[data-action]");
-  if (!target) return;
+  if (!target) {
+    const item = event.target.closest("[data-job-id]");
+    if (item) await selectJob(item.dataset.jobId).catch((err) => alert(err.message));
+    return;
+  }
   const action = target.dataset.action;
   const id = target.dataset.id;
-  if (action === "add-filter") {
-    addFilterRow(target.dataset.scope);
-    return;
-  }
-  if (action === "remove-filter") {
-    removeFilterRow(target.dataset.scope, Number(target.dataset.index));
-    return;
-  }
   try {
-    if (action === "view-job") {
-      state.selectedJobId = id;
-      await loadJobDetail(id);
+    if (action === "add-filter") {
+      addFilterRow(target.dataset.scope);
+      state.formDirty = true;
+      return;
     }
-    if (action === "edit-job") {
-      const job = state.jobs.find((item) => item.id === id) || await api.get(`/api/scheduler/jobs/${id}`);
-      editJob(job);
+    if (action === "remove-filter") {
+      removeFilterRow(target.dataset.scope, Number(target.dataset.index));
+      state.formDirty = true;
+      return;
     }
     if (action === "login-job") {
       await api.post(`/api/scheduler/jobs/${id}/login`);
       state.selectedJobId = id;
+      state.formDirty = false;
       await refreshAll();
     }
     if (action === "run-job") {
       await api.post(`/api/scheduler/jobs/${id}/run`);
       state.selectedJobId = id;
+      state.formDirty = false;
       await refreshAll();
     }
     if (action === "stop-job") {
@@ -437,6 +484,15 @@ document.addEventListener("click", async (event) => {
   } catch (err) {
     alert(err.message);
   }
+});
+
+document.addEventListener("keydown", async (event) => {
+  if (!["Enter", " "].includes(event.key)) return;
+  if (event.target.closest("button")) return;
+  const item = event.target.closest("[data-job-id]");
+  if (!item) return;
+  event.preventDefault();
+  await selectJob(item.dataset.jobId).catch((err) => alert(err.message));
 });
 
 renderFilterRows("job");

@@ -16,33 +16,29 @@
         <button id="refreshBtn" type="button">刷新</button>
       </header>
 
-      <section class="layout">
-        <section class="panel">
-          <div class="section-title">
-            <h2>作业</h2>
-            <span id="jobHint"></span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>名称</th>
-                  <th>平台</th>
-                  <th>类型</th>
-                  <th>状态</th>
-                  <th>目标</th>
-                  <th>最近运行</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="jobsBody"></tbody>
-            </table>
-          </div>
+      <section class="layout scheduler-grid">
+        <section class="left-column">
+          <section class="panel jobs-panel">
+            <div class="section-title">
+              <h2>作业列表</h2>
+              <span id="jobHint"></span>
+            </div>
+            <div id="jobsBody" class="jobs-list"></div>
+          </section>
+
+          <section class="panel log-panel">
+            <h2>实时日志</h2>
+            <pre id="logsBox">选择一个作业查看日志。</pre>
+          </section>
         </section>
 
-        <section class="panel">
-          <h2 id="formTitle">新建作业</h2>
-          <form id="jobForm" class="job-grid">
+        <section class="right-column">
+          <section class="panel job-form-panel">
+            <div class="section-title">
+              <h2 id="formTitle">新建作业</h2>
+              <button id="cancelEditBtn" class="secondary" type="button" hidden>新建作业</button>
+            </div>
+            <form id="jobForm" class="job-grid">
             <label>
               作业名称
               <input name="name" required placeholder="小红书账号 A" />
@@ -191,18 +187,12 @@
             </label>
             <div class="form-actions">
               <button id="jobSubmitBtn" type="submit">创建作业</button>
-              <button id="cancelEditBtn" class="secondary" type="button" hidden>取消编辑</button>
             </div>
-          </form>
-        </section>
-
-        <section class="detail-grid">
-          <section class="panel log-panel">
-            <h2>日志</h2>
-            <pre id="logsBox">选择一个作业查看日志。</pre>
+            </form>
           </section>
+
           <section class="panel artifact-panel">
-            <h2>产物</h2>
+            <h2>产物列表</h2>
             <ul id="artifactsList"></ul>
           </section>
         </section>
