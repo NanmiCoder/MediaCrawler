@@ -1,3 +1,5 @@
+const WORKS_PAGE_SIZE = 5;
+
 const api = {
   async get(path) {
     const res = await fetch(path);
@@ -34,6 +36,8 @@ let state = {
   selectedJobId: "",
   editingJobId: "",
   formDirty: false,
+  works: [],
+  worksPage: 1,
   filterRows: {
     job: [],
   },
@@ -101,6 +105,7 @@ const els = {
   artifactsList: document.querySelector("#artifactsList"),
   worksList: document.querySelector("#worksList"),
   worksHint: document.querySelector("#worksHint"),
+  worksPager: document.querySelector("#worksPager"),
   wordCloud: document.querySelector("#wordCloud"),
   jobFilterRows: document.querySelector("#jobFilterRows"),
 };
@@ -440,16 +445,20 @@ function syncSelectedJobForm() {
 async function selectJob(jobId) {
   const job = state.jobs.find((item) => item.id === jobId) || await api.get(`/api/scheduler/jobs/${jobId}`);
   state.selectedJobId = job.id;
+  state.worksPage = 1;
   fillJobForm(job);
   renderJobs();
   await loadJobDetail(job.id);
 }
 
 function clearJobDetail() {
+  state.works = [];
+  state.worksPage = 1;
   els.logsBox.textContent = "选择一个作业查看日志。";
   els.artifactsList.innerHTML = "<li>选择一个作业查看产物。</li>";
   els.worksHint.textContent = "";
   els.worksList.innerHTML = "<li>选择一个作业查看作品。</li>";
+  els.worksPager.innerHTML = "";
   els.wordCloud.innerHTML = `<p class="empty-note">选择一个作业查看评论词云。</p>`;
 }
 
@@ -500,14 +509,21 @@ async function loadJobDetail(jobId) {
         })
         .join("")
     : "<li>暂无产物。</li>";
-  renderWorks(summary.works || []);
+  state.works = summary.works || [];
+  renderWorks();
   renderWordCloud(summary.word_cloud || []);
 }
 
-function renderWorks(works) {
-  els.worksHint.textContent = works.length ? `${works.length} 个作品` : "";
-  els.worksList.innerHTML = works.length
-    ? works.map((item) => {
+function renderWorks() {
+  const works = state.works || [];
+  const totalPages = Math.max(1, Math.ceil(works.length / WORKS_PAGE_SIZE));
+  state.worksPage = Math.min(Math.max(state.worksPage, 1), totalPages);
+  const start = (state.worksPage - 1) * WORKS_PAGE_SIZE;
+  const currentWorks = works.slice(start, start + WORKS_PAGE_SIZE);
+
+  els.worksHint.textContent = works.length ? `${works.length} 个作品，第 ${state.worksPage}/${totalPages} 页` : "";
+  els.worksList.innerHTML = currentWorks.length
+    ? currentWorks.map((item) => {
       const url = safeHttpUrl(item.url);
       const title = escapeHtml(item.title || item.id || "未命名作品");
       const metrics = Object.entries(item.metrics || {})
@@ -531,6 +547,13 @@ function renderWorks(works) {
       `;
     }).join("")
     : "<li>暂无符合条件的作品。</li>";
+  els.worksPager.innerHTML = works.length
+    ? `
+      <button class="secondary" data-action="works-prev" ${state.worksPage <= 1 ? "disabled" : ""}>上一页</button>
+      <span>第 ${state.worksPage} / ${totalPages} 页</span>
+      <button class="secondary" data-action="works-next" ${state.worksPage >= totalPages ? "disabled" : ""}>下一页</button>
+    `
+    : "";
 }
 
 function renderWordCloud(words) {
@@ -591,6 +614,16 @@ document.addEventListener("click", async (event) => {
   const action = target.dataset.action;
   const id = target.dataset.id;
   try {
+    if (action === "works-prev") {
+      state.worksPage -= 1;
+      renderWorks();
+      return;
+    }
+    if (action === "works-next") {
+      state.worksPage += 1;
+      renderWorks();
+      return;
+    }
     if (action === "add-filter") {
       addFilterRow(target.dataset.scope);
       state.formDirty = true;

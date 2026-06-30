@@ -368,6 +368,20 @@ th {
   word-break: break-all;
 }
 
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pager span {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .artifact-item {
   display: grid;
   gap: 10px;
