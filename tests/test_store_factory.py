@@ -33,6 +33,7 @@ from store.xhs._store_impl import (
     XhsMongoStoreImplement,
     XhsExcelStoreImplement
 )
+from store.excel_store_base import ExcelStoreBase
 
 
 class TestXhsStoreFactory:
@@ -73,7 +74,8 @@ class TestXhsStoreFactory:
         """Test creating Excel store"""
         # ContextVar cannot be mocked, so we test with actual value
         store = XhsStoreFactory.create_store()
-        assert isinstance(store, XhsExcelStoreImplement)
+        # XhsExcelStoreImplement 返回 ExcelStoreBase 单例，实际类型为 ExcelStoreBase
+        assert isinstance(store, ExcelStoreBase)
 
     @patch('config.SAVE_DATA_OPTION', 'jsonl')
     def test_create_jsonl_store(self):

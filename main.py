@@ -106,6 +106,10 @@ async def main() -> None:
         print(f"Database {args.init_db} initialized successfully.")
         return
 
+    # 数据库保存模式下自动建表，避免首次运行时出现 no such table 错误
+    if config.SAVE_DATA_OPTION in ("sqlite", "mysql", "db", "postgres"):
+        await db.init_db(config.SAVE_DATA_OPTION)
+
     crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
     await crawler.start()
 

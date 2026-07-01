@@ -27,8 +27,8 @@ RAW_USER_ID = 7654321
 RAW_NICKNAME = "微博达人"
 RAW_COMMENT_USER_ID = 111222
 RAW_COMMENT_NICKNAME = "评论员小张"
-NOTE_ID = 5123456789
-COMMENT_ID = 998877
+NOTE_ID = "5123456789"
+COMMENT_ID = "998877"
 # 合法 RFC2822 时间串(weekday 与日期已对齐:2025-06-14 是周六)
 RFC2822_TIME = "Sat Jun 14 12:00:00 +0800 2025"
 
@@ -168,7 +168,7 @@ def test_weibo_comment_masks_user_info():
     fake = _FakeStore()
     wb_, orig = _patch_factory(fake)
     try:
-        asyncio.run(wb.update_weibo_note_comment(str(NOTE_ID), make_mock_comment()))
+        asyncio.run(wb.update_weibo_note_comment(NOTE_ID, make_mock_comment()))
     finally:
         _restore(wb_, orig)
 
@@ -194,7 +194,7 @@ def test_weibo_comment_masks_user_info():
 
     # 4. 内容字段正确
     assert "说得好" in captured["content"]
-    assert captured["comment_id"] == str(COMMENT_ID)
+    assert captured["comment_id"] == COMMENT_ID
     assert captured["comment_like_count"] == "5"
     assert captured["sub_comment_count"] == "3"
     assert captured["parent_comment_id"] == "parent_abc"
@@ -218,7 +218,7 @@ def test_weibo_store_end_to_end_sqlite():
     wb_, orig = _patch_factory(fake)
     try:
         asyncio.run(wb.update_weibo_note(make_mock_note()))
-        asyncio.run(wb.update_weibo_note_comment(str(NOTE_ID), make_mock_comment()))
+        asyncio.run(wb.update_weibo_note_comment(NOTE_ID, make_mock_comment()))
     finally:
         _restore(wb_, orig)
 
@@ -250,11 +250,8 @@ def test_weibo_store_end_to_end_sqlite():
         # 确认没有 desc 列存任何用户描述
         assert "desc" not in note_cols
 
-        # ---- 4. comment:同上。注意 store_comment 实现会把 comment_id/note_id/create_time
-        #         转成 int 后再构造 ORM,此处忠实复刻该转换以走通 BigInteger 列写入 ----
+        # ---- 4. comment:同上。ID 已统一为字符串类型,create_time 保持 int ----
         cc = dict(captured_comment)
-        cc["comment_id"] = int(cc["comment_id"])
-        cc["note_id"] = int(cc.get("note_id", 0) or 0)
         cc["create_time"] = int(cc.get("create_time", 0) or 0)
         comment_obj = WeiboNoteComment(**cc)  # 不抛异常 => key 与 ORM 列对得上
         session.add(comment_obj)

@@ -20,7 +20,7 @@ def test_extract_search_note_list_from_keyword_page():
     assert notes[0].note_id == "9117888152"
     assert notes[0].title.startswith("武汉交互空间科技")
     assert notes[0].tieba_name == "武汉交互空间"
-    assert notes[0].user_nickname == "VR虚拟达人"
+    assert notes[0].user_nickname == "V***人"
 
 
 def test_extract_search_note_list_from_current_pc_card_page():
@@ -56,7 +56,7 @@ def test_extract_search_note_list_from_current_pc_card_page():
     assert notes[0].desc == "培训班需求，数学，英语，编程老师，专职兼职都可"
     assert notes[0].tieba_name == "诸城吧"
     assert notes[0].tieba_link.endswith("kw=%E8%AF%B8%E5%9F%8E")
-    assert notes[0].user_nickname == "754023117"
+    assert notes[0].user_nickname == "7***7"
     assert notes[0].publish_time == "2026-3-15"
     assert notes[0].total_replay_num == 19
 
@@ -147,17 +147,17 @@ def test_extract_note_detail_and_comments_from_current_pc_api():
     assert note.note_id == "10451142633"
     assert note.title == "这X尔斯对比巴尔斯，我只能说ID正确，允许居功自傲"
     assert note.desc == "皮队败决处刑德国编程钢琴师兼职数学家"
-    assert note.user_nickname == "泰高祖蒙斯克"
+    assert note.user_nickname == "泰***克"
     assert note.tieba_name == "dota2吧"
     assert note.total_replay_num == 15
     assert note.total_replay_page == 1
-    assert note.ip_location == "广东"
+    # 教学版已移除 ip_location 等可定位真人字段
     assert len(comments) == 1
     assert comments[0].comment_id == "153154097267"
     assert comments[0].content == "xg现在大树阵容另一个辅助不选控制"
-    assert comments[0].user_nickname == "期胡希3"
+    assert comments[0].user_nickname == "期***3"
     assert comments[0].sub_comment_count == 4
-    assert comments[0].ip_location == "河北"
+    # 教学版已移除 ip_location 等可定位真人字段
 
 
 def test_extract_creator_info_and_threads_from_current_pc_api():
@@ -191,12 +191,10 @@ def test_extract_creator_info_and_threads_from_current_pc_api():
     creator = extractor.extract_creator_info_from_api(creator_api)
     thread_ids = extractor.extract_creator_thread_id_list_from_api(feed_api)
 
-    assert creator.user_id == "3546493137"
-    assert creator.user_name == "拜月教Alice"
-    assert creator.nickname == "米米世界大手子"
+    assert creator.user_nickname == "米***子"
     assert creator.fans == 58
     assert creator.follows == 1
-    assert creator.ip_location == "广东"
+    # 教学版已移除 user_id、user_name、ip_location 等可定位真人字段
     assert creator.registration_duration == "7.8"
     assert thread_ids == ["10208192951", "9835114923"]
 
@@ -225,7 +223,7 @@ def test_extract_tieba_note_list_from_bigpipe_thread_page():
     assert len(notes) == 48
     assert notes[0].note_id == "9079949995"
     assert notes[0].title == "盗墓笔记全集+txt小说，已整理"
-    assert notes[0].user_nickname == "公子伯仲"
+    assert notes[0].user_nickname == "公***仲"
     assert notes[0].tieba_name == "盗墓笔记吧"
     assert notes[0].tieba_link.endswith("kw=%E7%9B%97%E5%A2%93%E7%AC%94%E8%AE%B0&ie=utf-8")
 
@@ -235,11 +233,11 @@ def test_extract_note_detail_from_post_page():
 
     assert note.note_id == "9117905169"
     assert note.title == "对于一个父亲来说，这个女儿14岁就死了"
-    assert note.user_nickname == "章景轩"
+    assert note.user_nickname == "章***轩"
     assert note.tieba_name == "以太比特吧"
     assert note.total_replay_num == 786
     assert note.total_replay_page == 13
-    assert note.ip_location == "广东"
+    # 教学版已移除 ip_location 等可定位真人字段
 
 
 def test_extract_parent_comments_from_post_page():
@@ -251,9 +249,9 @@ def test_extract_parent_comments_from_post_page():
     assert len(comments) == 30
     assert comments[0].comment_id == "150726491368"
     assert comments[0].content == "中国队第22金！无悬念！"
-    assert comments[0].user_nickname == "heinzfrentzen"
+    assert comments[0].user_nickname == "h***n"
     assert comments[0].tieba_name == "网球风云吧"
-    assert comments[0].ip_location == "福建"
+    # 教学版已移除 ip_location 等可定位真人字段
 
 
 def test_extract_sub_comments_with_class_token_matching():
@@ -275,4 +273,4 @@ def test_extract_sub_comments_with_class_token_matching():
     assert len(comments) >= 10
     assert comments[0].comment_id
     assert comments[0].parent_comment_id == parent.comment_id
-    assert comments[0].user_link.startswith("https://tieba.baidu.com/home/main")
+    # 教学版已移除 user_link 等可定位真人字段的采集
