@@ -315,19 +315,17 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
             if not isinstance(is_end, bool):
                 utils.logger.warning(f"[BilibiliClient.get_video_all_comments] 'is_end' is not a boolean for video_id: {video_id}. Assuming end of comments.")
                 is_end = True
-            if is_fetch_sub_comments:
-                for comment in comment_list:
-                    comment_id = comment['rpid']
-                    if (comment.get("rcount", 0) > 0):
-                        {await self.get_video_all_level_two_comments(video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval, callback)}
             if len(result) + len(comment_list) > max_count:
                 comment_list = comment_list[:max_count - len(result)]
             if callback:  # If there is a callback function, execute it
                 await callback(video_id, comment_list)
+            if is_fetch_sub_comments:
+                for comment in comment_list:
+                    comment_id = comment['rpid']
+                    if comment.get("rcount", 0) > 0:
+                        await self.get_video_all_level_two_comments(video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval, callback)
             await asyncio.sleep(crawl_interval)
-            if not is_fetch_sub_comments:
-                result.extend(comment_list)
-                continue
+            result.extend(comment_list)
         return result
 
     async def get_video_all_level_two_comments(
