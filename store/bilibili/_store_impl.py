@@ -36,7 +36,13 @@ from sqlalchemy.orm import sessionmaker
 import config
 from base.base_crawler import AbstractStore
 from database.db_session import get_session
-from database.models import BilibiliVideoComment, BilibiliVideo, BilibiliUpDynamic
+from database.models import (
+    BilibiliArticle,
+    BilibiliArticleComment,
+    BilibiliVideo,
+    BilibiliVideoComment,
+    BilibiliUpDynamic,
+)
 from tools.async_file_writer import AsyncFileWriter
 from tools import utils, words
 from var import crawler_type_var
@@ -64,6 +70,12 @@ class BiliCsvStoreImplement(AbstractStore):
             item_type="videos"
         )
 
+    async def store_article(self, article_item: Dict):
+        await self.file_writer.write_to_csv(
+            item=article_item,
+            item_type="articles"
+        )
+
     async def store_comment(self, comment_item: Dict):
         """
         comment CSV storage implementation
@@ -76,6 +88,12 @@ class BiliCsvStoreImplement(AbstractStore):
         await self.file_writer.write_to_csv(
             item=comment_item,
             item_type="comments"
+        )
+
+    async def store_article_comment(self, comment_item: Dict):
+        await self.file_writer.write_to_csv(
+            item=comment_item,
+            item_type="article_comments"
         )
 
     async def store_creator(self, creator: Dict):
@@ -177,6 +195,54 @@ class BiliDbStoreImplement(AbstractStore):
                     setattr(comment_detail, key, value)
             await session.commit()
 
+    async def store_article(self, article_item: Dict):
+        article_id = int(article_item.get("article_id"))
+        article_item["article_id"] = article_id
+        article_item["create_time"] = int(article_item.get("create_time", 0) or 0)
+        article_item["liked_count"] = str(article_item.get("liked_count", ""))
+        article_item["favorite_count"] = str(article_item.get("favorite_count", ""))
+        article_item["share_count"] = str(article_item.get("share_count", ""))
+        article_item["comment_count"] = str(article_item.get("comment_count", ""))
+
+        async with get_session() as session:
+            result = await session.execute(select(BilibiliArticle).where(BilibiliArticle.article_id == article_id))
+            article_detail = result.scalar_one_or_none()
+
+            if not article_detail:
+                article_item["add_ts"] = utils.get_current_timestamp()
+                article_item["last_modify_ts"] = utils.get_current_timestamp()
+                new_article = BilibiliArticle(**article_item)
+                session.add(new_article)
+            else:
+                article_item["last_modify_ts"] = utils.get_current_timestamp()
+                for key, value in article_item.items():
+                    setattr(article_detail, key, value)
+            await session.commit()
+
+    async def store_article_comment(self, comment_item: Dict):
+        comment_id = int(comment_item.get("comment_id"))
+        comment_item["comment_id"] = comment_id
+        comment_item["article_id"] = int(comment_item.get("article_id", 0) or 0)
+        comment_item["create_time"] = int(comment_item.get("create_time", 0) or 0)
+        comment_item["like_count"] = str(comment_item.get("like_count", "0"))
+        comment_item["sub_comment_count"] = str(comment_item.get("sub_comment_count", "0"))
+        comment_item["parent_comment_id"] = str(comment_item.get("parent_comment_id", "0"))
+
+        async with get_session() as session:
+            result = await session.execute(select(BilibiliArticleComment).where(BilibiliArticleComment.comment_id == comment_id))
+            comment_detail = result.scalar_one_or_none()
+
+            if not comment_detail:
+                comment_item["add_ts"] = utils.get_current_timestamp()
+                comment_item["last_modify_ts"] = utils.get_current_timestamp()
+                new_comment = BilibiliArticleComment(**comment_item)
+                session.add(new_comment)
+            else:
+                comment_item["last_modify_ts"] = utils.get_current_timestamp()
+                for key, value in comment_item.items():
+                    setattr(comment_detail, key, value)
+            await session.commit()
+
     async def store_creator(self, creator: Dict):
         # 教学版：UP 主个人资料不再落库
         pass
@@ -231,6 +297,12 @@ class BiliJsonStoreImplement(AbstractStore):
             item_type="contents"
         )
 
+    async def store_article(self, article_item: Dict):
+        await self.file_writer.write_single_item_to_json(
+            item=article_item,
+            item_type="articles"
+        )
+
     async def store_comment(self, comment_item: Dict):
         """
         comment JSON storage implementation
@@ -243,6 +315,12 @@ class BiliJsonStoreImplement(AbstractStore):
         await self.file_writer.write_single_item_to_json(
             item=comment_item,
             item_type="comments"
+        )
+
+    async def store_article_comment(self, comment_item: Dict):
+        await self.file_writer.write_single_item_to_json(
+            item=comment_item,
+            item_type="article_comments"
         )
 
     async def store_creator(self, creator: Dict):
@@ -302,10 +380,22 @@ class BiliJsonlStoreImplement(AbstractStore):
             item_type="contents"
         )
 
+    async def store_article(self, article_item: Dict):
+        await self.file_writer.write_to_jsonl(
+            item=article_item,
+            item_type="articles"
+        )
+
     async def store_comment(self, comment_item: Dict):
         await self.file_writer.write_to_jsonl(
             item=comment_item,
             item_type="comments"
+        )
+
+    async def store_article_comment(self, comment_item: Dict):
+        await self.file_writer.write_to_jsonl(
+            item=comment_item,
+            item_type="article_comments"
         )
 
     async def store_creator(self, creator: Dict):
@@ -370,6 +460,30 @@ class BiliMongoStoreImplement(AbstractStore):
             data=comment_item
         )
         utils.logger.info(f"[BiliMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
+
+    async def store_article(self, article_item: Dict):
+        article_id = article_item.get("article_id")
+        if not article_id:
+            return
+
+        await self.mongo_store.save_or_update(
+            collection_suffix="articles",
+            query={"article_id": article_id},
+            data=article_item
+        )
+        utils.logger.info(f"[BiliMongoStoreImplement.store_article] Saved article {article_id} to MongoDB")
+
+    async def store_article_comment(self, comment_item: Dict):
+        comment_id = comment_item.get("comment_id")
+        if not comment_id:
+            return
+
+        await self.mongo_store.save_or_update(
+            collection_suffix="article_comments",
+            query={"comment_id": comment_id},
+            data=comment_item
+        )
+        utils.logger.info(f"[BiliMongoStoreImplement.store_article_comment] Saved article comment {comment_id} to MongoDB")
 
     async def store_creator(self, creator_item: Dict):
         # 教学版：UP 主个人资料不再落库
