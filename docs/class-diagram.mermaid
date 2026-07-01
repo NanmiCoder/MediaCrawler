@@ -1,0 +1,86 @@
+classDiagram
+    direction LR
+
+    class TaskInfo {
+        +string task_id
+        +string task_type
+        +string workspace
+        +Record params
+        +TaskStatus status
+        +string created_at
+        +string|null started_at
+        +string|null completed_at
+        +string|null error
+        +number exit_code
+        +Record|null result
+        +string progress
+    }
+
+    class TaskStatus {
+        <<enumeration>>
+        pending
+        running
+        completed
+        failed
+    }
+
+    class TaskManager {
+        -Record tasks
+        -Lock lock
+        +create_task(task_type, params) TaskInfo
+        +submit(task, worker) void
+        +get_task(task_id) TaskInfo
+        +list_tasks(filters) TaskInfo[]
+        +get_result_path(task_id) Path
+        +update_progress(task_id, progress) void
+    }
+
+    class API {
+        +POST /scrape/search
+        +POST /scrape/comments
+        +POST /scrape/scripts
+        +POST /scrape/merge
+        +POST /scrape/run-all
+        +GET /scrape/status/task_id
+        +GET /scrape/result/task_id
+        +GET /scrape/data/preview/task_id
+        +GET /scrape/data/export
+        +POST /scrape/data/export
+    }
+
+    class ContentAssetBuilder {
+        +build_content_asset(search, comments, scripts)
+        +content_asset.jsonl
+        +content_asset.csv
+        +content_asset_stats
+    }
+
+    class WebUI {
+        +React SPA
+        +Zustand task store
+        +WebSocket client
+        +Content Asset preview
+        +raw and legacy export
+    }
+
+    class WSManager {
+        +connect(websocket) void
+        +disconnect(websocket) void
+        +broadcast(message) void
+        +broadcast_sync(message) void
+    }
+
+    class EmbeddedUI {
+        +path /ui
+        +source api/webui
+    }
+
+    TaskInfo --> TaskStatus
+    TaskManager --> TaskInfo
+    API --> TaskManager
+    API --> ContentAssetBuilder
+    TaskManager --> WSManager
+    WebUI --> API
+    WebUI --> WSManager
+    WebUI ..> EmbeddedUI : npm build
+    API --> EmbeddedUI : StaticFiles
