@@ -1,0 +1,16 @@
+{
+  "header": {
+    "title": "系统控制台",
+    "entries": "{{count}} 条记录",
+    "active": "活跃",
+    "clear": "清除",
+    "restore": "恢复所有日志"
+  },
+  "banner": {
+    "systemInit": "[系统] 系统初始化成功",
+    "configHint": "[信息] 配置参数并启动扫描序列..."
+  },
+  "footer": {
+    "awaiting": "等待命令..."
+  }
+}

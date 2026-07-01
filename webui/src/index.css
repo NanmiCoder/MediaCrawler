@@ -1,0 +1,490 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Light theme (default) - Clean Cyber */
+  :root {
+    /* Semantic colors for shadcn compatibility */
+    --background: 210 20% 98%;
+    --foreground: 220 20% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
+    --primary: 187 80% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 330 75% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 15% 45%;
+    --accent: 187 80% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 330 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 187 80% 42%;
+    --radius: 0.375rem;
+
+    /* Cyberpunk color system - Clean Light with Cyan accent */
+    --cyber-bg-primary: 248 250 252;
+    --cyber-bg-secondary: 241 245 249;
+    --cyber-bg-tertiary: 226 232 240;
+    --cyber-bg-panel: 255 255 255;
+    --cyber-bg-elevated: 248 250 252;
+
+    --cyber-neon-cyan: 6 182 212;
+    --cyber-neon-cyan-dim: 8 145 178;
+    --cyber-neon-pink: 236 72 153;
+    --cyber-neon-pink-dim: 219 39 119;
+    --cyber-neon-green: 34 197 94;
+    --cyber-neon-green-dim: 22 163 74;
+    --cyber-neon-orange: 249 115 22;
+    --cyber-neon-yellow: 234 179 8;
+    --cyber-neon-purple: 168 85 247;
+
+    --cyber-text-primary: 15 23 42;
+    --cyber-text-secondary: 71 85 105;
+    --cyber-text-muted: 148 163 184;
+
+    --cyber-border-default: 203 213 225;
+    --cyber-border-subtle: 226 232 240;
+    --cyber-border-glow: 6 182 212;
+
+    /* Glass effect */
+    --glass-bg: 255 255 255 / 0.85;
+    --glass-border: 203 213 225 / 0.5;
+    --glass-dark-bg: 241 245 249 / 0.9;
+    --glass-dark-border: 203 213 225 / 0.6;
+
+    /* Shadows - subtle for light mode */
+    --shadow-glow-opacity: 0.2;
+    --shadow-glow-spread: 6px;
+  }
+
+  /* Dark theme - Full Cyberpunk */
+  .dark {
+    /* Semantic colors */
+    --background: 233 67% 4%;
+    --foreground: 210 20% 93%;
+    --card: 215 21% 11%;
+    --card-foreground: 210 20% 93%;
+    --popover: 213 18% 13%;
+    --popover-foreground: 210 20% 93%;
+    --primary: 180 100% 50%;
+    --primary-foreground: 233 67% 4%;
+    --secondary: 330 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 215 14% 17%;
+    --muted-foreground: 215 16% 57%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 233 67% 4%;
+    --destructive: 330 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 14% 25%;
+    --input: 215 14% 25%;
+    --ring: 180 100% 50%;
+
+    /* Cyberpunk color system - Dark variants (original neon) */
+    --cyber-bg-primary: 10 10 15;
+    --cyber-bg-secondary: 13 17 23;
+    --cyber-bg-tertiary: 22 27 34;
+    --cyber-bg-panel: 28 33 40;
+    --cyber-bg-elevated: 33 38 45;
+
+    --cyber-neon-cyan: 0 255 255;
+    --cyber-neon-cyan-dim: 37 177 191;
+    --cyber-neon-pink: 255 0 128;
+    --cyber-neon-pink-dim: 222 40 59;
+    --cyber-neon-green: 0 255 65;
+    --cyber-neon-green-dim: 57 255 20;
+    --cyber-neon-orange: 255 152 0;
+    --cyber-neon-yellow: 255 234 0;
+    --cyber-neon-purple: 191 0 255;
+
+    --cyber-text-primary: 230 237 243;
+    --cyber-text-secondary: 139 148 158;
+    --cyber-text-muted: 72 79 88;
+
+    --cyber-border-default: 48 54 61;
+    --cyber-border-subtle: 33 38 45;
+    --cyber-border-glow: 0 255 255;
+
+    /* Glass effect */
+    --glass-bg: 22 27 34 / 0.7;
+    --glass-border: 48 54 61 / 0.5;
+    --glass-dark-bg: 13 17 23 / 0.85;
+    --glass-dark-border: 48 54 61 / 0.4;
+
+    /* Shadows - vibrant for dark mode */
+    --shadow-glow-opacity: 0.5;
+    --shadow-glow-spread: 10px;
+  }
+
+  * {
+    border-color: rgb(var(--cyber-border-default));
+  }
+
+  body {
+    background-color: rgb(var(--cyber-bg-primary));
+    color: rgb(var(--cyber-text-primary));
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ============================
+   Cyberpunk Scrollbar Styles
+   ============================ */
+
+/* Default scrollbar - Light */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--cyber-bg-secondary));
+  border-left: 1px solid rgb(var(--cyber-neon-cyan) / 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(var(--cyber-neon-cyan) / 0.4), rgb(var(--cyber-neon-pink) / 0.3));
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(var(--cyber-neon-cyan) / 0.6), rgb(var(--cyber-neon-pink) / 0.5));
+}
+
+::-webkit-scrollbar-corner {
+  background: rgb(var(--cyber-bg-secondary));
+}
+
+/* Terminal scrollbar - always dark */
+.terminal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terminal-scroll::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+.terminal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.4);
+  border-radius: 0;
+}
+
+.terminal-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 65, 0.6);
+}
+
+/* ============================
+   Cyberpunk Grid Background
+   ============================ */
+
+.cyber-grid {
+  background-color: rgb(var(--cyber-bg-primary));
+  background-image:
+    linear-gradient(rgb(var(--cyber-neon-cyan) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--cyber-neon-cyan) / 0.03) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, rgb(var(--cyber-neon-cyan) / 0.06) 0%, transparent 60%);
+  background-size: 50px 50px, 50px 50px, 100% 100%;
+  background-position: -1px -1px, -1px -1px, center top;
+}
+
+.dark .cyber-grid {
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 255, 0.08) 0%, transparent 60%);
+}
+
+/* ============================
+   Glassmorphism Effects
+   ============================ */
+
+.glass-panel {
+  background: rgb(var(--glass-bg));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(var(--glass-border));
+}
+
+.glass-panel-dark {
+  background: rgb(var(--glass-dark-bg));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgb(var(--glass-dark-border));
+}
+
+.float-panel {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 1px rgb(var(--cyber-neon-cyan) / 0.1);
+}
+
+.dark .float-panel {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 255, 255, 0.15);
+}
+
+.elevated-panel {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.dark .elevated-panel {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================
+   Neon Glow Effects
+   ============================ */
+
+/* Text glow - Light mode: subtle shadow, Dark mode: neon glow */
+.glow-text-cyan {
+  text-shadow: 0 1px 3px rgb(var(--cyber-neon-cyan) / 0.3);
+}
+
+.dark .glow-text-cyan {
+  text-shadow:
+    0 0 5px rgba(0, 255, 255, 0.8),
+    0 0 10px rgba(0, 255, 255, 0.5),
+    0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.glow-text-pink {
+  text-shadow: 0 1px 3px rgb(var(--cyber-neon-pink) / 0.3);
+}
+
+.dark .glow-text-pink {
+  text-shadow:
+    0 0 5px rgba(255, 0, 128, 0.8),
+    0 0 10px rgba(255, 0, 128, 0.5),
+    0 0 20px rgba(255, 0, 128, 0.3);
+}
+
+.glow-text-green {
+  text-shadow: 0 1px 3px rgb(var(--cyber-neon-green) / 0.3);
+}
+
+.dark .glow-text-green {
+  text-shadow:
+    0 0 5px rgba(0, 255, 65, 0.8),
+    0 0 10px rgba(0, 255, 65, 0.5),
+    0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+/* Box glow - Light mode: subtle shadow, Dark mode: neon glow */
+.glow-cyan {
+  box-shadow: 0 4px 12px rgb(var(--cyber-neon-cyan) / var(--shadow-glow-opacity));
+}
+
+.dark .glow-cyan {
+  box-shadow:
+    0 0 5px rgba(0, 255, 255, 0.5),
+    0 0 10px rgba(0, 255, 255, 0.3),
+    0 0 20px rgba(0, 255, 255, 0.2),
+    inset 0 0 5px rgba(0, 255, 255, 0.1);
+}
+
+.glow-pink {
+  box-shadow: 0 4px 12px rgb(var(--cyber-neon-pink) / var(--shadow-glow-opacity));
+}
+
+.dark .glow-pink {
+  box-shadow:
+    0 0 5px rgba(255, 0, 128, 0.5),
+    0 0 10px rgba(255, 0, 128, 0.3),
+    0 0 20px rgba(255, 0, 128, 0.2);
+}
+
+.glow-green {
+  box-shadow: 0 4px 12px rgb(var(--cyber-neon-green) / var(--shadow-glow-opacity));
+}
+
+.dark .glow-green {
+  box-shadow:
+    0 0 5px rgba(0, 255, 65, 0.5),
+    0 0 10px rgba(0, 255, 65, 0.3),
+    0 0 20px rgba(0, 255, 65, 0.2);
+}
+
+/* ============================
+   Corner Decorations
+   ============================ */
+
+.cyber-corner {
+  position: relative;
+}
+
+.cyber-corner::before,
+.cyber-corner::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.cyber-corner::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid rgb(var(--cyber-neon-cyan) / 0.5);
+  border-left: 2px solid rgb(var(--cyber-neon-cyan) / 0.5);
+}
+
+.cyber-corner::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid rgb(var(--cyber-neon-cyan) / 0.5);
+  border-right: 2px solid rgb(var(--cyber-neon-cyan) / 0.5);
+}
+
+/* Four corners variant */
+.cyber-corners {
+  position: relative;
+}
+
+.cyber-corners::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 0 0,
+    linear-gradient(to right, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 0 100%,
+    linear-gradient(to left, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 100% 0,
+    linear-gradient(to left, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 100% 100%,
+    linear-gradient(to bottom, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 0 0,
+    linear-gradient(to bottom, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 100% 0,
+    linear-gradient(to top, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 0 100%,
+    linear-gradient(to top, rgb(var(--cyber-neon-cyan) / 0.5) 12px, transparent 12px) 100% 100%;
+  background-repeat: no-repeat;
+  background-size: 2px 12px, 2px 12px, 2px 12px, 2px 12px, 12px 2px, 12px 2px, 12px 2px, 12px 2px;
+  pointer-events: none;
+}
+
+/* ============================
+   Card Hover Effects
+   ============================ */
+
+/* Scan effect on hover */
+.card-scan {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-scan::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--cyber-neon-cyan) / 0.1),
+    transparent
+  );
+  transition: left 0.6s ease-in-out;
+  pointer-events: none;
+}
+
+.card-scan:hover::after {
+  left: 100%;
+}
+
+/* ============================
+   Cursor Blink
+   ============================ */
+
+.cursor-blink {
+  animation: cursorBlink 1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ============================
+   Status Indicators
+   ============================ */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot-online {
+  background: rgb(var(--cyber-neon-green));
+  box-shadow: 0 0 8px rgb(var(--cyber-neon-green) / 0.6);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.status-dot-offline {
+  background: rgb(var(--cyber-text-muted));
+}
+
+.status-dot-warning {
+  background: rgb(var(--cyber-neon-orange));
+  box-shadow: 0 0 8px rgb(var(--cyber-neon-orange) / 0.6);
+}
+
+.status-dot-error {
+  background: rgb(var(--cyber-neon-pink));
+  box-shadow: 0 0 8px rgb(var(--cyber-neon-pink) / 0.6);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 15px currentColor, 0 0 25px currentColor;
+  }
+}
+
+/* ============================
+   Input Focus Ring
+   ============================ */
+
+.cyber-focus {
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.cyber-focus:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px rgb(var(--cyber-neon-cyan)), 0 0 10px rgb(var(--cyber-neon-cyan) / 0.3);
+  border-color: rgb(var(--cyber-neon-cyan));
+}
+
+/* ============================
+   Selection
+   ============================ */
+
+::selection {
+  background: rgb(var(--cyber-neon-cyan) / 0.3);
+  color: rgb(var(--cyber-text-primary));
+}
+
+::-moz-selection {
+  background: rgb(var(--cyber-neon-cyan) / 0.3);
+  color: rgb(var(--cyber-text-primary));
+}
+
+/* ============================
+   Performance Optimizations
+   ============================ */
+
+.will-change-transform {
+  will-change: transform;
+}
+
+.gpu-accelerate {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

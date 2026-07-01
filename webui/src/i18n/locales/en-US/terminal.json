@@ -1,0 +1,16 @@
+{
+  "header": {
+    "title": "SYSTEM_CONSOLE",
+    "entries": "{{count}} entries",
+    "active": "ACTIVE",
+    "clear": "CLEAR",
+    "restore": "RESTORE ALL LOGS"
+  },
+  "banner": {
+    "systemInit": "[SYS] System initialized successfully",
+    "configHint": "[INFO] Configure parameters and initiate scan sequence..."
+  },
+  "footer": {
+    "awaiting": "awaiting_command..."
+  }
+}

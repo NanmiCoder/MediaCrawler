@@ -1,0 +1,71 @@
+{
+  "section": {
+    "targetMatrix": {
+      "title": "TARGET_MATRIX",
+      "description": "Platform, mode & search parameters"
+    },
+    "authMatrix": {
+      "title": "AUTH_MATRIX",
+      "description": "Login method configuration"
+    },
+    "outputConfig": {
+      "title": "OUTPUT_CONFIG",
+      "description": "Save format & comment options"
+    },
+    "runtime": {
+      "title": "RUNTIME",
+      "description": "Runtime parameters"
+    }
+  },
+  "field": {
+    "platform": "PLATFORM",
+    "platformPlaceholder": "Select platform",
+    "crawlType": "CRAWL_TYPE",
+    "crawlTypePlaceholder": "Select type",
+    "startPage": "START_PAGE",
+    "keywords": "KEYWORDS",
+    "keywordsHint": "Press Enter to add keyword",
+    "keywordsPlaceholder": "Type keyword, press Enter to add...",
+    "specifiedIds": "POST/VIDEO_ID",
+    "specifiedIdsHint": "Enter post or video ID/URL, one per line or comma-separated",
+    "specifiedIdsPlaceholder": {
+      "bili": "Examples:\nBV1xxxx\nhttps://www.bilibili.com/video/BV1xxxx",
+      "xhs": "Examples:\nhttps://www.xiaohongshu.com/explore/xxx?xsec_token=xxx\n(must include xsec_token)",
+      "dy": "Examples:\n7525538910311632128\nhttps://www.douyin.com/video/xxx\nhttps://v.douyin.com/xxx (short link)",
+      "wb": "Examples:\n4982041758140155\nhttps://weibo.com/xxx/xxx",
+      "ks": "Examples:\n3xf8enb8dbj6uig\nhttps://www.kuaishou.com/short-video/xxx",
+      "default": "Enter post/video ID or URL..."
+    },
+    "creatorIds": "CREATOR_ID",
+    "creatorIdsHint": "Enter creator ID/URL, one per line or comma-separated",
+    "creatorIdsPlaceholder": {
+      "bili": "Examples:\n434377496\nhttps://space.bilibili.com/434377496",
+      "xhs": "Examples:\nhttps://www.xiaohongshu.com/user/profile/xxx?xsec_token=xxx\n(must include xsec_token)",
+      "dy": "Examples:\nMS4wLjABAAAAxxx\nhttps://www.douyin.com/user/MS4wLjABAAAAxxx",
+      "wb": "Examples:\n5533390220\nhttps://weibo.com/u/5533390220",
+      "ks": "Examples:\n3x84qugg4ch9zhs\nhttps://www.kuaishou.com/profile/xxx",
+      "default": "Enter creator ID or URL..."
+    },
+    "loginMethod": "LOGIN_METHOD",
+    "loginMethodPlaceholder": "Select login method",
+    "cookies": "COOKIES",
+    "cookiesHint": "Paste cookie string",
+    "cookiesPlaceholder": "Paste cookies here...",
+    "saveFormat": "SAVE_FORMAT",
+    "saveFormatPlaceholder": "Select format",
+    "commentExtraction": "Comment Extraction",
+    "subComments": "Sub-comments",
+    "headlessMode": "HEADLESS_MODE",
+    "headlessModeHint": "Run browser without GUI"
+  },
+  "button": {
+    "initiateScan": "INITIATE SCAN",
+    "initiating": "INITIATING...",
+    "terminate": "TERMINATE",
+    "stopping": "STOPPING..."
+  },
+  "warning": {
+    "cookieSlider": "[Note] Cookie login is not recommended for Xiaohongshu and Douyin due to slider captcha",
+    "xhsToken": "[Important] Xiaohongshu URLs must contain xsec_token parameter, please copy the full URL from browser"
+  }
+}

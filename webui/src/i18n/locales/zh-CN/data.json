@@ -1,0 +1,29 @@
+{
+  "dialog": {
+    "button": "数据管理",
+    "title": "数据浏览器"
+  },
+  "explorer": {
+    "title": "数据文件管理",
+    "records": "{{count}} 条",
+    "rescan": "重新扫描",
+    "loading": "[加载中] 正在扫描数据目录...",
+    "noData": "暂无数据",
+    "noDataHint": "启动爬虫开始数据采集，完成后结果将显示在此处。",
+    "allCategories": "全部"
+  },
+  "file": {
+    "entries": "{{count}} 条",
+    "extract": "下载",
+    "preview": "预览"
+  },
+  "preview": {
+    "title": "数据预览",
+    "records": "{{count}} 条记录",
+    "download": "下载",
+    "loading": "[加载中] 正在解析数据...",
+    "error": "[错误] 数据解析失败",
+    "searchPlaceholder": "搜索数据...",
+    "showing": "显示 {{filtered}} / {{total}} 条记录"
+  }
+}

@@ -175,6 +175,18 @@ uv run main.py --help
 
 MediaCrawler 提供了基于 Web 的可视化操作界面，无需命令行也能轻松使用爬虫功能。
 
+#### 构建前端资源（首次使用需要）
+
+WebUI 前端源码位于 `webui/` 目录，需要先构建静态资源后才能通过 API 服务器访问。
+
+```shell
+cd webui
+npm install
+npm run build      # 产物输出到 api/webui/
+```
+
+> 开发调试可改用 `npm run dev`，会在 5173 端口启动 Vite 开发服务器并自动代理 `/api` 到 8080。
+
 #### 启动 WebUI 服务
 
 ```shell
