@@ -37,10 +37,24 @@ mysql_db_config = {
 
 
 # redis config
-REDIS_DB_HOST = os.getenv("REDIS_DB_HOST", "127.0.0.1")  # your redis host
-REDIS_DB_PWD = os.getenv("REDIS_DB_PWD", "123456")  # your redis password
-REDIS_DB_PORT = os.getenv("REDIS_DB_PORT", 6379)  # your redis port
-REDIS_DB_NUM = os.getenv("REDIS_DB_NUM", 0)  # your redis db num
+def _redis_env(name: str, legacy_name: str, default: str) -> str:
+    """Read the canonical Redis variable, falling back to its legacy name."""
+    value = os.getenv(name)
+    if value is not None:
+        return value
+    return os.getenv(legacy_name, default)
+
+
+REDIS_HOST = _redis_env("REDIS_HOST", "REDIS_DB_HOST", "localhost")
+REDIS_PORT = int(_redis_env("REDIS_PORT", "REDIS_DB_PORT", "6379"))
+REDIS_PASSWORD = _redis_env("REDIS_PASSWORD", "REDIS_DB_PWD", "") or None
+REDIS_DB = int(_redis_env("REDIS_DB", "REDIS_DB_NUM", "0"))
+
+# Backward-compatible aliases. New deployments should use REDIS_* variables.
+REDIS_DB_HOST = REDIS_HOST
+REDIS_DB_PORT = REDIS_PORT
+REDIS_DB_PWD = REDIS_PASSWORD
+REDIS_DB_NUM = REDIS_DB
 
 # cache type
 CACHE_TYPE_REDIS = "redis"

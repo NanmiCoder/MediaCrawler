@@ -1,200 +1,435 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2025 relakkes@gmail.com
-#
-# This file is part of MediaCrawler project.
-# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/api/main.py
-# GitHub: https://github.com/NanmiCoder
-# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
-#
-# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
-# 1. 不得用于任何商业用途。
-# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
-# 3. 不得进行大规模爬取或对平台造成运营干扰。
-# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
-# 5. 不得用于任何非法或不当的用途。
-#
-# 详细许可条款请参阅项目根目录下的LICENSE文件。
-# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
+"""
+douyin_scraper.api.main — FastAPI 应用入口
+=============================================
+v6 新增：Web API 服务入口。
 
+启动方式：
+  uvicorn api.main:app --host 0.0.0.0 --port 18080
+
+或通过环境变量配置：
+  DY_API_HOST=0.0.0.0 DY_API_PORT=18080 uvicorn api.main:app
+
+Docker/compose 宿主访问端口固定为 18080，容器内部 API 端口保持 8000。
+
+我实际执行时踩过的坑：
+  - 直接在 HTTP handler 中跑采集 → 请求超时
+  - 无任务隔离 → 并发互相覆盖状态
+  - 无健康检查 → 运维无法判断服务是否正常
+  - 日志无结构化 → 排查问题时翻几小时日志
 """
-MediaCrawler WebUI API Server
-Start command: uvicorn api.main:app --port 8080 --reload
-Or: python -m api.main
-"""
+
 import asyncio
+import logging
 import os
+import platform
+import shutil
 import sys
-import subprocess
-import uvicorn
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+import time
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any, Dict, Optional
 
-from .routers import crawler_router, data_router, websocket_router
+from dotenv import load_dotenv
+from fastapi import (
+    Depends,
+    FastAPI,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+    status,
+)
+from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
+
+from douyin_scraper.utils import (
+    check_command_exists,
+    check_disk_space,
+    check_port_in_use,
+    setup_ffmpeg,
+)
+
+from .routes import router, set_task_manager
+from .login import router as login_router
+from .tasks import TaskManager
+from .ws import ws_manager
+from .schemas import LogEntry
+from .auth import (
+    get_websocket_api_key,
+    is_api_key_enabled,
+    is_valid_api_key,
+    require_api_key,
+    validate_auth_configuration,
+)
+
+logger = logging.getLogger("douyin_scraper.api")
+
+DEFAULT_CORS_ALLOW_ORIGINS = (
+    "http://localhost:15173",
+    "http://127.0.0.1:15173",
+    "http://localhost:18080",
+    "http://127.0.0.1:18080",
+)
+
+
+def get_cors_allow_origins() -> list[str]:
+    """Resolve CORS origins from current and legacy environment variables."""
+    raw = (
+        os.environ.get("DY_CORS_ALLOW_ORIGINS")
+        or os.environ.get("CORS_ALLOW_ORIGINS")
+        or os.environ.get("DY_CORS_ORIGINS")
+    )
+    if raw is None or not raw.strip():
+        return list(DEFAULT_CORS_ALLOW_ORIGINS)
+
+    origins = list(dict.fromkeys(
+        origin.strip() for origin in raw.split(",") if origin.strip()
+    ))
+    if "*" in origins:
+        return ["*"]
+    return origins or list(DEFAULT_CORS_ALLOW_ORIGINS)
+
+
+def log_cors_security_posture(origins: list[str]) -> None:
+    """Log the effective CORS posture without exposing secrets."""
+    if origins == ["*"]:
+        logger.warning(
+            "CORS_ALLOW_ORIGINS=* enables cross-origin access from any site; "
+            "internal development only"
+        )
+    else:
+        logger.info("CORS restricted to %d configured local origin(s)", len(origins))
+
+
+# ═══════════════════════════════════════════════════════════════
+# 日志广播后台任务（把 crawler_manager 的日志队列推给 WebSocket 前端）
+# ═══════════════════════════════════════════════════════════════
+
+_log_broadcaster_task: Optional[asyncio.Task] = None
+
+
+async def log_broadcaster():
+    """
+    后台任务：从 crawler_manager 的日志队列读取 LogEntry，
+    通过 ws_manager.broadcast() 推送给所有连接的 WebSocket 前端。
+    消息格式：{"type": "log", "data": {...}}
+    """
+    from .services.crawler_manager import CrawlerManager
+    from .ws import ws_manager
+
+    # 获取 crawler_manager 单例（在 services/__init__.py 中定义）
+    from .services import crawler_manager
+
+    queue = crawler_manager.get_log_queue()
+    logger.info("[LogBroadcaster] 启动，等待日志消息...")
+
+    while True:
+        try:
+            entry = await queue.get()
+            # 广播给所有连接的 WS 客户端
+            msg = {
+                "type": "log",
+                "data": entry.model_dump() if hasattr(entry, "model_dump") else str(entry),
+            }
+            await ws_manager.broadcast(msg)
+        except asyncio.CancelledError:
+            logger.info("[LogBroadcaster] 被取消，退出")
+            break
+        except Exception as e:
+            logger.warning("[LogBroadcaster] 错误: %s", e)
+            await asyncio.sleep(0.1)
+
+
+# ═══════════════════════════════════════════════════════════════
+# 全局配置
+# ═══════════════════════════════════════════════════════════════
+
+API_HOST = os.environ.get("DY_API_HOST", "127.0.0.1")
+API_PUBLIC_PORT = int(os.environ.get("DY_API_PUBLIC_PORT", "18080"))
+API_PORT = int(os.environ.get("DY_API_PORT", str(API_PUBLIC_PORT)))
+WORKSPACE_DIR = os.environ.get("DY_WORKSPACE_DIR", "./workspaces")
+CHROME_PORT = int(os.environ.get("DY_CHROME_PORT", "19222"))
+LOG_LEVEL = os.environ.get("DY_LOG_LEVEL", "INFO")
+
+
+# ═══════════════════════════════════════════════════════════════
+# 结构化日志格式
+# ═══════════════════════════════════════════════════════════════
+
+class JSONFormatter(logging.Formatter):
+    """
+    JSON Lines 日志格式化器。
+    ★ 我实际执行时：纯文本日志无法被 ELK/Grafana 解析。★
+    """
+
+    def format(self, record: logging.LogRecord) -> str:
+        import json
+        entry = {
+            "ts": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "msg": record.getMessage(),
+        }
+        if record.exc_info and record.exc_info[1]:
+            entry["exception"] = str(record.exc_info[1])
+        return json.dumps(entry, ensure_ascii=False)
+
+
+def _setup_logging() -> None:
+    """配置结构化日志"""
+    log_dir = Path(WORKSPACE_DIR) / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    # 控制台：人类可读格式
+    console = logging.StreamHandler()
+    console.setFormatter(logging.Formatter(
+        "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
+    ))
+    console.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
+
+    # 文件：JSON Lines 格式（自动轮转 100MB × 5）
+    from logging.handlers import RotatingFileHandler
+    file_handler = RotatingFileHandler(
+        str(log_dir / "api.jsonl"),
+        maxBytes=100 * 1024 * 1024,  # 100MB
+        backupCount=5,
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(JSONFormatter(datefmt="%Y-%m-%dT%H:%M:%S"))
+    file_handler.setLevel(logging.DEBUG)
+
+    # 配置根 logger
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    root.addHandler(console)
+    root.addHandler(file_handler)
+
+    # 降低第三方库日志级别
+    logging.getLogger("uvicorn").setLevel(logging.INFO)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+# ═══════════════════════════════════════════════════════════════
+# 应用生命周期
+# ═══════════════════════════════════════════════════════════════
+
+_task_manager_instance = None
+_start_time: float = 0
+_ffmpeg_available: Optional[bool] = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    global _task_manager_instance, _start_time
+    _start_time = time.time()
+    validate_auth_configuration()
+
+    # 启动时初始化
+    _setup_logging()
+    logger.info("API 服务启动中...")
+
+    _task_manager_instance = TaskManager(base_dir=WORKSPACE_DIR)
+    app.state.task_manager = _task_manager_instance
+    set_task_manager(_task_manager_instance)
+
+    # 启动时清理过期任务
+    _task_manager_instance.cleanup_old_tasks(max_age_hours=72)
+
+    # 启动时检测 ffmpeg 可用性（仅一次，避免健康检查副作用）
+    global _ffmpeg_available
+    _ffmpeg_available = setup_ffmpeg()
+
+    logger.info(
+        "API 服务就绪: host=%s port=%d workspace=%s",
+        API_HOST, API_PORT, WORKSPACE_DIR,
+    )
+    if is_api_key_enabled():
+        logger.info("API Key 鉴权已启用")
+    else:
+        logger.warning(
+            "API auth disabled / internal use only; set DY_API_KEY or API_KEY "
+            "before LAN or public exposure"
+        )
+    log_cors_security_posture(_cors_origins)
+
+    # 启动日志广播后台任务（把 crawler_manager 的日志推送给 WebSocket 前端）
+    global _log_broadcaster_task
+    _log_broadcaster_task = asyncio.create_task(log_broadcaster())
+    logger.info("日志广播后台任务已启动")
+
+    yield
+
+    # 关闭时取消日志广播任务
+    if _log_broadcaster_task and not _log_broadcaster_task.done():
+        _log_broadcaster_task.cancel()
+        try:
+            await _log_broadcaster_task
+        except asyncio.CancelledError:
+            pass
+    if _task_manager_instance is not None:
+        _task_manager_instance.shutdown()
+    logger.info("API 服务已关闭")
+
+
+# ═══════════════════════════════════════════════════════════════
+# FastAPI 应用
+# ═══════════════════════════════════════════════════════════════
 
 app = FastAPI(
-    title="MediaCrawler WebUI API",
-    description="API for controlling MediaCrawler from WebUI",
-    version="1.0.0"
+    title="抖音采集工具 API",
+    description=(
+        "抖音关键词批量采集工具的 RESTful API。"
+        "支持搜索采集、评论采集、文案提取、数据合并。"
+        "所有长时间操作异步执行，通过 task_id 查询进度。"
+    ),
+    version="6.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# Get webui static files directory
-WEBUI_DIR = os.path.join(os.path.dirname(__file__), "webui")
-
-# CORS configuration - allow frontend dev server access
+# CORS defaults to the fixed local development and host UI origins.
+_cors_origins = get_cors_allow_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",  # Backup port
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-API-Key"],
+    expose_headers=["Content-Disposition"],
 )
 
-# Register routers
-app.include_router(crawler_router, prefix="/api")
-app.include_router(data_router, prefix="/api")
-app.include_router(websocket_router, prefix="/api")
+# 注册路由
+protected_dependencies = [Depends(require_api_key)]
+# `/scrape` is the only supported crawler API. The legacy `/crawler` router
+# remains intentionally unmounted; clients must migrate instead of relying on
+# a permanent dual-route compatibility layer.
+app.include_router(router, dependencies=protected_dependencies)
+app.include_router(login_router, dependencies=protected_dependencies)
 
 
-@app.get("/")
-async def serve_frontend():
-    """Return frontend page"""
-    index_path = os.path.join(WEBUI_DIR, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {
-        "message": "MediaCrawler WebUI API",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "note": "WebUI not found, please build it first: cd webui && npm run build"
-    }
+# ═══════════════════════════════════════════════════════════════
+# WebSocket 端点（直接注册在 app，不走 /scrape 前缀）
+# ═══════════════════════════════════════════════════════════════
 
+@app.websocket("/ws/tasks")
+async def websocket_tasks(ws: WebSocket):
+    """WebSocket 端点：推送任务状态变更"""
+    candidate, subprotocol = get_websocket_api_key(ws)
+    if not is_valid_api_key(candidate):
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Invalid or missing API key",
+        )
 
-@app.get("/api/health")
-async def health_check():
-    return {"status": "ok"}
-
-
-@app.get("/api/env/check")
-async def check_environment():
-    """Check if MediaCrawler environment is configured correctly"""
+    await ws_manager.connect(ws, subprotocol=subprotocol)
     try:
-        # Run uv run main.py --help command to check environment
-        if sys.platform == "win32":
-            loop = asyncio.get_running_loop()
-            process = await loop.run_in_executor(
-                None,
-                lambda: subprocess.run(
-                    ["uv", "run", "main.py", "--help"],
-                    capture_output=True,
-                    timeout=30.0,
-                    cwd="."
-                )
-            )
-            stdout, stderr = process.stdout, process.stderr  # bytes
-        else:
-            process = await asyncio.create_subprocess_exec(
-                "uv", "run", "main.py", "--help",
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd="."  # Project root directory
-            )
-            stdout, stderr = await asyncio.wait_for(
-                process.communicate(),
-                timeout=30.0  # 30 seconds timeout
-            )
-        if process.returncode == 0:
-            return {
-                "success": True,
-                "message": "MediaCrawler environment configured correctly",
-                "output": stdout.decode("utf-8", errors="ignore")[:500]  # Truncate to first 500 characters
-            }
-        else:
-            error_msg = stderr.decode("utf-8", errors="ignore") or stdout.decode("utf-8", errors="ignore")
-            return {
-                "success": False,
-                "message": "Environment check failed",
-                "error": error_msg[:500]
-            }
-    except asyncio.TimeoutError:
-        return {
-            "success": False,
-            "message": "Environment check timeout",
-            "error": "Command execution exceeded 30 seconds"
-        }
-    except FileNotFoundError:
-        return {
-            "success": False,
-            "message": "uv command not found",
-            "error": "Please ensure uv is installed and configured in system PATH"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "message": "Environment check error",
-            "error": f"{type(e).__name__}: {str(e) or 'Unknown'}"
-        }
+        while True:
+            await ws.receive_text()
+    except WebSocketDisconnect:
+        ws_manager.disconnect(ws)
+
+# ═══════════════════════════════════════════════════════════════
+# 静态文件挂载（Web UI）
+# ═══════════════════════════════════════════════════════════════
+# 挂在 /ui 而非 /，避免拦截 WebSocket (/ws/tasks) 和 API (/scrape/*)
+from fastapi.staticfiles import StaticFiles
+
+_webui_dir = Path(__file__).parent / "webui"
+if _webui_dir.exists() and (_webui_dir / "index.html").exists():
+    app.mount("/ui", StaticFiles(directory=str(_webui_dir), html=True), name="webui")
 
 
-@app.get("/api/config/platforms")
-async def get_platforms():
-    """Get list of supported platforms"""
+# ═══════════════════════════════════════════════════════════════
+# 健康检查
+# ═══════════════════════════════════════════════════════════════
+
+@app.get("/health", summary="健康检查", tags=["system"])
+async def health_check() -> Dict[str, Any]:
+    """
+    健康检查端点。
+
+    返回：
+    - 服务运行时间
+    - Chrome CDP 端口状态
+    - 磁盘空间
+    - 依赖版本
+    - 任务统计
+    """
+    uptime = time.time() - _start_time if _start_time else 0
+
+    # Chrome CDP 端口检查
+    cdp_ok = check_port_in_use(CHROME_PORT)
+
+    # 磁盘空间
+    workspace_path = Path(WORKSPACE_DIR)
+    disk_ok = True
+    free_gb = 0.0
+    try:
+        usage = shutil.disk_usage(str(workspace_path))
+        free_gb = usage.free / (1024**3)
+        disk_ok = free_gb > 1.0
+    except OSError:
+        pass
+
+    # 依赖检查（使用启动时缓存的结果，避免副作用）
+    ffmpeg_ok = _ffmpeg_available if _ffmpeg_available is not None else check_command_exists("ffmpeg")
+    python_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+    # 任务统计
+    task_stats = {}
+    if _task_manager_instance:
+        task_stats = _task_manager_instance.get_stats()
+
+    health = {
+        "status": "healthy" if (disk_ok and cdp_ok) else "degraded",
+        "uptime_seconds": round(uptime, 1),
+        "checks": {
+            "chrome_cdp": {
+                "port": CHROME_PORT,
+                "status": "ok" if cdp_ok else "not_running",
+            },
+            "disk": {
+                "free_gb": round(free_gb, 2),
+                "status": "ok" if disk_ok else "low",
+            },
+            "ffmpeg": {
+                "status": "ok" if ffmpeg_ok else "missing",
+            },
+        },
+        "system": {
+            "python": python_ver,
+            "platform": platform.platform(),
+            "workspace": str(workspace_path.resolve()),
+        },
+        "tasks": task_stats,
+    }
+
+    return health
+
+
+@app.get("/", summary="根路径", tags=["system"])
+async def root() -> Dict[str, str]:
+    """API 根路径，返回基本信息"""
     return {
-        "platforms": [
-            {"value": "xhs", "label": "Xiaohongshu", "icon": "book-open"},
-            {"value": "dy", "label": "Douyin", "icon": "music"},
-            {"value": "ks", "label": "Kuaishou", "icon": "video"},
-            {"value": "bili", "label": "Bilibili", "icon": "tv"},
-            {"value": "wb", "label": "Weibo", "icon": "message-circle"},
-            {"value": "tieba", "label": "Baidu Tieba", "icon": "messages-square"},
-            {"value": "zhihu", "label": "Zhihu", "icon": "help-circle"},
-        ]
+        "name": "抖音采集工具 API",
+        "version": "6.0.0",
+        "docs": "/docs",
+        "health": "/health",
     }
 
 
-@app.get("/api/config/options")
-async def get_config_options():
-    """Get all configuration options"""
-    return {
-        "login_types": [
-            {"value": "qrcode", "label": "QR Code Login"},
-            {"value": "cookie", "label": "Cookie Login"},
-        ],
-        "crawler_types": [
-            {"value": "search", "label": "Search Mode"},
-            {"value": "detail", "label": "Detail Mode"},
-            {"value": "creator", "label": "Creator Mode"},
-        ],
-        "save_options": [
-            {"value": "jsonl", "label": "JSONL File"},
-            {"value": "json", "label": "JSON File"},
-            {"value": "csv", "label": "CSV File"},
-            {"value": "excel", "label": "Excel File"},
-            {"value": "sqlite", "label": "SQLite Database"},
-            {"value": "db", "label": "MySQL Database"},
-            {"value": "mongodb", "label": "MongoDB Database"},
-        ],
-    }
-
-
-# Mount static resources - must be placed after all routes
-if os.path.exists(WEBUI_DIR):
-    assets_dir = os.path.join(WEBUI_DIR, "assets")
-    if os.path.exists(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-    # Mount logos directory
-    logos_dir = os.path.join(WEBUI_DIR, "logos")
-    if os.path.exists(logos_dir):
-        app.mount("/logos", StaticFiles(directory=logos_dir), name="logos")
-    # Mount other static files (e.g., vite.svg)
-    app.mount("/static", StaticFiles(directory=WEBUI_DIR), name="webui-static")
-
+# ═══════════════════════════════════════════════════════════════
+# 直接运行入口
+# ═══════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    import uvicorn
+    uvicorn.run(
+        "api.main:app",
+        host=API_HOST,
+        port=API_PORT,
+        reload=os.environ.get("DY_RELOAD", "0") == "1",
+        log_level=LOG_LEVEL.lower(),
+    )

@@ -37,7 +37,7 @@ CDP模式支持两种使用方式：
 
 1. 在 Chrome 地址栏输入：`chrome://inspect/#remote-debugging`
 2. 勾选 **"Allow remote debugging for this browser instance"**
-3. 页面会显示 `Server running at: 127.0.0.1:9222`，表示已就绪
+3. 页面会显示 `Server running at: 127.0.0.1:19222`，表示已就绪
 
 #### 第三步：运行爬虫
 
@@ -45,7 +45,7 @@ CDP模式支持两种使用方式：
 uv run main.py --platform xhs --lt qrcode --type search
 ```
 
-运行后，Chrome 浏览器会**弹出确认对话框**，点击"接受"即可。程序会等待用户确认（默认60秒超时）。
+运行后，程序会从 `http://127.0.0.1:19222/json/version` 获取当前浏览器实际的 WebSocket 地址。若 Chrome 弹出远程调试确认对话框，请点击“接受”；程序默认等待60秒。
 
 #### 配置说明
 
@@ -59,7 +59,7 @@ ENABLE_CDP_MODE = True
 CDP_CONNECT_EXISTING = True
 
 # CDP调试端口（与 chrome://inspect 页面显示的端口一致）
-CDP_DEBUG_PORT = 9222
+CDP_DEBUG_PORT = 19222
 ```
 
 ### 方式二：启动新浏览器
@@ -79,7 +79,7 @@ CDP_CONNECT_EXISTING = False  # 关闭连接已有浏览器，改为启动新浏
 |--------|------|--------|------|
 | `ENABLE_CDP_MODE` | bool | True | 是否启用CDP模式 |
 | `CDP_CONNECT_EXISTING` | bool | True | 是否连接已有浏览器（推荐开启） |
-| `CDP_DEBUG_PORT` | int | 9222 | CDP调试端口 |
+| `CDP_DEBUG_PORT` | int | 19222 | CDP调试端口 |
 | `CDP_HEADLESS` | bool | False | CDP模式下的无头模式 |
 | `AUTO_CLOSE_BROWSER` | bool | True | 程序结束时是否关闭浏览器 |
 
@@ -210,10 +210,10 @@ logging.basicConfig(level=logging.DEBUG)
 #### 2. 手动测试CDP连接
 ```bash
 # 手动启动Chrome
-chrome --remote-debugging-port=9222
+chrome --remote-debugging-port=19222
 
-# 访问调试页面
-curl http://localhost:9222/json
+# 查看浏览器级 WebSocket 地址
+curl http://127.0.0.1:19222/json/version
 ```
 
 #### 3. 检查浏览器进程
@@ -252,12 +252,12 @@ ps aux | grep chrome
 ### 连接已有浏览器模式（推荐）
 
 1. **用户开启远程调试**: 在 `chrome://inspect/#remote-debugging` 中勾选启用
-2. **WebSocket连接**: 程序通过 `ws://localhost:9222/devtools/browser` 直接连接浏览器
-3. **用户确认**: Chrome 弹出确认对话框，用户点击接受后连接建立
+2. **WebSocket发现**: 程序访问 `http://127.0.0.1:19222/json/version`，读取 `webSocketDebuggerUrl`
+3. **用户确认**: 如果 Chrome 弹出确认对话框，用户点击接受后连接建立
 4. **Playwright集成**: 使用 `connectOverCDP` 方法接管浏览器控制
 5. **上下文复用**: 直接使用浏览器已有的上下文（包含用户的Cookie、登录状态等）
 
-> 💡 与传统CDP模式的区别：传统方式通过 `--remote-debugging-port` 启动新浏览器，使用 HTTP 接口 `/json/version` 获取 WebSocket URL。而连接已有浏览器方式直接通过 WebSocket 连接，Chrome 新版（136+）的远程调试不提供 HTTP 接口，需要用户在浏览器端确认授权。
+> 💡 无论连接已有浏览器还是程序新启动的浏览器，都应从 `/json/version` 动态读取 `webSocketDebuggerUrl`，不能假设固定的 `/devtools/browser` 路径。Chrome 版本要求用户确认授权时，按浏览器提示操作即可。
 
 ### 启动新浏览器模式
 

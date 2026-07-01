@@ -22,12 +22,17 @@ import sys
 import os
 from datetime import datetime
 
+import pytest
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.mongodb_store_base import MongoDBConnection, MongoDBStoreBase
 from store.xhs._store_impl import XhsMongoStoreImplement
 from store.douyin._store_impl import DouyinMongoStoreImplement
 from config import db_config
+
+
+pytestmark = [pytest.mark.external, pytest.mark.mongo]
 
 
 class TestMongoDBRealConnection(unittest.TestCase):

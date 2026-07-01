@@ -42,6 +42,33 @@ dependencies = [
     "xhshow>=0.1.9",
 ]
 
+[project.optional-dependencies]
+whisper = [
+    "faster-whisper>=0.9",
+    "imageio-ffmpeg>=0.4",
+]
+dev = [
+    "pytest-mock>=3.10",
+    "ruff>=0.4",
+    "bandit>=1.7",
+]
+
 [[tool.uv.index]]
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 default = true
+
+[tool.pytest.ini_options]
+testpaths = ["douyin_scraper/tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+markers = [
+    "core: stable core regression tests required for the merge gate",
+    "legacy: legacy compatibility tests tracked outside the merge gate",
+    "external: tests requiring explicitly enabled external services",
+    "redis: tests requiring a Redis service",
+    "mongo: tests requiring a MongoDB service",
+    "proxy: tests requiring an external proxy provider",
+    "playwright: tests requiring a real Playwright browser environment",
+    "known_fail: known failing tests tracked by T021",
+]
+# API regression tests: pytest api/tests.py

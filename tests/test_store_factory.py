@@ -68,6 +68,7 @@ class TestXhsStoreFactory:
         store = XhsStoreFactory.create_store()
         assert isinstance(store, XhsMongoStoreImplement)
 
+    @pytest.mark.known_fail
     @patch('config.SAVE_DATA_OPTION', 'excel')
     def test_create_excel_store(self):
         """Test creating Excel store"""

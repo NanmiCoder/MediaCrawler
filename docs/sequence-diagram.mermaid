@@ -1,0 +1,44 @@
+sequenceDiagram
+    participant U as 用户
+    participant UI as Web UI
+    participant API as FastAPI
+    participant TM as TaskManager
+    participant W as 后台任务线程
+    participant CAB as Content Asset Builder
+    participant WS as WebSocket Manager
+
+    U->>UI: 创建 search/comments/scripts/merge 任务
+    UI->>API: POST /scrape/{task-type}
+    API->>TM: create_task(type, params)
+    API->>TM: submit(task, worker)
+    API-->>UI: task_id + submitted
+
+    TM->>W: 启动后台线程
+    W->>TM: status = running
+    TM->>WS: broadcast_sync(task_started)
+    WS-->>UI: /ws/tasks 状态事件
+
+    alt merge 使用 task-id 构建 Content Asset
+        W->>CAB: build_content_asset(search, comments, scripts)
+        CAB-->>W: content_asset.csv/jsonl/stats
+    else 普通采集任务
+        W->>W: 生成任务标准输出
+    end
+
+    alt 任务成功
+        W->>TM: status = completed + result
+        TM->>WS: broadcast_sync(task_completed)
+        WS-->>UI: completed + result
+        U->>UI: 打开预览或下载
+        UI->>API: GET result/preview/export
+        API->>TM: get_result_path(task_id)
+        TM-->>API: 主结果路径
+        API-->>UI: 原始完整结果或旧七字段导出
+    else 任务失败
+        W->>TM: status = failed + error
+        TM->>WS: broadcast_sync(task_failed)
+        WS-->>UI: failed + error
+    end
+
+    Note over UI,API: 开发环境 Web 为 localhost:15173，API 为 localhost:18080
+    Note over API: 发布构建由 api/webui 提供，并挂载在 /ui

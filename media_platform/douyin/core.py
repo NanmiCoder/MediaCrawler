@@ -95,7 +95,7 @@ class DouYinCrawler(AbstractCrawler):
                 await self.browser_context.add_init_script(path="libs/stealth.min.js")
 
             self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+            await self.context_page.goto(self.index_url, wait_until="domcontentloaded", timeout=60000)
 
             self.dy_client = await self.create_douyin_client(httpx_proxy_format)
             if not await self.dy_client.pong(browser_context=self.browser_context):
@@ -336,6 +336,12 @@ class DouYinCrawler(AbstractCrawler):
         headless: bool = True,
     ) -> BrowserContext:
         """Launch browser and create browser context"""
+        # Docker/Ci 环境需要 --no-sandbox（root 用户运行 Chromium）
+        launch_args: List[str] = []
+        chromium_exe: Optional[str] = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH") or os.environ.get("CHROME_PATH") or None
+        if chromium_exe:
+            launch_args = ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+
         if config.SAVE_LOGIN_STATE:
             user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
@@ -348,10 +354,17 @@ class DouYinCrawler(AbstractCrawler):
                     "height": 1080
                 },
                 user_agent=user_agent,
+                args=launch_args,
+                executable_path=chromium_exe,
             )  # type: ignore
             return browser_context
         else:
-            browser = await chromium.launch(headless=headless, proxy=playwright_proxy)  # type: ignore
+            browser = await chromium.launch(
+                headless=headless,
+                proxy=playwright_proxy,
+                args=launch_args,
+                executable_path=chromium_exe,
+            )  # type: ignore
             browser_context = await browser.new_context(viewport={"width": 1920, "height": 1080}, user_agent=user_agent)
             return browser_context
 

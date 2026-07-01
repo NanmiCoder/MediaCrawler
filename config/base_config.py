@@ -18,17 +18,17 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # Basic configuration
-PLATFORM = "xhs"  # Platform, xhs | dy | ks | bili | wb | tieba | zhihu
+PLATFORM = "dy"  # Platform, xhs | dy | ks | bili | wb | tieba | zhihu
 
 # 是否使用海外版小红书 (rednote.com)
 # 开启后 API 走 webapi.rednote.com，cookie 域使用 .rednote.com
 XHS_INTERNATIONAL = False
 
-KEYWORDS = "编程副业,编程兼职"  # Keyword search configuration, separated by English commas
+KEYWORDS = "科目三,靠边停车,直线行驶"  # Keyword search configuration, separated by English commas
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
 CRAWLER_TYPE = (
-    "search"  # Crawling type, search (keyword search) | detail (post details) | creator (creator homepage data)
+    "detail"  # Crawling type, search (keyword search) | detail (post details) | creator (creator homepage data)
 )
 # Whether to enable IP proxy
 ENABLE_IP_PROXY = False
@@ -56,17 +56,17 @@ SAVE_LOGIN_STATE = True
 # 是否启用 CDP 模式 - 使用用户本地的 Chrome/Edge 浏览器进行爬取，具有更好的反检测能力
 # 开启后，会自动检测并启动用户的 Chrome/Edge 浏览器，通过 CDP 协议进行控制
 # 该方式使用真实浏览器环境，包括用户的扩展、Cookie 和设置，大幅降低被风控检测的风险
-ENABLE_CDP_MODE = True
+ENABLE_CDP_MODE = False
 
 # CDP 调试端口，用于与浏览器通信
 # 如果端口被占用，系统会自动尝试下一个可用端口
-CDP_DEBUG_PORT = 9222
+CDP_DEBUG_PORT = 19222
 
 # 自定义浏览器路径（可选）
 # 如果为空，系统会自动检测 Chrome/Edge 的安装路径
 # Windows 示例: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
 # macOS 示例: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-CUSTOM_BROWSER_PATH = ""
+CUSTOM_BROWSER_PATH = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
 
 # 是否在 CDP 模式下启用无头模式
 # 注意：即使设置为 True，某些反检测功能在无头模式下可能无法正常工作
@@ -78,7 +78,7 @@ BROWSER_LAUNCH_TIMEOUT = 60
 # 是否连接用户已打开的浏览器，而不是启动新的浏览器
 # 开启后，程序会连接一个已经启用了远程调试的浏览器
 # 用户需要在 Chrome 中开启远程调试：chrome://inspect/#remote-debugging
-# 或者使用命令行参数启动 Chrome：--remote-debugging-port=9222
+# 或者使用命令行参数启动 Chrome：--remote-debugging-port=19222
 # 这种方式反检测效果最好，因为直接使用用户真实浏览器的所有 Cookie、扩展和浏览历史
 CDP_CONNECT_EXISTING = True
 
@@ -99,7 +99,7 @@ USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 START_PAGE = 1
 
 # Control the number of crawled videos/posts
-CRAWLER_MAX_NOTES_COUNT = 15
+CRAWLER_MAX_NOTES_COUNT = 20
 
 # Controlling the number of concurrent crawlers
 MAX_CONCURRENCY_NUM = 1
@@ -111,7 +111,7 @@ ENABLE_GET_MEIDAS = False
 ENABLE_GET_COMMENTS = True
 
 # Control the number of crawled first-level comments (single video/post)
-CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 10
+CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = 200
 
 # Whether to enable the mode of crawling second-level comments. By default, crawling of second-level comments is not enabled.
 # If the old version of the project uses db, you need to refer to schema/tables.sql line 287 to add table fields.
@@ -139,6 +139,9 @@ CRAWLER_MAX_SLEEP_SEC = 2
 # 是否禁用 SSL 证书验证。仅在使用企业代理、Burp Suite、mitmproxy 等会注入自签名证书的中间人代理时设为 True。
 # 警告：禁用 SSL 验证将使所有流量暴露于中间人攻击风险，请勿在生产环境中开启。
 DISABLE_SSL_VERIFY = False
+
+# Task output directory — when set, AsyncFileWriter writes flat stable-name files
+TASK_OUTPUT_DIR: str = ""
 
 from .bilibili_config import *
 from .xhs_config import *
