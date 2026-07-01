@@ -268,4 +268,23 @@ class TestIpPool(IsolatedAsyncioTestCase):
         print(f"  Is expired after setting expired proxy: {is_expired}")
         self.assertTrue(is_expired, msg="Expired proxy should return True")
 
+    async def test_create_ip_pool_unknown_provider_raises_value_error(self):
+        """create_ip_pool() should raise ValueError with a helpful message when
+        IP_PROXY_PROVIDER_NAME is not in the IpProxyProvider registry, rather than
+        passing None silently and crashing with AttributeError in load_proxies()."""
+        from proxy.proxy_ip_pool import IpProxyProvider
+        from unittest.mock import patch
+
+        invalid_cases = ["kuaidalli", "", "KUAIDAILI", "unknown_provider"]
+
+        for bad_name in invalid_cases:
+            with self.subTest(provider=bad_name):
+                with patch("proxy.proxy_ip_pool.config") as mock_config:
+                    mock_config.IP_PROXY_PROVIDER_NAME = bad_name
+                    with self.assertRaises(ValueError) as ctx:
+                        from proxy.proxy_ip_pool import create_ip_pool
+                        await create_ip_pool(ip_pool_count=1, enable_validate_ip=False)
+                    self.assertIn(bad_name, str(ctx.exception))
+                    self.assertIn(str(list(IpProxyProvider.keys())), str(ctx.exception))
+
         print("\n=== Standalone IP proxy expiration detection test completed ===\n")
