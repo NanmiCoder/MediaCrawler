@@ -28,7 +28,7 @@ import urllib.parse
 from hashlib import md5
 from typing import Dict
 
-from model.m_bilibili import VideoUrlInfo, CreatorUrlInfo
+from model.m_bilibili import ArticleUrlInfo, CreatorUrlInfo, VideoUrlInfo
 from tools import utils
 
 
@@ -102,6 +102,33 @@ def parse_video_info_from_url(url: str) -> VideoUrlInfo:
         return VideoUrlInfo(video_id=video_id)
 
     raise ValueError(f"Unable to parse video ID from URL: {url}")
+
+
+def parse_article_info_from_url(url: str) -> ArticleUrlInfo:
+    """
+    Parse article ID from Bilibili article URL.
+    Args:
+        url: Bilibili article link or cv id
+            - https://www.bilibili.com/read/cv123456
+            - cv123456
+            - 123456
+    Returns:
+        ArticleUrlInfo: Object containing article ID
+    """
+    if url.isdigit():
+        return ArticleUrlInfo(article_id=url)
+
+    cv_pattern = r"^cv(\d+)$"
+    match = re.search(cv_pattern, url)
+    if match:
+        return ArticleUrlInfo(article_id=match.group(1))
+
+    article_pattern = r"/read/cv(\d+)"
+    match = re.search(article_pattern, url)
+    if match:
+        return ArticleUrlInfo(article_id=match.group(1))
+
+    raise ValueError(f"Unable to parse article ID from URL: {url}")
 
 
 def parse_creator_info_from_url(url: str) -> CreatorUrlInfo:
