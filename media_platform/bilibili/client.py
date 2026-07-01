@@ -273,6 +273,87 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         """
         return await self.get_comments(video_id, BilibiliCommentType.VIDEO, order_mode, next)
 
+    async def get_all_comments(
+        self,
+        oid: str,
+        comment_type: BilibiliCommentType,
+        crawl_interval: float = 1.0,
+        is_fetch_sub_comments=False,
+        callback: Optional[Callable] = None,
+        max_count: int = 10,
+    ):
+        """
+        get all comments include sub comments
+        :param oid:
+        :param comment_type:
+        :param crawl_interval:
+        :param is_fetch_sub_comments:
+        :param callback:
+        max_count: Maximum number of comments to crawl per note
+
+        :return:
+        """
+        result = []
+        is_end = False
+        next_page = 0
+        max_retries = 3
+        while not is_end and len(result) < max_count:
+            comments_res = None
+            for attempt in range(max_retries):
+                try:
+                    comments_res = await self.get_comments(oid, comment_type, CommentOrderType.DEFAULT, next_page)
+                    break  # Success
+                except DataFetchError as e:
+                    if attempt < max_retries - 1:
+                        delay = 5 * (2**attempt) + random.uniform(0, 1)
+                        utils.logger.warning(f"[BilibiliClient.get_all_comments] Retrying oid {oid} in {delay:.2f}s... (Attempt {attempt + 1}/{max_retries})")
+                        await asyncio.sleep(delay)
+                    else:
+                        utils.logger.error(f"[BilibiliClient.get_all_comments] Max retries reached for oid: {oid}. Skipping comments. Error: {e}")
+                        is_end = True
+                        break
+            if not comments_res:
+                break
+
+            cursor_info: Dict = comments_res.get("cursor")
+            if not cursor_info:
+                utils.logger.warning(f"[BilibiliClient.get_all_comments] Could not find 'cursor' in response for oid: {oid}. Skipping.")
+                break
+
+            comment_list: List[Dict] = comments_res.get("replies", [])
+
+            # Check if is_end and next exist
+            if "is_end" not in cursor_info or "next" not in cursor_info:
+                utils.logger.warning(f"[BilibiliClient.get_all_comments] 'is_end' or 'next' not in cursor for oid: {oid}. Assuming end of comments.")
+                is_end = True
+            else:
+                is_end = cursor_info.get("is_end")
+                next_page = cursor_info.get("next")
+
+            if not isinstance(is_end, bool):
+                utils.logger.warning(f"[BilibiliClient.get_all_comments] 'is_end' is not a boolean for oid: {oid}. Assuming end of comments.")
+                is_end = True
+            if len(result) + len(comment_list) > max_count:
+                comment_list = comment_list[:max_count - len(result)]
+            if callback:  # If there is a callback function, execute it
+                await callback(oid, comment_list)
+            if is_fetch_sub_comments:
+                for comment in comment_list:
+                    comment_id = comment['rpid']
+                    if comment.get("rcount", 0) > 0:
+                        await self.get_all_level_two_comments(
+                            oid,
+                            comment_type,
+                            comment_id,
+                            CommentOrderType.DEFAULT,
+                            10,
+                            crawl_interval,
+                            callback,
+                        )
+            await asyncio.sleep(crawl_interval)
+            result.extend(comment_list)
+        return result
+
     async def get_video_all_comments(
         self,
         video_id: str,
@@ -291,58 +372,48 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
 
         :return:
         """
-        result = []
-        is_end = False
-        next_page = 0
-        max_retries = 3
-        while not is_end and len(result) < max_count:
-            comments_res = None
-            for attempt in range(max_retries):
-                try:
-                    comments_res = await self.get_video_comments(video_id, CommentOrderType.DEFAULT, next_page)
-                    break  # Success
-                except DataFetchError as e:
-                    if attempt < max_retries - 1:
-                        delay = 5 * (2**attempt) + random.uniform(0, 1)
-                        utils.logger.warning(f"[BilibiliClient.get_video_all_comments] Retrying video_id {video_id} in {delay:.2f}s... (Attempt {attempt + 1}/{max_retries})")
-                        await asyncio.sleep(delay)
-                    else:
-                        utils.logger.error(f"[BilibiliClient.get_video_all_comments] Max retries reached for video_id: {video_id}. Skipping comments. Error: {e}")
-                        is_end = True
-                        break
-            if not comments_res:
-                break
+        return await self.get_all_comments(
+            video_id,
+            BilibiliCommentType.VIDEO,
+            crawl_interval,
+            is_fetch_sub_comments,
+            callback,
+            max_count,
+        )
 
-            cursor_info: Dict = comments_res.get("cursor")
-            if not cursor_info:
-                utils.logger.warning(f"[BilibiliClient.get_video_all_comments] Could not find 'cursor' in response for video_id: {video_id}. Skipping.")
-                break
+    async def get_all_level_two_comments(
+        self,
+        oid: str,
+        comment_type: BilibiliCommentType,
+        level_one_comment_id: int,
+        order_mode: CommentOrderType,
+        ps: int = 10,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+    ) -> Dict:
+        """
+        get all level two comments for a level one comment
+        :param oid: Comment object ID
+        :param comment_type: Bilibili comment object type
+        :param level_one_comment_id: Level one comment ID
+        :param order_mode:
+        :param ps: Number of comments per page
+        :param crawl_interval:
+        :param callback:
+        :return:
+        """
 
-            comment_list: List[Dict] = comments_res.get("replies", [])
-
-            # Check if is_end and next exist
-            if "is_end" not in cursor_info or "next" not in cursor_info:
-                utils.logger.warning(f"[BilibiliClient.get_video_all_comments] 'is_end' or 'next' not in cursor for video_id: {video_id}. Assuming end of comments.")
-                is_end = True
-            else:
-                is_end = cursor_info.get("is_end")
-                next_page = cursor_info.get("next")
-
-            if not isinstance(is_end, bool):
-                utils.logger.warning(f"[BilibiliClient.get_video_all_comments] 'is_end' is not a boolean for video_id: {video_id}. Assuming end of comments.")
-                is_end = True
-            if len(result) + len(comment_list) > max_count:
-                comment_list = comment_list[:max_count - len(result)]
+        pn = 1
+        while True:
+            result = await self.get_level_two_comments(oid, comment_type, level_one_comment_id, pn, ps, order_mode)
+            comment_list: List[Dict] = result.get("replies", [])
             if callback:  # If there is a callback function, execute it
-                await callback(video_id, comment_list)
-            if is_fetch_sub_comments:
-                for comment in comment_list:
-                    comment_id = comment['rpid']
-                    if comment.get("rcount", 0) > 0:
-                        await self.get_video_all_level_two_comments(video_id, comment_id, CommentOrderType.DEFAULT, 10, crawl_interval, callback)
+                await callback(oid, comment_list)
             await asyncio.sleep(crawl_interval)
-            result.extend(comment_list)
-        return result
+            if (int(result["page"]["count"]) <= pn * ps):
+                break
+
+            pn += 1
 
     async def get_video_all_level_two_comments(
         self,
@@ -363,18 +434,44 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         :param callback:
         :return:
         """
+        return await self.get_all_level_two_comments(
+            video_id,
+            BilibiliCommentType.VIDEO,
+            level_one_comment_id,
+            order_mode,
+            ps,
+            crawl_interval,
+            callback,
+        )
 
-        pn = 1
-        while True:
-            result = await self.get_video_level_two_comments(video_id, level_one_comment_id, pn, ps, order_mode)
-            comment_list: List[Dict] = result.get("replies", [])
-            if callback:  # If there is a callback function, execute it
-                await callback(video_id, comment_list)
-            await asyncio.sleep(crawl_interval)
-            if (int(result["page"]["count"]) <= pn * ps):
-                break
+    async def get_level_two_comments(
+        self,
+        oid: str,
+        comment_type: BilibiliCommentType,
+        level_one_comment_id: int,
+        pn: int,
+        ps: int,
+        order_mode: CommentOrderType,
+    ) -> Dict:
+        """get level two comments
+        :param oid: Comment object ID
+        :param comment_type: Bilibili comment object type
+        :param level_one_comment_id: Level one comment ID
+        :param order_mode: Sort order
 
-            pn += 1
+        :return:
+        """
+        uri = "/x/v2/reply/reply"
+        post_data = {
+            "oid": oid,
+            "mode": order_mode.value,
+            "type": comment_type.value,
+            "ps": ps,
+            "pn": pn,
+            "root": level_one_comment_id,
+        }
+        result = await self.get(uri, post_data)
+        return result
 
     async def get_video_level_two_comments(
         self,
@@ -391,17 +488,14 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
 
         :return:
         """
-        uri = "/x/v2/reply/reply"
-        post_data = {
-            "oid": video_id,
-            "mode": order_mode.value,
-            "type": 1,
-            "ps": ps,
-            "pn": pn,
-            "root": level_one_comment_id,
-        }
-        result = await self.get(uri, post_data)
-        return result
+        return await self.get_level_two_comments(
+            video_id,
+            BilibiliCommentType.VIDEO,
+            level_one_comment_id,
+            pn,
+            ps,
+            order_mode,
+        )
 
     async def get_creator_videos(self, creator_id: str, pn: int, ps: int = 30, order_mode: SearchOrderType = SearchOrderType.LAST_PUBLISH) -> Dict:
         """get all videos for a creator

@@ -3,6 +3,7 @@
 import pytest
 
 from media_platform.bilibili.client import BilibiliClient
+from media_platform.bilibili.field import BilibiliCommentType
 
 
 @pytest.mark.asyncio
@@ -11,7 +12,8 @@ async def test_video_comments_trim_first_level_before_fetching_sub_comments(monk
     fetched_roots = []
     saved_batches = []
 
-    async def fake_get_video_comments(video_id, order_mode, next):
+    async def fake_get_comments(oid, comment_type, order_mode, next):
+        assert comment_type is BilibiliCommentType.VIDEO
         return {
             "cursor": {"is_end": True, "next": 0},
             "replies": [
@@ -20,14 +22,16 @@ async def test_video_comments_trim_first_level_before_fetching_sub_comments(monk
             ],
         }
 
-    async def fake_get_video_all_level_two_comments(
-        video_id,
+    async def fake_get_all_level_two_comments(
+        oid,
+        comment_type,
         level_one_comment_id,
         order_mode,
         ps,
         crawl_interval,
         callback,
     ):
+        assert comment_type is BilibiliCommentType.VIDEO
         fetched_roots.append(level_one_comment_id)
 
     async def fake_callback(video_id, comments):
@@ -36,8 +40,8 @@ async def test_video_comments_trim_first_level_before_fetching_sub_comments(monk
     async def fake_sleep(_):
         return None
 
-    monkeypatch.setattr(client, "get_video_comments", fake_get_video_comments)
-    monkeypatch.setattr(client, "get_video_all_level_two_comments", fake_get_video_all_level_two_comments)
+    monkeypatch.setattr(client, "get_comments", fake_get_comments)
+    monkeypatch.setattr(client, "get_all_level_two_comments", fake_get_all_level_two_comments)
     monkeypatch.setattr("media_platform.bilibili.client.asyncio.sleep", fake_sleep)
 
     result = await client.get_video_all_comments(
