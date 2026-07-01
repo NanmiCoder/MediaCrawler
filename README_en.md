@@ -157,9 +157,27 @@ uv run main.py --help
 
 MediaCrawler provides a web-based visual operation interface, allowing you to easily use crawler features without command line.
 
-#### Build Frontend Assets (required for first-time use)
+#### Development (recommended)
 
-The WebUI frontend source lives in the `webui/` directory. You need to build the static assets before the API server can serve them.
+For development, you need to start both the backend API service and the frontend Vite dev server:
+
+```shell
+# Terminal 1: start API server (default port 8080)
+uv run uvicorn api.main:app --port 8080 --reload
+
+# Terminal 2: start frontend dev server
+cd webui
+npm install
+npm run dev        # starts on port 5173 by default and proxies /api to 8080
+```
+
+After successful startup, visit `http://localhost:5173/` to open the WebUI interface.
+
+> On first launch, an environment check is performed (calls `/api/env/check`), so make sure the backend service is running. If the check fails, you can click "Skip Check" to bypass it temporarily.
+
+#### Build for Production
+
+If you want the API server to serve the WebUI static assets directly, build the frontend first:
 
 ```shell
 cd webui
@@ -167,16 +185,10 @@ npm install
 npm run build      # outputs to api/webui/
 ```
 
-> For development, run `npm run dev` instead — it starts the Vite dev server on port 5173 and proxies `/api` to 8080.
-
-#### Start WebUI Service
+Then start only the API server:
 
 ```shell
-# Start API server (default port 8080)
 uv run uvicorn api.main:app --port 8080 --reload
-
-# Or start using module method
-uv run python -m api.main
 ```
 
 After successful startup, visit `http://localhost:8080` to open the WebUI interface.

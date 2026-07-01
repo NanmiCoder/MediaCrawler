@@ -25,6 +25,7 @@ import asyncio
 import os
 import sys
 import subprocess
+from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +33,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from .routers import crawler_router, data_router, websocket_router
+
+# Project root directory (used for running subprocesses like uv run main.py)
+PROJECT_ROOT = Path(__file__).parent.parent
 
 app = FastAPI(
     title="MediaCrawler WebUI API",
@@ -86,6 +90,7 @@ async def check_environment():
     """Check if MediaCrawler environment is configured correctly"""
     try:
         # Run uv run main.py --help command to check environment
+        # Use PROJECT_ROOT so it works regardless of where uvicorn was started
         if sys.platform == "win32":
             loop = asyncio.get_running_loop()
             process = await loop.run_in_executor(
@@ -94,7 +99,7 @@ async def check_environment():
                     ["uv", "run", "main.py", "--help"],
                     capture_output=True,
                     timeout=30.0,
-                    cwd="."
+                    cwd=str(PROJECT_ROOT)
                 )
             )
             stdout, stderr = process.stdout, process.stderr  # bytes
@@ -103,7 +108,7 @@ async def check_environment():
                 "uv", "run", "main.py", "--help",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd="."  # Project root directory
+                cwd=str(PROJECT_ROOT)  # Project root directory
             )
             stdout, stderr = await asyncio.wait_for(
                 process.communicate(),
