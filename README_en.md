@@ -4,13 +4,13 @@
 
 ### 🤝 Special Thanks to Our Platinum Sponsor
 
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
   <img src="docs/static/images/browseract.png" alt="BrowserAct" width="400">
 </a>
 
 <br>
 
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
 <small>BrowserAct is a browser automation tool designed for AI Agents, featuring anti-bot interception handling, human handoff when tasks get stuck, multi-task parallel isolation, and multi-account independent management, helping Agents complete real-world web tasks more reliably.</small>
 </a>
 

@@ -4,13 +4,13 @@
 
 ### 🤝 特别感谢白金赞助商
 
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
   <img src="docs/static/images/browseract.png" alt="BrowserAct" width="400">
 </a>
 
 <br>
 
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
 <small>BrowserAct 是面向 AI Agent 的浏览器自动化工具，支持反机器人拦截应对、受阻时人工接管、多任务并行隔离和多账号独立管理，帮助 Agent 更稳定地完成真实网页任务。</small>
 </a>
 
