@@ -107,10 +107,10 @@ class ZhihuExtractor:
         Returns:
         """
         res = ZhihuContent()
-        res.content_id = answer.get("id")
+        res.content_id = str(answer.get("id") or "")
         res.content_type = answer.get("type")
         res.content_text = extract_text_from_html(answer.get("content", ""))
-        res.question_id = answer.get("question").get("id")
+        res.question_id = str(answer.get("question", {}).get("id") or "")
         res.content_url = f"{zhihu_constant.ZHIHU_URL}/question/{res.question_id}/answer/{res.content_id}"
         res.title = extract_text_from_html(answer.get("title", ""))
         res.desc = extract_text_from_html(answer.get("description", "") or answer.get("excerpt", ""))
@@ -135,7 +135,7 @@ class ZhihuExtractor:
 
         """
         res = ZhihuContent()
-        res.content_id = article.get("id")
+        res.content_id = str(article.get("id") or "")
         res.content_type = article.get("type")
         res.content_text = extract_text_from_html(article.get("content"))
         res.content_url = f"{zhihu_constant.ZHIHU_ZHUANLAN_URL}/p/{res.content_id}"
@@ -162,6 +162,8 @@ class ZhihuExtractor:
 
         """
         res = ZhihuContent()
+        res.content_id = str(zvideo.get("id") or "")
+        res.content_type = zvideo.get("type")
 
         if "video" in zvideo and isinstance(zvideo.get("video"), dict): # This indicates data from the creator's homepage video list API
             res.content_url = f"{zhihu_constant.ZHIHU_URL}/zvideo/{res.content_id}"
@@ -170,8 +172,6 @@ class ZhihuExtractor:
         else:
             res.content_url = zvideo.get("video_url")
             res.created_time = zvideo.get("created_at")
-        res.content_id = zvideo.get("id")
-        res.content_type = zvideo.get("type")
         res.title = extract_text_from_html(zvideo.get("title"))
         res.desc = extract_text_from_html(zvideo.get("description"))
         res.voteup_count = zvideo.get("voteup_count")

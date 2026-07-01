@@ -282,7 +282,7 @@ def test_douyin_store_end_to_end_sqlite(monkeypatch):
     # dict 多了已删列会 TypeError,少了非空必填列 SQLAlchemy 也会报错;
     # 此处证明 captured 的 key 与删列后 ORM 列完全对得上,不抛异常。
     obj = DouyinAweme(**captured)
-    assert int(obj.aweme_id) == int(aweme["aweme_id"])
+    assert obj.aweme_id == aweme["aweme_id"]
     assert obj.creator_hash == anonymize_user_id(raw_uid)
     assert obj.creator_hash != raw_uid
     assert obj.nickname == mask_nickname(raw_nick)
@@ -310,7 +310,7 @@ def test_douyin_store_end_to_end_sqlite(monkeypatch):
         # 查询回读
         async with db_session.get_session() as session:
             res = await session.execute(
-                select(DouyinAweme).where(DouyinAweme.aweme_id == int(aweme["aweme_id"]))
+                select(DouyinAweme).where(DouyinAweme.aweme_id == aweme["aweme_id"])
             )
             row = res.scalar_one_or_none()
         await engine.dispose()
@@ -320,7 +320,7 @@ def test_douyin_store_end_to_end_sqlite(monkeypatch):
 
     # ---- 4. 回读断言 ----
     assert row is not None, "作品未写入 SQLite"
-    assert int(row.aweme_id) == int(aweme["aweme_id"])
+    assert row.aweme_id == aweme["aweme_id"]
     assert row.creator_hash == anonymize_user_id(raw_uid)
     assert row.creator_hash != raw_uid
     assert row.nickname == mask_nickname(raw_nick)
@@ -348,7 +348,7 @@ def test_douyin_store_end_to_end_sqlite(monkeypatch):
         ds.DouyinStoreFactory.create_store = orig_c
     captured_comment = fake_c.comments[0]
     comment_obj = DouyinAwemeComment(**captured_comment)  # 不抛异常即对得上
-    assert int(comment_obj.comment_id) == int(comment["cid"])
+    assert comment_obj.comment_id == comment["cid"]
     assert comment_obj.creator_hash == anonymize_user_id(comment["user"]["uid"])
     assert comment_obj.nickname == mask_nickname(comment["user"]["nickname"])
     _assert_no_forbidden(captured_comment, "douyin_comment_orm_construct")
