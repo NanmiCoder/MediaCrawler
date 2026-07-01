@@ -51,6 +51,66 @@ async def test_get_video_comments_keeps_type_1(monkeypatch, bili_client):
 
 
 @pytest.mark.asyncio
+async def test_get_article_comments_uses_type_12(monkeypatch, bili_client):
+    captured = {}
+
+    async def fake_get_comments(oid, comment_type, order_mode, next):
+        captured["oid"] = oid
+        captured["type"] = comment_type.value
+        return {}
+
+    monkeypatch.setattr(bili_client, "get_comments", fake_get_comments)
+
+    await bili_client.get_article_comments("123456")
+
+    assert captured == {"oid": "123456", "type": 12}
+
+
+@pytest.mark.asyncio
+async def test_get_article_all_comments_delegates_to_generic(monkeypatch, bili_client):
+    captured = {}
+
+    async def fake_get_all_comments(
+        oid,
+        comment_type,
+        crawl_interval,
+        is_fetch_sub_comments,
+        callback,
+        max_count,
+    ):
+        captured["oid"] = oid
+        captured["type"] = comment_type.value
+        captured["crawl_interval"] = crawl_interval
+        captured["is_fetch_sub_comments"] = is_fetch_sub_comments
+        captured["callback"] = callback
+        captured["max_count"] = max_count
+        return [{"rpid": 1}]
+
+    async def fake_callback(oid, comments):
+        return None
+
+    monkeypatch.setattr(bili_client, "get_all_comments", fake_get_all_comments)
+
+    result = await bili_client.get_article_all_comments(
+        article_id="123456",
+        crawl_interval=0,
+        is_fetch_sub_comments=True,
+        callback=fake_callback,
+        max_count=3,
+    )
+
+    assert captured == {
+        "oid": "123456",
+        "type": 12,
+        "crawl_interval": 0,
+        "is_fetch_sub_comments": True,
+        "callback": fake_callback,
+        "max_count": 3,
+    }
+    assert result == [{"rpid": 1}]
+
+
+@pytest.mark.asyncio
 async def test_get_all_comments_limits_first_level_before_fetching_sub_comments(monkeypatch, bili_client):
     fetched_roots = []
     saved_batches = []

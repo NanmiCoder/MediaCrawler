@@ -286,6 +286,20 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         """
         return await self.get_comments(video_id, BilibiliCommentType.VIDEO, order_mode, next)
 
+    async def get_article_comments(
+        self,
+        article_id: str,
+        order_mode: CommentOrderType = CommentOrderType.DEFAULT,
+        next: int = 0,
+    ) -> Dict:
+        """get article comments
+        :param article_id: Article ID
+        :param order_mode: Sort order
+        :param next: Comment page selection
+        :return:
+        """
+        return await self.get_comments(article_id, BilibiliCommentType.ARTICLE, order_mode, next)
+
     async def get_all_comments(
         self,
         oid: str,
@@ -388,6 +402,33 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         return await self.get_all_comments(
             video_id,
             BilibiliCommentType.VIDEO,
+            crawl_interval,
+            is_fetch_sub_comments,
+            callback,
+            max_count,
+        )
+
+    async def get_article_all_comments(
+        self,
+        article_id: str,
+        crawl_interval: float = 1.0,
+        is_fetch_sub_comments=False,
+        callback: Optional[Callable] = None,
+        max_count: int = 10,
+    ):
+        """
+        get article all comments include sub comments
+        :param article_id:
+        :param crawl_interval:
+        :param is_fetch_sub_comments:
+        :param callback:
+        max_count: Maximum number of comments to crawl per article
+
+        :return:
+        """
+        return await self.get_all_comments(
+            article_id,
+            BilibiliCommentType.ARTICLE,
             crawl_interval,
             is_fetch_sub_comments,
             callback,
