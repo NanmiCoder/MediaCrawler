@@ -32,6 +32,13 @@ BILI_SPECIFIED_ID_LIST = [
     # ........................
 ]
 
+# Specify Bilibili article URL list for detail mode (supports full URL, cv ID, or numeric article ID)
+# Example:
+# - Full URL: "https://www.bilibili.com/read/cv123456"
+# - cv ID: "cv123456"
+# - Numeric article ID: "123456"
+BILI_SPECIFIED_ARTICLE_ID_LIST = []
+
 # Specify the URL list of Bilibili creators (supports full URL or UID)
 # Example:
 # - Full URL: "https://space.bilibili.com/434377496?spm_id_from=333.1007.0.0"
