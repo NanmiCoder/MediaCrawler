@@ -203,6 +203,19 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
             params.update({"bvid": bvid})
         return await self.get(uri, params, enable_params_sign=False)
 
+    async def get_article_info(self, article_id: str) -> Dict:
+        """
+        Bilibili article detail api
+        :param article_id: Article cv id without cv prefix
+        :return:
+        """
+        if not article_id:
+            raise ValueError("Please provide article_id")
+
+        uri = "/x/article/view"
+        params = {"id": article_id}
+        return await self.get(uri, params, enable_params_sign=False)
+
     async def get_video_play_url(self, aid: int, cid: int) -> Dict:
         """
         Bilibli web video play url api
