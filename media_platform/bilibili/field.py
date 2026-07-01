@@ -52,3 +52,8 @@ class CommentOrderType(Enum):
 
     # By time
     TIME = 2
+
+
+class BilibiliCommentType(Enum):
+    VIDEO = 1
+    ARTICLE = 12

@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
 
 from .exception import DataFetchError
-from .field import CommentOrderType, SearchOrderType
+from .field import BilibiliCommentType, CommentOrderType, SearchOrderType
 from .help import BilibiliSign
 
 
@@ -241,6 +241,24 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
                 utils.logger.error(f"[BilibiliClient.get_video_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")  # Keep original exception type name for developer debugging
                 return None
 
+    async def get_comments(
+        self,
+        oid: str,
+        comment_type: BilibiliCommentType,
+        order_mode: CommentOrderType = CommentOrderType.DEFAULT,
+        next: int = 0,
+    ) -> Dict:
+        """get comments by Bilibili comment object type
+        :param oid: Comment object ID
+        :param comment_type: Bilibili comment object type
+        :param order_mode: Sort order
+        :param next: Comment page selection
+        :return:
+        """
+        uri = "/x/v2/reply/wbi/main"
+        post_data = {"oid": oid, "mode": order_mode.value, "type": comment_type.value, "ps": 20, "next": next}
+        return await self.get(uri, post_data)
+
     async def get_video_comments(
         self,
         video_id: str,
@@ -253,9 +271,7 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         :param next: Comment page selection
         :return:
         """
-        uri = "/x/v2/reply/wbi/main"
-        post_data = {"oid": video_id, "mode": order_mode.value, "type": 1, "ps": 20, "next": next}
-        return await self.get(uri, post_data)
+        return await self.get_comments(video_id, BilibiliCommentType.VIDEO, order_mode, next)
 
     async def get_video_all_comments(
         self,
