@@ -1,0 +1,26 @@
+{
+  "status": {
+    "active": "ACTIVE",
+    "standby": "STANDBY",
+    "idle": "IDLE",
+    "running": "RUNNING",
+    "stopping": "STOPPING",
+    "error": "ERROR"
+  },
+  "sidebar": {
+    "title": "MediaCrawler",
+    "api": "API",
+    "local": "LOCAL",
+    "disclaimer": "For personal learning only, commercial use prohibited",
+    "license": "License"
+  },
+  "action": {
+    "loading": "Loading...",
+    "skip": "SKIP_CHECK",
+    "retry": "RETRY_SCAN"
+  },
+  "unit": {
+    "entries": "entries",
+    "records": "records"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "section": {
+    "targetMatrix": {
+      "title": "目标配置",
+      "description": "平台、模式与搜索参数"
+    },
+    "authMatrix": {
+      "title": "登录配置",
+      "description": "登录方式配置"
+    },
+    "outputConfig": {
+      "title": "输出配置",
+      "description": "保存格式与评论选项"
+    },
+    "runtime": {
+      "title": "运行参数",
+      "description": "运行时参数"
+    }
+  },
+  "field": {
+    "platform": "平台",
+    "platformPlaceholder": "选择平台",
+    "crawlType": "爬取类型",
+    "crawlTypePlaceholder": "选择类型",
+    "startPage": "起始页",
+    "keywords": "关键词",
+    "keywordsHint": "输入关键词后按回车添加",
+    "keywordsPlaceholder": "输入关键词，按回车添加...",
+    "specifiedIds": "帖子/视频 ID",
+    "specifiedIdsHint": "输入帖子或视频的ID/URL，每行一个或用逗号分隔",
+    "specifiedIdsPlaceholder": {
+      "bili": "示例:\nBV1xxxx\nhttps://www.bilibili.com/video/BV1xxxx",
+      "xhs": "示例:\nhttps://www.xiaohongshu.com/explore/xxx?xsec_token=xxx\n(必须包含xsec_token参数)",
+      "dy": "示例:\n7525538910311632128\nhttps://www.douyin.com/video/xxx\nhttps://v.douyin.com/xxx (短链接)",
+      "wb": "示例:\n4982041758140155\nhttps://weibo.com/xxx/xxx",
+      "ks": "示例:\n3xf8enb8dbj6uig\nhttps://www.kuaishou.com/short-video/xxx",
+      "default": "输入帖子/视频 ID 或 URL..."
+    },
+    "creatorIds": "创作者 ID",
+    "creatorIdsHint": "输入创作者的ID/URL，每行一个或用逗号分隔",
+    "creatorIdsPlaceholder": {
+      "bili": "示例:\n434377496\nhttps://space.bilibili.com/434377496",
+      "xhs": "示例:\nhttps://www.xiaohongshu.com/user/profile/xxx?xsec_token=xxx\n(必须包含xsec_token参数)",
+      "dy": "示例:\nMS4wLjABAAAAxxx\nhttps://www.douyin.com/user/MS4wLjABAAAAxxx",
+      "wb": "示例:\n5533390220\nhttps://weibo.com/u/5533390220",
+      "ks": "示例:\n3x84qugg4ch9zhs\nhttps://www.kuaishou.com/profile/xxx",
+      "default": "输入创作者 ID 或 URL..."
+    },
+    "loginMethod": "登录方式",
+    "loginMethodPlaceholder": "选择登录方式",
+    "cookies": "Cookies",
+    "cookiesHint": "粘贴 Cookie 字符串",
+    "cookiesPlaceholder": "在此粘贴 Cookies...",
+    "saveFormat": "保存格式",
+    "saveFormatPlaceholder": "选择格式",
+    "commentExtraction": "评论抓取",
+    "subComments": "子评论",
+    "headlessMode": "无头模式",
+    "headlessModeHint": "无 GUI 运行浏览器"
+  },
+  "button": {
+    "initiateScan": "开始爬虫",
+    "initiating": "启动中...",
+    "terminate": "终止",
+    "stopping": "停止中..."
+  },
+  "warning": {
+    "cookieSlider": "[提示] 小红书和抖音平台不建议使用 Cookie 登录，因为可能会触发滑块验证",
+    "xhsToken": "[重要] 小红书 URL 必须包含 xsec_token 参数，请从浏览器复制完整 URL"
+  }
+}

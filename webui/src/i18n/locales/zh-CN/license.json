@@ -1,0 +1,21 @@
+{
+  "title": "使用须知",
+  "warning": "请仔细阅读以下条款",
+  "content": {
+    "line1": "本项目仅供个人学习和研究爬虫技术使用",
+    "line2": "严禁将本项目用于任何商业用途或盈利活动",
+    "line3": "使用本项目即表示您同意遵守相关法律法规",
+    "line4": "任何因违规使用造成的后果由使用者自行承担"
+  },
+  "license": "查看完整协议",
+  "github": "访问 GitHub 仓库",
+  "confirm": "我已知晓并同意上述条款",
+  "decline": "不同意，退出",
+  "author": {
+    "name": "程序员阿江-Relakkes",
+    "tagline": "40K+ Star 开源项目作者",
+    "description": "40K开源项目MediaCrawler作者，专注爬虫技术和AI Agent知识分享",
+    "support": "如果觉得项目有帮助，欢迎关注作者的社交媒体账号",
+    "slogan": "开源不易，求个关注 ⭐"
+  }
+}

@@ -157,6 +157,18 @@ uv run main.py --help
 
 MediaCrawler provides a web-based visual operation interface, allowing you to easily use crawler features without command line.
 
+#### Build Frontend Assets (required for first-time use)
+
+The WebUI frontend source lives in the `webui/` directory. You need to build the static assets before the API server can serve them.
+
+```shell
+cd webui
+npm install
+npm run build      # outputs to api/webui/
+```
+
+> For development, run `npm run dev` instead — it starts the Vite dev server on port 5173 and proxies `/api` to 8080.
+
 #### Start WebUI Service
 
 ```shell
