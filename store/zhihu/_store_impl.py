@@ -36,7 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import config
 from base.base_crawler import AbstractStore
 from database.db_session import get_session
-from database.models import ZhihuContent, ZhihuComment, ZhihuCreator
+from database.models import ZhihuContent, ZhihuComment
 from tools import utils, words
 from var import crawler_type_var
 from tools.async_file_writer import AsyncFileWriter
@@ -85,15 +85,8 @@ class ZhihuCsvStoreImplement(AbstractStore):
         await self.writer.write_to_csv(item_type="comments", item=comment_item)
 
     async def store_creator(self, creator: Dict):
-        """
-        Zhihu content CSV storage implementation
-        Args:
-            creator: creator dict
-
-        Returns:
-
-        """
-        await self.writer.write_to_csv(item_type="creators", item=creator)
+        """Creator profile is no longer persisted (teaching version: anti-harassment)."""
+        pass
 
 
 class ZhihuDbStoreImplement(AbstractStore):
@@ -142,26 +135,8 @@ class ZhihuDbStoreImplement(AbstractStore):
             await session.commit()
 
     async def store_creator(self, creator: Dict):
-        """
-        Zhihu content DB storage implementation
-        Args:
-            creator: creator dict
-        """
-        user_id = creator.get("user_id")
-        async with get_session() as session:
-            stmt = select(ZhihuCreator).where(ZhihuCreator.user_id == user_id)
-            result = await session.execute(stmt)
-            existing_creator = result.scalars().first()
-            if existing_creator:
-                for key, value in creator.items():
-                    if hasattr(existing_creator, key):
-                        setattr(existing_creator, key, value)
-            else:
-                if "add_ts" not in creator:
-                    creator["add_ts"] = utils.get_current_timestamp()
-                new_creator = ZhihuCreator(**creator)
-                session.add(new_creator)
-            await session.commit()
+        """Creator profile is no longer persisted (teaching version: anti-harassment)."""
+        pass
 
 
 class ZhihuJsonStoreImplement(AbstractStore):
@@ -192,15 +167,8 @@ class ZhihuJsonStoreImplement(AbstractStore):
         await self.writer.write_single_item_to_json(item_type="comments", item=comment_item)
 
     async def store_creator(self, creator: Dict):
-        """
-        Zhihu content JSON storage implementation
-        Args:
-            creator: creator dict
-
-        Returns:
-
-        """
-        await self.writer.write_single_item_to_json(item_type="creators", item=creator)
+        """Creator profile is no longer persisted (teaching version: anti-harassment)."""
+        pass
 
 
 class ZhihuJsonlStoreImplement(AbstractStore):
@@ -215,7 +183,8 @@ class ZhihuJsonlStoreImplement(AbstractStore):
         await self.writer.write_to_jsonl(item_type="comments", item=comment_item)
 
     async def store_creator(self, creator: Dict):
-        await self.writer.write_to_jsonl(item_type="creators", item=creator)
+        """Creator profile is no longer persisted (teaching version: anti-harassment)."""
+        pass
 
 
 class ZhihuSqliteStoreImplement(ZhihuDbStoreImplement):
@@ -266,21 +235,8 @@ class ZhihuMongoStoreImplement(AbstractStore):
         utils.logger.info(f"[ZhihuMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
 
     async def store_creator(self, creator_item: Dict):
-        """
-        Store creator information to MongoDB
-        Args:
-            creator_item: Creator data
-        """
-        user_id = creator_item.get("user_id")
-        if not user_id:
-            return
-
-        await self.mongo_store.save_or_update(
-            collection_suffix="creators",
-            query={"user_id": user_id},
-            data=creator_item
-        )
-        utils.logger.info(f"[ZhihuMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")
+        """Creator profile is no longer persisted (teaching version: anti-harassment)."""
+        pass
 
 
 class ZhihuExcelStoreImplement:

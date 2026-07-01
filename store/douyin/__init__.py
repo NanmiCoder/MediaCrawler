@@ -25,6 +25,7 @@ from typing import List
 
 import config
 from var import source_keyword_var
+from tools.user_hash import anonymize_user_id, mask_nickname
 
 from ._store_impl import *
 from .douyin_store_media import *
@@ -164,18 +165,12 @@ async def update_douyin_aweme(aweme_item: Dict):
         "title": aweme_item.get("desc", ""),
         "desc": aweme_item.get("desc", ""),
         "create_time": aweme_item.get("create_time"),
-        "user_id": user_info.get("uid"),
-        "sec_uid": user_info.get("sec_uid"),
-        "short_user_id": user_info.get("short_id"),
-        "user_unique_id": user_info.get("unique_id"),
-        "user_signature": user_info.get("signature"),
-        "nickname": user_info.get("nickname"),
-        "avatar": user_info.get("avatar_thumb", {}).get("url_list", [""])[0],
+        "creator_hash": anonymize_user_id(user_info.get("uid")),  # 创作者匿名哈希(不存原始 uid)
+        "nickname": mask_nickname(user_info.get("nickname")),  # 用户昵称(已脱敏)
         "liked_count": str(interact_info.get("digg_count")),
         "collected_count": str(interact_info.get("collect_count")),
         "comment_count": str(interact_info.get("comment_count")),
         "share_count": str(interact_info.get("share_count")),
-        "ip_location": aweme_item.get("ip_label", ""),
         "last_modify_ts": utils.get_current_timestamp(),
         "aweme_url": f"https://www.douyin.com/video/{aweme_id}",
         "cover_url": _extract_content_cover_url(aweme_item),
@@ -203,20 +198,13 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
     user_info = comment_item.get("user", {})
     comment_id = comment_item.get("cid")
     parent_comment_id = comment_item.get("reply_id", "0")
-    avatar_info = (user_info.get("avatar_medium", {}) or user_info.get("avatar_300x300", {}) or user_info.get("avatar_168x168", {}) or user_info.get("avatar_thumb", {}) or {})
     save_comment_item = {
         "comment_id": comment_id,
         "create_time": comment_item.get("create_time"),
-        "ip_location": comment_item.get("ip_label", ""),
         "aweme_id": aweme_id,
         "content": comment_item.get("text"),
-        "user_id": user_info.get("uid"),
-        "sec_uid": user_info.get("sec_uid"),
-        "short_user_id": user_info.get("short_id"),
-        "user_unique_id": user_info.get("unique_id"),
-        "user_signature": user_info.get("signature"),
-        "nickname": user_info.get("nickname"),
-        "avatar": avatar_info.get("url_list", [""])[0],
+        "creator_hash": anonymize_user_id(user_info.get("uid")),  # 创作者匿名哈希(不存原始 uid)
+        "nickname": mask_nickname(user_info.get("nickname")),  # 用户昵称(已脱敏)
         "sub_comment_count": str(comment_item.get("reply_comment_total", 0)),
         "like_count": (comment_item.get("digg_count") if comment_item.get("digg_count") else 0),
         "last_modify_ts": utils.get_current_timestamp(),
@@ -229,24 +217,8 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
 
 
 async def save_creator(user_id: str, creator: Dict):
-    user_info = creator.get("user", {})
-    gender_map = {0: "Unknown", 1: "Male", 2: "Female"}
-    avatar_uri = user_info.get("avatar_300x300", {}).get("uri")
-    local_db_item = {
-        "user_id": user_id,
-        "nickname": user_info.get("nickname"),
-        "gender": gender_map.get(user_info.get("gender"), "Unknown"),
-        "avatar": f"https://p3-pc.douyinpic.com/img/{avatar_uri}" + r"~c5_300x300.jpeg?from=2956013662",
-        "desc": user_info.get("signature"),
-        "ip_location": user_info.get("ip_location"),
-        "follows": user_info.get("following_count", 0),
-        "fans": user_info.get("max_follower_count", 0),
-        "interaction": user_info.get("total_favorited", 0),
-        "videos_count": user_info.get("aweme_count", 0),
-        "last_modify_ts": utils.get_current_timestamp(),
-    }
-    utils.logger.info(f"[store.douyin.save_creator] creator:{local_db_item}")
-    await DouyinStoreFactory.create_store().store_creator(local_db_item)
+    # 教学版：创作者个人资料(昵称/性别/头像/签名/IP/粉丝数等)不再落库，防骚扰。
+    return
 
 
 async def update_dy_aweme_image(aweme_id, pic_content, extension_file_name):

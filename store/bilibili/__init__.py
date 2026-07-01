@@ -26,6 +26,7 @@ from typing import List
 
 import config
 from var import source_keyword_var
+from tools.user_hash import anonymize_user_id, mask_nickname
 
 from ._store_impl import *
 from .bilibilli_store_media import *
@@ -62,9 +63,8 @@ async def update_bilibili_video(video_item: Dict):
         "title": video_item_view.get("title", "")[:500],
         "desc": video_item_view.get("desc", "")[:500],
         "create_time": video_item_view.get("pubdate"),
-        "user_id": str(video_user_info.get("mid")),
-        "nickname": video_user_info.get("name"),
-        "avatar": video_user_info.get("face", ""),
+        "creator_hash": anonymize_user_id(video_user_info.get("mid")),  # 创作者匿名哈希(不存原始 mid)
+        "nickname": mask_nickname(video_user_info.get("name")),  # 用户昵称(已脱敏)
         "liked_count": str(video_item_stat.get("like", "")),
         "disliked_count": str(video_item_stat.get("dislike", "")),
         "video_play_count": str(video_item_stat.get("view", "")),
@@ -83,22 +83,8 @@ async def update_bilibili_video(video_item: Dict):
 
 
 async def update_up_info(video_item: Dict):
-    video_item_card_list: Dict = video_item.get("Card")
-    video_item_card: Dict = video_item_card_list.get("card")
-    saver_up_info = {
-        "user_id": str(video_item_card.get("mid")),
-        "nickname": video_item_card.get("name"),
-        "sex": video_item_card.get("sex"),
-        "sign": video_item_card.get("sign"),
-        "avatar": video_item_card.get("face"),
-        "last_modify_ts": utils.get_current_timestamp(),
-        "total_fans": video_item_card.get("fans"),
-        "total_liked": video_item_card_list.get("like_num"),
-        "user_rank": video_item_card.get("level_info").get("current_level"),
-        "is_official": video_item_card.get("official_verify").get("type"),
-    }
-    utils.logger.info(f"[store.bilibili.update_up_info] bilibili user_id:{video_item_card.get('mid')}")
-    await BiliStoreFactory.create_store().store_creator(creator=saver_up_info)
+    # 教学版：UP 主个人资料(昵称/性别/签名/头像/粉丝数等)不再落库，防骚扰。
+    return
 
 
 async def batch_update_bilibili_video_comments(video_id: str, comments: List[Dict]):
@@ -120,11 +106,8 @@ async def update_bilibili_video_comment(video_id: str, comment_item: Dict):
         "create_time": comment_item.get("ctime"),
         "video_id": str(video_id),
         "content": content.get("message"),
-        "user_id": user_info.get("mid"),
-        "nickname": user_info.get("uname"),
-        "sex": user_info.get("sex"),
-        "sign": user_info.get("sign"),
-        "avatar": user_info.get("avatar"),
+        "creator_hash": anonymize_user_id(user_info.get("mid")),  # 创作者匿名哈希(不存原始 mid)
+        "nickname": mask_nickname(user_info.get("uname")),  # 用户昵称(已脱敏)
         "sub_comment_count": str(comment_item.get("rcount", 0)),
         "like_count": like_count,
         "last_modify_ts": utils.get_current_timestamp(),
@@ -149,29 +132,13 @@ async def store_video(aid, video_content, extension_file_name):
 
 
 async def batch_update_bilibili_creator_fans(creator_info: Dict, fans_list: List[Dict]):
-    if not fans_list:
-        return
-    for fan_item in fans_list:
-        fan_info: Dict = {
-            "id": fan_item.get("mid"),
-            "name": fan_item.get("uname"),
-            "sign": fan_item.get("sign"),
-            "avatar": fan_item.get("face"),
-        }
-        await update_bilibili_creator_contact(creator_info=creator_info, fan_info=fan_info)
+    # 教学版：不再采集/存储粉丝列表(其他用户的个人信息)，防骚扰。
+    return
 
 
 async def batch_update_bilibili_creator_followings(creator_info: Dict, followings_list: List[Dict]):
-    if not followings_list:
-        return
-    for following_item in followings_list:
-        following_info: Dict = {
-            "id": following_item.get("mid"),
-            "name": following_item.get("uname"),
-            "sign": following_item.get("sign"),
-            "avatar": following_item.get("face"),
-        }
-        await update_bilibili_creator_contact(creator_info=following_info, fan_info=creator_info)
+    # 教学版：不再采集/存储关注列表(其他用户的个人信息)，防骚扰。
+    return
 
 
 async def batch_update_bilibili_creator_dynamics(creator_info: Dict, dynamics_list: List[Dict]):
@@ -201,26 +168,15 @@ async def batch_update_bilibili_creator_dynamics(creator_info: Dict, dynamics_li
 
 
 async def update_bilibili_creator_contact(creator_info: Dict, fan_info: Dict):
-    save_contact_item = {
-        "up_id": creator_info["id"],
-        "fan_id": fan_info["id"],
-        "up_name": creator_info["name"],
-        "fan_name": fan_info["name"],
-        "up_sign": creator_info["sign"],
-        "fan_sign": fan_info["sign"],
-        "up_avatar": creator_info["avatar"],
-        "fan_avatar": fan_info["avatar"],
-        "last_modify_ts": utils.get_current_timestamp(),
-    }
-
-    await BiliStoreFactory.create_store().store_contact(contact_item=save_contact_item)
+    # 教学版：UP-粉丝关系表已移除，不再存储联系人信息。
+    return
 
 
 async def update_bilibili_creator_dynamic(creator_info: Dict, dynamic_info: Dict):
     save_dynamic_item = {
         "dynamic_id": dynamic_info["dynamic_id"],
-        "user_id": creator_info["id"],
-        "user_name": creator_info["name"],
+        "creator_hash": anonymize_user_id(creator_info.get("id")),  # 创作者匿名哈希(不存原始 ID)
+        "user_name": mask_nickname(creator_info.get("name")),  # 用户名称(已脱敏)
         "text": dynamic_info["text"],
         "type": dynamic_info["type"],
         "pub_ts": dynamic_info["pub_ts"],

@@ -121,7 +121,5 @@ async def save_creator(user_info: TiebaCreator):
     Returns:
 
     """
-    local_db_item = user_info.model_dump()
-    local_db_item["last_modify_ts"] = utils.get_current_timestamp()
-    utils.logger.info(f"[store.tieba.save_creator] creator:{local_db_item}")
-    await TieBaStoreFactory.create_store().store_creator(local_db_item)
+    # 教学版：创作者个人资料不再落库，防骚扰。
+    return

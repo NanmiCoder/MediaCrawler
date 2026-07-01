@@ -25,6 +25,7 @@
 import re
 from typing import List
 
+from tools.user_hash import anonymize_user_id, mask_nickname
 from var import source_keyword_var
 
 from .weibo_store_media import *
@@ -78,11 +79,13 @@ async def update_weibo_note(note_item: Dict):
     if not note_item:
         return
 
-    mblog: Dict = note_item.get("mblog")
-    user_info: Dict = mblog.get("user")
+    mblog: Dict = note_item.get("mblog") or {}
+    user_info: Dict = mblog.get("user") or {}
     note_id = mblog.get("id")
     content_text = mblog.get("text")
     clean_text = re.sub(r"<.*?>", "", content_text)
+    # 教学版：原始 user_id 匿名化为 creator_hash，昵称脱敏；
+    # 不采集头像/主页链接/性别/IP 归属地等可定位真人的信息。
     save_content_item = {
         # Weibo information
         "note_id": note_id,
@@ -94,14 +97,10 @@ async def update_weibo_note(note_item: Dict):
         "shared_count": str(mblog.get("reposts_count", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
         "note_url": f"https://m.weibo.cn/detail/{note_id}",
-        "ip_location": mblog.get("region_name", "").replace("发布于 ", ""),
 
-        # User information
-        "user_id": str(user_info.get("id")),
-        "nickname": user_info.get("screen_name", ""),
-        "gender": user_info.get("gender", ""),
-        "profile_url": user_info.get("profile_url", ""),
-        "avatar": user_info.get("profile_image_url", ""),
+        # 创作者信息（匿名化/脱敏，不含原始 user_id/avatar/gender/profile_url/ip_location）
+        "creator_hash": anonymize_user_id(user_info.get("id")),
+        "nickname": mask_nickname(user_info.get("screen_name", "")),
         "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(f"[store.weibo.update_weibo_note] weibo note id:{note_id}, title:{save_content_item.get('content')[:24]} ...")
@@ -137,9 +136,11 @@ async def update_weibo_note_comment(note_id: str, comment_item: Dict):
     if not comment_item or not note_id:
         return
     comment_id = str(comment_item.get("id"))
-    user_info: Dict = comment_item.get("user")
+    user_info: Dict = comment_item.get("user") or {}
     content_text = comment_item.get("text")
     clean_text = re.sub(r"<.*?>", "", content_text)
+    # 教学版：原始 user_id 匿名化为 creator_hash，昵称脱敏；
+    # 不采集头像/主页链接/性别/IP 归属地等可定位真人的信息。
     save_comment_item = {
         "comment_id": comment_id,
         "create_time": utils.rfc2822_to_timestamp(comment_item.get("created_at")),
@@ -149,15 +150,11 @@ async def update_weibo_note_comment(note_id: str, comment_item: Dict):
         "sub_comment_count": str(comment_item.get("total_number", 0)),
         "comment_like_count": str(comment_item.get("like_count", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
-        "ip_location": comment_item.get("source", "").replace("来自", ""),
         "parent_comment_id": comment_item.get("rootid", ""),
 
-        # User information
-        "user_id": str(user_info.get("id")),
-        "nickname": user_info.get("screen_name", ""),
-        "gender": user_info.get("gender", ""),
-        "profile_url": user_info.get("profile_url", ""),
-        "avatar": user_info.get("profile_image_url", ""),
+        # 创作者信息（匿名化/脱敏，不含原始 user_id/avatar/gender/profile_url/ip_location）
+        "creator_hash": anonymize_user_id(user_info.get("id")),
+        "nickname": mask_nickname(user_info.get("screen_name", "")),
     }
     utils.logger.info(f"[store.weibo.update_weibo_note_comment] Weibo note comment: {comment_id}, content: {save_comment_item.get('content', '')[:24]} ...")
     await WeibostoreFactory.create_store().store_comment(comment_item=save_comment_item)
@@ -180,6 +177,8 @@ async def update_weibo_note_image(picid: str, pic_content, extension_file_name):
 async def save_creator(user_id: str, user_info: Dict):
     """
     Save creator information to local
+    教学版：为防骚扰不再采集/持久化创作者个人信息（昵称/性别/头像/简介/IP/粉丝数等），
+    此入口保留为空操作以兼容调用方。user_id 仅在调用方局部用于抓取该创作者的微博。
     Args:
         user_id:
         user_info:
@@ -187,17 +186,5 @@ async def save_creator(user_id: str, user_info: Dict):
     Returns:
 
     """
-    local_db_item = {
-        'user_id': user_id,
-        'nickname': user_info.get('screen_name'),
-        'gender': 'Female' if user_info.get('gender') == "f" else 'Male',
-        'avatar': user_info.get('avatar_hd'),
-        'desc': user_info.get('description'),
-        'ip_location': user_info.get("source", "").replace("来自", ""),
-        'follows': user_info.get('follow_count', ''),
-        'fans': user_info.get('followers_count', ''),
-        'tag_list': '',
-        "last_modify_ts": utils.get_current_timestamp(),
-    }
-    utils.logger.info(f"[store.weibo.save_creator] creator:{local_db_item}")
-    await WeibostoreFactory.create_store().store_creator(local_db_item)
+    # 教学版：创作者个人信息均不采集不持久化
+    return

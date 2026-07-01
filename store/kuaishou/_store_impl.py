@@ -228,21 +228,8 @@ class KuaishouMongoStoreImplement(AbstractStore):
         utils.logger.info(f"[KuaishouMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
 
     async def store_creator(self, creator_item: Dict):
-        """
-        Store creator information to MongoDB
-        Args:
-            creator_item: Creator data
-        """
-        user_id = creator_item.get("user_id")
-        if not user_id:
-            return
-
-        await self.mongo_store.save_or_update(
-            collection_suffix="creators",
-            query={"user_id": user_id},
-            data=creator_item
-        )
-        utils.logger.info(f"[KuaishouMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")
+        # 教学版：创作者个人资料不再落库
+        pass
 
 
 class KuaishouExcelStoreImplement:

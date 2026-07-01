@@ -646,14 +646,14 @@ class BilibiliCrawler(AbstractCrawler):
         """
         async with semaphore:
             creator_unhandled_info: Dict = await self.bili_client.get_creator_info(creator_id)
+            # 教学版：仅保留动态所需的最少字段(内存临时用)，不持久化创作者个人资料。
             creator_info: Dict = {
                 "id": creator_id,
                 "name": creator_unhandled_info.get("name"),
-                "sign": creator_unhandled_info.get("sign"),
-                "avatar": creator_unhandled_info.get("face"),
             }
-        await self.get_fans(creator_info, semaphore)
-        await self.get_followings(creator_info, semaphore)
+        # 教学版：不再爬取粉丝/关注列表(其他用户的个人信息)，防骚扰。
+        # await self.get_fans(creator_info, semaphore)
+        # await self.get_followings(creator_info, semaphore)
         await self.get_dynamics(creator_info, semaphore)
 
     async def get_fans(self, creator_info: Dict, semaphore: asyncio.Semaphore):

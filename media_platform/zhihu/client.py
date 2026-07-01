@@ -459,11 +459,11 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         }
         return await self.get(uri, params)
 
-    async def get_all_anwser_by_creator(self, creator: ZhihuCreator, crawl_interval: float = 1.0, callback: Optional[Callable] = None) -> List[ZhihuContent]:
+    async def get_all_anwser_by_creator(self, url_token: str, crawl_interval: float = 1.0, callback: Optional[Callable] = None) -> List[ZhihuContent]:
         """
         Get all answers by creator
         Args:
-            creator: Creator information
+            url_token: Creator url token (in-memory only, not persisted)
             crawl_interval: Crawl delay interval in seconds
             callback: Callback after completing one crawl
 
@@ -475,10 +475,10 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         offset: int = 0
         limit: int = 20
         while not is_end:
-            res = await self.get_creator_answers(creator.url_token, offset, limit)
+            res = await self.get_creator_answers(url_token, offset, limit)
             if not res:
                 break
-            utils.logger.info(f"[ZhiHuClient.get_all_anwser_by_creator] Get creator {creator.url_token} answers: {res}")
+            utils.logger.info(f"[ZhiHuClient.get_all_anwser_by_creator] Get creator {url_token} answers: {res}")
             paging_info = res.get("paging", {})
             is_end = paging_info.get("is_end")
             contents = self._extractor.extract_content_list_from_creator(res.get("data"))
@@ -491,14 +491,14 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
 
     async def get_all_articles_by_creator(
         self,
-        creator: ZhihuCreator,
+        url_token: str,
         crawl_interval: float = 1.0,
         callback: Optional[Callable] = None,
     ) -> List[ZhihuContent]:
         """
         Get all articles by creator
         Args:
-            creator:
+            url_token: Creator url token (in-memory only, not persisted)
             crawl_interval:
             callback:
 
@@ -510,7 +510,7 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         offset: int = 0
         limit: int = 20
         while not is_end:
-            res = await self.get_creator_articles(creator.url_token, offset, limit)
+            res = await self.get_creator_articles(url_token, offset, limit)
             if not res:
                 break
             paging_info = res.get("paging", {})
@@ -525,14 +525,14 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
 
     async def get_all_videos_by_creator(
         self,
-        creator: ZhihuCreator,
+        url_token: str,
         crawl_interval: float = 1.0,
         callback: Optional[Callable] = None,
     ) -> List[ZhihuContent]:
         """
         Get all videos by creator
         Args:
-            creator:
+            url_token: Creator url token (in-memory only, not persisted)
             crawl_interval:
             callback:
 
@@ -544,7 +544,7 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         offset: int = 0
         limit: int = 20
         while not is_end:
-            res = await self.get_creator_videos(creator.url_token, offset, limit)
+            res = await self.get_creator_videos(url_token, offset, limit)
             if not res:
                 break
             paging_info = res.get("paging", {})

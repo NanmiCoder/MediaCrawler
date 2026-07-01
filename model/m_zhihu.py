@@ -19,8 +19,6 @@
 
 
 # -*- coding: utf-8 -*-
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -40,12 +38,8 @@ class ZhihuContent(BaseModel):
     voteup_count: int = Field(default=0, description="Upvote count")
     comment_count: int = Field(default=0, description="Comment count")
     source_keyword: str = Field(default="", description="Source keyword")
-
-    user_id: str = Field(default="", description="User ID")
-    user_link: str = Field(default="", description="User homepage link")
-    user_nickname: str = Field(default="", description="User nickname")
-    user_avatar: str = Field(default="", description="User avatar URL")
-    user_url_token: str = Field(default="", description="User url_token")
+    creator_hash: str = Field(default="", description="Creator anonymized hash")
+    user_nickname: str = Field(default="", description="User nickname (masked)")
 
 
 class ZhihuComment(BaseModel):
@@ -57,30 +51,21 @@ class ZhihuComment(BaseModel):
     parent_comment_id: str = Field(default="", description="Parent comment ID")
     content: str = Field(default="", description="Comment content")
     publish_time: int = Field(default=0, description="Publish time")
-    ip_location: Optional[str] = Field(default="", description="IP location")
     sub_comment_count: int = Field(default=0, description="Sub-comment count")
     like_count: int = Field(default=0, description="Like count")
     dislike_count: int = Field(default=0, description="Dislike count")
     content_id: str = Field(default="", description="Content ID")
     content_type: str = Field(default="", description="Content type (article | answer | zvideo)")
-
-    user_id: str = Field(default="", description="User ID")
-    user_link: str = Field(default="", description="User homepage link")
-    user_nickname: str = Field(default="", description="User nickname")
-    user_avatar: str = Field(default="", description="User avatar URL")
+    creator_hash: str = Field(default="", description="Creator anonymized hash")
+    user_nickname: str = Field(default="", description="User nickname (masked)")
 
 
 class ZhihuCreator(BaseModel):
     """
-    Zhihu creator
+    Zhihu creator (in-memory only; personal profile is no longer persisted)
     """
-    user_id: str = Field(default="", description="User ID")
-    user_link: str = Field(default="", description="User homepage link")
-    user_nickname: str = Field(default="", description="User nickname")
-    user_avatar: str = Field(default="", description="User avatar URL")
-    url_token: str = Field(default="", description="User url_token")
-    gender: str = Field(default="", description="User gender")
-    ip_location: Optional[str] = Field(default="", description="IP location")
+    creator_hash: str = Field(default="", description="Creator anonymized hash")
+    user_nickname: str = Field(default="", description="User nickname (masked)")
     follows: int = Field(default=0, description="Follows count")
     fans: int = Field(default=0, description="Fans count")
     anwser_count: int = Field(default=0, description="Answer count")

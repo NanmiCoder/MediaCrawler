@@ -35,7 +35,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import config
 from base.base_crawler import AbstractStore
-from database.models import TiebaNote, TiebaComment, TiebaCreator
+from database.models import TiebaNote, TiebaComment
 from tools import utils, words
 from database.db_session import get_session
 from var import crawler_type_var
@@ -137,23 +137,8 @@ class TieBaDbStoreImplement(AbstractStore):
             await session.commit()
 
     async def store_creator(self, creator: Dict):
-        """
-        tieba content DB storage implementation
-        Args:
-            creator: creator dict
-        """
-        user_id = creator.get("user_id")
-        async with get_session() as session:
-            stmt = select(TiebaCreator).where(TiebaCreator.user_id == user_id)
-            res = await session.execute(stmt)
-            db_creator = res.scalar_one_or_none()
-            if db_creator:
-                for key, value in creator.items():
-                    setattr(db_creator, key, value)
-            else:
-                db_creator = TiebaCreator(**creator)
-                session.add(db_creator)
-            await session.commit()
+        # 教学版：创作者个人资料不再落库
+        pass
 
 
 class TieBaJsonStoreImplement(AbstractStore):
@@ -258,20 +243,8 @@ class TieBaMongoStoreImplement(AbstractStore):
         utils.logger.info(f"[TieBaMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
 
     async def store_creator(self, creator_item: Dict):
-        """
-        Store creator information to MongoDB
-        Args:
-            creator_item: Creator data
-        """
-        user_id = creator_item.get("user_id")
-        if not user_id:
-            return
-
-        await self.mongo_store.save_or_update(
-            collection_suffix="creators",
-            query={"user_id": user_id},
-            data=creator_item
-        )
+        # 教学版：创作者个人资料不再落库
+        pass
         utils.logger.info(f"[TieBaMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")
 
 

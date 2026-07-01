@@ -276,27 +276,26 @@ class ZhihuCrawler(AbstractCrawler):
             utils.logger.info(
                 f"[ZhihuCrawler.get_creators_and_notes] Creator info: {createor_info}"
             )
-            await zhihu_store.save_creator(creator=createor_info)
 
             # By default, only answer information is extracted, uncomment below if articles and videos are needed
 
             # Get all anwser information of the creator
             all_content_list = await self.zhihu_client.get_all_anwser_by_creator(
-                creator=createor_info,
+                url_token=user_url_token,
                 crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
                 callback=zhihu_store.batch_update_zhihu_contents,
             )
 
             # Get all articles of the creator's contents
             # all_content_list = await self.zhihu_client.get_all_articles_by_creator(
-            #     creator=createor_info,
+            #     url_token=user_url_token,
             #     crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
             #     callback=zhihu_store.batch_update_zhihu_contents
             # )
 
             # Get all videos of the creator's contents
             # all_content_list = await self.zhihu_client.get_all_videos_by_creator(
-            #     creator=createor_info,
+            #     url_token=user_url_token,
             #     crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
             #     callback=zhihu_store.batch_update_zhihu_contents
             # )

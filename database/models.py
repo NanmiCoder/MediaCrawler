@@ -15,6 +15,14 @@
 #
 # 详细许可条款请参阅项目根目录下的LICENSE文件。
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
+#
+# 教学版说明：为防止爬取到的用户个人信息被用于定位真人并私信骚扰，
+# 本 ORM 不再持久化任何可识别用户的字段（用户 ID、IP 归属地、头像、
+# 主页链接、签名、性别等一律不落库）。原始用户 ID 在提取层经
+# tools.user_hash.anonymize_user_id 转为匿名 creator_hash 后写入，
+# 仅用于"同一创作者"的内容分组；昵称保留但经 mask_nickname 中间脱敏。
+# 创作者个人档案表（XhsCreator/DyCreator/WeiboCreator/TiebaCreator/
+# ZhihuCreator/BilibiliUpInfo/BilibiliContactInfo）已整体移除。
 
 from sqlalchemy import create_engine, Column, Integer, Text, String, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
@@ -27,9 +35,8 @@ class BilibiliVideo(Base):
     id = Column(Integer, primary_key=True, comment='主键ID')
     video_id = Column(BigInteger, nullable=False, index=True, unique=True, comment='视频ID')
     video_url = Column(Text, nullable=False, comment='视频URL')
-    user_id = Column(BigInteger, index=True, comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     liked_count = Column(Integer, comment='点赞数')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
@@ -50,11 +57,8 @@ class BilibiliVideo(Base):
 class BilibiliVideoComment(Base):
     __tablename__ = 'bilibili_video_comment'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    sex = Column(Text, comment='性别')
-    sign = Column(Text, comment='签名')
-    avatar = Column(Text, comment='头像')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     comment_id = Column(BigInteger, index=True, comment='评论ID')
@@ -65,41 +69,12 @@ class BilibiliVideoComment(Base):
     parent_comment_id = Column(String(255), comment='父评论ID')
     like_count = Column(Text, default='0', comment='点赞数')
 
-class BilibiliUpInfo(Base):
-    __tablename__ = 'bilibili_up_info'
-    id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(BigInteger, index=True, comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    sex = Column(Text, comment='性别')
-    sign = Column(Text, comment='签名')
-    avatar = Column(Text, comment='头像')
-    add_ts = Column(BigInteger, comment='添加时间戳')
-    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-    total_fans = Column(Integer, comment='总粉丝数')
-    total_liked = Column(Integer, comment='总获赞数')
-    user_rank = Column(Integer, comment='用户等级')
-    is_official = Column(Integer, comment='是否官方认证')
-
-class BilibiliContactInfo(Base):
-    __tablename__ = 'bilibili_contact_info'
-    id = Column(Integer, primary_key=True, comment='主键ID')
-    up_id = Column(BigInteger, index=True, comment='UP主ID')
-    fan_id = Column(BigInteger, index=True, comment='粉丝ID')
-    up_name = Column(Text, comment='UP主名称')
-    fan_name = Column(Text, comment='粉丝名称')
-    up_sign = Column(Text, comment='UP主签名')
-    fan_sign = Column(Text, comment='粉丝签名')
-    up_avatar = Column(Text, comment='UP主头像')
-    fan_avatar = Column(Text, comment='粉丝头像')
-    add_ts = Column(BigInteger, comment='添加时间戳')
-    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-
 class BilibiliUpDynamic(Base):
     __tablename__ = 'bilibili_up_dynamic'
     id = Column(Integer, primary_key=True, comment='主键ID')
     dynamic_id = Column(BigInteger, index=True, comment='动态ID')
-    user_id = Column(String(255), comment='用户ID')
-    user_name = Column(Text, comment='用户名称')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    user_name = Column(Text, comment='用户名称(已脱敏)')
     text = Column(Text, comment='动态内容')
     type = Column(Text, comment='动态类型')
     pub_ts = Column(BigInteger, comment='发布时间戳')
@@ -112,14 +87,8 @@ class BilibiliUpDynamic(Base):
 class DouyinAweme(Base):
     __tablename__ = 'douyin_aweme'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    sec_uid = Column(String(255), comment='安全用户ID')
-    short_user_id = Column(String(255), comment='短用户ID')
-    user_unique_id = Column(String(255), comment='用户唯一ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    user_signature = Column(Text, comment='用户签名')
-    ip_location = Column(Text, comment='IP地址位置')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     aweme_id = Column(BigInteger, index=True, comment='作品ID')
@@ -141,14 +110,8 @@ class DouyinAweme(Base):
 class DouyinAwemeComment(Base):
     __tablename__ = 'douyin_aweme_comment'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    sec_uid = Column(String(255), comment='安全用户ID')
-    short_user_id = Column(String(255), comment='短用户ID')
-    user_unique_id = Column(String(255), comment='用户唯一ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    user_signature = Column(Text, comment='用户签名')
-    ip_location = Column(Text, comment='IP地址位置')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     comment_id = Column(BigInteger, index=True, comment='评论ID')
@@ -160,28 +123,11 @@ class DouyinAwemeComment(Base):
     like_count = Column(Text, default='0', comment='点赞数')
     pictures = Column(Text, default='', comment='图片')
 
-class DyCreator(Base):
-    __tablename__ = 'dy_creator'
-    id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    ip_location = Column(Text, comment='IP地址位置')
-    add_ts = Column(BigInteger, comment='添加时间戳')
-    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-    desc = Column(Text, comment='描述')
-    gender = Column(Text, comment='性别')
-    follows = Column(Text, comment='关注数')
-    fans = Column(Text, comment='粉丝数')
-    interaction = Column(Text, comment='互动数')
-    videos_count = Column(String(255), comment='视频数量')
-
 class KuaishouVideo(Base):
     __tablename__ = 'kuaishou_video'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(64), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     video_id = Column(String(255), index=True, comment='视频ID')
@@ -199,9 +145,8 @@ class KuaishouVideo(Base):
 class KuaishouVideoComment(Base):
     __tablename__ = 'kuaishou_video_comment'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(Text, comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     comment_id = Column(BigInteger, index=True, comment='评论ID')
@@ -213,12 +158,8 @@ class KuaishouVideoComment(Base):
 class WeiboNote(Base):
     __tablename__ = 'weibo_note'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    gender = Column(Text, comment='性别')
-    profile_url = Column(Text, comment='个人主页URL')
-    ip_location = Column(Text, default='', comment='IP地址位置')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     note_id = Column(BigInteger, index=True, comment='笔记ID')
@@ -234,12 +175,8 @@ class WeiboNote(Base):
 class WeiboNoteComment(Base):
     __tablename__ = 'weibo_note_comment'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    gender = Column(Text, comment='性别')
-    profile_url = Column(Text, comment='个人主页URL')
-    ip_location = Column(Text, default='', comment='IP地址位置')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     comment_id = Column(BigInteger, index=True, comment='评论ID')
@@ -251,44 +188,11 @@ class WeiboNoteComment(Base):
     sub_comment_count = Column(Text, comment='子评论数')
     parent_comment_id = Column(String(255), comment='父评论ID')
 
-class WeiboCreator(Base):
-    __tablename__ = 'weibo_creator'
-    id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    ip_location = Column(Text, comment='IP地址位置')
-    add_ts = Column(BigInteger, comment='添加时间戳')
-    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-    desc = Column(Text, comment='描述')
-    gender = Column(Text, comment='性别')
-    follows = Column(Text, comment='关注数')
-    fans = Column(Text, comment='粉丝数')
-    tag_list = Column(Text, comment='标签列表')
-
-class XhsCreator(Base):
-    __tablename__ = 'xhs_creator'
-    id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    ip_location = Column(Text, comment='IP地址位置')
-    add_ts = Column(BigInteger, comment='添加时间戳')
-    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-    desc = Column(Text, comment='描述')
-    gender = Column(Text, comment='性别')
-    follows = Column(Text, comment='关注数')
-    fans = Column(Text, comment='粉丝数')
-    interaction = Column(Text, comment='互动数')
-    tag_list = Column(Text, comment='标签列表')
-
 class XhsNote(Base):
     __tablename__ = 'xhs_note'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    ip_location = Column(Text, comment='IP地址位置')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     note_id = Column(String(255), index=True, comment='笔记ID')
@@ -311,10 +215,8 @@ class XhsNote(Base):
 class XhsNoteComment(Base):
     __tablename__ = 'xhs_note_comment'
     id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(255), comment='用户ID')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    ip_location = Column(Text, comment='IP地址位置')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     comment_id = Column(String(255), index=True, comment='评论ID')
@@ -334,15 +236,13 @@ class TiebaNote(Base):
     desc = Column(Text, comment='笔记描述')
     note_url = Column(Text, comment='笔记URL')
     publish_time = Column(String(255), index=True, comment='发布时间')
-    user_link = Column(Text, default='', comment='用户链接')
-    user_nickname = Column(Text, default='', comment='用户昵称')
-    user_avatar = Column(Text, default='', comment='用户头像')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    user_nickname = Column(Text, default='', comment='用户昵称(已脱敏)')
     tieba_id = Column(String(255), default='', comment='贴吧ID')
     tieba_name = Column(Text, comment='贴吧名称')
     tieba_link = Column(Text, comment='贴吧链接')
     total_replay_num = Column(Integer, default=0, comment='总回复数')
     total_replay_page = Column(Integer, default=0, comment='总回复页数')
-    ip_location = Column(Text, default='', comment='IP地址位置')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
     source_keyword = Column(Text, default='', comment='来源关键词')
@@ -353,34 +253,17 @@ class TiebaComment(Base):
     comment_id = Column(String(255), index=True, comment='评论ID')
     parent_comment_id = Column(String(255), default='', comment='父评论ID')
     content = Column(Text, comment='评论内容')
-    user_link = Column(Text, default='', comment='用户链接')
-    user_nickname = Column(Text, default='', comment='用户昵称')
-    user_avatar = Column(Text, default='', comment='用户头像')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    user_nickname = Column(Text, default='', comment='用户昵称(已脱敏)')
     tieba_id = Column(String(255), default='', comment='贴吧ID')
     tieba_name = Column(Text, comment='贴吧名称')
     tieba_link = Column(Text, comment='贴吧链接')
     publish_time = Column(String(255), index=True, comment='发布时间')
-    ip_location = Column(Text, default='', comment='IP地址位置')
     sub_comment_count = Column(Integer, default=0, comment='子评论数')
     note_id = Column(String(255), index=True, comment='笔记ID')
     note_url = Column(Text, comment='笔记URL')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-
-class TiebaCreator(Base):
-    __tablename__ = 'tieba_creator'
-    id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(64), comment='用户ID')
-    user_name = Column(Text, comment='用户名')
-    nickname = Column(Text, comment='用户昵称')
-    avatar = Column(Text, comment='用户头像')
-    ip_location = Column(Text, comment='IP地址位置')
-    add_ts = Column(BigInteger, comment='添加时间戳')
-    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-    gender = Column(Text, comment='性别')
-    follows = Column(Text, comment='关注数')
-    fans = Column(Text, comment='粉丝数')
-    registration_duration = Column(Text, comment='注册时长')
 
 class ZhihuContent(Base):
     __tablename__ = 'zhihu_content'
@@ -397,18 +280,10 @@ class ZhihuContent(Base):
     voteup_count = Column(Integer, default=0, comment='赞同数')
     comment_count = Column(Integer, default=0, comment='评论数')
     source_keyword = Column(Text, comment='来源关键词')
-    user_id = Column(String(255), comment='用户ID')
-    user_link = Column(Text, comment='用户链接')
-    user_nickname = Column(Text, comment='用户昵称')
-    user_avatar = Column(Text, comment='用户头像')
-    user_url_token = Column(Text, comment='用户URL Token')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    user_nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-
-    # persist-1<persist1@126.com>
-    # Reason: Fixed ORM model definition error, ensuring consistency with database table structure.
-    # Side effects: None
-    # Rollback strategy: Restore this line
 
 class ZhihuComment(Base):
     __tablename__ = 'zhihu_comment'
@@ -417,36 +292,12 @@ class ZhihuComment(Base):
     parent_comment_id = Column(String(64), comment='父评论ID')
     content = Column(Text, comment='评论内容')
     publish_time = Column(String(32), index=True, comment='发布时间')
-    ip_location = Column(Text, comment='IP地址位置')
     sub_comment_count = Column(Integer, default=0, comment='子评论数')
     like_count = Column(Integer, default=0, comment='点赞数')
     dislike_count = Column(Integer, default=0, comment='点踩数')
     content_id = Column(String(64), index=True, comment='内容ID')
     content_type = Column(Text, comment='内容类型')
-    user_id = Column(String(64), comment='用户ID')
-    user_link = Column(Text, comment='用户链接')
-    user_nickname = Column(Text, comment='用户昵称')
-    user_avatar = Column(Text, comment='用户头像')
-    add_ts = Column(BigInteger, comment='添加时间戳')
-    last_modify_ts = Column(BigInteger, comment='最后修改时间戳')
-
-class ZhihuCreator(Base):
-    __tablename__ = 'zhihu_creator'
-    id = Column(Integer, primary_key=True, comment='主键ID')
-    user_id = Column(String(64), unique=True, index=True, comment='用户ID')
-    user_link = Column(Text, comment='用户链接')
-    user_nickname = Column(Text, comment='用户昵称')
-    user_avatar = Column(Text, comment='用户头像')
-    url_token = Column(Text, comment='URL Token')
-    gender = Column(Text, comment='性别')
-    ip_location = Column(Text, comment='IP地址位置')
-    follows = Column(Integer, default=0, comment='关注数')
-    fans = Column(Integer, default=0, comment='粉丝数')
-    anwser_count = Column(Integer, default=0, comment='回答数')
-    video_count = Column(Integer, default=0, comment='视频数')
-    question_count = Column(Integer, default=0, comment='问题数')
-    article_count = Column(Integer, default=0, comment='文章数')
-    column_count = Column(Integer, default=0, comment='专栏数')
-    get_voteup_count = Column(Integer, default=0, comment='获赞数')
+    creator_hash = Column(String(64), index=True, comment='创作者匿名哈希')
+    user_nickname = Column(Text, comment='用户昵称(已脱敏)')
     add_ts = Column(BigInteger, comment='添加时间戳')
     last_modify_ts = Column(BigInteger, comment='最后修改时间戳')

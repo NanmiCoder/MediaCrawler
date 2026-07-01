@@ -36,7 +36,7 @@ from sqlalchemy.orm import sessionmaker
 import config
 from base.base_crawler import AbstractStore
 from database.db_session import get_session
-from database.models import BilibiliVideoComment, BilibiliVideo, BilibiliUpInfo, BilibiliUpDynamic, BilibiliContactInfo
+from database.models import BilibiliVideoComment, BilibiliVideo, BilibiliUpDynamic
 from tools.async_file_writer import AsyncFileWriter
 from tools import utils, words
 from var import crawler_type_var
@@ -130,7 +130,6 @@ class BiliDbStoreImplement(AbstractStore):
         """
         video_id = int(content_item.get("video_id"))
         content_item["video_id"] = video_id
-        content_item["user_id"] = int(content_item.get("user_id", 0) or 0)
         content_item["liked_count"] = int(content_item.get("liked_count", 0) or 0)
         content_item["create_time"] = int(content_item.get("create_time", 0) or 0)
 
@@ -179,60 +178,12 @@ class BiliDbStoreImplement(AbstractStore):
             await session.commit()
 
     async def store_creator(self, creator: Dict):
-        """
-        Bilibili creator DB storage implementation
-        Args:
-            creator: creator item dict
-        """
-        creator_id = int(creator.get("user_id"))
-        creator["user_id"] = creator_id
-        creator["total_fans"] = int(creator.get("total_fans", 0) or 0)
-        creator["total_liked"] = int(creator.get("total_liked", 0) or 0)
-        creator["user_rank"] = int(creator.get("user_rank", 0) or 0)
-        creator["is_official"] = int(creator.get("is_official", 0) or 0)
-
-        async with get_session() as session:
-            result = await session.execute(select(BilibiliUpInfo).where(BilibiliUpInfo.user_id == creator_id))
-            creator_detail = result.scalar_one_or_none()
-
-            if not creator_detail:
-                creator["add_ts"] = utils.get_current_timestamp()
-                creator["last_modify_ts"] = utils.get_current_timestamp()
-                new_creator = BilibiliUpInfo(**creator)
-                session.add(new_creator)
-            else:
-                creator["last_modify_ts"] = utils.get_current_timestamp()
-                for key, value in creator.items():
-                    setattr(creator_detail, key, value)
-            await session.commit()
+        # 教学版：UP 主个人资料不再落库
+        pass
 
     async def store_contact(self, contact_item: Dict):
-        """
-        Bilibili contact DB storage implementation
-        Args:
-            contact_item: contact item dict
-        """
-        up_id = int(contact_item.get("up_id"))
-        fan_id = int(contact_item.get("fan_id"))
-        contact_item["up_id"] = up_id
-        contact_item["fan_id"] = fan_id
-
-        async with get_session() as session:
-            result = await session.execute(
-                select(BilibiliContactInfo).where(BilibiliContactInfo.up_id == up_id, BilibiliContactInfo.fan_id == fan_id)
-            )
-            contact_detail = result.scalar_one_or_none()
-
-            if not contact_detail:
-                contact_item["add_ts"] = utils.get_current_timestamp()
-                contact_item["last_modify_ts"] = utils.get_current_timestamp()
-                new_contact = BilibiliContactInfo(**contact_item)
-                session.add(new_contact)
-            else:
-                contact_item["last_modify_ts"] = utils.get_current_timestamp()
-                for key, value in contact_item.items():
-                    setattr(contact_detail, key, value)
-            await session.commit()
+        # 教学版：UP-粉丝关系表已移除，不再存储联系人信息
+        pass
 
     async def store_dynamic(self, dynamic_item):
         """
@@ -421,21 +372,8 @@ class BiliMongoStoreImplement(AbstractStore):
         utils.logger.info(f"[BiliMongoStoreImplement.store_comment] Saved comment {comment_id} to MongoDB")
 
     async def store_creator(self, creator_item: Dict):
-        """
-        Store UP master information to MongoDB
-        Args:
-            creator_item: UP master data
-        """
-        user_id = creator_item.get("user_id")
-        if not user_id:
-            return
-
-        await self.mongo_store.save_or_update(
-            collection_suffix="creators",
-            query={"user_id": user_id},
-            data=creator_item
-        )
-        utils.logger.info(f"[BiliMongoStoreImplement.store_creator] Saved creator {user_id} to MongoDB")
+        # 教学版：UP 主个人资料不再落库
+        pass
 
 
 class BiliExcelStoreImplement:
