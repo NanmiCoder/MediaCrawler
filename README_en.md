@@ -2,6 +2,24 @@
 
 <div align="center">
 
+### 🤝 Special Thanks to Our Platinum Sponsor
+
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+  <img src="docs/static/images/browseract.png" alt="BrowserAct" width="400">
+</a>
+
+<br>
+
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<small>BrowserAct is a browser automation tool designed for AI Agents, featuring anti-bot interception handling, human handoff when tasks get stuck, multi-task parallel isolation, and multi-account independent management, helping Agents complete real-world web tasks more reliably.</small>
+</a>
+
+</div>
+
+---
+
+<div align="center">
+
 <a href="https://trendshift.io/repositories/8291" target="_blank">
   <img src="https://trendshift.io/api/badge/repositories/8291" alt="NanmiCoder%2FMediaCrawler | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 </a>

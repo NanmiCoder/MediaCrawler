@@ -2,6 +2,24 @@
 
 <div align="center">
 
+### 🤝 特别感谢白金赞助商
+
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+  <img src="docs/static/images/browseract.png" alt="BrowserAct" width="400">
+</a>
+
+<br>
+
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<small>BrowserAct 是面向 AI Agent 的浏览器自动化工具，支持反机器人拦截应对、受阻时人工接管、多任务并行隔离和多账号独立管理，帮助 Agent 更稳定地完成真实网页任务。</small>
+</a>
+
+</div>
+
+---
+
+<div align="center">
+
 <a href="https://trendshift.io/repositories/8291" target="_blank">
   <img src="https://trendshift.io/api/badge/repositories/8291" alt="NanmiCoder%2FMediaCrawler | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 </a>

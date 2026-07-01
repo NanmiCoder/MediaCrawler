@@ -2,6 +2,24 @@
 
 <div align="center">
 
+### 🤝 Agradecimientos Especiales a Nuestro Patrocinador Platino
+
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+  <img src="docs/static/images/browseract.png" alt="BrowserAct" width="400">
+</a>
+
+<br>
+
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<small>BrowserAct es una herramienta de automatización de navegador diseñada para Agentes de IA, con manejo de intercepciones anti-bot, transferencia humana cuando las tareas se atascan, aislamiento paralelo de múltiples tareas y gestión independiente de múltiples cuentas, ayudando a los Agentes a completar tareas web reales de manera más estable.</small>
+</a>
+
+</div>
+
+---
+
+<div align="center">
+
 <a href="https://trendshift.io/repositories/8291" target="_blank">
   <img src="https://trendshift.io/api/badge/repositories/8291" alt="NanmiCoder%2FMediaCrawler | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 </a>
