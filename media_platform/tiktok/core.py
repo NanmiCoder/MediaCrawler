@@ -188,7 +188,7 @@ class TikTokCrawler(AbstractCrawler):
                 await self.browser_context.add_init_script(path="libs/stealth.min.js")
 
             self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(self.index_url)
+            await self.context_page.goto(self.index_url, wait_until="domcontentloaded")
 
             # Wait for page to initialize fully
             await asyncio.sleep(3)

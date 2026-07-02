@@ -94,7 +94,7 @@ class KuaishouCrawler(AbstractCrawler):
 
 
             self.context_page = await self.browser_context.new_page()
-            await self.context_page.goto(f"{self.index_url}?isHome=1")
+            await self.context_page.goto(f"{self.index_url}?isHome=1", wait_until="domcontentloaded")
 
             # Create a client to interact with the kuaishou website.
             self.ks_client = await self.create_ks_client(httpx_proxy_format)
@@ -296,7 +296,7 @@ class KuaishouCrawler(AbstractCrawler):
                 for task in current_running_tasks:
                     task.cancel()
                 time.sleep(20)
-                await self.context_page.goto(f"{self.index_url}?isHome=1")
+                await self.context_page.goto(f"{self.index_url}?isHome=1", wait_until="domcontentloaded")
                 await self.ks_client.update_cookies(
                     browser_context=self.browser_context,
                     urls=self.cookie_urls,
