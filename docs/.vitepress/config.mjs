@@ -46,6 +46,7 @@ export default withMermaid(defineConfig({
                     {text: '基本使用', link: '/'},
                     {text: '项目架构文档', link: '/项目架构文档'},
                     {text: '多实例调度器', link: '/多实例调度器使用指南'},
+                    {text: '内容过滤', link: '/内容过滤使用指南'},
                     {text: '常见问题汇总', link: '/常见问题'},
                     {text: 'IP代理使用', link: '/代理使用'},
                     {text: '词云图使用', link: '/词云图使用配置'},
