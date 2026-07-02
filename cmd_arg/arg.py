@@ -21,8 +21,8 @@
 from __future__ import annotations
 
 
-import sys
 import re
+import sys
 from enum import Enum
 from types import SimpleNamespace
 from typing import Iterable, Optional, Sequence, Type, TypeVar
@@ -149,27 +149,6 @@ def _normalize_tieba_creator_url(value: str) -> str:
     if value.startswith("http://") or value.startswith("https://"):
         return value
     return f"https://tieba.baidu.com/home/main?id={value}"
-
-
-def _is_bilibili_article_id(value: str) -> bool:
-    """Return True for Bilibili article URLs, cv IDs, or numeric article IDs."""
-    value = value.strip()
-    return (
-        value.isdigit()
-        or re.fullmatch(r"cv\d+", value) is not None
-        or re.search(r"/read/cv\d+", value) is not None
-    )
-
-
-def _split_bilibili_specified_ids(values: list[str]) -> tuple[list[str], list[str]]:
-    video_ids: list[str] = []
-    article_ids: list[str] = []
-    for value in values:
-        if _is_bilibili_article_id(value):
-            article_ids.append(value)
-        else:
-            video_ids.append(value)
-    return video_ids, article_ids
 
 
 async def parse_cmd(argv: Optional[Sequence[str]] = None):
@@ -392,10 +371,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             if platform == PlatformEnum.XHS:
                 config.XHS_SPECIFIED_NOTE_URL_LIST = specified_id_list
             elif platform == PlatformEnum.BILIBILI:
-                (
-                    config.BILI_SPECIFIED_ID_LIST,
-                    config.BILI_SPECIFIED_ARTICLE_ID_LIST,
-                ) = _split_bilibili_specified_ids(specified_id_list)
+                config.BILI_SPECIFIED_ID_LIST = specified_id_list
             elif platform == PlatformEnum.DOUYIN:
                 config.DY_SPECIFIED_ID_LIST = specified_id_list
             elif platform == PlatformEnum.WEIBO:

@@ -7,6 +7,7 @@ import pytest
 import config
 from media_platform.bilibili.core import BilibiliCrawler
 from media_platform.bilibili.field import BilibiliCommentType
+from media_platform.bilibili.help import split_bilibili_specified_ids
 from store import bilibili as bilibili_store
 
 
@@ -84,5 +85,44 @@ async def test_batch_get_article_comments_respects_comment_flag(monkeypatch, cra
     assert called is False
 
 
-def test_detail_start_config_has_separate_article_list():
-    assert hasattr(config, "BILI_SPECIFIED_ARTICLE_ID_LIST")
+def test_split_bilibili_specified_ids_separates_video_and_article_inputs():
+    video_ids, article_ids = split_bilibili_specified_ids([
+        "BV1Sz4y1U77N",
+        "https://www.bilibili.com/video/BV1d54y1g7db",
+        "https://www.bilibili.com/read/cv123456",
+        "cv654321",
+        "789012",
+    ])
+
+    assert video_ids == [
+        "BV1Sz4y1U77N",
+        "https://www.bilibili.com/video/BV1d54y1g7db",
+    ]
+    assert article_ids == [
+        "https://www.bilibili.com/read/cv123456",
+        "cv654321",
+        "789012",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_get_specified_ids_dispatches_videos_and_articles(monkeypatch, crawler):
+    video_calls = []
+    article_calls = []
+
+    async def fake_get_specified_videos(video_ids):
+        video_calls.append(video_ids)
+
+    async def fake_get_specified_articles(article_ids):
+        article_calls.append(article_ids)
+
+    monkeypatch.setattr(crawler, "get_specified_videos", fake_get_specified_videos)
+    monkeypatch.setattr(crawler, "get_specified_articles", fake_get_specified_articles)
+
+    await crawler.get_specified_ids([
+        "BV1Sz4y1U77N",
+        "cv123456",
+    ])
+
+    assert video_calls == [["BV1Sz4y1U77N"]]
+    assert article_calls == [["cv123456"]]

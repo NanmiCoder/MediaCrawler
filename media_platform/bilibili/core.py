@@ -50,7 +50,12 @@ from var import crawler_type_var, source_keyword_var
 from .client import BilibiliClient
 from .exception import DataFetchError
 from .field import BilibiliCommentType, SearchOrderType
-from .help import parse_article_info_from_url, parse_creator_info_from_url, parse_video_info_from_url
+from .help import (
+    parse_article_info_from_url,
+    parse_creator_info_from_url,
+    parse_video_info_from_url,
+    split_bilibili_specified_ids,
+)
 from .login import BilibiliLogin
 
 
@@ -116,10 +121,7 @@ class BilibiliCrawler(AbstractCrawler):
                 await self.search()
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
-                await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
-                article_id_list = getattr(config, "BILI_SPECIFIED_ARTICLE_ID_LIST", [])
-                if article_id_list:
-                    await self.get_specified_articles(article_id_list)
+                await self.get_specified_ids(config.BILI_SPECIFIED_ID_LIST)
             elif config.CRAWLER_TYPE == "creator":
                 if config.CREATOR_MODE:
                     for creator_url in config.BILI_CREATOR_ID_LIST:
@@ -418,6 +420,16 @@ class BilibiliCrawler(AbstractCrawler):
                 await bilibili_store.update_up_info(video_detail)
                 await self.get_bilibili_video(video_detail, semaphore)
         await self.batch_get_video_comments(video_aids_list)
+
+    async def get_specified_ids(self, specified_id_list: List[str]):
+        """
+        Dispatch mixed Bilibili specified IDs to video or article crawlers.
+        """
+        video_id_list, article_id_list = split_bilibili_specified_ids(specified_id_list)
+        if video_id_list:
+            await self.get_specified_videos(video_id_list)
+        if article_id_list:
+            await self.get_specified_articles(article_id_list)
 
     async def get_specified_articles(self, article_url_list: List[str]):
         """

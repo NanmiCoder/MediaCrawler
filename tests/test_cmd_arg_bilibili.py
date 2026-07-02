@@ -6,7 +6,7 @@ from cmd_arg import parse_cmd
 
 
 @pytest.mark.asyncio
-async def test_bilibili_detail_cli_splits_video_and_article_ids():
+async def test_bilibili_detail_cli_keeps_video_and_article_ids_in_single_list():
     await parse_cmd(
         [
             "--platform",
@@ -18,8 +18,8 @@ async def test_bilibili_detail_cli_splits_video_and_article_ids():
         ]
     )
 
-    assert config.BILI_SPECIFIED_ID_LIST == ["BV1Sz4y1U77N"]
-    assert config.BILI_SPECIFIED_ARTICLE_ID_LIST == [
+    assert config.BILI_SPECIFIED_ID_LIST == [
+        "BV1Sz4y1U77N",
         "https://www.bilibili.com/read/cv123456",
         "cv654321",
     ]
