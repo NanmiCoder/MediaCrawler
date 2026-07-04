@@ -654,6 +654,150 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         )
         return result
 
+    async def get_self_user_id(self) -> str:
+        """
+        Get the logged-in user's own user_id. Used by the "collect" crawler mode
+        when no user_id is configured, so we crawl the currently logged-in
+        account's collected notes.
+
+        The /user/me endpoint reliably returns the numeric user_id; selfinfo does
+        not always include it, so we try /me first and fall back to selfinfo.
+
+        Returns:
+            str: user_id of the logged-in account, or "" if it cannot be resolved
+        """
+        def _extract_uid(payload: Optional[Dict]) -> str:
+            if not payload:
+                return ""
+            data = payload.get("data", payload) or {}
+            return (
+                data.get("user_id")
+                or data.get("userId")
+                or data.get("userid")
+                or ""
+            )
+
+        # 1) canonical "who am I" endpoint (pass empty params so the signer runs)
+        try:
+            me = await self.get("/api/sns/web/v2/user/me", {})
+            uid = _extract_uid(me)
+            if uid:
+                return uid
+            utils.logger.info(f"[XiaoHongShuClient.get_self_user_id] /user/me returned no user_id, raw: {me}")
+        except Exception as e:
+            utils.logger.warning(f"[XiaoHongShuClient.get_self_user_id] /user/me failed: {e}")
+
+        # 2) fallback to selfinfo
+        self_info = await self.query_self()
+        uid = _extract_uid(self_info)
+        if not uid:
+            utils.logger.info(f"[XiaoHongShuClient.get_self_user_id] selfinfo returned no user_id, raw: {self_info}")
+        return uid
+
+    async def get_notes_by_collect(
+        self,
+        user_id: str,
+        cursor: str = "",
+        page_size: int = 30,
+        xsec_token: str = "",
+        xsec_source: str = "pc_user",
+    ) -> Dict:
+        """
+        Get a single page of notes collected (收藏) by a user.
+
+        Args:
+            user_id: The user whose collection to read (the logged-in user for own collection)
+            cursor: Pagination cursor returned from the previous page
+            page_size: Page data length
+            xsec_token: Verification token (only present when navigating from a profile URL)
+            xsec_source: Channel source
+
+        Returns:
+            Dict: raw response containing "notes", "has_more" and "cursor"
+        """
+        uri = "/api/sns/web/v2/note/collect/page"
+        params = {
+            "num": page_size,
+            "cursor": cursor,
+            "user_id": user_id,
+            "image_formats": "jpg,webp,avif",
+        }
+        # xsec_token/xsec_source are only required when the request originates from a
+        # profile URL; for the logged-in user's own collection they are not needed.
+        if xsec_token:
+            params["xsec_token"] = xsec_token
+            params["xsec_source"] = xsec_source
+        return await self.get(uri, params)
+
+    async def get_all_notes_by_collect(
+        self,
+        user_id: str,
+        crawl_interval: float = 1.0,
+        callback: Optional[Callable] = None,
+        xsec_token: str = "",
+        xsec_source: str = "pc_user",
+    ) -> List[Dict]:
+        """
+        Get all notes collected (收藏) by the specified user, paging until exhausted
+        or CRAWLER_MAX_NOTES_COUNT is reached. Mirrors get_all_notes_by_creator.
+
+        Args:
+            user_id: The user whose collection to read
+            crawl_interval: Crawl delay (seconds)
+            callback: Called with each page of note items after it is fetched
+            xsec_token: Verification token
+            xsec_source: Channel source
+
+        Returns:
+            List[Dict]: collected note items (each carries note_id and xsec_token)
+        """
+        result: List[Dict] = []
+        notes_has_more = True
+        notes_cursor = ""
+        while notes_has_more and len(result) < config.CRAWLER_MAX_NOTES_COUNT:
+            notes_res = await self.get_notes_by_collect(
+                user_id, notes_cursor, xsec_token=xsec_token, xsec_source=xsec_source
+            )
+            if not notes_res:
+                utils.logger.error(
+                    "[XiaoHongShuClient.get_all_notes_by_collect] Empty response; the collection may be private or the account restricted."
+                )
+                break
+
+            notes_has_more = notes_res.get("has_more", False)
+            notes_cursor = notes_res.get("cursor", "")
+            if "notes" not in notes_res:
+                utils.logger.info(
+                    f"[XiaoHongShuClient.get_all_notes_by_collect] No 'notes' key found in response: {notes_res}"
+                )
+                break
+
+            notes = notes_res["notes"]
+            utils.logger.info(
+                f"[XiaoHongShuClient.get_all_notes_by_collect] got user_id:{user_id} collected notes len : {len(notes)}"
+            )
+
+            remaining = config.CRAWLER_MAX_NOTES_COUNT - len(result)
+            if remaining <= 0:
+                break
+
+            notes_to_add = notes[:remaining]
+            # Collected-note items don't carry xsec_source; inject it so the
+            # downstream note-detail fetch has a valid source.
+            for note in notes_to_add:
+                note.setdefault("xsec_source", xsec_source or "pc_user")
+
+            if callback:
+                await callback(notes_to_add)
+
+            result.extend(notes_to_add)
+            await asyncio.sleep(crawl_interval)
+
+        utils.logger.info(
+            f"[XiaoHongShuClient.get_all_notes_by_collect] Finished getting collected notes for user {user_id}, total: {len(result)}"
+        )
+        return result
+
     async def get_note_short_url(self, note_id: str) -> Dict:
         """
         Get note short URL
