@@ -19,6 +19,17 @@
 
 # Douyin platform configuration
 PUBLISH_TIME_TYPE = 0
+SEARCH_SORT_TYPE = 0
+# Control the time period of crawled videos/posts 
+# CRAWLER_MAX_NOTES_COUNT and SINCE_TIME(desc), which hit first count
+# dy only right now 
+# search and creator mode only
+# will overwrite config.SORT_TYPE to "time_descending"
+ENABLE_TIME_CRAWL = True
+SINCE_TIME = "2026-04-01 00:00:00"
+UNTIL_TIME = "2026-07-01 00:00:00"
+if ENABLE_TIME_CRAWL:
+    SEARCH_SORT_TYPE = 2
 
 # Specify DY video URL list (supports multiple formats)
 # Supported formats:
