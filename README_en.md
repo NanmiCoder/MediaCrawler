@@ -307,7 +307,7 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
         <a href="https://bloome.im/login?ref=NanmiCoder"><img src="https://bloome.im/icon-512.png" width="72" alt="Bloome"><br><strong>Bloome</strong></a>
       </td>
       <td valign="middle">
-        Crawled your data — now let AI handle it? <a href="https://bloome.im/login?ref=NanmiCoder">Bloome</a> lets multiple AI agents (Claude, ChatGPT, DeepSeek, etc.) collaborate in a single conversation — cleaning, analysis, and report generation all in one flow. Zero config, runs in the cloud, works on both web and mobile, and you can even share your configured agents with your team. 👉 <a href="https://bloome.im/login?ref=NanmiCoder">Try Bloome</a>
+        <a href="https://bloome.im/login?ref=NanmiCoder">Bloome</a> is an AI Agent IM platform — multiple AI agents (Claude, ChatGPT, DeepSeek, etc.) collaborate with you in a single conversation like team members, automatically dividing up the work and cross-checking each other, and directly producing tables, documents, and visual dashboards. Zero config, runs in the cloud, works on both web and mobile, and you can share your configured agents with your team in one click. 👉 <a href="https://bloome.im/login?ref=NanmiCoder">Try Bloome</a>
       </td>
     </tr>
   </tbody>
