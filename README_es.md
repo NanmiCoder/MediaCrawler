@@ -278,11 +278,32 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
 
 ### 💰 Exhibición de Patrocinadores
 
-<a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">
-<img width="500" src="docs/static/images/tikhub_banner_zh.png">
-<br>
-TikHub.io proporciona 900+ interfaces de datos altamente estables, cubriendo 14+ plataformas principales nacionales e internacionales incluyendo TK, DY, XHS, Y2B, Ins, X, etc. Soporta APIs de datos públicos multidimensionales para usuarios, contenido, productos, comentarios, etc., con 40M+ conjuntos de datos estructurados limpios. Use el código de invitación <code>cfzyejV9</code> para registrarse y recargar, y obtenga $2 adicionales de bonificación.
-</a>
+<table>
+  <thead>
+    <tr>
+      <th width="220">Patrocinador</th>
+      <th align="left">Introducción</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad"><img src="docs/static/images/tikhub_banner_zh.png" width="180" alt="TikHub"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">TikHub.io</a> proporciona 900+ interfaces de datos altamente estables, cubriendo 14+ plataformas principales nacionales e internacionales incluyendo TK, DY, XHS, Y2B, Ins, X, etc. Soporta APIs de datos públicos multidimensionales para usuarios, contenido, productos, comentarios, etc., con 40M+ conjuntos de datos estructurados limpios. Use el código de invitación <code>cfzyejV9</code> para <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">registrarse y recargar</a>, y obtenga $2 adicionales de bonificación.
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://bloome.im/login?ref=NanmiCoder"><img src="https://bloome.im/icon-512.png" width="72" alt="Bloome"><br><strong>Bloome</strong></a>
+      </td>
+      <td valign="middle">
+        ¿Ya recopilaste los datos y ahora quieres procesarlos con IA? <a href="https://bloome.im/login?ref=NanmiCoder">Bloome</a> permite que varios agentes de IA (Claude, ChatGPT, DeepSeek, etc.) colaboren en una misma conversación: limpieza, análisis y generación de informes de principio a fin. Sin configuración, funciona en la nube, disponible tanto en web como en móvil, e incluso puedes compartir tus agentes configurados con tu equipo. 👉 <a href="https://bloome.im/login?ref=NanmiCoder">Prueba Bloome</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 
