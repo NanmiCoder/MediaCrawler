@@ -141,7 +141,7 @@ export function Terminal() {
           {/* Terminal Footer */}
           <div className="px-4 py-2 border-t border-[#30363d] bg-[#161b22] flex items-center justify-end flex-shrink-0">
             <div className="text-xs font-mono text-[#8b949e]">
-              {status.toUpperCase()}
+              {status ? status.toUpperCase() : 'IDLE'}
             </div>
           </div>
         </>
