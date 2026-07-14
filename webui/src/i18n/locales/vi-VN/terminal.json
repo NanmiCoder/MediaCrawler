@@ -1,0 +1,16 @@
+{
+  "header": {
+    "title": "BẢNG ĐIỀU KHIỂN HỆ THỐNG",
+    "entries": "{{count}} mục",
+    "active": "ĐANG HOẠT ĐỘNG",
+    "clear": "XÓA",
+    "restore": "KHÔI PHỤC TẤT CẢ NHẬT KÝ"
+  },
+  "banner": {
+    "systemInit": "[HỆ THỐNG] Hệ thống được khởi tạo thành công",
+    "configHint": "[THÔNG TIN] Cấu hình tham số và khởi động trình quét..."
+  },
+  "footer": {
+    "awaiting": "chờ_lệnh..."
+  }
+}

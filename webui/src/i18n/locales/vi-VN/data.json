@@ -1,0 +1,29 @@
+{
+  "dialog": {
+    "button": "MA TRẬN DỮLIỆU",
+    "title": "TRÌNH KHÁM PHÁ DỮ LIỆU"
+  },
+  "explorer": {
+    "title": "MA TRẬN DỮLIỆU ĐÃ CHỤP",
+    "records": "{{count}} BẢN GHI",
+    "rescan": "QUÉT LẠI",
+    "loading": "[ĐANG TẢI] Quét thư mục dữ liệu...",
+    "noData": "KHÔNG CÓ DỮ LIỆU",
+    "noDataHint": "Khởi tạo crawler để bắt đầu trích xuất dữ liệu. Kết quả sẽ xuất hiện ở đây sau khi hoàn tất.",
+    "allCategories": "TẤT CẢ"
+  },
+  "file": {
+    "entries": "{{count}} mục",
+    "extract": "TRÍCH XUẤT",
+    "preview": "XEM TRƯỚC"
+  },
+  "preview": {
+    "title": "Xem trước dữ liệu",
+    "records": "{{count}} BẢN GHI",
+    "download": "TẢI XUỐNG",
+    "loading": "[ĐANG TẢI] Giải mã dữ liệu...",
+    "error": "[LỖI] Không thể giải mã dữ liệu",
+    "searchPlaceholder": "Tìm kiếm trong dữ liệu...",
+    "showing": "Hiển thị {{filtered}} trong {{total}} bản ghi"
+  }
+}
