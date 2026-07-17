@@ -9,6 +9,9 @@ import zhTerminal from './locales/zh-CN/terminal.json'
 import zhData from './locales/zh-CN/data.json'
 import zhEnv from './locales/zh-CN/env.json'
 import zhLicense from './locales/zh-CN/license.json'
+import zhHistory from './locales/zh-CN/history.json'
+import zhBgm from './locales/zh-CN/bgm.json'
+import zhComments from './locales/zh-CN/comments.json'
 
 // 英文翻译
 import enCommon from './locales/en-US/common.json'
@@ -17,6 +20,9 @@ import enTerminal from './locales/en-US/terminal.json'
 import enData from './locales/en-US/data.json'
 import enEnv from './locales/en-US/env.json'
 import enLicense from './locales/en-US/license.json'
+import enHistory from './locales/en-US/history.json'
+import enBgm from './locales/en-US/bgm.json'
+import enComments from './locales/en-US/comments.json'
 
 const resources = {
   'zh-CN': {
@@ -26,6 +32,9 @@ const resources = {
     data: zhData,
     env: zhEnv,
     license: zhLicense,
+    history: zhHistory,
+    bgm: zhBgm,
+    comments: zhComments,
   },
   'en-US': {
     common: enCommon,
@@ -34,6 +43,9 @@ const resources = {
     data: enData,
     env: enEnv,
     license: enLicense,
+    history: enHistory,
+    bgm: enBgm,
+    comments: enComments,
   },
 }
 

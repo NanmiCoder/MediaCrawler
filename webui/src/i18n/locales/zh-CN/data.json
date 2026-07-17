@@ -24,6 +24,9 @@
     "loading": "[加载中] 正在解析数据...",
     "error": "[错误] 数据解析失败",
     "searchPlaceholder": "搜索数据...",
-    "showing": "显示 {{filtered}} / {{total}} 条记录"
+    "showing": "显示 {{filtered}} / {{total}} 条记录",
+    "hiddenColumns": "{{count}} 列已隐藏",
+    "showAll": "显示全部列",
+    "showDefault": "仅显示常用列"
   }
 }

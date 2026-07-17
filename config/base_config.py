@@ -30,6 +30,11 @@ COOKIES = ""
 CRAWLER_TYPE = (
     "search"  # Crawling type, search (keyword search) | detail (post details) | creator (creator homepage data)
 )
+
+# Run id 注入：由 WebUI API 的 CrawlerManager 生成并通过 --run_id 传给子进程；
+# 命令行直接跑时为空（数据落盘不带 run_id，向后兼容旧文件名）。
+RUN_ID = ""
+
 # Whether to enable IP proxy
 ENABLE_IP_PROXY = False
 
@@ -73,7 +78,7 @@ CUSTOM_BROWSER_PATH = ""
 CDP_HEADLESS = False
 
 # 浏览器启动超时时间（秒）
-BROWSER_LAUNCH_TIMEOUT = 60
+BROWSER_LAUNCH_TIMEOUT = 20
 
 # 是否连接用户已打开的浏览器，而不是启动新的浏览器
 # 开启后，程序会连接一个已经启用了远程调试的浏览器
@@ -83,8 +88,8 @@ BROWSER_LAUNCH_TIMEOUT = 60
 CDP_CONNECT_EXISTING = True
 
 # 程序结束时是否自动关闭浏览器
-# 设置为 False 可以保持浏览器运行，方便调试
-AUTO_CLOSE_BROWSER = True
+# 设为 False：爬完保留浏览器进程，下次爬取复用同一浏览器+登录态，免去重复扫码登录。
+AUTO_CLOSE_BROWSER = False
 
 # Data saving type option configuration, supports: csv, db, json, jsonl, sqlite, excel, postgres. It is best to save to DB, with deduplication function.
 SAVE_DATA_OPTION = "jsonl"  # csv or db or json or jsonl or sqlite or excel or postgres
@@ -106,6 +111,13 @@ MAX_CONCURRENCY_NUM = 1
 
 # Whether to enable crawling media mode (including image or video resources), crawling media is not enabled by default
 ENABLE_GET_MEIDAS = False
+
+# Whether to extract and download the background music (BGM) of douyin videos.
+# When enabled, for each searched/detail video its music.play_url is downloaded
+# to data/douyin/bgm/{aweme_id}/bgm.m4a; if the music URL fails (anti-leech),
+# falls back to extracting audio from the already-downloaded video.mp4 via ffmpeg
+# (requires ENABLE_GET_MEIDAS=True so the video exists on disk).
+ENABLE_GET_BGM = False
 
 # Whether to enable comment crawling mode. Comment crawling is enabled by default.
 ENABLE_GET_COMMENTS = True

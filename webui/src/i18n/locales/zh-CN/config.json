@@ -55,6 +55,8 @@
     "saveFormatPlaceholder": "选择格式",
     "commentExtraction": "评论抓取",
     "subComments": "子评论",
+    "bgmExtraction": "BGM 抓取",
+    "bgmExtractionHint": "下载视频背景音乐(抖音),自动连带开启视频下载以支持音轨兜底",
     "headlessMode": "无头模式",
     "headlessModeHint": "无 GUI 运行浏览器"
   },
@@ -62,7 +64,8 @@
     "initiateScan": "开始爬虫",
     "initiating": "启动中...",
     "terminate": "终止",
-    "stopping": "停止中..."
+    "stopping": "停止中...",
+    "clearHistory": "清除历史"
   },
   "warning": {
     "cookieSlider": "[提示] 小红书和抖音平台不建议使用 Cookie 登录，因为可能会触发滑块验证",

@@ -71,6 +71,7 @@ class CrawlerStartRequest(BaseModel):
     start_page: int = 1
     enable_comments: bool = True
     enable_sub_comments: bool = False
+    enable_bgm: bool = False
     save_option: SaveDataOptionEnum = SaveDataOptionEnum.JSONL
     cookies: str = ""
     headless: bool = False
@@ -102,3 +103,26 @@ class DataFileInfo(BaseModel):
     size: int
     modified_at: str
     record_count: Optional[int] = None
+
+
+class RunRecord(BaseModel):
+    """单次爬取运行的元数据记录"""
+    run_id: str
+    platform: Optional[str] = None
+    crawler_type: Optional[str] = None
+    save_option: Optional[str] = None
+    keywords: Optional[str] = None
+    started_at: Optional[str] = None
+    ended_at: Optional[str] = None
+    status: Literal["running", "success", "failed", "stopped"]
+    exit_code: Optional[int] = None
+    record_count: Optional[int] = None
+    error_message: Optional[str] = None
+
+
+class ClearHistoryRequest(BaseModel):
+    """清除历史数据请求"""
+    clear_files: bool = True       # 删除 data/ 下的数据文件（文件存储模式）
+    clear_db: bool = False        # truncate ORM 表（db/sqlite/postgres 模式）
+    clear_runs: bool = True        # 清空运行清单
+    platform: Optional[str] = None  # 限定平台，None 表示全部

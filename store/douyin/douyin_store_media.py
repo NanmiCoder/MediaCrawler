@@ -127,3 +127,60 @@ class DouYinVideo(AbstractStoreVideo):
         async with aiofiles.open(save_file_name, 'wb') as f:
             await f.write(video_content)
             utils.logger.info(f"[DouYinVideoStoreImplement.save_video] save video {save_file_name} success ...")
+
+
+class DouYinBGM(AbstractStoreVideo):
+    """Store Douyin video BGM (background music) audio file to local disk."""
+
+    def __init__(self):
+        if config.SAVE_DATA_PATH:
+            self.bgm_store_path = f"{config.SAVE_DATA_PATH}/douyin/bgm"
+        else:
+            self.bgm_store_path = "data/douyin/bgm"
+
+    async def store_bgm(self, bgm_content_item: Dict):
+        """
+        store bgm audio
+
+        Args:
+            bgm_content_item: dict with aweme_id, bgm_content(bytes), extension_file_name
+
+        Returns:
+
+        """
+        await self.save_bgm(
+            bgm_content_item.get("aweme_id"),
+            bgm_content_item.get("bgm_content"),
+            bgm_content_item.get("extension_file_name"),
+        )
+
+    def make_save_file_name(self, aweme_id: str, extension_file_name: str) -> str:
+        """
+        make save file name by store type
+
+        Args:
+            aweme_id: aweme id
+            extension_file_name: bgm filename with extension (e.g. bgm.m4a, bgm.mp3)
+
+        Returns:
+
+        """
+        return f"{self.bgm_store_path}/{aweme_id}/{extension_file_name}"
+
+    async def save_bgm(self, aweme_id: str, bgm_content: bytes, extension_file_name: str):
+        """
+        save bgm audio to local
+
+        Args:
+            aweme_id: aweme id
+            bgm_content: audio bytes
+            extension_file_name: bgm filename with extension
+
+        Returns:
+
+        """
+        pathlib.Path(self.bgm_store_path + "/" + aweme_id).mkdir(parents=True, exist_ok=True)
+        save_file_name = self.make_save_file_name(aweme_id, extension_file_name)
+        async with aiofiles.open(save_file_name, 'wb') as f:
+            await f.write(bgm_content)
+            utils.logger.info(f"[DouYinBGM.save_bgm] save bgm {save_file_name} success ...")

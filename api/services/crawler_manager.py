@@ -20,11 +20,13 @@ import asyncio
 import subprocess
 import signal
 import os
+import json
 from typing import Optional, List
 from datetime import datetime
 from pathlib import Path
 
 from ..schemas import CrawlerStartRequest, LogEntry
+from . import run_history
 
 
 class CrawlerManager:
@@ -43,6 +45,17 @@ class CrawlerManager:
         self._project_root = Path(__file__).parent.parent.parent
         # Log queue - for pushing to WebSocket
         self._log_queue: Optional[asyncio.Queue] = None
+        # 当前运行记录 id（start 时生成，_read_output finalize 时用）
+        self._current_run_id: Optional[str] = None
+        # stop() 主动停止标记，用于区分 failed 与 stopped
+        self._stop_requested = False
+        # 孤儿恢复：把上次 API 崩溃前残留的 running 记录标记为 failed
+        try:
+            recovered = run_history.recover_orphan_runs()
+            if recovered:
+                print(f"[CrawlerManager] Recovered {recovered} orphaned run(s) marked as failed")
+        except Exception as e:
+            print(f"[CrawlerManager] Run history orphan recovery failed: {e}")
 
     @property
     def logs(self) -> List[LogEntry]:
@@ -110,6 +123,10 @@ class CrawlerManager:
                 except asyncio.QueueEmpty:
                     pass
 
+            # 先生成 run_id 并存实例状态，供 _build_command 拼接 --run_id 注入子进程
+            run_id = run_history.generate_run_id()
+            self._current_run_id = run_id
+
             # Build command line arguments
             cmd = self._build_command(config)
 
@@ -133,6 +150,32 @@ class CrawlerManager:
                 self.status = "running"
                 self.started_at = datetime.now()
                 self.current_config = config
+                self._stop_requested = False
+
+                # 记录本次运行到历史清单
+                keywords_field = ""
+                if config.crawler_type.value == "search":
+                    keywords_field = config.keywords
+                elif config.crawler_type.value == "detail":
+                    keywords_field = config.specified_ids
+                elif config.crawler_type.value == "creator":
+                    keywords_field = config.creator_ids
+                try:
+                    run_history.append_run({
+                        "run_id": run_id,
+                        "platform": config.platform.value,
+                        "crawler_type": config.crawler_type.value,
+                        "save_option": config.save_option.value,
+                        "keywords": keywords_field,
+                        "started_at": self.started_at.isoformat(),
+                        "ended_at": None,
+                        "status": "running",
+                        "exit_code": None,
+                        "record_count": None,
+                        "error_message": None,
+                    })
+                except Exception as e:
+                    print(f"[CrawlerManager] Failed to append run history: {e}")
 
                 entry = self._create_log_entry(
                     f"Crawler started on platform: {config.platform.value}, type: {config.crawler_type.value}",
@@ -157,6 +200,7 @@ class CrawlerManager:
                 return False
 
             self.status = "stopping"
+            self._stop_requested = True
             entry = self._create_log_entry("Sending SIGTERM to crawler process...", "warning")
             await self._push_log(entry)
 
@@ -199,7 +243,8 @@ class CrawlerManager:
             "platform": self.current_config.platform.value if self.current_config else None,
             "crawler_type": self.current_config.crawler_type.value if self.current_config else None,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "error_message": None
+            "error_message": None,
+            "run_id": self._current_run_id,
         }
 
     def _build_command(self, config: CrawlerStartRequest) -> list:
@@ -224,6 +269,7 @@ class CrawlerManager:
 
         cmd.extend(["--get_comment", "true" if config.enable_comments else "false"])
         cmd.extend(["--get_sub_comment", "true" if config.enable_sub_comments else "false"])
+        cmd.extend(["--enable_get_bgm", "true" if config.enable_bgm else "false"])
 
         if config.max_notes_count is not None:
             cmd.extend(["--crawler_max_notes_count", str(config.max_notes_count)])
@@ -235,6 +281,10 @@ class CrawlerManager:
             cmd.extend(["--cookies", config.cookies])
 
         cmd.extend(["--headless", "true" if config.headless else "false"])
+
+        # 注入 run_id，供子进程把 run_id 写进数据行/文件名后缀（按 run 分组的前提）
+        if self._current_run_id:
+            cmd.extend(["--run_id", self._current_run_id])
 
         return cmd
 
@@ -276,12 +326,104 @@ class CrawlerManager:
                     entry = self._create_log_entry(f"Crawler exited with code: {exit_code}", "warning")
                 await self._push_log(entry)
                 self.status = "idle"
+                self._finalize_run(exit_code)
 
         except asyncio.CancelledError:
+            # stop() 取消读任务时也要 finalize（标记为 stopped）
+            if self._stop_requested and self._current_run_id:
+                self._finalize_run(-1, stopped=True)
             pass
         except Exception as e:
             entry = self._create_log_entry(f"Error reading output: {str(e)}", "error")
             await self._push_log(entry)
+
+    def _finalize_run(self, exit_code: int, stopped: bool = False) -> None:
+        """运行结束时回写历史清单：ended_at / status / exit_code / record_count。"""
+        if not self._current_run_id:
+            return
+        # 判定最终状态：主动停止→stopped，exit 0→success，否则 failed
+        if stopped or self._stop_requested:
+            final_status = "stopped"
+        elif exit_code == 0:
+            final_status = "success"
+        else:
+            final_status = "failed"
+        patch = {
+            "ended_at": datetime.now().isoformat(),
+            "status": final_status,
+            "exit_code": exit_code,
+            "record_count": self._count_recent_records(),
+        }
+        try:
+            run_history.update_run(self._current_run_id, patch)
+        except Exception as e:
+            print(f"[CrawlerManager] Failed to finalize run history: {e}")
+        # 清理当前运行标记
+        self._current_run_id = None
+        self._stop_requested = False
+
+    def _count_recent_records(self) -> int:
+        """
+        统计本次运行产生的记录数（近似）。
+
+        扫描 data 目录下属于当前平台、且在 started_at 之后修改的数据文件，
+        求和其记录数。由于文件是追加模式，同日多次运行会混在同一文件，此值为
+        「运行结束时文件内累计记录数」，非本次增量。
+        """
+        if not self.started_at or not self.current_config:
+            return 0
+        data_dir = self._project_root / "data"
+        if not data_dir.exists():
+            return 0
+        # 平台短名 → 存储目录名映射（存储层用长名）
+        platform_map = {"dy": "douyin", "xhs": "xhs", "ks": "kuaishou",
+                        "bili": "bilibili", "wb": "weibo", "tieba": "tieba", "zhihu": "zhihu"}
+        platform_dir = platform_map.get(self.current_config.platform.value, "")
+        if not platform_dir:
+            return 0
+        started_ts = self.started_at.timestamp()
+        supported = {".json", ".jsonl", ".csv", ".xlsx", ".xls"}
+        total = 0
+        for root, _dirs, filenames in os.walk(data_dir):
+            root_path = Path(root)
+            # 仅统计当前平台目录下的文件
+            try:
+                rel = root_path.relative_to(data_dir)
+            except ValueError:
+                continue
+            if platform_dir not in str(rel).lower():
+                continue
+            for filename in filenames:
+                file_path = root_path / filename
+                if file_path.suffix.lower() not in supported:
+                    continue
+                try:
+                    stat = file_path.stat()
+                    if stat.st_mtime < started_ts:
+                        continue  # 运行开始前就存在的文件，跳过
+                    total += self._count_records_in_file(file_path)
+                except Exception:
+                    continue
+        return total
+
+    @staticmethod
+    def _count_records_in_file(file_path: Path) -> int:
+        """统计单个数据文件的记录数（json 数组长度 / jsonl 非空行 / csv 行数-1）。"""
+        suffix = file_path.suffix.lower()
+        try:
+            if suffix == ".json":
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    return len(data) if isinstance(data, list) else 0
+            elif suffix == ".jsonl":
+                with open(file_path, "r", encoding="utf-8") as f:
+                    return sum(1 for line in f if line.strip())
+            elif suffix == ".csv":
+                with open(file_path, "r", encoding="utf-8") as f:
+                    return max(0, sum(1 for _ in f) - 1)
+        except Exception:
+            return 0
+        return 0
 
 
 # Global singleton

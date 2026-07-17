@@ -50,10 +50,12 @@ WEBUI_DIR = os.path.join(os.path.dirname(__file__), "webui")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite dev server
+        "http://localhost:5173",  # Vite dev server (original)
         "http://localhost:3000",  # Backup port
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "http://localhost:15173",  # Vite dev server (custom port, avoid conflict)
+        "http://127.0.0.1:15173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -202,4 +204,4 @@ if os.path.exists(WEBUI_DIR):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=18080)

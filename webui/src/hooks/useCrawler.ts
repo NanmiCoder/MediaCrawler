@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { crawlerApi, configApi } from '@/lib/api'
 import { useCrawlerStore } from '@/store/crawlerStore'
-import type { CrawlerConfig } from '@/types/crawler'
+import type { CrawlerConfig, ClearHistoryRequest, RunRecord } from '@/types/crawler'
 
 export function useCrawlerStatus() {
   const setStatus = useCrawlerStore((state) => state.setStatus)
@@ -95,5 +95,33 @@ export function useConfigOptions() {
       return data
     },
     staleTime: Infinity,
+  })
+}
+
+export function useRunHistory() {
+  const status = useCrawlerStore((state) => state.status)
+  return useQuery<RunRecord[]>({
+    queryKey: ['runHistory'],
+    queryFn: async () => {
+      const { data } = await crawlerApi.getHistory(50)
+      return data.runs
+    },
+    // 有运行中任务时 5s 轮询刷新状态，否则 stale
+    refetchInterval: status === 'running' ? 5000 : false,
+  })
+}
+
+export function useClearHistory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: ClearHistoryRequest) => crawlerApi.clearHistory(payload),
+    onSuccess: (res) => {
+      toast.success(`已清除：${res.data.deleted_files} 个文件${res.data.cleared_runs ? ' + 运行清单' : ''}`)
+      queryClient.invalidateQueries({ queryKey: ['runHistory'] })
+      queryClient.invalidateQueries({ queryKey: ['dataFiles'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`清除失败: ${error.message}`)
+    },
   })
 }

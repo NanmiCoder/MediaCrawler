@@ -1,0 +1,36 @@
+{
+  "title": "RUN_HISTORY",
+  "subtitle": "Review each crawl run and its results",
+  "clear": "CLEAR_HISTORY",
+  "clearConfirm": "Confirm clear history data?",
+  "clearHint": "Irreversible. Cannot clear while crawler is running.",
+  "clearFiles": "Delete data files (jsonl/json/csv)",
+  "clearDb": "Truncate database tables",
+  "clearRuns": "Clear run manifest",
+  "platform": "ALL PLATFORMS",
+  "empty": "NO_RUNS",
+  "emptyHint": "Start a crawler and run records will appear here.",
+  "duration": "DURATION",
+  "column": {
+    "platform": "PLATFORM",
+    "type": "CRAWL_TYPE",
+    "status": "STATUS",
+    "startedAt": "STARTED_AT",
+    "endedAt": "ENDED_AT",
+    "duration": "DURATION",
+    "records": "RECORDS",
+    "keywords": "KEYWORDS",
+    "error": "ERROR"
+  },
+  "status": {
+    "running": "RUNNING",
+    "success": "SUCCESS",
+    "failed": "FAILED",
+    "stopped": "STOPPED"
+  },
+  "durationSeconds": "{{sec}}s",
+  "durationMinutes": "{{min}}m {{sec}}s",
+  "cancel": "CANCEL",
+  "clearSuccess": "Cleared: {{files}} files{{runsSuffix}}",
+  "clearFailed": "Clear failed: {{message}}"
+}

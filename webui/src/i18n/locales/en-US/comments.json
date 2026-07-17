@@ -1,0 +1,14 @@
+{
+  "title": "COMMENTS",
+  "empty": "NO_COMMENTS",
+  "emptyHint": "Crawl Douyin with comment fetching enabled and comments will appear here grouped by run.",
+  "runGroup": "RUN_GROUP",
+  "unattributed": "HISTORICAL",
+  "commentCount": "{{count}} COMMENTS",
+  "nickname": "ANONYMOUS",
+  "content": "CONTENT",
+  "likes": "LIKES",
+  "createTime": "TIME",
+  "viewOriginal": "SOURCE",
+  "subComments": "REPLIES"
+}

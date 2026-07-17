@@ -44,7 +44,7 @@ from media_platform.weibo import WeiboCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 from media_platform.zhihu import ZhihuCrawler
 from tools.async_file_writer import AsyncFileWriter
-from var import crawler_type_var
+from var import crawler_type_var, run_id_var
 
 
 class CrawlerFactory:
@@ -109,6 +109,10 @@ async def main() -> None:
     # 数据库保存模式下自动建表，避免首次运行时出现 no such table 错误
     if config.SAVE_DATA_OPTION in ("sqlite", "mysql", "db", "postgres"):
         await db.init_db(config.SAVE_DATA_OPTION)
+
+    # 单点注入 run_id 到 contextvar，供 store 层写数据行/文件名时带上。
+    # 同一 event loop，asyncio.gather 默认 copy context，store 层读取安全。
+    run_id_var.set(config.RUN_ID or "")
 
     crawler = CrawlerFactory.create_crawler(platform=config.PLATFORM)
     await crawler.start()

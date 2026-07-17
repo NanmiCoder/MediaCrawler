@@ -12,7 +12,11 @@
     "api": "API",
     "local": "LOCAL",
     "disclaimer": "For personal learning only, commercial use prohibited",
-    "license": "License"
+    "license": "License",
+    "crawler": "CRAWLER",
+    "history": "HISTORY",
+    "bgm": "BGM",
+    "comments": "COMMENTS"
   },
   "action": {
     "loading": "Loading...",

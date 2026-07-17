@@ -1,13 +1,14 @@
 import type { ComponentType, ReactNode, KeyboardEvent } from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Database, Globe, KeyRound, MessageSquare, Play, Square, X } from 'lucide-react'
+import { Database, Globe, KeyRound, MessageSquare, Music, Play, Square, X, Trash2 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { useCrawlerStore } from '@/store/crawlerStore'
+import { useViewStore } from '@/store/viewStore'
 import { usePlatforms, useConfigOptions, useStartCrawler, useStopCrawler } from '@/hooks/useCrawler'
 import { ParsedIdList } from './ParsedIdList'
 
@@ -145,6 +146,7 @@ export function CrawlerConfigPanel() {
   const isDisabled = status === 'running' || status === 'stopping'
   const isRunning = status === 'running'
   const isBusy = isStarting || isStopping || status === 'stopping'
+  const setView = useViewStore((s) => s.setView)
 
   const handleStart = () => {
     startCrawler(config)
@@ -152,6 +154,10 @@ export function CrawlerConfigPanel() {
 
   const handleStop = () => {
     stopCrawler()
+  }
+
+  const handleGoHistory = () => {
+    setView('history')
   }
 
   return (
@@ -373,6 +379,23 @@ export function CrawlerConfigPanel() {
 
             <div className="flex items-center gap-3 rounded-lg border border-cyber-border-subtle bg-cyber-bg-tertiary/30 p-2.5 hover:border-cyber-border-DEFAULT transition-colors">
               <Checkbox
+                checked={config.enable_bgm}
+                onCheckedChange={(checked) => updateConfig({ enable_bgm: checked === true })}
+                disabled={isDisabled}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <Music className="h-3.5 w-3.5 text-cyber-text-secondary" />
+                  <p className="text-xs font-mono text-cyber-text-primary">{t('field.bgmExtraction')}</p>
+                </div>
+                <p className="text-[10px] text-cyber-text-muted leading-snug">
+                  {t('field.bgmExtractionHint')}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-lg border border-cyber-border-subtle bg-cyber-bg-tertiary/30 p-2.5 hover:border-cyber-border-DEFAULT transition-colors">
+              <Checkbox
                 checked={config.headless}
                 onCheckedChange={(checked) => updateConfig({ headless: checked === true })}
                 disabled={isDisabled}
@@ -388,13 +411,13 @@ export function CrawlerConfigPanel() {
         </Section>
       </div>
 
-      {/* Row 2: Start/Stop Button - Full Width */}
-      <div className="w-full">
+      {/* Row 2: Start/Stop Button + Clear History - Full Width */}
+      <div className="w-full flex gap-2">
         {isRunning ? (
           <Button
             onClick={handleStop}
             disabled={isBusy}
-            className="w-full h-12 bg-cyber-neon-pink text-white font-mono font-bold text-sm tracking-wider hover:bg-cyber-neon-pink/90 hover:shadow-glow-pink-sm transition-all"
+            className="flex-1 h-12 bg-cyber-neon-pink text-white font-mono font-bold text-sm tracking-wider hover:bg-cyber-neon-pink/90 hover:shadow-glow-pink-sm transition-all"
           >
             <Square className="w-4 h-4" />
             {isStopping ? t('button.stopping') : t('button.terminate')}
@@ -403,12 +426,22 @@ export function CrawlerConfigPanel() {
           <Button
             onClick={handleStart}
             disabled={isBusy}
-            className="w-full h-12 bg-cyber-neon-cyan text-cyber-bg-primary font-mono font-bold text-sm tracking-wider hover:bg-cyber-neon-cyan/90 hover:shadow-glow-cyan-sm transition-all"
+            className="flex-1 h-12 bg-cyber-neon-cyan text-cyber-bg-primary font-mono font-bold text-sm tracking-wider hover:bg-cyber-neon-cyan/90 hover:shadow-glow-cyan-sm transition-all"
           >
             <Play className="w-4 h-4" />
             {isStarting ? t('button.initiating') : t('button.initiateScan')}
           </Button>
         )}
+        <Button
+          onClick={handleGoHistory}
+          disabled={isRunning}
+          variant="outline"
+          className="h-12 px-4 font-mono font-bold text-sm tracking-wider border-cyber-neon-pink/40 text-cyber-neon-pink hover:text-cyber-neon-pink hover:bg-cyber-neon-pink/10 transition-all"
+          title={t('button.clearHistory', '清除历史')}
+        >
+          <Trash2 className="w-4 h-4" />
+          {t('button.clearHistory', '清除历史')}
+        </Button>
       </div>
     </div>
   )

@@ -1,0 +1,36 @@
+{
+  "title": "爬取历史",
+  "subtitle": "查看每次爬取的运行记录与结果",
+  "clear": "清除历史",
+  "clearConfirm": "确认清除历史数据？",
+  "clearHint": "此操作不可恢复。爬取进行中时无法清除。",
+  "clearFiles": "删除数据文件 (jsonl/json/csv)",
+  "clearDb": "清空数据库表",
+  "clearRuns": "清空运行清单",
+  "platform": "全部平台",
+  "empty": "暂无运行记录",
+  "emptyHint": "启动爬虫后，运行记录将显示在此处。",
+  "duration": "时长",
+  "column": {
+    "platform": "平台",
+    "type": "爬取类型",
+    "status": "状态",
+    "startedAt": "开始时间",
+    "endedAt": "结束时间",
+    "duration": "时长",
+    "records": "条数",
+    "keywords": "关键词",
+    "error": "错误信息"
+  },
+  "status": {
+    "running": "运行中",
+    "success": "成功",
+    "failed": "失败",
+    "stopped": "已停止"
+  },
+  "durationSeconds": "{{sec}}秒",
+  "durationMinutes": "{{min}}分{{sec}}秒",
+  "cancel": "取消",
+  "clearSuccess": "已清除：{{files}} 个文件{{runsSuffix}}",
+  "clearFailed": "清除失败: {{message}}"
+}

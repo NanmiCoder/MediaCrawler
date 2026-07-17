@@ -216,6 +216,15 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 show_default=True,
             ),
         ] = str(config.ENABLE_GET_SUB_COMMENTS),
+        enable_get_bgm: Annotated[
+            str,
+            typer.Option(
+                "--enable_get_bgm",
+                help="Whether to extract and download video BGM (background music). When enabled, also turns on media download so ffmpeg can extract audio as fallback. supports yes/true/t/y/1 or no/false/f/n/0",
+                rich_help_panel="Media Configuration",
+                show_default=True,
+            ),
+        ] = str(config.ENABLE_GET_BGM),
         headless: Annotated[
             str,
             typer.Option(
@@ -332,6 +341,14 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Proxy Configuration",
             ),
         ] = config.STATIC_PROXY_URL,
+        run_id: Annotated[
+            str,
+            typer.Option(
+                "--run_id",
+                help="Run id injected by WebUI API; empty when run from CLI directly. Used to group crawled data by run.",
+                rich_help_panel="Runtime Configuration",
+            ),
+        ] = config.RUN_ID,
     ) -> SimpleNamespace:
         """MediaCrawler 命令行入口"""
 
@@ -339,6 +356,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         enable_sub_comment = _to_bool(get_sub_comment)
         enable_headless = _to_bool(headless)
         enable_ip_proxy_value = _to_bool(enable_ip_proxy)
+        enable_bgm_value = _to_bool(enable_get_bgm)
         init_db_value = init_db.value if init_db else None
 
         # Parse specified_id and creator_id into lists
@@ -353,6 +371,10 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.KEYWORDS = keywords
         config.ENABLE_GET_COMMENTS = enable_comment
         config.ENABLE_GET_SUB_COMMENTS = enable_sub_comment
+        config.ENABLE_GET_BGM = enable_bgm_value
+        # BGM ffmpeg fallback needs the video file on disk, so turn on media download too
+        if enable_bgm_value:
+            config.ENABLE_GET_MEIDAS = True
         config.HEADLESS = enable_headless
         config.CDP_HEADLESS = enable_headless
         config.SAVE_DATA_OPTION = save_data_option.value
@@ -365,6 +387,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.IP_PROXY_POOL_COUNT = ip_proxy_pool_count
         config.IP_PROXY_PROVIDER_NAME = ip_proxy_provider_name
         config.STATIC_PROXY_URL = static_proxy_url
+        config.RUN_ID = run_id
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:

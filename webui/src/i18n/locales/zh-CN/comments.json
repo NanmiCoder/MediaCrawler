@@ -1,0 +1,14 @@
+{
+  "title": "评论记录",
+  "empty": "暂无评论",
+  "emptyHint": "爬取抖音并启用评论抓取后，评论会按运行分组显示在此处。",
+  "runGroup": "运行分组",
+  "unattributed": "历史数据",
+  "commentCount": "{{count}} 条评论",
+  "nickname": "匿名",
+  "content": "内容",
+  "likes": "点赞",
+  "createTime": "时间",
+  "viewOriginal": "原视频",
+  "subComments": "子评论"
+}

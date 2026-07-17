@@ -29,3 +29,5 @@ crawler_type_var: ContextVar[str] = ContextVar("crawler_type", default="")
 comment_tasks_var: ContextVar[List[Task]] = ContextVar("comment_tasks", default=[])
 db_conn_pool_var: ContextVar[aiomysql.Pool] = ContextVar("db_conn_pool_var")
 source_keyword_var: ContextVar[str] = ContextVar("source_keyword", default="")
+# WebUI 注入的运行 id（命令行直跑时为空）。store 层写数据时带上，用于按 run 分组。
+run_id_var: ContextVar[str] = ContextVar("run_id", default="")

@@ -22,7 +22,7 @@
 from typing import List
 
 from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
-from var import source_keyword_var
+from var import source_keyword_var, run_id_var
 
 from ._store_impl import *
 
@@ -74,7 +74,7 @@ async def update_tieba_note(note_item: TiebaNote):
     """
     note_item.source_keyword = source_keyword_var.get()
     save_note_item = note_item.model_dump()
-    save_note_item.update({"last_modify_ts": utils.get_current_timestamp()})
+    save_note_item.update({"last_modify_ts": utils.get_current_timestamp(), "run_id": run_id_var.get()})
     utils.logger.info(f"[store.tieba.update_tieba_note] tieba note: {save_note_item}")
 
     await TieBaStoreFactory.create_store().store_content(save_note_item)
@@ -107,7 +107,7 @@ async def update_tieba_note_comment(note_id: str, comment_item: TiebaComment):
 
     """
     save_comment_item = comment_item.model_dump()
-    save_comment_item.update({"last_modify_ts": utils.get_current_timestamp()})
+    save_comment_item.update({"last_modify_ts": utils.get_current_timestamp(), "run_id": run_id_var.get()})
     utils.logger.info(f"[store.tieba.update_tieba_note_comment] tieba note id: {note_id} comment:{save_comment_item}")
     await TieBaStoreFactory.create_store().store_comment(save_comment_item)
 

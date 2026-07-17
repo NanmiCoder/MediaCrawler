@@ -104,6 +104,10 @@ class DouyinAweme(Base):
     cover_url = Column(Text, comment='封面URL')
     video_download_url = Column(Text, comment='视频下载URL')
     music_download_url = Column(Text, comment='音乐下载URL')
+    music_title = Column(Text, comment='BGM歌名')
+    music_author = Column(Text, comment='BGM作者')
+    music_duration = Column(Text, comment='BGM时长(秒)')
+    music_cover_url = Column(Text, comment='BGM封面URL')
     note_download_url = Column(Text, comment='笔记下载URL')
     source_keyword = Column(Text, default='', comment='来源关键词')
 

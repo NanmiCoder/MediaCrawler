@@ -56,6 +56,7 @@ const defaultConfig: CrawlerConfig = {
   start_page: 1,
   enable_comments: true,
   enable_sub_comments: false,
+  enable_bgm: false,
   save_option: 'json',
   cookies: '',
   headless: false,

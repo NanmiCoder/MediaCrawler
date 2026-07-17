@@ -85,7 +85,7 @@ def _build_aweme_item() -> dict:
             "play_addr": {"url_list": ["", "http://x/video.mp4"]},
         },
         "music": {
-            "play_url": {"uri": "http://x/music.mp3"},
+            "play_url": {"uri": "http://x/music.mp3", "url_list": ["", "http://x/music.mp3"]},
         },
         "images": [
             {"url_list": ["", "http://x/note_img1.jpg"]},

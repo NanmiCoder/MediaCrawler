@@ -23,6 +23,7 @@ import random
 from asyncio import Task
 from typing import Any, Dict, List, Optional, Tuple
 
+import aiofiles
 from playwright.async_api import (
     BrowserContext,
     BrowserType,
@@ -41,7 +42,7 @@ from var import crawler_type_var, source_keyword_var
 
 from .client import DouYinClient
 from .exception import DataFetchError
-from .field import PublishTimeType
+from .field import PublishTimeType, SearchSortType
 from .help import parse_video_info_from_url, parse_creator_info_from_url
 from .login import DouYinLogin
 
@@ -146,6 +147,7 @@ class DouYinCrawler(AbstractCrawler):
                     posts_res = await self.dy_client.search_info_by_keyword(
                         keyword=keyword,
                         offset=page * dy_limit_count - dy_limit_count,
+                        sort_type=SearchSortType(config.SEARCH_SORT_TYPE),
                         publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE),
                         search_id=dy_search_id,
                     )
@@ -167,10 +169,21 @@ class DouYinCrawler(AbstractCrawler):
                         aweme_info: Dict = (post_item.get("aweme_info") or post_item.get("aweme_mix_info", {}).get("mix_items")[0])
                     except TypeError:
                         continue
+
+                    # 精度过滤：仅跳过广告/无效项。
+                    # 注：曾尝试按「desc 必须含关键词」过滤，但抖音大量相关视频 desc 为空或纯表情，
+                    # 误杀严重，已移除。搜索结果本身已按相关度排序，信任搜索即可。
+                    if not aweme_info or not isinstance(aweme_info, dict):
+                        continue
+                    if aweme_info.get("is_ads") or aweme_info.get("aweme_type") == 0 and aweme_info.get("commerce_info"):
+                        utils.logger.info(f"[DouYinCrawler.search] Skip ads aweme: {aweme_info.get('aweme_id', '')}")
+                        continue
+
                     aweme_list.append(aweme_info.get("aweme_id", ""))
                     page_aweme_list.append(aweme_info.get("aweme_id", ""))
                     await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
                     await self.get_aweme_media(aweme_item=aweme_info)
+                    await self.get_aweme_bgm(aweme_item=aweme_info)
                 
                 # Batch get note comments for the current page
                 await self.batch_get_note_comments(page_aweme_list)
@@ -213,6 +226,7 @@ class DouYinCrawler(AbstractCrawler):
             if aweme_detail is not None:
                 await douyin_store.update_douyin_aweme(aweme_item=aweme_detail)
                 await self.get_aweme_media(aweme_item=aweme_detail)
+                await self.get_aweme_bgm(aweme_item=aweme_detail)
         await self.batch_get_note_comments(aweme_id_list)
 
     async def get_aweme_detail(self, aweme_id: str, semaphore: asyncio.Semaphore) -> Any:
@@ -305,6 +319,7 @@ class DouYinCrawler(AbstractCrawler):
             if aweme_item is not None:
                 await douyin_store.update_douyin_aweme(aweme_item=aweme_item)
                 await self.get_aweme_media(aweme_item=aweme_item)
+                await self.get_aweme_bgm(aweme_item=aweme_item)
 
     async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DouYinClient:
         """Create douyin client"""
@@ -468,3 +483,124 @@ class DouYinCrawler(AbstractCrawler):
             return
         extension_file_name = f"video.mp4"
         await douyin_store.update_dy_aweme_video(aweme_id, content, extension_file_name)
+
+    async def get_aweme_bgm(self, aweme_item: Dict):
+        """
+        Download the BGM (background music) of a douyin video.
+        Primary path: download music.play_url.url_list directly (reuse DouYinClient.get_aweme_media).
+        Fallback: if primary fails (anti-leech), extract audio from the already-downloaded
+                  video.mp4 via ffmpeg (requires ENABLE_GET_MEIDAS=True so video exists on disk).
+        Any failure is logged and skipped — never breaks the main search flow.
+        """
+        if not config.ENABLE_GET_BGM:
+            return
+        try:
+            aweme_id = aweme_item.get("aweme_id")
+            if not aweme_id:
+                return
+            music_info = douyin_store._extract_music_info(aweme_item)
+            music_url = music_info.get("music_download_url", "")
+            aweme_url = f"https://www.douyin.com/video/{aweme_id}"
+            video_download_url = douyin_store._extract_video_download_url(aweme_item)
+
+            # ---- Primary path: direct download music.play_url.url_list ----
+            bgm_content: Optional[bytes] = None
+            bgm_source = "primary_url"
+            ext = "m4a"  # douyin music.play_url.url_list is usually m4a
+            if music_url:
+                try:
+                    bgm_content = await self.dy_client.get_aweme_media(music_url)
+                    await asyncio.sleep(random.random())
+                except Exception as e:
+                    utils.logger.warning(f"[DouYinCrawler.get_aweme_bgm] primary music url download failed aweme={aweme_id}: {e}")
+                    bgm_content = None
+                # Defense: anti-leech may return a very short error page instead of audio
+                if bgm_content is not None and len(bgm_content) < 1024:
+                    utils.logger.warning(f"[DouYinCrawler.get_aweme_bgm] music content too short({len(bgm_content)}B), likely anti-leech, aweme={aweme_id}")
+                    bgm_content = None
+            else:
+                utils.logger.info(f"[DouYinCrawler.get_aweme_bgm] no music_url for aweme={aweme_id}")
+
+            # ---- Fallback: ffmpeg extract audio from local video.mp4 ----
+            if bgm_content is None:
+                bgm_content, ext = await self._extract_bgm_from_local_video(aweme_id)
+                if bgm_content is not None:
+                    bgm_source = "ffmpeg_fallback"
+                else:
+                    utils.logger.warning(f"[DouYinCrawler.get_aweme_bgm] bgm fallback unavailable for aweme={aweme_id} (need ENABLE_GET_MEIDAS=True and video.mp4 on disk)")
+                    return
+
+            # ---- Save audio + write playlist row ----
+            base_dir = config.SAVE_DATA_PATH if config.SAVE_DATA_PATH else "data"
+            local_path = f"{base_dir}/douyin/bgm/{aweme_id}/bgm.{ext}"
+            extension_file_name = f"bgm.{ext}"
+            await douyin_store.update_dy_aweme_bgm(
+                aweme_id=aweme_id,
+                bgm_content=bgm_content,
+                extension_file_name=extension_file_name,
+                bgm_meta={
+                    "keyword": source_keyword_var.get(),
+                    "aweme_url": aweme_url,
+                    "video_download_url": video_download_url,
+                    "music_title": music_info["music_title"],
+                    "music_author": music_info["music_author"],
+                    "music_duration": music_info["music_duration"],
+                    "music_url": music_url,
+                    "bgm_source": bgm_source,
+                    "local_path": local_path,
+                },
+            )
+        except Exception as e:
+            utils.logger.error(f"[DouYinCrawler.get_aweme_bgm] unexpected error for aweme={aweme_item.get('aweme_id')}: {e}")
+
+    async def _extract_bgm_from_local_video(self, aweme_id: str) -> Tuple[Optional[bytes], str]:
+        """
+        Extract audio track from the already-downloaded video.mp4 using ffmpeg.
+        Depends on ENABLE_GET_MEIDAS=True and video.mp4 existing on disk.
+
+        Args:
+            aweme_id: aweme id
+
+        Returns:
+            Tuple[Optional[bytes], str]: (audio_bytes, ext) on success, (None, "") on any failure.
+        """
+        if not config.ENABLE_GET_MEIDAS:
+            return None, ""
+        # Locate video.mp4 (keep path consistent with DouYinVideo in douyin_store_media.py)
+        base = config.SAVE_DATA_PATH if config.SAVE_DATA_PATH else "data"
+        video_path = f"{base}/douyin/videos/{aweme_id}/video.mp4"
+        if not os.path.exists(video_path):
+            utils.logger.info(f"[DouYinCrawler._extract_bgm_from_local_video] video.mp4 not found for aweme={aweme_id}")
+            return None, ""
+        bgm_dir = f"{base}/douyin/bgm/{aweme_id}"
+        os.makedirs(bgm_dir, exist_ok=True)
+        tmp_mp3 = f"{bgm_dir}/bgm.mp3"
+        cmd = [
+            "ffmpeg", "-y", "-i", video_path,
+            "-vn", "-acodec", "libmp3lame", "-ab", "192k",
+            tmp_mp3,
+        ]
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                utils.logger.error(f"[DouYinCrawler._extract_bgm_from_local_video] ffmpeg rc={proc.returncode} aweme={aweme_id} stderr={stderr.decode(errors='replace')[:500]}")
+                return None, ""
+            if not os.path.exists(tmp_mp3) or os.path.getsize(tmp_mp3) == 0:
+                utils.logger.error(f"[DouYinCrawler._extract_bgm_from_local_video] ffmpeg produced empty/no file aweme={aweme_id}")
+                return None, ""
+            # Read back bytes so that final save goes through the unified DouYinBGM.save_bgm path
+            async with aiofiles.open(tmp_mp3, 'rb') as f:
+                content = await f.read()
+            os.remove(tmp_mp3)
+            return content, "mp3"
+        except FileNotFoundError:
+            utils.logger.error("[DouYinCrawler._extract_bgm_from_local_video] ffmpeg not found in PATH, install ffmpeg or add to PATH")
+            return None, ""
+        except Exception as e:
+            utils.logger.error(f"[DouYinCrawler._extract_bgm_from_local_video] unexpected error aweme={aweme_id}: {e}")
+            return None, ""

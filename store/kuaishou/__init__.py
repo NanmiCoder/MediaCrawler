@@ -25,7 +25,7 @@
 from typing import List
 
 import config
-from var import source_keyword_var
+from var import source_keyword_var, run_id_var
 from tools.user_hash import anonymize_user_id, mask_nickname
 
 from ._store_impl import *
@@ -73,6 +73,7 @@ async def update_kuaishou_video(video_item: Dict):
         "video_cover_url": photo_info.get("coverUrl", ""),
         "video_play_url": photo_info.get("photoUrl", ""),
         "source_keyword": source_keyword_var.get(),
+        "run_id": run_id_var.get(),
     }
     utils.logger.info(
         f"[store.kuaishou.update_kuaishou_video] Kuaishou video id:{video_id}, title:{save_content_item.get('title')}")
@@ -104,6 +105,7 @@ async def update_ks_video_comment(video_id: str, comment_item: Dict):
         # V2: commentCount, Old: subCommentCount
         "sub_comment_count": str(comment_item.get("commentCount") or comment_item.get("subCommentCount", 0)),
         "last_modify_ts": utils.get_current_timestamp(),
+        "run_id": run_id_var.get(),
     }
     utils.logger.info(
         f"[store.kuaishou.update_ks_video_comment] Kuaishou video comment: {comment_id}, content: {save_comment_item.get('content')}")

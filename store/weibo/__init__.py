@@ -26,7 +26,7 @@ import re
 from typing import List
 
 from tools.user_hash import anonymize_user_id, mask_nickname
-from var import source_keyword_var
+from var import source_keyword_var, run_id_var
 
 from .weibo_store_media import *
 from ._store_impl import *
@@ -102,6 +102,7 @@ async def update_weibo_note(note_item: Dict):
         "creator_hash": anonymize_user_id(user_info.get("id")),
         "nickname": mask_nickname(user_info.get("screen_name", "")),
         "source_keyword": source_keyword_var.get(),
+        "run_id": run_id_var.get(),
     }
     utils.logger.info(f"[store.weibo.update_weibo_note] weibo note id:{note_id}, title:{save_content_item.get('content')[:24]} ...")
     await WeibostoreFactory.create_store().store_content(content_item=save_content_item)
@@ -155,6 +156,7 @@ async def update_weibo_note_comment(note_id: str, comment_item: Dict):
         # 创作者信息（匿名化/脱敏，不含原始 user_id/avatar/gender/profile_url/ip_location）
         "creator_hash": anonymize_user_id(user_info.get("id")),
         "nickname": mask_nickname(user_info.get("screen_name", "")),
+        "run_id": run_id_var.get(),
     }
     utils.logger.info(f"[store.weibo.update_weibo_note_comment] Weibo note comment: {comment_id}, content: {save_comment_item.get('content', '')[:24]} ...")
     await WeibostoreFactory.create_store().store_comment(comment_item=save_comment_item)

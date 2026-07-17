@@ -1,7 +1,9 @@
-import { Bug, Wifi, AlertTriangle, Github } from 'lucide-react'
+import { Bug, Wifi, AlertTriangle, Github, History, Music, MessageSquare, Bug as CrawlerIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useCrawlerStore } from '@/store/crawlerStore'
+import { useViewStore } from '@/store/viewStore'
 import { useCrawlerStatus } from '@/hooks/useCrawler'
 import { LanguageSwitch } from './LanguageSwitch'
 import { ThemeToggle } from './ThemeToggle'
@@ -10,15 +12,26 @@ interface SidebarProps {
   onShowDisclaimer?: () => void
 }
 
+type ViewKey = 'crawler' | 'history' | 'bgm' | 'comments'
+
 export function Sidebar({ onShowDisclaimer }: SidebarProps) {
   const { t } = useTranslation()
   const { t: tLicense } = useTranslation('license')
   const status = useCrawlerStore((state) => state.status)
+  const currentView = useViewStore((s) => s.currentView)
+  const setView = useViewStore((s) => s.setView)
 
   // Poll status
   useCrawlerStatus()
 
   const isRunning = status === 'running'
+
+  const viewButtons: { key: ViewKey; icon: typeof History; label: string }[] = [
+    { key: 'crawler', icon: CrawlerIcon, label: t('sidebar.crawler', '爬虫') },
+    { key: 'history', icon: History, label: t('sidebar.history', '历史') },
+    { key: 'bgm', icon: Music, label: t('sidebar.bgm', 'BGM') },
+    { key: 'comments', icon: MessageSquare, label: t('sidebar.comments', '评论') },
+  ]
 
   return (
     <header className="h-14 flex-shrink-0 glass-panel border-b border-cyber-border-subtle relative z-10">
@@ -64,8 +77,32 @@ export function Sidebar({ onShowDisclaimer }: SidebarProps) {
           </div>
         </button>
 
-        {/* Right: Actions and Status */}
+        {/* Right: View switch + Actions + Status */}
         <div className="flex items-center gap-3">
+          {/* View switcher */}
+          <div className="flex items-center gap-1 p-0.5 rounded-md border border-cyber-border-subtle bg-cyber-bg-tertiary">
+            {viewButtons.map(({ key, icon: Icon, label }) => {
+              const active = currentView === key
+              return (
+                <Button
+                  key={key}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setView(key)}
+                  title={label}
+                  className={`h-7 px-2 font-mono text-xs transition-all ${
+                    active
+                      ? 'bg-cyber-neon-cyan/20 text-cyber-neon-cyan shadow-glow-cyan-sm'
+                      : 'text-cyber-text-muted hover:text-cyber-text-primary hover:bg-cyber-bg-elevated'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                </Button>
+              )
+            })}
+          </div>
+
           {/* Theme Toggle */}
           <ThemeToggle />
           {/* Language Switch */}

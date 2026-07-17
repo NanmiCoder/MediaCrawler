@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { Toaster } from 'sonner'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MainContent } from '@/components/layout/MainContent'
-import { AuthorFooter } from '@/components/layout/AuthorFooter'
 import { CrawlerConfigPanel } from '@/components/config/CrawlerConfigPanel'
+import { HistoryView } from '@/components/history/HistoryView'
+import { BgmPlayer } from '@/components/bgm/BgmPlayer'
+import { CommentsView } from '@/components/comments/CommentsView'
 import { EnvironmentCheck, isEnvChecked } from '@/components/env/EnvironmentCheck'
 import { LicenseDisclaimer, isLicenseAccepted } from '@/components/license/LicenseDisclaimer'
+import { useViewStore } from '@/store/viewStore'
 
 function App() {
   // Initialize by checking localStorage if license has been accepted
@@ -14,6 +17,8 @@ function App() {
   const [envChecked, setEnvChecked] = useState(() => isEnvChecked())
   // State for showing disclaimer manually
   const [showDisclaimer, setShowDisclaimer] = useState(false)
+
+  const currentView = useViewStore((s) => s.currentView)
 
   const handleEnvCheckComplete = () => {
     setEnvChecked(true)
@@ -45,17 +50,34 @@ function App() {
 
       {/* Main Area */}
       <div className="flex-1 flex flex-col gap-4 p-4 overflow-hidden min-h-0">
-        {/* Config Panel - Primary Action Area (Always Expanded) */}
-        <div className="flex-shrink-0">
-          <CrawlerConfigPanel />
-        </div>
+        {/* View switch: crawler / history / bgm */}
+        {currentView === 'crawler' && (
+          <>
+            {/* Config Panel - Primary Action Area (Always Expanded) */}
+            <div className="flex-shrink-0">
+              <CrawlerConfigPanel />
+            </div>
 
-        {/* Console - Collapsible Terminal */}
-        <MainContent />
+            {/* Console - Collapsible Terminal */}
+            <MainContent />
+          </>
+        )}
+        {currentView === 'history' && (
+          <div className="flex-1 min-h-0">
+            <HistoryView />
+          </div>
+        )}
+        {currentView === 'bgm' && (
+          <div className="flex-1 min-h-0">
+            <BgmPlayer />
+          </div>
+        )}
+        {currentView === 'comments' && (
+          <div className="flex-1 min-h-0">
+            <CommentsView />
+          </div>
+        )}
       </div>
-
-      {/* Author Footer */}
-      <AuthorFooter />
 
       {/* Toast notifications - Theme-aware style */}
       <Toaster

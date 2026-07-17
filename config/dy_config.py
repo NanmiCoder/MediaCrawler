@@ -18,7 +18,13 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # Douyin platform configuration
-PUBLISH_TIME_TYPE = 0
+# 发布时间过滤: 0=不限 | 1=一天内 | 7=一周内 | 180=半年内
+# 收紧搜索精度，避开老热门内容刷屏。需要更宽时间窗改 0。
+PUBLISH_TIME_TYPE = 7
+
+# 搜索排序方式: 0=综合排序 | 1=最多点赞(热门) | 2=最新发布
+# 默认 1 = 按热门排序，抓热门内容。
+SEARCH_SORT_TYPE = 1
 
 # Specify DY video URL list (supports multiple formats)
 # Supported formats:

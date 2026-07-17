@@ -40,7 +40,14 @@ class AsyncFileWriter:
         else:
             base_path = f"data/{self.platform}/{file_type}"
         pathlib.Path(base_path).mkdir(parents=True, exist_ok=True)
-        file_name = f"{self.crawler_type}_{item_type}_{utils.get_current_date()}.{file_type}"
+        date = utils.get_current_date()
+        # run_id 非空时纳入文件名后缀，使每次运行落独立文件（按 run 分组的前提）；
+        # 为空时用旧格式，向后兼容命令行直跑与历史数据。
+        run_id = getattr(config, "RUN_ID", "") or ""
+        if run_id:
+            file_name = f"{self.crawler_type}_{item_type}_{date}_{run_id}.{file_type}"
+        else:
+            file_name = f"{self.crawler_type}_{item_type}_{date}.{file_type}"
         return f"{base_path}/{file_name}"
 
     async def write_to_csv(self, item: Dict, item_type: str):

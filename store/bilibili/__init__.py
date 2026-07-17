@@ -25,7 +25,7 @@
 from typing import List
 
 import config
-from var import source_keyword_var
+from var import source_keyword_var, run_id_var
 from tools.user_hash import anonymize_user_id, mask_nickname
 
 from ._store_impl import *
@@ -77,6 +77,7 @@ async def update_bilibili_video(video_item: Dict):
         "video_url": f"https://www.bilibili.com/video/av{video_id}",
         "video_cover_url": video_item_view.get("pic", ""),
         "source_keyword": source_keyword_var.get(),
+        "run_id": run_id_var.get(),
     }
     utils.logger.info(f"[store.bilibili.update_bilibili_video] bilibili video id:{video_id}, title:{save_content_item.get('title')}")
     await BiliStoreFactory.create_store().store_content(content_item=save_content_item)
@@ -111,6 +112,7 @@ async def update_bilibili_video_comment(video_id: str, comment_item: Dict):
         "sub_comment_count": str(comment_item.get("rcount", 0)),
         "like_count": like_count,
         "last_modify_ts": utils.get_current_timestamp(),
+        "run_id": run_id_var.get(),
     }
     utils.logger.info(f"[store.bilibili.update_bilibili_video_comment] Bilibili video comment: {comment_id}, content: {save_comment_item.get('content')}")
     await BiliStoreFactory.create_store().store_comment(comment_item=save_comment_item)

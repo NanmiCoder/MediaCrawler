@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { RunRecord, ClearHistoryRequest, BgmTrack, BgmRunGroup, CommentRunGroup } from '@/types/crawler'
 
 const api = axios.create({
   baseURL: '/api',
@@ -69,6 +70,13 @@ export const crawlerApi = {
   stop: () => api.post('/crawler/stop'),
   getStatus: () => api.get<CrawlerStatus>('/crawler/status'),
   getLogs: (limit = 100) => api.get<{ logs: LogEntry[] }>('/crawler/logs', { params: { limit } }),
+  getHistory: (limit = 50) =>
+    api.get<{ runs: RunRecord[] }>('/crawler/history', { params: { limit } }),
+  clearHistory: (payload: ClearHistoryRequest) =>
+    api.delete<{ deleted_files: number; truncated_tables: string[]; cleared_runs: boolean }>(
+      '/crawler/history',
+      { data: payload },
+    ),
 }
 
 export const dataApi = {
@@ -78,6 +86,23 @@ export const dataApi = {
     api.get<FilePreviewResponse>('/data/files/' + path, { params: { preview: true, limit } }),
   getStats: () => api.get('/data/stats'),
   getDownloadUrl: (path: string) => `/api/data/download/${path}`,
+  getBgmPlaylist: (runId?: string) =>
+    api.get<{ tracks: BgmTrack[]; groups: BgmRunGroup[] }>('/data/bgm/playlist', {
+      params: { run_id: runId },
+    }),
+  getBgmStreamUrl: (awemeId: string) => `/api/data/bgm/${awemeId}`,
+  deleteBgm: (awemeId: string, deleteAudio = false) =>
+    api.delete<{ removed_rows: number; audio_deleted: boolean }>(
+      `/data/bgm/${awemeId}`,
+      { params: { delete_audio: deleteAudio } },
+    ),
+  getBgmTags: () => api.get<{ tags: Record<string, string> }>('/data/bgm/tags'),
+  updateBgmScene: (awemeId: string, scene: string) =>
+    api.put(`/data/bgm/scene/${awemeId}`, { scene }),
+  getCommentsPlaylist: (runId?: string) =>
+    api.get<{ groups: CommentRunGroup[] }>('/data/comments/playlist', {
+      params: { run_id: runId },
+    }),
 }
 
 export const configApi = {

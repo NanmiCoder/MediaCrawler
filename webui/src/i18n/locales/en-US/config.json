@@ -55,6 +55,8 @@
     "saveFormatPlaceholder": "Select format",
     "commentExtraction": "Comment Extraction",
     "subComments": "Sub-comments",
+    "bgmExtraction": "BGM Extraction",
+    "bgmExtractionHint": "Download video background music (Douyin). Auto-enables video download for audio fallback.",
     "headlessMode": "HEADLESS_MODE",
     "headlessModeHint": "Run browser without GUI"
   },
@@ -62,7 +64,8 @@
     "initiateScan": "INITIATE SCAN",
     "initiating": "INITIATING...",
     "terminate": "TERMINATE",
-    "stopping": "STOPPING..."
+    "stopping": "STOPPING...",
+    "clearHistory": "CLEAR_HISTORY"
   },
   "warning": {
     "cookieSlider": "[Note] Cookie login is not recommended for Xiaohongshu and Douyin due to slider captcha",
