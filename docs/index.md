@@ -3,6 +3,8 @@
 ## 项目文档
 
 - [项目架构文档](项目架构文档.md) - 系统架构、模块设计、数据流向（含 Mermaid 图表）
+- [多实例调度器使用指南](多实例调度器使用指南.md) - 多账号作业、运行记录、调度器 WebUI 和 API
+- [内容过滤使用指南](内容过滤使用指南.md) - 按发布时间、点赞、收藏、转发、评论等条件筛选爬取目标
 
 ## 推荐：使用 uv 管理依赖
 
@@ -34,6 +36,9 @@ uv run playwright install
 # 从配置中读取关键词搜索并爬取帖子与评论
 uv run main.py --platform xhs --lt qrcode --type search
 
+# 只保存 2024-07-01 之后且点赞数不低于 1000 的搜索结果
+uv run main.py --platform xhs --lt qrcode --type search --content_filters '{"publish_time":{"min":"2024-07-01"},"liked_count":{"min":1000}}'
+
 # 从配置中读取指定帖子ID列表并爬取帖子与评论
 uv run main.py --platform xhs --lt qrcode --type detail
 
@@ -46,6 +51,16 @@ uv run main.py --platform xhs --lt qrcode --type search --save_data_option db
 # 其他平台示例
 uv run main.py --help
 ```
+
+## 多实例调度器
+
+如需管理多个独立账号实例，可启动 API 服务后访问调度器页面：
+
+```shell
+uv run uvicorn api.main:app --port 8080 --reload
+```
+
+访问 `http://localhost:8080/scheduler` 创建作业、维护登录态、启动运行并查看日志和产物。详细说明见 [多实例调度器使用指南](多实例调度器使用指南.md)。
 
 ## 备选：Python 原生 venv（不推荐）
 > 如果爬取抖音或知乎，需要提前安装 Node.js，版本 `>= 16`。

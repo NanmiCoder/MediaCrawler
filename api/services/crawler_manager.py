@@ -17,6 +17,7 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 import asyncio
+import json
 import subprocess
 import signal
 import os
@@ -230,6 +231,9 @@ class CrawlerManager:
 
         if config.max_comments_count is not None:
             cmd.extend(["--max_comments_count_singlenotes", str(config.max_comments_count)])
+
+        if config.content_filters:
+            cmd.extend(["--content_filters", json.dumps(config.content_filters, ensure_ascii=False)])
 
         if config.cookies:
             cmd.extend(["--cookies", config.cookies])

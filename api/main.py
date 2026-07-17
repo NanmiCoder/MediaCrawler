@@ -32,7 +32,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from .routers import crawler_router, data_router, websocket_router
+from .routers import crawler_router, data_router, scheduler_router, websocket_router
 
 # Project root directory (used for running subprocesses like uv run main.py)
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -45,6 +45,7 @@ app = FastAPI(
 
 # Get webui static files directory
 WEBUI_DIR = os.path.join(os.path.dirname(__file__), "webui")
+SCHEDULER_WEBUI_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scheduler_webui")
 
 # CORS configuration - allow frontend dev server access
 app.add_middleware(
@@ -63,6 +64,7 @@ app.add_middleware(
 # Register routers
 app.include_router(crawler_router, prefix="/api")
 app.include_router(data_router, prefix="/api")
+app.include_router(scheduler_router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
 
 
@@ -83,6 +85,18 @@ async def serve_frontend():
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+
+
+@app.get("/scheduler")
+async def serve_scheduler_frontend():
+    """Return scheduler WebUI page."""
+    index_path = os.path.join(SCHEDULER_WEBUI_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {
+        "message": "MediaCrawler Scheduler WebUI",
+        "note": "Scheduler WebUI source was not found",
+    }
 
 
 @app.get("/api/env/check")
@@ -175,6 +189,7 @@ async def get_config_options():
             {"value": "search", "label": "Search Mode"},
             {"value": "detail", "label": "Detail Mode"},
             {"value": "creator", "label": "Creator Mode"},
+            {"value": "login", "label": "Login Only"},
         ],
         "save_options": [
             {"value": "jsonl", "label": "JSONL File"},
@@ -199,6 +214,13 @@ if os.path.exists(WEBUI_DIR):
         app.mount("/logos", StaticFiles(directory=logos_dir), name="logos")
     # Mount other static files (e.g., vite.svg)
     app.mount("/static", StaticFiles(directory=WEBUI_DIR), name="webui-static")
+
+if os.path.exists(SCHEDULER_WEBUI_DIR):
+    app.mount(
+        "/scheduler/static",
+        StaticFiles(directory=SCHEDULER_WEBUI_DIR),
+        name="scheduler-webui-static",
+    )
 
 
 if __name__ == "__main__":
