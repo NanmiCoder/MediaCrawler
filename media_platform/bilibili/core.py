@@ -49,8 +49,13 @@ from var import crawler_type_var, source_keyword_var
 
 from .client import BilibiliClient
 from .exception import DataFetchError
-from .field import SearchOrderType
-from .help import parse_video_info_from_url, parse_creator_info_from_url
+from .field import BilibiliCommentType, SearchOrderType
+from .help import (
+    parse_article_info_from_url,
+    parse_creator_info_from_url,
+    parse_video_info_from_url,
+    split_bilibili_specified_ids,
+)
 from .login import BilibiliLogin
 
 
@@ -116,7 +121,7 @@ class BilibiliCrawler(AbstractCrawler):
                 await self.search()
             elif config.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
-                await self.get_specified_videos(config.BILI_SPECIFIED_ID_LIST)
+                await self.get_specified_ids(config.BILI_SPECIFIED_ID_LIST)
             elif config.CRAWLER_TYPE == "creator":
                 if config.CREATOR_MODE:
                     for creator_url in config.BILI_CREATOR_ID_LIST:
@@ -415,6 +420,110 @@ class BilibiliCrawler(AbstractCrawler):
                 await bilibili_store.update_up_info(video_detail)
                 await self.get_bilibili_video(video_detail, semaphore)
         await self.batch_get_video_comments(video_aids_list)
+
+    async def get_specified_ids(self, specified_id_list: List[str]):
+        """
+        Dispatch mixed Bilibili specified IDs to video or article crawlers.
+        """
+        video_id_list, article_id_list = split_bilibili_specified_ids(specified_id_list)
+        if video_id_list:
+            await self.get_specified_videos(video_id_list)
+        if article_id_list:
+            await self.get_specified_articles(article_id_list)
+
+    async def get_specified_articles(self, article_url_list: List[str]):
+        """
+        get specified articles info from URLs or cv IDs
+        :param article_url_list: List of article URLs or cv IDs
+        :return:
+        """
+        utils.logger.info("[BilibiliCrawler.get_specified_articles] Parsing article URLs...")
+        article_id_list = []
+        for article_url in article_url_list:
+            try:
+                article_info = parse_article_info_from_url(article_url)
+                article_id_list.append(article_info.article_id)
+                utils.logger.info(f"[BilibiliCrawler.get_specified_articles] Parsed article ID: {article_info.article_id} from {article_url}")
+            except ValueError as e:
+                utils.logger.error(f"[BilibiliCrawler.get_specified_articles] Failed to parse article URL: {e}")
+                continue
+
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list = [self.get_article_info_task(article_id=article_id, semaphore=semaphore) for article_id in article_id_list]
+        article_details = await asyncio.gather(*task_list)
+        crawled_article_ids = []
+        for article_detail in article_details:
+            if article_detail is not None:
+                article_id = str(article_detail.get("id"))
+                if article_id:
+                    crawled_article_ids.append(article_id)
+                await bilibili_store.update_bilibili_article(article_detail)
+        await self.batch_get_article_comments(crawled_article_ids)
+
+    async def get_article_info_task(self, article_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
+        """
+        Get article detail task
+        :param article_id:
+        :param semaphore:
+        :return:
+        """
+        async with semaphore:
+            try:
+                result = await self.bili_client.get_article_info(article_id=article_id)
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                utils.logger.info(f"[BilibiliCrawler.get_article_info_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching article details {article_id}")
+                return result
+            except DataFetchError as ex:
+                utils.logger.error(f"[BilibiliCrawler.get_article_info_task] Get article detail error: {ex}")
+                return None
+            except KeyError as ex:
+                utils.logger.error(f"[BilibiliCrawler.get_article_info_task] have not found article detail article_id:{article_id}, err: {ex}")
+                return None
+
+    async def batch_get_article_comments(self, article_id_list: List[str]):
+        """
+        batch get article comments
+        :param article_id_list:
+        :return:
+        """
+        if not config.ENABLE_GET_COMMENTS:
+            utils.logger.info("[BilibiliCrawler.batch_get_article_comments] Crawling comment mode is not enabled")
+            return
+
+        utils.logger.info(f"[BilibiliCrawler.batch_get_article_comments] article ids:{article_id_list}")
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        task_list: List[Task] = []
+        for article_id in article_id_list:
+            task = asyncio.create_task(self.get_article_comments(article_id, semaphore), name=article_id)
+            task_list.append(task)
+        await asyncio.gather(*task_list)
+
+    async def get_article_comments(self, article_id: str, semaphore: asyncio.Semaphore):
+        """
+        get comment for article id
+        :param article_id:
+        :param semaphore:
+        :return:
+        """
+        async with semaphore:
+            try:
+                utils.logger.info(f"[BilibiliCrawler.get_article_comments] begin get article_id: {article_id} comments ...")
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                utils.logger.info(f"[BilibiliCrawler.get_article_comments] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching comments for article {article_id}")
+                await self.bili_client.get_all_comments(
+                    oid=article_id,
+                    comment_type=BilibiliCommentType.ARTICLE,
+                    crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
+                    is_fetch_sub_comments=config.ENABLE_GET_SUB_COMMENTS,
+                    callback=bilibili_store.batch_update_bilibili_article_comments,
+                    max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
+                )
+
+            except DataFetchError as ex:
+                utils.logger.error(f"[BilibiliCrawler.get_article_comments] get article_id: {article_id} comment error: {ex}")
+            except Exception as e:
+                utils.logger.error(f"[BilibiliCrawler.get_article_comments] may be been blocked, err:{e}")
+                raise
 
     async def get_video_info_task(self, aid: int, bvid: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """
