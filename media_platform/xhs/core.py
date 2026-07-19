@@ -121,6 +121,9 @@ class XiaoHongShuCrawler(AbstractCrawler):
             elif config.CRAWLER_TYPE == "creator":
                 # Get creator's information and their notes and comments
                 await self.get_creators_and_notes()
+            elif config.CRAWLER_TYPE == "collect":
+                # Get the logged-in user's (or configured users') collected notes
+                await self.get_collected_notes()
             else:
                 pass
 
@@ -216,6 +219,61 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 callback=self.fetch_creator_notes_detail,
                 xsec_token=creator_info.xsec_token,
                 xsec_source=creator_info.xsec_source,
+            )
+
+            note_ids = []
+            xsec_tokens = []
+            for note_item in all_notes_list:
+                note_ids.append(note_item.get("note_id"))
+                xsec_tokens.append(note_item.get("xsec_token"))
+            await self.batch_get_note_comments(note_ids, xsec_tokens)
+
+    async def get_collected_notes(self) -> None:
+        """Get collected (收藏) notes for the logged-in user or configured users.
+
+        If config.XHS_COLLECT_USER_ID_LIST is empty, the currently logged-in
+        account's own collection is crawled (user_id resolved via selfinfo).
+        Otherwise each entry may be a bare user_id or a full profile URL.
+        """
+        utils.logger.info("[XiaoHongShuCrawler.get_collected_notes] Begin get Xiaohongshu collected notes")
+
+        # Build the list of (user_id, xsec_token, xsec_source) targets
+        targets: List[CreatorUrlInfo] = []
+        configured = getattr(config, "XHS_COLLECT_USER_ID_LIST", []) or []
+        if configured:
+            for entry in configured:
+                entry = entry.strip()
+                if not entry:
+                    continue
+                if "/user/profile/" in entry:
+                    try:
+                        targets.append(parse_creator_info_from_url(entry))
+                    except ValueError as e:
+                        utils.logger.error(f"[XiaoHongShuCrawler.get_collected_notes] Failed to parse profile URL: {e}")
+                else:
+                    targets.append(CreatorUrlInfo(user_id=entry, xsec_token="", xsec_source="pc_user"))
+        else:
+            self_user_id = await self.xhs_client.get_self_user_id()
+            if not self_user_id:
+                utils.logger.error(
+                    "[XiaoHongShuCrawler.get_collected_notes] Could not resolve the logged-in user_id from selfinfo. "
+                    "Make sure you are logged in, or set config.XHS_COLLECT_USER_ID_LIST."
+                )
+                return
+            utils.logger.info(f"[XiaoHongShuCrawler.get_collected_notes] Using logged-in user_id: {self_user_id}")
+            targets.append(CreatorUrlInfo(user_id=self_user_id, xsec_token="", xsec_source="pc_user"))
+
+        crawl_interval = config.CRAWLER_MAX_SLEEP_SEC
+        for target in targets:
+            all_notes_list = await self.xhs_client.get_all_notes_by_collect(
+                user_id=target.user_id,
+                crawl_interval=crawl_interval,
+                callback=self.fetch_creator_notes_detail,
+                xsec_token=target.xsec_token,
+                xsec_source=target.xsec_source or "pc_user",
+            )
+            utils.logger.info(
+                f"[XiaoHongShuCrawler.get_collected_notes] user_id:{target.user_id} collected notes total: {len(all_notes_list)}"
             )
 
             note_ids = []
