@@ -41,7 +41,7 @@ from var import crawler_type_var, source_keyword_var
 
 from .client import DouYinClient
 from .exception import DataFetchError
-from .field import PublishTimeType
+from .field import PublishTimeType, SearchSortType
 from .help import parse_video_info_from_url, parse_creator_info_from_url
 from .login import DouYinLogin
 
@@ -136,7 +136,10 @@ class DouYinCrawler(AbstractCrawler):
             aweme_list: List[str] = []
             page = 0
             dy_search_id = ""
-            while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            stop_time_hit = False
+            end_time = utils.get_unix_time_from_time_str(config.UNTIL_TIME)
+            start_time = utils.get_unix_time_from_time_str(config.SINCE_TIME)
+            while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT and not stop_time_hit:
                 if page < start_page:
                     utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
                     page += 1
@@ -147,6 +150,7 @@ class DouYinCrawler(AbstractCrawler):
                         keyword=keyword,
                         offset=page * dy_limit_count - dy_limit_count,
                         publish_time=PublishTimeType(config.PUBLISH_TIME_TYPE),
+                        sort_type=SearchSortType(config.SEARCH_SORT_TYPE),
                         search_id=dy_search_id,
                     )
                     if posts_res.get("data") is None or posts_res.get("data") == []:
@@ -166,6 +170,13 @@ class DouYinCrawler(AbstractCrawler):
                     try:
                         aweme_info: Dict = (post_item.get("aweme_info") or post_item.get("aweme_mix_info", {}).get("mix_items")[0])
                     except TypeError:
+                        continue
+                    # time rule filter
+                    if config.ENABLE_TIME_CRAWL and ( start_time > aweme_info.get('create_time')  or aweme_info.get('create_time') > end_time):
+                        # stop paging flag filter
+                        if start_time > aweme_info.get('create_time'):
+                            stop_time_hit = True
+                            break
                         continue
                     aweme_list.append(aweme_info.get("aweme_id", ""))
                     page_aweme_list.append(aweme_info.get("aweme_id", ""))
