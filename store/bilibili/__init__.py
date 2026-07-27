@@ -30,6 +30,7 @@ from tools.user_hash import anonymize_user_id, mask_nickname
 
 from ._store_impl import *
 from .bilibilli_store_media import *
+from .bilibili_store_audio import *
 
 
 class BiliStoreFactory:
@@ -127,6 +128,24 @@ async def store_video(aid, video_content, extension_file_name):
     await BilibiliVideo().store_video({
         "aid": aid,
         "video_content": video_content,
+        "extension_file_name": extension_file_name,
+    })
+
+
+async def store_audio(aid, video_path, extension_file_name):
+    """
+    Extract and save Bilibili video audio from a downloaded video.
+    Args:
+        aid:
+        video_path:
+        extension_file_name:
+
+    Returns:
+        Path to the extracted audio file, or None if failed.
+    """
+    return await BilibiliAudio().store_audio({
+        "aid": aid,
+        "video_path": video_path,
         "extension_file_name": extension_file_name,
     })
 

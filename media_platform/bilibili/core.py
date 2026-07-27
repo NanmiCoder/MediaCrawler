@@ -607,6 +607,11 @@ class BilibiliCrawler(AbstractCrawler):
         extension_file_name = f"video.mp4"
         await bilibili_store.store_video(aid, content, extension_file_name)
 
+        if config.ENABLE_GET_AUDIO:
+            video_path = f"{bilibili_store.BilibiliVideo().video_store_path}/{aid}/{extension_file_name}"
+            audio_extension_file_name = f"{extension_file_name.rsplit('.', 1)[0]}.{config.AUDIO_FORMAT}"
+            await bilibili_store.store_audio(aid, video_path, audio_extension_file_name)
+
     async def get_all_creator_details(self, creator_url_list: List[str]):
         """
         creator_url_list: get details for creator from creator URL list

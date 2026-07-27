@@ -29,6 +29,7 @@ from tools.user_hash import anonymize_user_id, mask_nickname
 
 from ._store_impl import *
 from .douyin_store_media import *
+from .douyin_store_audio import *
 
 
 class DouyinStoreFactory:
@@ -249,3 +250,18 @@ async def update_dy_aweme_video(aweme_id, video_content, extension_file_name):
     """
 
     await DouYinVideo().store_video({"aweme_id": aweme_id, "video_content": video_content, "extension_file_name": extension_file_name})
+
+
+async def update_dy_aweme_audio(aweme_id, video_path, extension_file_name):
+    """
+    Extract and save Douyin aweme audio from a downloaded video.
+    Args:
+        aweme_id:
+        video_path:
+        extension_file_name:
+
+    Returns:
+        Path to the extracted audio file, or None if failed.
+    """
+
+    return await DouYinAudio().store_audio({"aweme_id": aweme_id, "video_path": video_path, "extension_file_name": extension_file_name})

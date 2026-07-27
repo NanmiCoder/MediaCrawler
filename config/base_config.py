@@ -107,6 +107,17 @@ MAX_CONCURRENCY_NUM = 1
 # Whether to enable crawling media mode (including image or video resources), crawling media is not enabled by default
 ENABLE_GET_MEIDAS = False
 
+# Whether to enable audio download/extraction mode.
+# When True, the crawler will automatically extract audio from downloaded videos and save it as a separate file.
+ENABLE_GET_AUDIO = False
+
+# Audio output format, supports: mp3, aac
+AUDIO_FORMAT = "mp3"
+
+# Whether to keep the original video file after extracting audio.
+# Set to False to delete the video and keep only the audio, saving disk space.
+KEEP_ORIGINAL_VIDEO = True
+
 # Whether to enable comment crawling mode. Comment crawling is enabled by default.
 ENABLE_GET_COMMENTS = True
 
