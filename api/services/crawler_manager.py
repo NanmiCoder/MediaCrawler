@@ -40,6 +40,7 @@ class CrawlerManager:
         self.task_id: Optional[str] = None
         self.last_exit_code: Optional[int] = None
         self.finished_at: Optional[datetime] = None
+        self.error_message: Optional[str] = None
         self._log_id = 0
         self._logs: List[LogEntry] = []
         self._read_task: Optional[asyncio.Task] = None
@@ -97,7 +98,11 @@ class CrawlerManager:
     async def start(self, config: CrawlerStartRequest) -> Optional[str]:
         """Start crawler process and return its task id."""
         async with self._lock:
-            if self.process and self.process.poll() is None:
+            if (
+                self._read_task and not self._read_task.done()
+            ) or (
+                self.process and self.process.poll() is None
+            ):
                 return None
 
             # Clear old logs
@@ -137,6 +142,7 @@ class CrawlerManager:
                 self.task_id = str(uuid4())
                 self.last_exit_code = None
                 self.finished_at = None
+                self.error_message = None
                 self.status = "running"
                 self.started_at = datetime.now()
                 self.current_config = config
@@ -197,7 +203,6 @@ class CrawlerManager:
             # Cancel log reading task
             if self._read_task:
                 self._read_task.cancel()
-                self._read_task = None
 
             return True
 
@@ -208,7 +213,7 @@ class CrawlerManager:
             "platform": self.current_config.platform.value if self.current_config else None,
             "crawler_type": self.current_config.crawler_type.value if self.current_config else None,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "error_message": None,
+            "error_message": self.error_message,
             "task_id": self.task_id,
             "last_exit_code": self.last_exit_code,
             "finished_at": self.finished_at.isoformat() if self.finished_at else None,
@@ -253,12 +258,14 @@ class CrawlerManager:
     async def _read_output(self):
         """Asynchronously read process output"""
         loop = asyncio.get_event_loop()
+        process = self.process
+        task_id = self.task_id
 
         try:
-            while self.process and self.process.poll() is None:
+            while process and process.poll() is None:
                 # Read a line in thread pool
                 line = await loop.run_in_executor(
-                    None, self.process.stdout.readline
+                    None, process.stdout.readline
                 )
                 if line:
                     line = line.strip()
@@ -268,9 +275,9 @@ class CrawlerManager:
                         await self._push_log(entry)
 
             # Read remaining output
-            if self.process and self.process.stdout:
+            if process and process.stdout:
                 remaining = await loop.run_in_executor(
-                    None, self.process.stdout.read
+                    None, process.stdout.read
                 )
                 if remaining:
                     for line in remaining.strip().split('\n'):
@@ -280,10 +287,15 @@ class CrawlerManager:
                             await self._push_log(entry)
 
             # Process ended
-            if self.status == "running":
-                exit_code = self.process.returncode if self.process else -1
+            if (
+                self.process is process
+                and self.task_id == task_id
+                and self.status == "running"
+            ):
+                exit_code = process.returncode if process else -1
                 self.last_exit_code = exit_code
                 self.finished_at = datetime.now()
+                self.error_message = None
                 if exit_code == 0:
                     entry = self._create_log_entry("Crawler completed successfully", "success")
                 else:
@@ -295,8 +307,15 @@ class CrawlerManager:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            entry = self._create_log_entry(f"Error reading output: {str(e)}", "error")
-            await self._push_log(entry)
+            if self.process is process and self.task_id == task_id:
+                message = f"Error reading output: {str(e)}"
+                returncode = process.returncode if process else None
+                self.last_exit_code = returncode if isinstance(returncode, int) else -1
+                self.finished_at = datetime.now()
+                self.error_message = message
+                self.status = "error"
+                entry = self._create_log_entry(message, "error")
+                await self._push_log(entry)
 
 
 # Global singleton

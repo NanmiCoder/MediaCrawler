@@ -58,6 +58,134 @@ async def test_read_output_records_exit_metadata():
     assert status["platform"] is None
 
 
+@pytest.mark.asyncio
+async def test_stop_does_not_allow_restart_until_reader_finishes():
+    manager = CrawlerManager()
+    manager.status = "running"
+    manager.current_config = request()
+    manager.task_id = "old-task"
+    process = MagicMock()
+    process.poll.side_effect = [None, 0, 0, 0, 0]
+    manager.process = process
+    reader = MagicMock()
+    reader.done.return_value = False
+    manager._read_task = reader
+    new_process = MagicMock()
+
+    assert await manager.stop() is True
+
+    with patch(
+        "api.services.crawler_manager.subprocess.Popen", return_value=new_process
+    ) as popen:
+        with patch(
+            "api.services.crawler_manager.asyncio.create_task",
+            side_effect=lambda coroutine: coroutine.close(),
+        ):
+            task_id = await manager.start(request())
+
+    assert task_id is None
+    assert manager.task_id == "old-task"
+    popen.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_old_reader_uses_its_process_and_cannot_overwrite_new_task():
+    manager = CrawlerManager()
+    manager.status = "running"
+    manager.current_config = request()
+    manager.task_id = "old-task"
+    old_process = MagicMock()
+    old_process.poll.side_effect = [None, 0]
+    old_process.returncode = 7
+    old_process.stdout.readline.return_value = "old output\n"
+    old_process.stdout.read.return_value = ""
+    manager.process = old_process
+
+    new_process = MagicMock()
+    new_process.poll.return_value = 0
+    new_process.returncode = 0
+    new_config = request()
+
+    async def switch_to_new_task(_entry):
+        manager.process = new_process
+        manager.task_id = "new-task"
+        manager.status = "running"
+        manager.current_config = new_config
+        manager.last_exit_code = None
+        manager.finished_at = None
+
+    manager._push_log = AsyncMock(side_effect=switch_to_new_task)
+
+    await manager._read_output()
+
+    old_process.stdout.read.assert_called_once_with()
+    new_process.stdout.read.assert_not_called()
+    assert manager.process is new_process
+    assert manager.task_id == "new-task"
+    assert manager.status == "running"
+    assert manager.current_config is new_config
+    assert manager.last_exit_code is None
+    assert manager.finished_at is None
+
+
+@pytest.mark.asyncio
+async def test_read_output_error_records_terminal_metadata():
+    manager = CrawlerManager()
+    manager.status = "running"
+    manager.current_config = request()
+    manager.task_id = "task-123"
+    process = MagicMock()
+    process.poll.return_value = None
+    process.returncode = 17
+    process.stdout.readline.side_effect = RuntimeError("read failed")
+    manager.process = process
+
+    await manager._read_output()
+
+    status = manager.get_status()
+    assert status["status"] == "error"
+    assert status["task_id"] == "task-123"
+    assert status["last_exit_code"] == 17
+    assert status["finished_at"] is not None
+    assert status["error_message"] == "Error reading output: read failed"
+
+
+@pytest.mark.asyncio
+async def test_old_reader_error_cannot_overwrite_new_task():
+    manager = CrawlerManager()
+    manager.status = "running"
+    manager.current_config = request()
+    manager.task_id = "old-task"
+    old_process = MagicMock()
+    old_process.poll.return_value = None
+    manager.process = old_process
+
+    new_process = MagicMock()
+    new_config = request()
+
+    def fail_after_switch():
+        manager.process = new_process
+        manager.task_id = "new-task"
+        manager.status = "running"
+        manager.current_config = new_config
+        manager.last_exit_code = None
+        manager.finished_at = None
+        manager._logs = []
+        raise RuntimeError("old reader failed")
+
+    old_process.stdout.readline.side_effect = fail_after_switch
+
+    await manager._read_output()
+
+    assert manager.logs == []
+    assert manager.process is new_process
+    assert manager.task_id == "new-task"
+    assert manager.status == "running"
+    assert manager.current_config is new_config
+    assert manager.last_exit_code is None
+    assert manager.finished_at is None
+
+
 def test_start_endpoint_returns_task_id():
     client = TestClient(app)
     with patch(
