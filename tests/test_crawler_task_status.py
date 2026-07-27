@@ -1,3 +1,5 @@
+import asyncio
+from contextlib import suppress
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -59,33 +61,95 @@ async def test_read_output_records_exit_metadata():
 
 
 @pytest.mark.asyncio
-async def test_stop_does_not_allow_restart_until_reader_finishes():
+async def test_stop_failure_keeps_active_process_and_reader():
+    manager = CrawlerManager()
+    manager.status = "running"
+    active_config = request()
+    manager.current_config = active_config
+    manager.task_id = "old-task"
+    process = MagicMock()
+    process.poll.return_value = None
+    process.send_signal.side_effect = OSError("terminate failed")
+    process.kill.side_effect = OSError("kill failed")
+    manager.process = process
+    reader = MagicMock()
+    reader.done.return_value = False
+    manager._read_task = reader
+
+    assert await manager.stop() is False
+
+    process.kill.assert_called_once_with()
+    assert manager.status == "error"
+    assert manager.error_message is not None
+    assert "terminate failed" in manager.error_message
+    assert "kill failed" in manager.error_message
+    assert manager.process is process
+    assert manager._read_task is reader
+    assert manager.current_config is active_config
+    assert manager.last_exit_code is None
+    assert manager.finished_at is None
+    reader.cancel.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_stop_waits_for_killed_process_and_reader_before_restart():
     manager = CrawlerManager()
     manager.status = "running"
     manager.current_config = request()
     manager.task_id = "old-task"
     process = MagicMock()
-    process.poll.side_effect = [None, 0, 0, 0, 0]
-    manager.process = process
-    reader = MagicMock()
-    reader.done.return_value = False
-    manager._read_task = reader
-    new_process = MagicMock()
+    process.returncode = None
+    process.poll.side_effect = lambda: process.returncode
 
-    assert await manager.stop() is True
+    def delayed_exit(timeout):
+        process.returncode = -9
+        return process.returncode
+
+    process.wait.side_effect = delayed_exit
+    manager.process = process
+
+    async def monitor_output():
+        await asyncio.Event().wait()
+
+    reader = asyncio.create_task(monitor_output())
+    manager._read_task = reader
 
     with patch(
-        "api.services.crawler_manager.subprocess.Popen", return_value=new_process
-    ) as popen:
-        with patch(
-            "api.services.crawler_manager.asyncio.create_task",
-            side_effect=lambda coroutine: coroutine.close(),
-        ):
-            task_id = await manager.start(request())
+        "api.services.crawler_manager.asyncio.sleep", new_callable=AsyncMock
+    ):
+        stopped = await manager.stop()
 
-    assert task_id is None
-    assert manager.task_id == "old-task"
-    popen.assert_not_called()
+    try:
+        assert stopped is True
+        process.kill.assert_called_once_with()
+        process.wait.assert_called_once_with(timeout=5)
+        assert manager.status == "idle"
+        assert manager.current_config is None
+        assert manager.last_exit_code == -9
+        assert manager.finished_at is not None
+        assert manager.error_message is None
+        assert reader.done()
+        assert reader.cancelled()
+        assert manager._read_task is None
+
+        new_process = MagicMock()
+        new_process.poll.return_value = None
+        with patch(
+            "api.services.crawler_manager.subprocess.Popen", return_value=new_process
+        ):
+            with patch(
+                "api.services.crawler_manager.asyncio.create_task",
+                side_effect=lambda coroutine: coroutine.close(),
+            ):
+                task_id = await manager.start(request())
+
+        assert task_id is not None
+        assert manager.task_id == task_id
+    finally:
+        if not reader.done():
+            reader.cancel()
+        with suppress(asyncio.CancelledError):
+            await reader
 
 
 @pytest.mark.asyncio
