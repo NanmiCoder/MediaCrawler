@@ -22,7 +22,10 @@ async def test_start_returns_task_id_and_clears_completion_state():
     process.poll.return_value = None
 
     with patch("api.services.crawler_manager.subprocess.Popen", return_value=process):
-        with patch("api.services.crawler_manager.asyncio.create_task"):
+        with patch(
+            "api.services.crawler_manager.asyncio.create_task",
+            side_effect=lambda coroutine: coroutine.close(),
+        ):
             task_id = await manager.start(request())
 
     assert isinstance(task_id, str)
