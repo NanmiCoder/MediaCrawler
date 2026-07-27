@@ -23,6 +23,7 @@ import os
 from typing import Optional, List
 from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
 
 from ..schemas import CrawlerStartRequest, LogEntry
 
@@ -36,6 +37,9 @@ class CrawlerManager:
         self.status = "idle"
         self.started_at: Optional[datetime] = None
         self.current_config: Optional[CrawlerStartRequest] = None
+        self.task_id: Optional[str] = None
+        self.last_exit_code: Optional[int] = None
+        self.finished_at: Optional[datetime] = None
         self._log_id = 0
         self._logs: List[LogEntry] = []
         self._read_task: Optional[asyncio.Task] = None
@@ -90,11 +94,11 @@ class CrawlerManager:
             return "debug"
         return "info"
 
-    async def start(self, config: CrawlerStartRequest) -> bool:
-        """Start crawler process"""
+    async def start(self, config: CrawlerStartRequest) -> Optional[str]:
+        """Start crawler process and return its task id."""
         async with self._lock:
             if self.process and self.process.poll() is None:
-                return False
+                return None
 
             # Clear old logs
             self._logs = []
@@ -130,6 +134,9 @@ class CrawlerManager:
                     env={**os.environ, "PYTHONUNBUFFERED": "1"}
                 )
 
+                self.task_id = str(uuid4())
+                self.last_exit_code = None
+                self.finished_at = None
                 self.status = "running"
                 self.started_at = datetime.now()
                 self.current_config = config
@@ -143,12 +150,12 @@ class CrawlerManager:
                 # Start log reading task
                 self._read_task = asyncio.create_task(self._read_output())
 
-                return True
+                return self.task_id
             except Exception as e:
                 self.status = "error"
                 entry = self._create_log_entry(f"Failed to start crawler: {str(e)}", "error")
                 await self._push_log(entry)
-                return False
+                return None
 
     async def stop(self) -> bool:
         """Stop crawler process"""
@@ -184,6 +191,8 @@ class CrawlerManager:
 
             self.status = "idle"
             self.current_config = None
+            self.last_exit_code = self.process.poll()
+            self.finished_at = datetime.now()
 
             # Cancel log reading task
             if self._read_task:
@@ -199,7 +208,10 @@ class CrawlerManager:
             "platform": self.current_config.platform.value if self.current_config else None,
             "crawler_type": self.current_config.crawler_type.value if self.current_config else None,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "error_message": None
+            "error_message": None,
+            "task_id": self.task_id,
+            "last_exit_code": self.last_exit_code,
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
         }
 
     def _build_command(self, config: CrawlerStartRequest) -> list:
@@ -270,12 +282,15 @@ class CrawlerManager:
             # Process ended
             if self.status == "running":
                 exit_code = self.process.returncode if self.process else -1
+                self.last_exit_code = exit_code
+                self.finished_at = datetime.now()
                 if exit_code == 0:
                     entry = self._create_log_entry("Crawler completed successfully", "success")
                 else:
                     entry = self._create_log_entry(f"Crawler exited with code: {exit_code}", "warning")
                 await self._push_log(entry)
                 self.status = "idle"
+                self.current_config = None
 
         except asyncio.CancelledError:
             pass

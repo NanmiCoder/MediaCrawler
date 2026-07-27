@@ -85,6 +85,9 @@ class CrawlerStatusResponse(BaseModel):
     crawler_type: Optional[str] = None
     started_at: Optional[str] = None
     error_message: Optional[str] = None
+    task_id: Optional[str] = None
+    last_exit_code: Optional[int] = None
+    finished_at: Optional[str] = None
 
 
 class LogEntry(BaseModel):
