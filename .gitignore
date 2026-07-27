@@ -184,3 +184,4 @@ debug_tools
 
 database/*.db
 .omx/
+.worktrees/
