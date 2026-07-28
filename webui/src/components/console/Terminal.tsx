@@ -6,6 +6,45 @@ import { useCrawlerStore } from '@/store/crawlerStore'
 import { Button } from '@/components/ui/button'
 import { DataExplorerDialog } from '@/components/data/DataExplorerDialog'
 
+const TERMINAL_BANNER_LINES = [
+  '   __  __          _ _       ____',
+  '  |  \\/  | ___  __| (_) __ _/ ___|_ __ __ ___      __',
+  "  | |\\/| |/ _ \\/ _` | |/ _` | |   | '__/ _` \\ \\ /\\ / /",
+  '  | |  | |  __/ (_| | | (_| | |___| | | (_| |\\ V  V /',
+  '  |_|  |_|\\___|\\__,_|_|\\__,_|\\____|_|  \\__,_| \\_/\\_/',
+  '',
+  '          [ NEURAL EXTRACTION UNIT v1.0 ]',
+]
+
+const TERMINAL_BANNER_WIDTH = Math.max(...TERMINAL_BANNER_LINES.map((line) => line.length))
+const TERMINAL_HORIZONTAL_FILL = '═'.repeat(128)
+
+function TerminalBanner() {
+  return (
+    <div className="ml-[2ch] inline-grid grid-cols-[auto_max-content_auto] text-cyber-neon-cyan/70 text-xs leading-tight">
+      <span>╔</span>
+      <span className="relative overflow-hidden">
+        <span className="absolute inset-0 whitespace-nowrap">{TERMINAL_HORIZONTAL_FILL}</span>
+      </span>
+      <span>╗</span>
+
+      {TERMINAL_BANNER_LINES.map((line, index) => (
+        <div key={`${index}-${line}`} className="contents">
+          <span>║</span>
+          <span className="whitespace-pre px-[1ch]">{line.padEnd(TERMINAL_BANNER_WIDTH)}</span>
+          <span>║</span>
+        </div>
+      ))}
+
+      <span>╚</span>
+      <span className="relative overflow-hidden">
+        <span className="absolute inset-0 whitespace-nowrap">{TERMINAL_HORIZONTAL_FILL}</span>
+      </span>
+      <span>╝</span>
+    </div>
+  )
+}
+
 export function Terminal() {
   const { t } = useTranslation('terminal')
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -105,17 +144,7 @@ export function Terminal() {
             {/* ASCII Art Banner when empty */}
             {logs.length === 0 ? (
               <div className="space-y-4">
-                <pre className="text-cyber-neon-cyan/70 text-xs leading-tight">
-{`  ╔══════════════════════════════════════════════════════╗
-  ║   __  __          _ _       ____                     ║
-  ║  |  \\/  | ___  __| (_) __ _/ ___|_ __ __ ___      __ ║
-  ║  | |\\/| |/ _ \\/ _\` | |/ _\` | |   | '__/ _\` \\ \\ /\\ / / ║
-  ║  | |  | |  __/ (_| | | (_| | |___| | | (_| |\\ V  V /  ║
-  ║  |_|  |_|\\___|\\__,_|_|\\__,_|\\____|_|  \\__,_| \\_/\\_/   ║
-  ║                                                      ║
-  ║          [ NEURAL EXTRACTION UNIT v1.0 ]             ║
-  ╚══════════════════════════════════════════════════════╝`}
-                </pre>
+                <TerminalBanner />
                 <div className="text-[#c9d1d9] text-xs space-y-1">
                   <p className="text-cyber-neon-green/70">{t('banner.systemInit')}</p>
                   <p className="text-[#8b949e]">{t('banner.configHint')}</p>

@@ -24,7 +24,7 @@ export function ThemeToggle() {
 
   return (
     <Select value={theme} onValueChange={(value: Theme) => setTheme(value)}>
-      <SelectTrigger className="w-20 h-7 text-xs font-mono border-cyber-border-subtle bg-cyber-bg-tertiary/50 hover:border-cyber-neon-cyan/50 transition-colors">
+      <SelectTrigger className="w-24 h-7 text-xs font-mono border-cyber-border-subtle bg-cyber-bg-tertiary/50 hover:border-cyber-neon-cyan/50 transition-colors">
         <Icon className="w-3 h-3 mr-1 text-cyber-text-secondary" />
         <SelectValue>{currentTheme.label}</SelectValue>
       </SelectTrigger>

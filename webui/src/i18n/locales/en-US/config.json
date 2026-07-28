@@ -48,6 +48,10 @@
     },
     "loginMethod": "LOGIN_METHOD",
     "loginMethodPlaceholder": "Select login method",
+    "crawlConfig": "CRAWL_CONFIG",
+    "crawlConfigHint": "Post and comment limits",
+    "maxNotesCount": "POST LIMIT",
+    "maxCommentsCount": "COMMENTS PER POST",
     "cookies": "COOKIES",
     "cookiesHint": "Paste cookie string",
     "cookiesPlaceholder": "Paste cookies here...",
@@ -62,7 +66,12 @@
     "initiateScan": "INITIATE SCAN",
     "initiating": "INITIATING...",
     "terminate": "TERMINATE",
-    "stopping": "STOPPING..."
+    "stopping": "STOPPING...",
+    "saveAllConfig": "SAVE ALL CONFIG"
+  },
+  "toast": {
+    "configSaved": "Configuration saved",
+    "configSaveFailed": "Failed to save configuration"
   },
   "warning": {
     "cookieSlider": "[Note] Cookie login is not recommended for Xiaohongshu and Douyin due to slider captcha",
