@@ -19,7 +19,8 @@
 
 import asyncio
 import json
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+import time
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional, Union
 from urllib.parse import quote, urlencode
 
 import httpx
@@ -35,11 +36,48 @@ from tools import utils
 if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
 
-from .exception import DataFetchError, IPBlockError, NoteNotFoundError
+from .exception import CaptchaRequiredError, DataFetchError, IPBlockError, NoteNotFoundError
 from .field import SearchNoteType, SearchSortType
 from .help import get_search_id
 from .extractor import XiaoHongShuExtractor
 from .playwright_sign import sign_with_xhshow
+
+
+CAPTCHA_RETRY_SECONDS = 10
+CAPTCHA_MAX_WAIT_SECONDS = 300
+
+
+def raise_for_captcha(response: httpx.Response) -> None:
+    if response.status_code not in {461, 471}:
+        return
+
+    verify_type = response.headers.get("Verifytype", "unknown")
+    verify_uuid = response.headers.get("Verifyuuid", "unknown")
+    raise CaptchaRequiredError(
+        "CAPTCHA appeared; please verify manually in Chrome. "
+        f"Verifytype: {verify_type}, Verifyuuid: {verify_uuid}"
+    )
+
+
+async def wait_for_captcha(
+    operation: Callable[[], Awaitable[Any]],
+    *,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    monotonic: Callable[[], float] = time.monotonic,
+) -> Any:
+    deadline = monotonic() + CAPTCHA_MAX_WAIT_SECONDS
+    while True:
+        try:
+            return await operation()
+        except CaptchaRequiredError:
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise
+            utils.logger.warning(
+                "[XiaoHongShuClient] CAPTCHA appeared; complete verification "
+                "in Chrome within 5 minutes."
+            )
+            await sleep(min(CAPTCHA_RETRY_SECONDS, remaining))
 
 
 class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
@@ -112,7 +150,6 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.headers.update(headers)
         return self.headers
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1), retry=retry_if_not_exception_type(NoteNotFoundError))
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
         """
         Wrapper for httpx common request method, processes request response
@@ -124,34 +161,40 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
+        return_response = kwargs.pop("return_response", False)
+
+        async def operation():
+            return await self._request_with_short_retry(
+                method, url, return_response=return_response, **kwargs
+            )
+
+        return await wait_for_captcha(operation)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_not_exception_type((NoteNotFoundError, CaptchaRequiredError)),
+    )
+    async def _request_with_short_retry(
+        self, method, url, *, return_response=False, **kwargs
+    ) -> Union[str, Any]:
         # Check if proxy is expired before each request
         await self._refresh_proxy_if_expired()
-
-        # return response.text
-        return_response = kwargs.pop("return_response", False)
         async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
-        if response.status_code == 471 or response.status_code == 461:
-            # someday someone maybe will bypass captcha
-            verify_type = response.headers["Verifytype"]
-            verify_uuid = response.headers["Verifyuuid"]
-            msg = f"CAPTCHA appeared, request failed, Verifytype: {verify_type}, Verifyuuid: {verify_uuid}, Response: {response}"
-            utils.logger.error(msg)
-            raise Exception(msg)
-
+        raise_for_captcha(response)
         if return_response:
             return response.text
         data: Dict = response.json()
         if data["success"]:
             return data.get("data", data.get("success", {}))
-        elif data["code"] == self.IP_ERROR_CODE:
+        if data["code"] == self.IP_ERROR_CODE:
             raise IPBlockError(self.IP_ERROR_STR)
-        elif data["code"] in (self.NOTE_NOT_FOUND_CODE, self.NOTE_ABNORMAL_CODE):
+        if data["code"] in (self.NOTE_NOT_FOUND_CODE, self.NOTE_ABNORMAL_CODE):
             raise NoteNotFoundError(f"Note not found or abnormal, code: {data['code']}")
-        else:
-            err_msg = data.get("msg", None) or f"{response.text}"
-            raise DataFetchError(err_msg)
+        err_msg = data.get("msg", None) or response.text
+        raise DataFetchError(err_msg)
 
     @staticmethod
     def _build_query_string(params: Dict) -> str:

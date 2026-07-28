@@ -31,3 +31,7 @@ class IPBlockError(RequestError):
 
 class NoteNotFoundError(RequestError):
     """Note does not exist or is abnormal"""
+
+
+class CaptchaRequiredError(RuntimeError):
+    """Xiaohongshu requires the user to complete CAPTCHA manually."""
