@@ -118,6 +118,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.NOTE_ABNORMAL_CODE = -510001
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
+        self._captcha_keyword: Optional[str] = None
         self._extractor = XiaoHongShuExtractor()
         # Initialize proxy pool (from ProxyRefreshMixin)
         self.init_proxy_pool(proxy_ip_pool)
@@ -216,6 +217,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
 
     async def _present_captcha(self, keyword: Optional[str] = None) -> None:
         await self.playwright_page.bring_to_front()
+        keyword = keyword or getattr(self, "_captcha_keyword", None)
         if keyword:
             await self.playwright_page.goto(
                 f"{self._domain}/search_result?keyword={quote(keyword, safe='')}"
@@ -249,6 +251,8 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             if uri == "/api/sns/web/v1/search/notes" and isinstance(params, dict)
             else None
         )
+        if isinstance(keyword, str) and keyword:
+            self._captcha_keyword = keyword
         return await wait_for_captcha(
             operation,
             on_captcha=lambda: self._present_captcha(keyword),
@@ -281,6 +285,8 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             if uri == "/api/sns/web/v1/search/notes" and isinstance(data, dict)
             else None
         )
+        if isinstance(keyword, str) and keyword:
+            self._captcha_keyword = keyword
         return await wait_for_captcha(
             operation,
             on_captcha=lambda: self._present_captcha(keyword),

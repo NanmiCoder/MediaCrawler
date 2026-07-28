@@ -184,6 +184,26 @@ def _client_for_request_tests():
     return client
 
 
+def _client_for_presenter_flow(monkeypatch, responses):
+    client = _client_for_request_tests()
+    client._host = "https://example.test"
+    client._domain = "https://www.xiaohongshu.com"
+    client.playwright_page.context = object()
+    client.update_cookies = AsyncMock()
+    client._pre_headers = AsyncMock(return_value={})
+    client._request_with_short_retry = AsyncMock(side_effect=responses)
+    monkeypatch.setattr(
+        "media_platform.xhs.client.wait_for_captcha",
+        lambda operation, **kwargs: wait_for_captcha(
+            operation,
+            on_captcha=kwargs.get("on_captcha"),
+            sleep=AsyncMock(),
+            monotonic=lambda: 0.0,
+        ),
+    )
+    return client
+
+
 @pytest.mark.asyncio
 async def test_request_waits_for_captcha_instead_of_short_retry(monkeypatch):
     captcha = httpx.Response(
@@ -295,6 +315,64 @@ async def test_signed_requests_refresh_cookies_and_signature_after_captcha(
         "https://www.xiaohongshu.com/search_result?keyword=%E9%87%8D%E5%BA%86%20%E7%81%AB%E9%94%85"
     )
     assert sleeps == [10]
+
+
+@pytest.mark.asyncio
+async def test_detail_captcha_reuses_latest_search_keyword(monkeypatch):
+    client = _client_for_presenter_flow(
+        monkeypatch,
+        [
+            {"notes": []},
+            CaptchaRequiredError("verify"),
+            {"items": []},
+        ],
+    )
+
+    await client.post(
+        "/api/sns/web/v1/search/notes", {"keyword": "重庆 亲子游"}
+    )
+    await client.post("/api/sns/web/v1/feed", {"source_note_id": "note-1"})
+
+    client.playwright_page.bring_to_front.assert_awaited_once_with()
+    client.playwright_page.goto.assert_awaited_once_with(
+        "https://www.xiaohongshu.com/search_result?keyword=%E9%87%8D%E5%BA%86%20%E4%BA%B2%E5%AD%90%E6%B8%B8"
+    )
+
+
+@pytest.mark.asyncio
+async def test_new_search_keyword_overwrites_presenter_history(monkeypatch):
+    client = _client_for_presenter_flow(
+        monkeypatch,
+        [
+            {"notes": []},
+            {"notes": []},
+            CaptchaRequiredError("verify"),
+            {"items": []},
+        ],
+    )
+
+    await client.post("/api/sns/web/v1/search/notes", {"keyword": "旧词"})
+    await client.post("/api/sns/web/v1/search/notes", {"keyword": "新词"})
+    await client.post("/api/sns/web/v1/feed", {"source_note_id": "note-1"})
+
+    client.playwright_page.goto.assert_awaited_once_with(
+        "https://www.xiaohongshu.com/search_result?keyword=%E6%96%B0%E8%AF%8D"
+    )
+
+
+@pytest.mark.asyncio
+async def test_detail_captcha_without_search_history_only_brings_page_forward(
+    monkeypatch,
+):
+    client = _client_for_presenter_flow(
+        monkeypatch,
+        [CaptchaRequiredError("verify"), {"items": []}],
+    )
+
+    await client.post("/api/sns/web/v1/feed", {"source_note_id": "note-1"})
+
+    client.playwright_page.bring_to_front.assert_awaited_once_with()
+    client.playwright_page.goto.assert_not_awaited()
 
 
 @pytest.mark.asyncio
