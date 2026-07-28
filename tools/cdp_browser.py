@@ -25,6 +25,7 @@ import httpx
 import signal
 import atexit
 from typing import Optional, Dict, Any
+from urllib.parse import urlparse
 from playwright.async_api import Browser, BrowserContext, Playwright
 
 import config
@@ -285,19 +286,40 @@ class CDPBrowserManager:
                 "[CDPBrowserManager] CDP connection test failed, but will continue to try connecting"
             )
 
+    @staticmethod
+    def _is_valid_websocket_url(ws_url: Any) -> bool:
+        if not isinstance(ws_url, str):
+            return False
+
+        try:
+            parsed_url = urlparse(ws_url)
+            port = parsed_url.port
+        except ValueError:
+            return False
+
+        if parsed_url.scheme not in ("ws", "wss") or not parsed_url.hostname:
+            return False
+
+        if any(character.isspace() for character in parsed_url.netloc):
+            return False
+
+        host_port = parsed_url.netloc.rsplit("@", 1)[-1]
+        return port is not None or not host_port.endswith(":")
+
     async def _get_browser_websocket_url(self, debug_port: int) -> str:
         """
         Get browser WebSocket connection URL
         """
         try:
+            discovery_host = "127.0.0.1" if config.CDP_CONNECT_EXISTING else "localhost"
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    f"http://127.0.0.1:{debug_port}/json/version", timeout=10
+                    f"http://{discovery_host}:{debug_port}/json/version", timeout=10
                 )
                 if response.status_code == 200:
                     data = response.json()
                     ws_url = data.get("webSocketDebuggerUrl")
-                    if isinstance(ws_url, str) and ws_url.startswith(("ws://", "wss://")):
+                    if self._is_valid_websocket_url(ws_url):
                         utils.logger.info(
                             f"[CDPBrowserManager] Got browser WebSocket URL: {ws_url}"
                         )
