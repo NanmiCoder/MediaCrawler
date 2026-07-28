@@ -1,3 +1,5 @@
+from copy import deepcopy
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import httpx
@@ -47,13 +49,40 @@ async def test_wait_for_captcha_continues_after_manual_verification():
 async def test_wait_for_captcha_stops_after_five_minutes():
     operation = AsyncMock(side_effect=CaptchaRequiredError("verify"))
     times = iter([0.0, 300.0])
+    sleep = AsyncMock()
 
     with pytest.raises(CaptchaRequiredError):
         await wait_for_captcha(
-            operation, sleep=AsyncMock(), monotonic=lambda: next(times)
+            operation, sleep=sleep, monotonic=lambda: next(times)
         )
 
-    assert operation.await_count == 1
+    assert operation.await_count == 2
+    sleep.assert_awaited_once_with(10)
+
+
+@pytest.mark.asyncio
+async def test_captcha_deadline_starts_when_captcha_is_first_seen():
+    clock = {"now": 0.0}
+    attempts = 0
+    sleeps = []
+
+    async def operation():
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            clock["now"] = 301.0
+            raise CaptchaRequiredError("verify")
+        return {"notes": []}
+
+    result = await wait_for_captcha(
+        operation,
+        sleep=lambda seconds: record_sleep(sleeps, seconds),
+        monotonic=lambda: clock["now"],
+    )
+
+    assert result == {"notes": []}
+    assert attempts == 2
+    assert sleeps == [10]
 
 
 @pytest.mark.asyncio
@@ -82,6 +111,33 @@ class _ResponseClient:
     async def request(self, *args, **kwargs):
         self.calls += 1
         return self.response
+
+
+class _SequenceResponseClient:
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.requests = []
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return False
+
+    async def request(self, *args, **kwargs):
+        self.requests.append((args, deepcopy(kwargs)))
+        return self.responses.pop(0)
+
+
+class _CookieContext:
+    def __init__(self, values):
+        self.values = list(values)
+        self.calls = 0
+
+    async def cookies(self, urls=None):
+        self.calls += 1
+        value = self.values.pop(0)
+        return [{"name": "a1", "value": value}]
 
 
 def _client_for_request_tests():
@@ -128,6 +184,67 @@ async def test_request_waits_for_captcha_instead_of_short_retry(monkeypatch):
     result = await _client_for_request_tests().request("GET", "https://example.test")
 
     assert result == {"notes": []}
+    assert sleeps == [10]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", ["get", "post"])
+async def test_signed_requests_refresh_cookies_and_signature_after_captcha(
+    monkeypatch, method
+):
+    captcha = httpx.Response(
+        461,
+        headers={"Verifytype": "slider", "Verifyuuid": "uuid-1"},
+        request=httpx.Request(method.upper(), "https://example.test"),
+    )
+    success = httpx.Response(
+        200,
+        json={"success": True, "data": {"notes": []}},
+        request=httpx.Request(method.upper(), "https://example.test"),
+    )
+    response_client = _SequenceResponseClient([captcha, success])
+    context = _CookieContext(["old", "new"])
+    client = _client_for_request_tests()
+    client._host = "https://example.test"
+    client._domain = "https://example.test"
+    client.cookie_urls = [client._domain]
+    client.headers = {"Cookie": "a1=initial"}
+    client.cookie_dict = {"a1": "initial"}
+    client.playwright_page = SimpleNamespace(context=context)
+
+    def sign_with_cookie(*, uri, data, cookie_str, method):
+        return {
+            "x-s": f"xs-{cookie_str}",
+            "x-t": f"xt-{cookie_str}",
+            "x-s-common": f"common-{cookie_str}",
+            "x-b3-traceid": f"trace-{cookie_str}",
+        }
+
+    sleeps = []
+    monkeypatch.setattr(
+        "media_platform.xhs.client.make_async_client", lambda **kwargs: response_client
+    )
+    monkeypatch.setattr("media_platform.xhs.client.sign_with_xhshow", sign_with_cookie)
+    monkeypatch.setattr(
+        "media_platform.xhs.client.wait_for_captcha",
+        lambda operation: wait_for_captcha(
+            operation,
+            sleep=lambda seconds: record_sleep(sleeps, seconds),
+            monotonic=lambda: 0.0,
+        ),
+    )
+
+    if method == "get":
+        result = await client.get("/api/search", {"keyword": "重庆"})
+    else:
+        result = await client.post("/api/search", {"keyword": "重庆"})
+
+    request_headers = [call[1]["headers"] for call in response_client.requests]
+    assert result == {"notes": []}
+    assert context.calls == 2
+    assert client.cookie_dict == {"a1": "new"}
+    assert [headers["Cookie"] for headers in request_headers] == ["a1=old", "a1=new"]
+    assert [headers["X-T"] for headers in request_headers] == ["xt-a1=old", "xt-a1=new"]
     assert sleeps == [10]
 
 

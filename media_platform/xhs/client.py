@@ -65,12 +65,15 @@ async def wait_for_captcha(
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     monotonic: Callable[[], float] = time.monotonic,
 ) -> Any:
-    deadline = monotonic() + CAPTCHA_MAX_WAIT_SECONDS
+    deadline = None
     while True:
         try:
             return await operation()
         except CaptchaRequiredError:
-            remaining = deadline - monotonic()
+            now = monotonic()
+            if deadline is None:
+                deadline = now + CAPTCHA_MAX_WAIT_SECONDS
+            remaining = deadline - now
             if remaining <= 0:
                 raise
             utils.logger.warning(
@@ -215,17 +218,20 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
-        headers = await self._pre_headers(uri, params)
-        # Build URL manually to ensure query string encoding matches the sign string
-        # (httpx's default params encoding differs from browser/XHS frontend behavior)
-        if params:
-            full_url = f"{self._host}{uri}?{self._build_query_string(params)}"
-        else:
-            full_url = f"{self._host}{uri}"
+        async def operation():
+            await self.update_cookies(self.playwright_page.context)
+            headers = await self._pre_headers(uri, params)
+            # Build URL manually to ensure query string encoding matches the sign string
+            # (httpx's default params encoding differs from browser/XHS frontend behavior)
+            if params:
+                full_url = f"{self._host}{uri}?{self._build_query_string(params)}"
+            else:
+                full_url = f"{self._host}{uri}"
+            return await self._request_with_short_retry(
+                method="GET", url=full_url, headers=headers
+            )
 
-        return await self.request(
-            method="GET", url=full_url, headers=headers
-        )
+        return await wait_for_captcha(operation)
 
     async def post(self, uri: str, data: dict, **kwargs) -> Dict:
         """
@@ -237,15 +243,19 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
-        headers = await self._pre_headers(uri, payload=data)
-        json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
-        return await self.request(
-            method="POST",
-            url=f"{self._host}{uri}",
-            data=json_str,
-            headers=headers,
-            **kwargs,
-        )
+        async def operation():
+            await self.update_cookies(self.playwright_page.context)
+            headers = await self._pre_headers(uri, payload=data)
+            json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+            return await self._request_with_short_retry(
+                method="POST",
+                url=f"{self._host}{uri}",
+                data=json_str,
+                headers=headers,
+                **kwargs,
+            )
+
+        return await wait_for_captcha(operation)
 
     async def get_note_media(self, url: str) -> Union[bytes, None]:
         # Check if proxy is expired before request
