@@ -107,7 +107,18 @@ async def test_launched_browser_get_browser_websocket_url_uses_localhost(monkeyp
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("invalid_url", ["ws://", "ws:///path", "ws:// host"])
+@pytest.mark.parametrize(
+    "invalid_url",
+    [
+        "ws://",
+        "ws:///path",
+        "ws:// host",
+        "ws://127.0.0.1:9222/dev tools",
+        "ws://127.0.0.1:9222/path?query=has value",
+        "ws://127.0.0.1:notaport/path",
+        "ws://127.0.0.1:65536/path",
+    ],
+)
 async def test_existing_browser_falls_back_to_direct_for_malformed_websocket_url(
     monkeypatch, invalid_url
 ):

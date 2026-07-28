@@ -288,7 +288,7 @@ class CDPBrowserManager:
 
     @staticmethod
     def _is_valid_websocket_url(ws_url: Any) -> bool:
-        if not isinstance(ws_url, str):
+        if not isinstance(ws_url, str) or any(character.isspace() for character in ws_url):
             return False
 
         try:
