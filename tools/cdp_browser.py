@@ -292,18 +292,17 @@ class CDPBrowserManager:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    f"http://localhost:{debug_port}/json/version", timeout=10
+                    f"http://127.0.0.1:{debug_port}/json/version", timeout=10
                 )
                 if response.status_code == 200:
                     data = response.json()
                     ws_url = data.get("webSocketDebuggerUrl")
-                    if ws_url:
+                    if isinstance(ws_url, str) and ws_url.startswith(("ws://", "wss://")):
                         utils.logger.info(
                             f"[CDPBrowserManager] Got browser WebSocket URL: {ws_url}"
                         )
                         return ws_url
-                    else:
-                        raise RuntimeError("webSocketDebuggerUrl not found")
+                    raise RuntimeError("valid webSocketDebuggerUrl not found")
                 else:
                     raise RuntimeError(f"HTTP {response.status_code}: {response.text}")
         except Exception as e:
@@ -328,9 +327,6 @@ class CDPBrowserManager:
                         "Chrome 136+ direct CDP mode, which may require browser approval: "
                         f"{discovery_error}"
                     )
-                utils.logger.info(
-                    "[CDPBrowserManager] Please check your browser for a confirmation dialog and accept it"
-                )
                 self.browser = await playwright.chromium.connect_over_cdp(
                     ws_url, timeout=config.BROWSER_LAUNCH_TIMEOUT * 1000
                 )
