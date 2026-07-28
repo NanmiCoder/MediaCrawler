@@ -62,10 +62,12 @@ def raise_for_captcha(response: httpx.Response) -> None:
 async def wait_for_captcha(
     operation: Callable[[], Awaitable[Any]],
     *,
+    on_captcha: Optional[Callable[[], Awaitable[None]]] = None,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     monotonic: Callable[[], float] = time.monotonic,
 ) -> Any:
     deadline = None
+    presented = False
     while True:
         try:
             return await operation()
@@ -73,6 +75,10 @@ async def wait_for_captcha(
             now = monotonic()
             if deadline is None:
                 deadline = now + CAPTCHA_MAX_WAIT_SECONDS
+            if not presented:
+                presented = True
+                if on_captcha is not None:
+                    await on_captcha()
             remaining = deadline - now
             if remaining <= 0:
                 raise
@@ -171,7 +177,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 method, url, return_response=return_response, **kwargs
             )
 
-        return await wait_for_captcha(operation)
+        return await wait_for_captcha(operation, on_captcha=self._present_captcha)
 
     @retry(
         stop=stop_after_attempt(3),
@@ -208,6 +214,13 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             parts.append(f"{key}={quote(value_str, safe=',')}")
         return "&".join(parts)
 
+    async def _present_captcha(self, keyword: Optional[str] = None) -> None:
+        await self.playwright_page.bring_to_front()
+        if keyword:
+            await self.playwright_page.goto(
+                f"{self._domain}/search_result?keyword={quote(keyword, safe='')}"
+            )
+
     async def get(self, uri: str, params: Optional[Dict] = None) -> Dict:
         """
         GET request, signs request headers
@@ -231,7 +244,15 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 method="GET", url=full_url, headers=headers
             )
 
-        return await wait_for_captcha(operation)
+        keyword = (
+            params.get("keyword")
+            if uri == "/api/sns/web/v1/search/notes" and isinstance(params, dict)
+            else None
+        )
+        return await wait_for_captcha(
+            operation,
+            on_captcha=lambda: self._present_captcha(keyword),
+        )
 
     async def post(self, uri: str, data: dict, **kwargs) -> Dict:
         """
@@ -255,7 +276,15 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 **kwargs,
             )
 
-        return await wait_for_captcha(operation)
+        keyword = (
+            data.get("keyword")
+            if uri == "/api/sns/web/v1/search/notes" and isinstance(data, dict)
+            else None
+        )
+        return await wait_for_captcha(
+            operation,
+            on_captcha=lambda: self._present_captcha(keyword),
+        )
 
     async def get_note_media(self, url: str) -> Union[bytes, None]:
         # Check if proxy is expired before request
