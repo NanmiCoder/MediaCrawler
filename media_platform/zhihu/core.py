@@ -20,7 +20,6 @@
 
 # -*- coding: utf-8 -*-
 import asyncio
-import os
 # import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple, cast
@@ -41,6 +40,8 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import zhihu as zhihu_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.content_filter import filter_content_items, log_filter_result
+from tools.profile import get_browser_profile_dir
 from var import crawler_type_var, source_keyword_var
 
 from .client import ZhiHuClient
@@ -142,6 +143,8 @@ class ZhihuCrawler(AbstractCrawler):
             elif config.CRAWLER_TYPE == "creator":
                 # Get creator's information and their notes and comments
                 await self.get_creators_and_notes()
+            elif config.CRAWLER_TYPE == "login":
+                utils.logger.info("[ZhihuCrawler.start] Login state is ready, skip crawling ...")
             else:
                 pass
 
@@ -190,10 +193,12 @@ class ZhihuCrawler(AbstractCrawler):
                     utils.logger.info(f"[ZhihuCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
 
                     page += 1
-                    for content in content_list:
+                    kept_content_list = filter_content_items("zhihu", content_list)
+                    log_filter_result("zhihu", "search", len(content_list), len(kept_content_list), utils.logger)
+                    for content in kept_content_list:
                         await zhihu_store.update_zhihu_content(content)
 
-                    await self.batch_get_content_comments(content_list)
+                    await self.batch_get_content_comments(kept_content_list)
                 except DataFetchError:
                     utils.logger.error("[ZhihuCrawler.search] Search content error")
                     return
@@ -276,14 +281,21 @@ class ZhihuCrawler(AbstractCrawler):
             utils.logger.info(
                 f"[ZhihuCrawler.get_creators_and_notes] Creator info: {createor_info}"
             )
+            accepted_contents: List[ZhihuContent] = []
+
+            async def save_filtered_contents(contents: List[ZhihuContent]):
+                kept_contents = filter_content_items("zhihu", contents)
+                log_filter_result("zhihu", "creator", len(contents), len(kept_contents), utils.logger)
+                accepted_contents.extend(kept_contents)
+                await zhihu_store.batch_update_zhihu_contents(kept_contents)
 
             # By default, only answer information is extracted, uncomment below if articles and videos are needed
 
             # Get all anwser information of the creator
-            all_content_list = await self.zhihu_client.get_all_anwser_by_creator(
+            await self.zhihu_client.get_all_anwser_by_creator(
                 url_token=user_url_token,
                 crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
-                callback=zhihu_store.batch_update_zhihu_contents,
+                callback=save_filtered_contents,
             )
 
             # Get all articles of the creator's contents
@@ -301,7 +313,7 @@ class ZhihuCrawler(AbstractCrawler):
             # )
 
             # Get all comments of the creator's contents
-            await self.batch_get_content_comments(all_content_list)
+            await self.batch_get_content_comments(accepted_contents)
 
     async def get_note_detail(
         self, full_note_url: str, semaphore: asyncio.Semaphore
@@ -379,6 +391,7 @@ class ZhihuCrawler(AbstractCrawler):
 
         need_get_comment_notes: List[ZhihuContent] = []
         note_details = await asyncio.gather(*get_note_detail_task_list)
+        valid_note_details: List[ZhihuContent] = []
         for index, note_detail in enumerate(note_details):
             if not note_detail:
                 utils.logger.info(
@@ -387,6 +400,11 @@ class ZhihuCrawler(AbstractCrawler):
                 continue
 
             note_detail = cast(ZhihuContent, note_detail)  # only for type check
+            valid_note_details.append(note_detail)
+
+        kept_note_details = filter_content_items("zhihu", valid_note_details)
+        log_filter_result("zhihu", "detail", len(valid_note_details), len(kept_note_details), utils.logger)
+        for note_detail in kept_note_details:
             need_get_comment_notes.append(note_detail)
             await zhihu_store.update_zhihu_content(note_detail)
 
@@ -435,9 +453,7 @@ class ZhihuCrawler(AbstractCrawler):
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
-            user_data_dir = os.path.join(
-                os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM
-            )  # type: ignore
+            user_data_dir = get_browser_profile_dir()
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,

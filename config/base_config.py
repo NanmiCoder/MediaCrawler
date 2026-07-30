@@ -28,7 +28,7 @@ KEYWORDS = "编程副业,编程兼职"  # Keyword search configuration, separate
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
 CRAWLER_TYPE = (
-    "search"  # Crawling type, search (keyword search) | detail (post details) | creator (creator homepage data)
+    "search"  # Crawling type, search (keyword search) | detail (post details) | creator (creator homepage data) | login (login only)
 )
 # Whether to enable IP proxy
 ENABLE_IP_PROXY = False
@@ -61,6 +61,9 @@ ENABLE_CDP_MODE = True
 # CDP 调试端口，用于与浏览器通信
 # 如果端口被占用，系统会自动尝试下一个可用端口
 CDP_DEBUG_PORT = 9222
+
+# 调度器多实例运行时使用的实例标识，仅用于日志、状态和产物隔离。
+INSTANCE_ID = ""
 
 # 自定义浏览器路径（可选）
 # 如果为空，系统会自动检测 Chrome/Edge 的安装路径
@@ -95,11 +98,18 @@ SAVE_DATA_PATH = ""
 # Browser file configuration cached by the user's browser
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 
+# 多实例运行时可显式指定浏览器用户数据目录；为空时沿用 USER_DATA_DIR。
+BROWSER_PROFILE_DIR = ""
+
 # The number of pages to start crawling starts from the first page by default
 START_PAGE = 1
 
 # Control the number of crawled videos/posts
 CRAWLER_MAX_NOTES_COUNT = 15
+
+# Content metric filters applied before storing media/comments.
+# Example: {"liked_count": {"min": 1000}, "comment_count": {"max": 500}}
+CONTENT_FILTERS = {}
 
 # Controlling the number of concurrent crawlers
 MAX_CONCURRENCY_NUM = 1

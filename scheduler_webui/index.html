@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediaCrawler 调度器</title>
+    <link rel="stylesheet" href="/scheduler/static/styles.css?v=20260630-right-artifacts" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>MediaCrawler 调度器</h1>
+          <p id="summary">正在读取调度状态...</p>
+        </div>
+        <button id="refreshBtn" type="button">刷新</button>
+      </header>
+
+      <section class="layout scheduler-grid">
+        <section class="left-column">
+          <section class="panel jobs-panel">
+            <div class="section-title">
+              <h2>作业列表</h2>
+              <span id="jobHint"></span>
+            </div>
+            <div id="jobsBody" class="jobs-list"></div>
+          </section>
+
+          <section class="panel log-panel">
+            <h2>实时日志</h2>
+            <pre id="logsBox">选择一个作业查看日志。</pre>
+          </section>
+
+          <section class="panel works-panel">
+            <div class="section-title">
+              <h2>作品列表</h2>
+              <span id="worksHint"></span>
+            </div>
+            <ul id="worksList" class="works-list"></ul>
+            <div id="worksPager" class="pager"></div>
+          </section>
+        </section>
+
+        <section class="right-column">
+          <section class="panel job-form-panel">
+            <div class="section-title">
+              <h2 id="formTitle">新建作业</h2>
+              <button id="cancelEditBtn" class="secondary" type="button" hidden>新建作业</button>
+            </div>
+            <form id="jobForm" class="job-grid">
+            <label>
+              作业名称
+              <input name="name" required placeholder="小红书账号 A" />
+            </label>
+            <label>
+              平台
+              <select name="platform">
+                <option value="xhs">小红书</option>
+                <option value="dy">抖音</option>
+                <option value="ks">快手</option>
+                <option value="bili">B站</option>
+                <option value="wb">微博</option>
+                <option value="tieba">贴吧</option>
+                <option value="zhihu">知乎</option>
+              </select>
+            </label>
+            <label>
+              登录方式
+              <select name="login_type">
+                <option value="qrcode">二维码</option>
+                <option value="cookie">Cookie</option>
+                <option value="phone">手机号</option>
+              </select>
+            </label>
+            <label>
+              保存格式
+              <select name="save_option">
+                <option value="jsonl">JSONL</option>
+                <option value="json">JSON</option>
+                <option value="csv">CSV</option>
+                <option value="excel">Excel</option>
+                <option value="sqlite">SQLite</option>
+              </select>
+            </label>
+            <label>
+              爬取类型
+              <select name="crawler_type">
+                <option value="search">搜索</option>
+                <option value="detail">详情</option>
+                <option value="creator">创作者</option>
+              </select>
+            </label>
+            <label>
+              目标
+              <input name="target_text" placeholder="关键词 / ID / 创作者主页，多个用英文逗号分隔" />
+            </label>
+            <label>
+              CDP 端口
+              <input name="cdp_debug_port" type="number" min="1000" max="65535" placeholder="自动分配" />
+            </label>
+            <label>
+              浏览器 Profile 目录
+              <input name="browser_profile_dir" placeholder="默认自动隔离" />
+            </label>
+
+            <section class="form-section">
+              <h3>抓取参数</h3>
+              <div class="form-grid param-grid">
+                <label>
+                  起始页
+                  <input name="start_page" type="number" min="1" placeholder="1" />
+                </label>
+                <label>
+                  最大内容数
+                  <input name="max_notes_count" type="number" min="1" placeholder="20" />
+                </label>
+                <label>
+                  单条评论数
+                  <input name="max_comments_count" type="number" min="1" placeholder="10" />
+                </label>
+                <label>
+                  并发数
+                  <input name="max_concurrency_num" type="number" min="1" placeholder="1" />
+                </label>
+                <label>
+                  评论
+                  <select name="enable_comments">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+                <label>
+                  二级评论
+                  <select name="enable_sub_comments">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section class="form-section">
+              <h3>内容过滤</h3>
+              <div id="jobFilterRows" class="filter-rows"></div>
+              <button class="secondary" type="button" data-action="add-filter" data-scope="job">添加过滤条件</button>
+            </section>
+
+            <section class="form-section">
+              <h3>登录与代理</h3>
+              <label>
+                Cookie
+                <textarea name="cookies" rows="3" placeholder="a=b; c=d"></textarea>
+              </label>
+              <div class="form-grid">
+                <label>
+                  连接已有浏览器
+                  <select name="cdp_connect_existing">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+                <label>
+                  IP 代理
+                  <select name="enable_ip_proxy">
+                    <option value="">项目默认</option>
+                    <option value="true">开启</option>
+                    <option value="false">关闭</option>
+                  </select>
+                </label>
+                <label>
+                  代理池数量
+                  <input name="ip_proxy_pool_count" type="number" min="1" placeholder="2" />
+                </label>
+                <label>
+                  代理服务
+                  <select name="ip_proxy_provider_name">
+                    <option value="">默认</option>
+                    <option value="static">固定代理</option>
+                    <option value="kuaidaili">快代理</option>
+                    <option value="wandouhttp">豌豆 HTTP</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                固定代理地址
+                <input name="static_proxy_url" placeholder="http://user:pass@host:port" />
+              </label>
+            </section>
+
+            <label class="checkline">
+              <input name="headless" type="checkbox" />
+              无头模式
+            </label>
+            <div class="form-actions">
+              <button id="jobSubmitBtn" type="submit">创建作业</button>
+            </div>
+            </form>
+          </section>
+
+          <section class="panel word-panel">
+            <h2>评论词云</h2>
+            <div id="wordCloud" class="word-cloud"></div>
+          </section>
+
+          <section class="panel artifact-panel">
+            <h2>产物列表</h2>
+            <ul id="artifactsList"></ul>
+          </section>
+        </section>
+      </section>
+    </main>
+    <script src="/scheduler/static/app.js?v=20260630-works-pagination-8"></script>
+  </body>
+</html>

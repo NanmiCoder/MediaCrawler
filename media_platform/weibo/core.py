@@ -23,7 +23,6 @@
 # @Desc    : Weibo crawler main workflow code
 
 import asyncio
-import os
 # import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
@@ -42,6 +41,8 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import weibo as weibo_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.content_filter import filter_content_items, log_filter_result
+from tools.profile import get_browser_profile_dir
 from var import crawler_type_var, source_keyword_var
 
 from .client import WeiboClient
@@ -130,6 +131,8 @@ class WeiboCrawler(AbstractCrawler):
             elif config.CRAWLER_TYPE == "creator":
                 # Get creator's information and their notes and comments
                 await self.get_creators_and_notes()
+            elif config.CRAWLER_TYPE == "login":
+                utils.logger.info("[WeiboCrawler.start] Login state is ready, skip crawling ...")
             else:
                 pass
             utils.logger.info("[WeiboCrawler.start] Weibo Crawler finished ...")
@@ -173,13 +176,15 @@ class WeiboCrawler(AbstractCrawler):
                 note_list = filter_search_result_card(search_res.get("cards"))
                 # If full text fetching is enabled, batch get full text of posts
                 note_list = await self.batch_get_notes_full_text(note_list)
-                for note_item in note_list:
-                    if note_item:
-                        mblog: Dict = note_item.get("mblog")
-                        if mblog:
-                            note_id_list.append(mblog.get("id"))
-                            await weibo_store.update_weibo_note(note_item)
-                            await self.get_note_images(mblog)
+                valid_note_list = [note_item for note_item in note_list if note_item]
+                kept_note_list = filter_content_items("wb", valid_note_list)
+                log_filter_result("wb", "search", len(valid_note_list), len(kept_note_list), utils.logger)
+                for note_item in kept_note_list:
+                    mblog: Dict = note_item.get("mblog")
+                    if mblog:
+                        note_id_list.append(mblog.get("id"))
+                        await weibo_store.update_weibo_note(note_item)
+                        await self.get_note_images(mblog)
 
                 page += 1
 
@@ -197,10 +202,16 @@ class WeiboCrawler(AbstractCrawler):
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [self.get_note_info_task(note_id=note_id, semaphore=semaphore) for note_id in config.WEIBO_SPECIFIED_ID_LIST]
         video_details = await asyncio.gather(*task_list)
-        for note_item in video_details:
-            if note_item:
-                await weibo_store.update_weibo_note(note_item)
-        await self.batch_get_notes_comments(config.WEIBO_SPECIFIED_ID_LIST)
+        valid_note_details = [note_item for note_item in video_details if note_item]
+        kept_note_details = filter_content_items("wb", valid_note_details)
+        log_filter_result("wb", "detail", len(valid_note_details), len(kept_note_details), utils.logger)
+        note_ids = []
+        for note_item in kept_note_details:
+            mblog = note_item.get("mblog", {})
+            if mblog.get("id"):
+                note_ids.append(mblog.get("id"))
+            await weibo_store.update_weibo_note(note_item)
+        await self.batch_get_notes_comments(note_ids)
 
     async def get_note_info_task(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
         """
@@ -315,22 +326,26 @@ class WeiboCrawler(AbstractCrawler):
                 if not createor_info:
                     raise DataFetchError("Get creator info error")
                 await weibo_store.save_creator(user_id, user_info=createor_info)
+                accepted_notes: List[Dict] = []
 
                 # Create a wrapper callback to get full text before saving data
                 async def save_notes_with_full_text(note_list: List[Dict]):
                     # If full text fetching is enabled, batch get full text first
                     updated_note_list = await self.batch_get_notes_full_text(note_list)
-                    await weibo_store.batch_update_weibo_notes(updated_note_list)
+                    kept_note_list = filter_content_items("wb", updated_note_list)
+                    log_filter_result("wb", "creator", len(updated_note_list), len(kept_note_list), utils.logger)
+                    accepted_notes.extend(kept_note_list)
+                    await weibo_store.batch_update_weibo_notes(kept_note_list)
 
                 # Get all note information of the creator
-                all_notes_list = await self.wb_client.get_all_notes_by_creator_id(
+                await self.wb_client.get_all_notes_by_creator_id(
                     creator_id=user_id,
                     container_id=f"107603{user_id}",
                     crawl_interval=0,
                     callback=save_notes_with_full_text,
                 )
 
-                note_ids = [note_item.get("mblog", {}).get("id") for note_item in all_notes_list if note_item.get("mblog", {}).get("id")]
+                note_ids = [note_item.get("mblog", {}).get("id") for note_item in accepted_notes if note_item.get("mblog", {}).get("id")]
                 await self.batch_get_notes_comments(note_ids)
 
             else:
@@ -368,7 +383,7 @@ class WeiboCrawler(AbstractCrawler):
         """Launch browser and create browser context"""
         utils.logger.info("[WeiboCrawler.launch_browser] Begin create browser context ...")
         if config.SAVE_LOGIN_STATE:
-            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
+            user_data_dir = get_browser_profile_dir()
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,

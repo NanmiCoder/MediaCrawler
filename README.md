@@ -161,14 +161,25 @@ uv run playwright install
 # 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
 uv run main.py --platform xhs --lt qrcode --type search
 
+# 按发布时间和互动指标过滤爬取目标，例如只保存 2024-07-01 之后且点赞数不低于 1000 的内容
+uv run main.py --platform xhs --lt qrcode --type search --content_filters '{"publish_time":{"min":"2024-07-01"},"liked_count":{"min":1000}}'
+
+# 也可以只按互动指标过滤
+uv run main.py --platform xhs --lt qrcode --type search --content_filters '{"liked_count":{"min":1000}}'
+
 # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
 uv run main.py --platform xhs --lt qrcode --type detail
+
+# 只维护登录态，不进入抓取流程
+uv run main.py --platform xhs --lt qrcode --type login
 
 # 打开对应APP扫二维码登录
 
 # 其他平台爬虫使用示例，执行下面的命令查看
 uv run main.py --help
 ```
+
+内容过滤支持不同平台的发布时间、点赞、收藏、转发、评论等字段，详见 [内容过滤使用指南](docs/内容过滤使用指南.md)。
 
 <details>
 <summary>🖥️ <strong>WebUI 可视化操作界面</strong></summary>
@@ -210,6 +221,18 @@ uv run uvicorn api.main:app --port 8080 --reload
 ```
 
 然后访问 `http://localhost:8080` 即可。
+
+#### 多实例调度器
+
+启动同一个 API 服务后，访问 `http://localhost:8080/scheduler` 可打开多实例调度器。调度器支持创建多个独立作业，每个作业拥有独立浏览器 Profile、CDP 端口、登录态、爬取目标和爬取参数。作业参数、内容过滤、Cookie 和代理都可以在页面中通过输入框、下拉菜单配置，无需手写 JSON。
+
+调度器运行数据默认保存在 `data/scheduler/`：
+
+- `scheduler.db`：作业配置、运行记录、日志和产物索引
+- `profiles/{job_id}/`：作业独立浏览器 Profile
+- `artifacts/{job_id}/{task_id}/`：单次运行抓取产物
+
+详细说明请查看：[多实例调度器使用指南](docs/多实例调度器使用指南.md)
 
 #### WebUI 功能特性
 

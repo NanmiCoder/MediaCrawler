@@ -18,7 +18,6 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 import asyncio
-import os
 import random
 from asyncio import Task
 from typing import Dict, List, Optional
@@ -39,6 +38,8 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import xhs as xhs_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.content_filter import filter_content_items, log_filter_result
+from tools.profile import get_browser_profile_dir
 from var import crawler_type_var, source_keyword_var
 
 from .client import XiaoHongShuClient
@@ -121,6 +122,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
             elif config.CRAWLER_TYPE == "creator":
                 # Get creator's information and their notes and comments
                 await self.get_creators_and_notes()
+            elif config.CRAWLER_TYPE == "login":
+                utils.logger.info("[XiaoHongShuCrawler.start] Login state is ready, skip crawling ...")
             else:
                 pass
 
@@ -168,11 +171,15 @@ class XiaoHongShuCrawler(AbstractCrawler):
                         ) for post_item in notes_res.get("items", {}) if post_item.get("model_type") not in ("rec_query", "hot_query")
                     ]
                     note_details = await asyncio.gather(*task_list)
-                    for note_detail in note_details:
-                        if note_detail:
-                            await xhs_store.update_xhs_note(note_detail)
-                            await self.get_notice_media(note_detail)
-                            note_ids.append(note_detail.get("note_id"))
+                    valid_note_details = [note_detail for note_detail in note_details if note_detail]
+                    kept_note_details = filter_content_items("xhs", valid_note_details)
+                    log_filter_result("xhs", "search", len(valid_note_details), len(kept_note_details), utils.logger)
+                    for note_detail in kept_note_details:
+                        await xhs_store.update_xhs_note(note_detail)
+                        await self.get_notice_media(note_detail)
+                        note_id = note_detail.get("note_id")
+                        if note_id:
+                            note_ids.append(note_id)
                             xsec_tokens.append(note_detail.get("xsec_token"))
                     page += 1
                     utils.logger.info(f"[XiaoHongShuCrawler.search] Note details: {note_details}")
@@ -210,22 +217,29 @@ class XiaoHongShuCrawler(AbstractCrawler):
             # Use fixed crawling interval
             crawl_interval = config.CRAWLER_MAX_SLEEP_SEC
             # Get all note information of the creator
-            all_notes_list = await self.xhs_client.get_all_notes_by_creator(
+            accepted_notes: List[Dict] = []
+
+            async def fetch_and_collect(note_list: List[Dict]):
+                accepted_notes.extend(await self.fetch_creator_notes_detail(note_list))
+
+            await self.xhs_client.get_all_notes_by_creator(
                 user_id=user_id,
                 crawl_interval=crawl_interval,
-                callback=self.fetch_creator_notes_detail,
+                callback=fetch_and_collect,
                 xsec_token=creator_info.xsec_token,
                 xsec_source=creator_info.xsec_source,
             )
 
             note_ids = []
             xsec_tokens = []
-            for note_item in all_notes_list:
-                note_ids.append(note_item.get("note_id"))
-                xsec_tokens.append(note_item.get("xsec_token"))
+            for note_item in accepted_notes:
+                note_id = note_item.get("note_id")
+                if note_id:
+                    note_ids.append(note_id)
+                    xsec_tokens.append(note_item.get("xsec_token"))
             await self.batch_get_note_comments(note_ids, xsec_tokens)
 
-    async def fetch_creator_notes_detail(self, note_list: List[Dict]):
+    async def fetch_creator_notes_detail(self, note_list: List[Dict]) -> List[Dict]:
         """Concurrently obtain the specified post list and save the data"""
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list = [
@@ -238,10 +252,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
         ]
 
         note_details = await asyncio.gather(*task_list)
-        for note_detail in note_details:
-            if note_detail:
-                await xhs_store.update_xhs_note(note_detail)
-                await self.get_notice_media(note_detail)
+        valid_note_details = [note_detail for note_detail in note_details if note_detail]
+        kept_note_details = filter_content_items("xhs", valid_note_details)
+        log_filter_result("xhs", "creator", len(valid_note_details), len(kept_note_details), utils.logger)
+        for note_detail in kept_note_details:
+            await xhs_store.update_xhs_note(note_detail)
+            await self.get_notice_media(note_detail)
+        return kept_note_details
 
     async def get_specified_notes(self):
         """Get the information and comments of the specified post
@@ -263,12 +280,16 @@ class XiaoHongShuCrawler(AbstractCrawler):
         need_get_comment_note_ids = []
         xsec_tokens = []
         note_details = await asyncio.gather(*get_note_detail_task_list)
-        for note_detail in note_details:
-            if note_detail:
-                need_get_comment_note_ids.append(note_detail.get("note_id", ""))
+        valid_note_details = [note_detail for note_detail in note_details if note_detail]
+        kept_note_details = filter_content_items("xhs", valid_note_details)
+        log_filter_result("xhs", "detail", len(valid_note_details), len(kept_note_details), utils.logger)
+        for note_detail in kept_note_details:
+            note_id = note_detail.get("note_id", "")
+            if note_id:
+                need_get_comment_note_ids.append(note_id)
                 xsec_tokens.append(note_detail.get("xsec_token", ""))
-                await xhs_store.update_xhs_note(note_detail)
-                await self.get_notice_media(note_detail)
+            await xhs_store.update_xhs_note(note_detail)
+            await self.get_notice_media(note_detail)
         await self.batch_get_note_comments(need_get_comment_note_ids, xsec_tokens)
 
     async def get_note_detail_async_task(
@@ -403,7 +424,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         if config.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
-            user_data_dir = os.path.join(os.getcwd(), "browser_data", config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
+            user_data_dir = get_browser_profile_dir()
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,

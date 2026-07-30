@@ -18,6 +18,7 @@
 
 from .crawler import router as crawler_router
 from .data import router as data_router
+from .scheduler import router as scheduler_router
 from .websocket import router as websocket_router
 
-__all__ = ["crawler_router", "data_router", "websocket_router"]
+__all__ = ["crawler_router", "data_router", "scheduler_router", "websocket_router"]
