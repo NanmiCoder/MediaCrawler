@@ -31,6 +31,10 @@ async def test_cmd_arg_crawler_max_notes_count():
 async def test_capture_creator_ids_cli_defaults_off_and_can_be_enabled():
     original = config.ENABLE_XHS_CREATOR_ID_CAPTURE
     try:
+        config.ENABLE_XHS_CREATOR_ID_CAPTURE = False
+        await parse_cmd(["--platform", "xhs"])
+        assert config.ENABLE_XHS_CREATOR_ID_CAPTURE is False
+
         await parse_cmd(["--platform", "xhs", "--capture_creator_ids", "true"])
         assert config.ENABLE_XHS_CREATOR_ID_CAPTURE is True
     finally:
