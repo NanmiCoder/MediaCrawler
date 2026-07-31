@@ -92,6 +92,10 @@ SAVE_DATA_OPTION = "jsonl"  # csv or db or json or jsonl or sqlite or excel or p
 # Data saving path, if not specified by default, it will be saved to the data folder.
 SAVE_DATA_PATH = ""
 
+# Opt-in local sidecar for XHS creator IDs captured during keyword search.
+ENABLE_XHS_CREATOR_ID_CAPTURE = False
+XHS_CREATOR_ID_CAPTURE_DIR = ""
+
 # Browser file configuration cached by the user's browser
 USER_DATA_DIR = "%s_user_data_dir"  # %s will be replaced by platform name
 

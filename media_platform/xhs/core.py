@@ -39,6 +39,7 @@ from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import xhs as xhs_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
+from tools.xhs_creator_id_capture import capture_creator_id
 from var import crawler_type_var, source_keyword_var
 
 from .client import XiaoHongShuClient
@@ -170,6 +171,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     note_details = await asyncio.gather(*task_list)
                     for note_detail in note_details:
                         if note_detail:
+                            await capture_creator_id(note_detail)
                             await xhs_store.update_xhs_note(note_detail)
                             await self.get_notice_media(note_detail)
                             note_ids.append(note_detail.get("note_id"))
