@@ -1,130 +1,158 @@
-# 公开作者 ID 到 Creator 模式自动化设计
+# 首次捕获作者 ID 与候选 Creator 自动采集设计
 
 > 日期：2026-07-31
 >
 > 状态：已确认，待实施
-> 前置设计：`2026-07-24-public-account-id-extractor-design.md`
 
 ## 1. 目标
 
-在不改变 MediaCrawler 匿名存储逻辑的前提下，把以下研究链路放进同一个命令：
+在第一次关键词搜索成功取得笔记详情时、匿名化存储之前，旁路捕获公开作者的 24 位
+`user_id`。AI 粗筛完成后，只保留 `potential_customer` 且证据等级为 `strong` 或
+`medium` 的候选作者，将其与旁路 ID 映射关联，并自动调用现有 creator 模式采集候选
+作者主页下的公开笔记。
 
 ```text
-人工确认且非营销的公开笔记 JSON
-  -> 获取公开笔记详情
-  -> 提取 note_detail["user"]["user_id"]
-  -> 去重并原子写出作者 ID 清单
-  -> 在同一登录会话中调用现有 creator 模式
-  -> 保存这些作者的公开笔记
+关键词搜索取得原始 note_detail
+  ├─ 现有匿名存储：creator_hash + 笔记内容
+  └─ 本地临时映射：note_id + creator_hash + user_id
+                     ↓
+AI 粗筛（不接收 user_id）
+  -> potential_customer + strong/medium
+  -> 关联本地临时映射
+  -> candidate_creators.json（含 user_id）
+  -> 自动调用 creator 模式
+  -> 保存候选作者的公开笔记，供第二轮 AI 筛选
 ```
 
-## 2. 实现位置与命令
+主流程不依赖粗筛后重新获取旧笔记详情，因此不会因原笔记 `xsec_token` 过期而丢失
+作者 ID。
 
-新增：
+## 2. 候选规则
+
+候选证据笔记必须同时满足：
 
 ```text
-MediaCrawler/tools/public_account_creator_pipeline.py
-MediaCrawler/tests/test_public_account_creator_pipeline.py
+status in {"screened", "cached"}
+AND label == "potential_customer"
+AND evidence_level in {"strong", "medium"}
+AND evidence_quotes 为非空字符串数组
 ```
 
-从 `MediaCrawler` 目录运行：
+只有至少包含一条上述证据笔记的作者才进入 `candidate_creators.json`。`weak`、`none`、
+`service_provider`、`media_or_educator`、`unclear` 和 `irrelevant` 不进入候选列表。
 
-```powershell
-uv run python -m tools.public_account_creator_pipeline `
-  --input ..\public_account_id_extractor\reviewed_notes.json `
-  --output ..\public_account_id_extractor\extracted_ids.json `
-  --creator-max-notes 50
-```
+这仍是内容证据驱动的研究候选，不是对作者真实身份、资产、职业或意图的事实判断。
 
-不新增第三方依赖、数据库、WebUI 或常驻服务。
+## 3. 首次抓取时捕获 ID
 
-## 3. 输入与筛选
+新增一个默认关闭的研究开关。关键词运行器通过 API 启动小红书搜索时显式开启；普通
+MediaCrawler 命令、详情模式、creator 模式和其他平台不捕获原始 ID。
 
-输入是 UTF-8 JSON 数组。仅处理同时满足以下条件的记录：
-
-```text
-review_status == "accepted"
-AND suspected_marketing == false
-AND note_url 非空
-```
-
-每条记录可包含 `note_id`、`note_url`、`source_keyword`、`review_status` 和
-`suspected_marketing`。重复 `note_url` 只请求一次。输入文件不存在、JSON 非法或顶层
-不是数组时，命令立即以非零状态结束。
-
-## 4. 输出
-
-提取阶段完成后，先将结果写入输出文件同目录的临时文件，再使用原子替换生成：
+捕获点位于 `media_platform/xhs/core.py`：`get_note_detail_async_task()` 已返回完整
+`note_detail`，但尚未调用 `store.xhs.update_xhs_note()`。捕获记录只包含：
 
 ```json
 {
-  "results": [
-    {
-      "note_id": "公开笔记 ID",
-      "public_user_id": "24 位公开用户 ID",
-      "profile_url": "https://www.xiaohongshu.com/user/profile/公开用户ID",
-      "source_keyword": "来源关键词",
-      "evidence_note_url": "公开笔记链接",
-      "extracted_at": "带时区的 ISO 8601 时间"
-    }
-  ],
-  "errors": [
-    {
-      "note_id": "失败笔记 ID",
-      "note_url": "失败笔记链接",
-      "error": "简短错误原因"
-    }
-  ]
+  "note_id": "公开笔记 ID",
+  "creator_hash": "与匿名笔记一致的 SHA-256 截断值",
+  "public_user_id": "24 位公开用户 ID",
+  "profile_url": "https://www.xiaohongshu.com/user/profile/公开用户ID",
+  "captured_at": "带时区的 ISO 8601 时间"
 }
 ```
 
-输出不得包含 Cookie、请求头、签名、手机号、微信、住址或评论用户信息。结果按
-`(note_id, public_user_id)` 去重；用于 creator 阶段的作者列表按 `public_user_id` 去重。
+不保存昵称、头像、简介、IP、Cookie、请求头、签名、评论用户或联系方式。记录按
+`(note_id, public_user_id)` 幂等写入本地私有旁路文件。写入失败应终止该次关键词任务，
+避免出现“笔记已保存但 ID 静默丢失”的不一致状态。
 
-## 5. 复用现有爬虫
+现有 `store/xhs/__init__.py` 不修改，搜索内容仍只保存 `creator_hash`。
 
-新增模块提供一个 `XiaoHongShuCrawler` 的轻量子类。它复用父类的浏览器初始化、
-登录状态、请求签名、`get_note_detail_async_task()`、`get_creators_and_notes()` 和关闭
-流程。子类只覆盖本次任务入口：
+## 4. API 与关键词运行器
 
-1. 串行获取通过筛选的笔记详情。
-2. 从原始详情读取 `user.user_id`，不调用 `store.xhs.update_xhs_note()`。
-3. 原子写出提取结果，确保即使 creator 阶段失败，ID 清单仍可用于重试。
-4. 将去重后的 24 位 ID 放入 `config.XHS_CREATOR_ID_LIST`。
-5. 设置 creator 笔记上限并调用继承的 `get_creators_and_notes()`。
+MediaCrawler API 的搜索请求新增布尔字段 `capture_creator_ids`，默认 `false`。进程管理器
+只在该值为真时向 `main.py` 传递对应命令行开关。
 
-Creator 阶段继续使用当前存储实现，因此作者资料仍不落库，公开笔记中的作者标识仍被
-转换为 `creator_hash`。本功能不修改 `store/xhs/__init__.py`。
+`keyword_crawl_runner/run_keywords.py` 启动小红书搜索时固定传递
+`capture_creator_ids: true`，从而确保本研究流程每次首次取得详情时同步捕获 ID。
 
-## 6. 错误、节流与退出状态
+旁路文件保存在 MediaCrawler 的本地数据目录中，并按日期生成，便于和
+`search_contents_YYYY-MM-DD.json` 对齐。旁路文件加入 `.gitignore`，不得提交 Git。
 
-- 笔记链接无法解析、详情为空或缺少 `user.user_id`：写入 `errors`，继续下一条。
-- 单个作者 creator 抓取失败：记录日志并继续下一位作者；不得丢失已生成的 ID 文件。
-- 没有成功提取任何作者：正常写出空 `results`，不启动 creator 阶段。
-- 输出不可写或浏览器/登录初始化失败：命令以非零状态结束。
-- 默认串行提取；沿用 `CRAWLER_MAX_SLEEP_SEC`，不新增并发。
-- 关闭评论和媒体下载；creator 笔记数量由 `--creator-max-notes` 控制，必须为正整数。
-- 不主动关闭用户已有的 CDP Chrome，仅清理本工具创建的页面和连接。
+## 5. AI 粗筛与 ID 关联
 
-## 7. 测试与验收
+`keyword_crawl_runner/screen_data.py` 继续只把匿名笔记内容发送给 AI。原始 `user_id`、
+主页链接和旁路映射不得进入提示词、缓存或 `screened_notes.jsonl`。
+
+模型响应全部完成且通过结构校验后：
+
+1. 使用现有 strong/medium 合格判断聚合作者。
+2. 丢弃没有合格证据笔记的作者。
+3. 通过 `creator_hash` 将候选作者与本地旁路映射关联。
+4. 一个哈希对应多个不同 `user_id` 时记录冲突并不自动采集。
+5. 缺少映射的候选写入 `candidate_creator_errors.json`，不尝试用旧 token 重抓详情。
+6. 成功关联的候选在 `candidate_creators.json` 中增加 `public_user_id` 和 `profile_url`。
+
+候选输出是本地研究中间文件，不上传 AI，不提交 Git。
+
+## 6. 自动 Creator 采集
+
+粗筛命令新增显式开关 `--crawl-creators`。启用时，`screen_data.py` 写完全部筛选输出后：
+
+1. 按 `public_user_id` 去重。
+2. 通过现有本地 MediaCrawler API 提交 creator 任务。
+3. 关闭评论和媒体下载。
+4. 使用 `--creator-max-notes` 控制每位作者的最大公开笔记数，该值必须为正整数。
+5. 等待任务结束并把成功、失败和需要人工复核的状态写入运行清单。
+
+未指定 `--crawl-creators` 时只输出候选及 ID，不访问作者主页。显式开关既支持全自动
+运行，也保留用户对主页采集时机的控制。
+
+Creator 模式使用新登录态和已捕获的 `user_id`，不再依赖候选证据笔记的旧
+`xsec_token`。平台仍可能因登录状态、频率限制或风控拒绝 creator 请求；这种失败应记录
+并可重试，但不能回退为手工打开候选笔记恢复 ID。
+
+## 7. 第二轮 AI 筛选
+
+Creator 输出保持 MediaCrawler 现有匿名笔记格式。第二轮 AI 筛选复用现有
+`screen_data.py`，通过输入路径或文件匹配模式指向 creator 输出。本阶段不引入新的模型
+提示词或对个人身份作额外推断。
+
+## 8. 错误处理与恢复
+
+- 捕获开关关闭：完全保持现有行为。
+- 原始详情缺少合法 24 位 `user_id`：记录捕获错误，笔记仍可按匿名流程保存。
+- 旁路文件不可写：关键词任务失败，保留已写入的原子记录供重试审计。
+- 候选缺少 ID 映射或发生哈希冲突：写入错误文件，不启动该作者的 creator 任务。
+- AI 粗筛存在单条失败：不影响其他已验证 strong/medium 候选。
+- Creator 单个任务失败：记录状态，后续候选继续处理。
+- 输出目录非空等现有安全检查继续生效。
+
+不新增数据库、WebUI、联系人提取、跨平台匹配或自动营销功能。
+
+## 9. 测试与验收
 
 自动测试覆盖：
 
-1. 只选择 `accepted` 且非营销的记录，并按 URL 去重。
-2. 非数组 JSON 输入被拒绝。
-3. 从模拟详情提取 24 位 `user_id` 并生成主页链接。
-4. 缺失 `user_id` 只产生单条错误，后续记录仍处理。
-5. creator 输入按用户 ID 去重。
-6. 输出使用临时文件和原子替换，且不泄露敏感字段。
-7. 没有提取结果时不调用 creator 方法。
-8. 原有匿名存储测试继续通过。
+1. 捕获开关默认关闭，关闭时不写旁路数据。
+2. 开启时从原始详情捕获合法 24 位 `user_id`，并生成与现有逻辑一致的
+   `creator_hash`。
+3. 捕获输出不包含昵称、Cookie、请求头、评论用户等字段。
+4. API 只在请求开启捕获时传递命令行参数。
+5. 关键词运行器固定开启捕获。
+6. 候选只包含 `potential_customer` 的 strong/medium 证据作者。
+7. ID 映射不会进入 AI 请求或筛选缓存。
+8. 缺失映射和哈希冲突不会启动 creator。
+9. `--crawl-creators` 关闭时不访问主页，开启时只提交去重后的候选 ID。
+10. Creator 失败被记录且不阻止后续候选。
+11. 原有匿名存储与关键词运行器测试继续通过。
 
-人工验收使用一条已确认的公开笔记，确认输出 ID 正确、creator 阶段保存公开笔记、
-评论和媒体没有被请求，且原始 `user_id` 没有进入现有内容存储。
+人工验收至少执行一条新关键词搜索，确认首次详情阶段生成旁路映射；随后执行粗筛，
+确认候选仅含 strong/medium、候选 ID 正确、旧笔记 token 不再被请求，并确认 creator
+输出可作为第二轮 AI 筛选输入。
 
-## 8. 使用边界
+## 10. 使用与数据边界
 
-- 仅用于个人、非商业研究。
-- 仅处理人工确认的公开笔记及其公开发布者标识。
-- 不采集评论用户 ID，不提取联系方式，不进行跨平台真人匹配或自动营销触达。
-- 输入和输出只保存在本机，不提交 Git；研究结束后删除不再需要的账号级中间数据。
+- 仅用于个人、非商业研究和公开内容分析。
+- 候选结论只表示公开内容证据满足筛选规则，不表示个人事实。
+- 不采集评论用户 ID、联系方式、非公开主页信息或跨平台身份。
+- 旁路映射和候选 ID 仅保存在本机，不提交 Git；研究结束后删除不再需要的数据。
