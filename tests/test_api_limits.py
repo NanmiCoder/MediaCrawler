@@ -26,6 +26,29 @@ async def test_cmd_arg_crawler_max_notes_count():
         config.CRAWLER_MAX_NOTES_COUNT = orig_notes
         config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = orig_comments
 
+
+@pytest.mark.asyncio
+async def test_capture_creator_ids_cli_defaults_off_and_can_be_enabled():
+    original = config.ENABLE_XHS_CREATOR_ID_CAPTURE
+    try:
+        await parse_cmd(["--platform", "xhs", "--capture_creator_ids", "true"])
+        assert config.ENABLE_XHS_CREATOR_ID_CAPTURE is True
+    finally:
+        config.ENABLE_XHS_CREATOR_ID_CAPTURE = original
+
+
+def test_crawler_manager_only_passes_capture_switch_when_enabled():
+    manager = CrawlerManager()
+    disabled = manager._build_command(CrawlerStartRequest(platform=PlatformEnum.XHS))
+    enabled = manager._build_command(CrawlerStartRequest(
+        platform=PlatformEnum.XHS,
+        capture_creator_ids=True,
+    ))
+    assert "--capture_creator_ids" not in disabled
+    index = enabled.index("--capture_creator_ids")
+    assert enabled[index + 1] == "true"
+
+
 def test_crawler_manager_build_command():
     cm = CrawlerManager()
 

@@ -265,6 +265,9 @@ class CrawlerManager:
         cmd.extend(["--get_comment", "true" if config.enable_comments else "false"])
         cmd.extend(["--get_sub_comment", "true" if config.enable_sub_comments else "false"])
 
+        if config.capture_creator_ids:
+            cmd.extend(["--capture_creator_ids", "true"])
+
         if config.max_notes_count is not None:
             cmd.extend(["--crawler_max_notes_count", str(config.max_notes_count)])
 
