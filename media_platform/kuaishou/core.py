@@ -178,6 +178,10 @@ class KuaishouCrawler(AbstractCrawler):
                     video_id_list.append(video_detail.get("photo", {}).get("id"))
                     await kuaishou_store.update_kuaishou_video(video_item=video_detail)
 
+                utils.logger.info(
+                    f"[KuaishouCrawler.search] keyword: {keyword}, page: {page}, got {len(video_id_list)} videos"
+                )
+
                 # batch fetch video comments
                 page += 1
 
@@ -223,10 +227,17 @@ class KuaishouCrawler(AbstractCrawler):
                 await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
                 utils.logger.info(f"[KuaishouCrawler.get_video_info_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching video details {video_id}")
 
-                utils.logger.info(
-                    f"[KuaishouCrawler.get_video_info_task] Get video_id:{video_id} info result: {result} ..."
-                )
-                return result.get("visionVideoDetail")
+                detail = result.get("visionVideoDetail")
+                if detail:
+                    photo = detail.get("photo", {})
+                    author = detail.get("author", {})
+                    utils.logger.info(
+                        f"[KuaishouCrawler.get_video_info_task] video detail: "
+                        f"id={photo.get('id', video_id)} author={author.get('name', '')} "
+                        f"likes={photo.get('likeCount', '')} views={photo.get('viewCount', '')} "
+                        f"caption={str(photo.get('caption', ''))[:50]}"
+                    )
+                return detail
             except DataFetchError as ex:
                 utils.logger.error(
                     f"[KuaishouCrawler.get_video_info_task] Get video detail error: {ex}"
@@ -423,6 +434,9 @@ class KuaishouCrawler(AbstractCrawler):
                 user_id=user_id,
                 crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
                 callback=self.fetch_creator_video_detail,
+            )
+            utils.logger.info(
+                f"[KuaishouCrawler.get_creators_and_videos] creator: {user_id}, got {len(all_video_list)} videos"
             )
 
             video_ids = [
