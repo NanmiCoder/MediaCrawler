@@ -38,6 +38,7 @@ if TYPE_CHECKING:
 
 from .exception import DataFetchError
 from .graphql import KuaiShouGraphQL
+from .help import get_ks_sign_from_playwright
 
 
 class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
@@ -111,6 +112,67 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         if result.get("result") != 1:
             raise DataFetchError(f"REST API V2 error: {result}")
         return result
+
+    async def request_rest_v2_signed(self, uri: str, data: dict) -> Dict:
+        """
+        带 __NS_hxfalcon 签名的 REST API V2 请求
+        快手网页端批量列表接口（作品列表/搜索）需要签名，未签名请求会返回 result:50
+        :param uri: API endpoint path
+        :param data: request body
+        :return: response data
+        """
+        await self._refresh_proxy_if_expired()
+
+        sign = await get_ks_sign_from_playwright(
+            self.playwright_page,
+            uri,
+            {"caver": 2},
+            data,
+        )
+
+        json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+        async with make_async_client(proxy=self.proxy) as client:
+            response = await client.request(
+                method="POST",
+                url=f"{self._rest_host}{uri}?__NS_hxfalcon={sign}&caver=2",
+                data=json_str,
+                timeout=self.timeout,
+                headers=self.headers,
+            )
+        result: Dict = response.json()
+        if result.get("result") != 1:
+            raise DataFetchError(f"REST API V2 error: {result}")
+        return result
+
+    async def get_video_by_creater_v2(self, userId: str, pcursor: str = "") -> Dict:
+        """
+        获取用户作品列表 - REST 签名版
+        网页端已将作品列表迁移到 /rest/v/profile/feed 并需要签名
+        :param userId: 用户ID
+        :param pcursor: 分页游标
+        :return: 顶层结构 {result, pcursor, feeds, ...}
+        """
+        post_data = {"user_id": userId, "pcursor": pcursor, "page": "profile"}
+        return await self.request_rest_v2_signed("/rest/v/profile/feed", post_data)
+
+    async def search_info_by_keyword_v2(
+        self, keyword: str, pcursor: str, search_session_id: str = ""
+    ) -> Dict:
+        """
+        关键词搜索 - REST 签名版
+        网页端已将搜索迁移到 /rest/v/search/feed 并需要签名
+        :param keyword: 搜索关键词
+        :param pcursor: 分页游标（数字页码字符串）
+        :param search_session_id: 搜索会话ID
+        :return: 顶层结构 {result, pcursor, feeds, searchSessionId, ...}
+        """
+        post_data = {
+            "keyword": keyword,
+            "pcursor": pcursor,
+            "page": "search",
+            "searchSessionId": search_session_id,
+        }
+        return await self.request_rest_v2_signed("/rest/v/search/feed", post_data)
 
     async def pong(self) -> bool:
         """get a note to check if login state is ok"""
@@ -336,20 +398,32 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         pcursor = ""
 
         while pcursor != "no_more":
-            videos_res = await self.get_video_by_creater(user_id, pcursor)
+            videos_res = await self.get_video_by_creater_v2(user_id, pcursor)
             if not videos_res:
                 utils.logger.error(
                     f"[KuaiShouClient.get_all_videos_by_creator] The current creator may have been banned by ks, so they cannot access the data."
                 )
                 break
 
-            vision_profile_photo_list = videos_res.get("visionProfilePhotoList", {})
-            pcursor = vision_profile_photo_list.get("pcursor", "")
+            # REST 接口用 result 字段表示业务状态，必须显式校验，
+            # 否则接口被拒(result:50)会被静默当成"没有更多视频"
+            result_code = videos_res.get("result")
+            if result_code != 1:
+                utils.logger.error(
+                    f"[KuaiShouClient.get_all_videos_by_creator] ks api returned business error "
+                    f"(result: {result_code}), stop pagination for user_id: {user_id}"
+                )
+                break
 
-            videos = vision_profile_photo_list.get("feeds", [])
+            pcursor = videos_res.get("pcursor", "")
+
+            videos = videos_res.get("feeds", [])
             utils.logger.info(
                 f"[KuaiShouClient.get_all_videos_by_creator] got user_id:{user_id} videos len : {len(videos)}"
             )
+            if not videos:
+                pcursor = "no_more"
+                break
 
             if callback:
                 await callback(videos)

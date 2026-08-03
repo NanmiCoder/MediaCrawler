@@ -34,7 +34,7 @@ KS_SPECIFIED_ID_LIST = [
 # 1. Creator homepage URL: "https://www.kuaishou.com/profile/3x84qugg4ch9zhs"
 # 2. Pure user_id: "3x4sm73aye7jq7i"
 KS_CREATOR_ID_LIST = [
-    "https://www.kuaishou.com/profile/3x84qugg4ch9zhs",
+    "https://www.kuaishou.com/profile/3xf79edg9msa85c",
     "3x4sm73aye7jq7i",
     # ........................
 ]
