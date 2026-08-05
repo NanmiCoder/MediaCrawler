@@ -69,6 +69,40 @@ class BilibiliVideoComment(Base):
     parent_comment_id = Column(String(255), comment='父评论ID')
     like_count = Column(Text, default='0', comment='点赞数')
 
+class BilibiliArticle(Base):
+    __tablename__ = 'bilibili_article'
+    id = Column(Integer, primary_key=True, comment='primary key')
+    article_id = Column(BigInteger, nullable=False, index=True, unique=True, comment='article id')
+    article_url = Column(Text, nullable=False, comment='article url')
+    title = Column(Text, comment='article title')
+    desc = Column(Text, comment='article description')
+    content = Column(Text, comment='article content')
+    creator_hash = Column(String(64), index=True, comment='anonymized creator id hash')
+    nickname = Column(Text, comment='masked nickname')
+    liked_count = Column(Text, comment='like count')
+    favorite_count = Column(Text, comment='favorite count')
+    share_count = Column(Text, comment='share count')
+    comment_count = Column(Text, comment='comment count')
+    create_time = Column(BigInteger, index=True, comment='create timestamp')
+    source_keyword = Column(Text, default='', comment='source keyword')
+    add_ts = Column(BigInteger, comment='add timestamp')
+    last_modify_ts = Column(BigInteger, comment='last modify timestamp')
+
+class BilibiliArticleComment(Base):
+    __tablename__ = 'bilibili_article_comment'
+    id = Column(Integer, primary_key=True, comment='primary key')
+    creator_hash = Column(String(64), index=True, comment='anonymized creator id hash')
+    nickname = Column(Text, comment='masked nickname')
+    add_ts = Column(BigInteger, comment='add timestamp')
+    last_modify_ts = Column(BigInteger, comment='last modify timestamp')
+    comment_id = Column(BigInteger, index=True, comment='comment id')
+    article_id = Column(BigInteger, index=True, comment='article id')
+    content = Column(Text, comment='comment content')
+    create_time = Column(BigInteger, comment='create timestamp')
+    sub_comment_count = Column(Text, comment='sub comment count')
+    parent_comment_id = Column(String(255), comment='parent comment id')
+    like_count = Column(Text, default='0', comment='like count')
+
 class BilibiliUpDynamic(Base):
     __tablename__ = 'bilibili_up_dynamic'
     id = Column(Integer, primary_key=True, comment='主键ID')

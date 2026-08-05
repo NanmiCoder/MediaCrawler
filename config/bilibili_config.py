@@ -21,10 +21,13 @@
 # Control the number of videos/posts crawled per day
 MAX_NOTES_PER_DAY = 1
 
-# Specify Bilibili video URL list (supports complete URL or BV number)
+# Specify Bilibili video/article URL list (supports complete URL, BV number, cv ID, or numeric article ID)
 # Example:
-# - Full URL: "https://www.bilibili.com/video/BV1dwuKzmE26/?spm_id_from=333.1387.homepage.video_card.click"
+# - Video URL: "https://www.bilibili.com/video/BV1dwuKzmE26/?spm_id_from=333.1387.homepage.video_card.click"
 # - BV number: "BV1d54y1g7db"
+# - Article URL: "https://www.bilibili.com/read/cv123456"
+# - cv ID: "cv123456"
+# - Numeric article ID: "123456"
 BILI_SPECIFIED_ID_LIST = [
     "https://www.bilibili.com/video/BV1dwuKzmE26/?spm_id_from=333.1387.homepage.video_card.click",
     "BV1Sz4y1U77N",

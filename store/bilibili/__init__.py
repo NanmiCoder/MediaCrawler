@@ -87,6 +87,63 @@ async def update_up_info(video_item: Dict):
     return
 
 
+async def update_bilibili_article(article_item: Dict):
+    author_info: Dict = article_item.get("author") or {}
+    article_stat: Dict = article_item.get("stats") or {}
+    article_id = str(article_item.get("id"))
+    save_content_item = {
+        "article_id": article_id,
+        "article_url": f"https://www.bilibili.com/read/cv{article_id}",
+        "title": article_item.get("title", "")[:500],
+        "desc": article_item.get("summary", "")[:500],
+        "content": article_item.get("content", ""),
+        "create_time": article_item.get("publish_time") or article_item.get("ctime"),
+        "creator_hash": anonymize_user_id(author_info.get("mid")),
+        "nickname": mask_nickname(author_info.get("name")),
+        "liked_count": str(article_stat.get("like", "")),
+        "favorite_count": str(article_stat.get("favorite", "")),
+        "share_count": str(article_stat.get("share", "")),
+        "comment_count": str(article_stat.get("reply", "")),
+        "last_modify_ts": utils.get_current_timestamp(),
+        "source_keyword": source_keyword_var.get(),
+    }
+    utils.logger.info(f"[store.bilibili.update_bilibili_article] bilibili article id:{article_id}, title:{save_content_item.get('title')}")
+    store = BiliStoreFactory.create_store()
+    if hasattr(store, "store_article"):
+        await store.store_article(article_item=save_content_item)
+    else:
+        await store.store_content(content_item=save_content_item)
+
+
+async def batch_update_bilibili_article_comments(article_id: str, comments: List[Dict]):
+    if not comments:
+        return
+    for comment_item in comments:
+        await update_bilibili_article_comment(article_id, comment_item)
+
+
+async def update_bilibili_article_comment(article_id: str, comment_item: Dict):
+    comment_id = str(comment_item.get("rpid"))
+    parent_comment_id = str(comment_item.get("parent", 0))
+    content: Dict = comment_item.get("content") or {}
+    user_info: Dict = comment_item.get("member") or {}
+    like_count: int = comment_item.get("like", 0)
+    save_comment_item = {
+        "comment_id": comment_id,
+        "parent_comment_id": parent_comment_id,
+        "create_time": comment_item.get("ctime"),
+        "article_id": str(article_id),
+        "content": content.get("message"),
+        "creator_hash": anonymize_user_id(user_info.get("mid")),
+        "nickname": mask_nickname(user_info.get("uname")),
+        "sub_comment_count": str(comment_item.get("rcount", 0)),
+        "like_count": like_count,
+        "last_modify_ts": utils.get_current_timestamp(),
+    }
+    utils.logger.info(f"[store.bilibili.update_bilibili_article_comment] Bilibili article comment: {comment_id}, content: {save_comment_item.get('content')}")
+    await BiliStoreFactory.create_store().store_article_comment(comment_item=save_comment_item)
+
+
 async def batch_update_bilibili_video_comments(video_id: str, comments: List[Dict]):
     if not comments:
         return

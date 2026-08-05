@@ -21,8 +21,8 @@
 from __future__ import annotations
 
 
-import sys
 import re
+import sys
 from enum import Enum
 from types import SimpleNamespace
 from typing import Iterable, Optional, Sequence, Type, TypeVar
@@ -255,7 +255,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             str,
             typer.Option(
                 "--specified_id",
-                help="Post/video ID list in detail mode, multiple IDs separated by commas (supports full URL or ID)",
+                help="Post/video/article ID list in detail mode, multiple IDs separated by commas (supports full URL or ID)",
                 rich_help_panel="Basic Configuration",
             ),
         ] = "",

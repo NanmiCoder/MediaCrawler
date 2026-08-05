@@ -28,7 +28,7 @@ import urllib.parse
 from hashlib import md5
 from typing import Dict
 
-from model.m_bilibili import VideoUrlInfo, CreatorUrlInfo
+from model.m_bilibili import ArticleUrlInfo, CreatorUrlInfo, VideoUrlInfo
 from tools import utils
 
 
@@ -102,6 +102,59 @@ def parse_video_info_from_url(url: str) -> VideoUrlInfo:
         return VideoUrlInfo(video_id=video_id)
 
     raise ValueError(f"Unable to parse video ID from URL: {url}")
+
+
+def parse_article_info_from_url(url: str) -> ArticleUrlInfo:
+    """
+    Parse article ID from Bilibili article URL.
+    Args:
+        url: Bilibili article link or cv id
+            - https://www.bilibili.com/read/cv123456
+            - cv123456
+            - 123456
+    Returns:
+        ArticleUrlInfo: Object containing article ID
+    """
+    if url.isdigit():
+        return ArticleUrlInfo(article_id=url)
+
+    cv_pattern = r"^cv(\d+)$"
+    match = re.search(cv_pattern, url)
+    if match:
+        return ArticleUrlInfo(article_id=match.group(1))
+
+    article_pattern = r"/read/cv(\d+)"
+    match = re.search(article_pattern, url)
+    if match:
+        return ArticleUrlInfo(article_id=match.group(1))
+
+    raise ValueError(f"Unable to parse article ID from URL: {url}")
+
+
+def is_bilibili_article_id(value: str) -> bool:
+    """
+    Return True for Bilibili article URLs, cv IDs, or numeric article IDs.
+    """
+    value = value.strip()
+    return (
+        value.isdigit()
+        or re.fullmatch(r"cv\d+", value) is not None
+        or re.search(r"/read/cv\d+", value) is not None
+    )
+
+
+def split_bilibili_specified_ids(values: list[str]) -> tuple[list[str], list[str]]:
+    """
+    Split mixed Bilibili specified IDs into video and article inputs.
+    """
+    video_ids: list[str] = []
+    article_ids: list[str] = []
+    for value in values:
+        if is_bilibili_article_id(value):
+            article_ids.append(value)
+        else:
+            video_ids.append(value)
+    return video_ids, article_ids
 
 
 def parse_creator_info_from_url(url: str) -> CreatorUrlInfo:

@@ -38,6 +38,12 @@ class VideoUrlInfo(BaseModel):
     video_type: str = Field(default="video", title="video type")
 
 
+class ArticleUrlInfo(BaseModel):
+    """Bilibili article URL information"""
+    article_id: str = Field(title="article id (cv id without cv prefix)")
+    article_type: str = Field(default="article", title="article type")
+
+
 class CreatorUrlInfo(BaseModel):
     """Bilibili creator URL information"""
     creator_id: str = Field(title="creator id (UID)")
