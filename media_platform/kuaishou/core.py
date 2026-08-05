@@ -20,7 +20,7 @@
 
 import asyncio
 import os
-# import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
+import random
 import time
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple
@@ -186,8 +186,10 @@ class KuaishouCrawler(AbstractCrawler):
                 page += 1
 
                 # Sleep after page navigation
-                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[KuaishouCrawler.search] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after page {page-1}")
+                # 固定延时基础上加 1-3 秒随机抖动，降低服务端限流概率
+                sleep_sec = config.CRAWLER_MAX_SLEEP_SEC + random.uniform(1, 3)
+                await asyncio.sleep(sleep_sec)
+                utils.logger.info(f"[KuaishouCrawler.search] Sleeping for {sleep_sec:.1f} seconds after page {page-1}")
 
                 await self.batch_get_video_comments(video_id_list)
 
@@ -224,8 +226,10 @@ class KuaishouCrawler(AbstractCrawler):
                 result = await self.ks_client.get_video_info(video_id)
 
                 # Sleep after fetching video details
-                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[KuaishouCrawler.get_video_info_task] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching video details {video_id}")
+                # 固定延时基础上加 1-3 秒随机抖动，降低服务端限流概率
+                sleep_sec = config.CRAWLER_MAX_SLEEP_SEC + random.uniform(1, 3)
+                await asyncio.sleep(sleep_sec)
+                utils.logger.info(f"[KuaishouCrawler.get_video_info_task] Sleeping for {sleep_sec:.1f} seconds after fetching video details {video_id}")
 
                 detail = result.get("visionVideoDetail")
                 if detail:
@@ -289,8 +293,10 @@ class KuaishouCrawler(AbstractCrawler):
                 )
 
                 # Sleep before fetching comments
-                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-                utils.logger.info(f"[KuaishouCrawler.get_comments] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds before fetching comments for video {video_id}")
+                # 固定延时基础上加 1-3 秒随机抖动，降低服务端限流概率
+                sleep_sec = config.CRAWLER_MAX_SLEEP_SEC + random.uniform(1, 3)
+                await asyncio.sleep(sleep_sec)
+                utils.logger.info(f"[KuaishouCrawler.get_comments] Sleeping for {sleep_sec:.1f} seconds before fetching comments for video {video_id}")
 
                 await self.ks_client.get_video_all_comments(
                     photo_id=video_id,

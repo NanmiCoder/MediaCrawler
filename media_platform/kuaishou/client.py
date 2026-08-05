@@ -21,6 +21,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
+import random
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 from urllib.parse import urlencode
 
@@ -117,32 +118,45 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         """
         带 __NS_hxfalcon 签名的 REST API V2 请求
         快手网页端批量列表接口（作品列表/搜索）需要签名，未签名请求会返回 result:50
+        服务端限流（result:2）时指数退避重试
         :param uri: API endpoint path
         :param data: request body
         :return: response data
         """
-        await self._refresh_proxy_if_expired()
+        max_retry = 3
+        for attempt in range(max_retry):
+            await self._refresh_proxy_if_expired()
 
-        sign = await get_ks_sign_from_playwright(
-            self.playwright_page,
-            uri,
-            {"caver": 2},
-            data,
-        )
-
-        json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
-        async with make_async_client(proxy=self.proxy) as client:
-            response = await client.request(
-                method="POST",
-                url=f"{self._rest_host}{uri}?__NS_hxfalcon={sign}&caver=2",
-                data=json_str,
-                timeout=self.timeout,
-                headers=self.headers,
+            # 签名绑定请求内容和时间窗口，重试时必须重新生成
+            sign = await get_ks_sign_from_playwright(
+                self.playwright_page,
+                uri,
+                {"caver": 2},
+                data,
             )
-        result: Dict = response.json()
-        if result.get("result") != 1:
+
+            json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+            async with make_async_client(proxy=self.proxy) as client:
+                response = await client.request(
+                    method="POST",
+                    url=f"{self._rest_host}{uri}?__NS_hxfalcon={sign}&caver=2",
+                    data=json_str,
+                    timeout=self.timeout,
+                    headers=self.headers,
+                )
+            result: Dict = response.json()
+            if result.get("result") == 1:
+                return result
+            if result.get("result") == 2:
+                delay = 5 * (2**attempt) + random.uniform(0, 2)
+                utils.logger.warning(
+                    f"[KuaiShouClient.request_rest_v2_signed] rate limited (result:2) on {uri}, "
+                    f"retry in {delay:.1f}s, attempt {attempt + 1}/{max_retry}"
+                )
+                await asyncio.sleep(delay)
+                continue
             raise DataFetchError(f"REST API V2 error: {result}")
-        return result
+        raise DataFetchError(f"REST API V2 error: {result}")
 
     async def get_video_by_creater_v2(self, userId: str, pcursor: str = "") -> Dict:
         """
@@ -312,7 +326,8 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
             if callback:  # If there is a callback function, execute the callback function
                 await callback(photo_id, comments)
             result.extend(comments)
-            await asyncio.sleep(crawl_interval)
+            # 固定延时基础上加 1-3 秒随机抖动，降低服务端限流概率
+            await asyncio.sleep(crawl_interval + random.uniform(1, 3))
             sub_comments = await self.get_comments_all_sub_comments(
                 comments, photo_id, crawl_interval, callback
             )
@@ -366,7 +381,8 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
 
                 if callback and sub_comments:
                     await callback(photo_id, sub_comments)
-                await asyncio.sleep(crawl_interval)
+                # 固定延时基础上加 1-3 秒随机抖动，降低服务端限流概率
+                await asyncio.sleep(crawl_interval + random.uniform(1, 3))
                 result.extend(sub_comments)
         return result
 
@@ -427,6 +443,7 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
 
             if callback:
                 await callback(videos)
-            await asyncio.sleep(crawl_interval)
+            # 固定延时基础上加 1-3 秒随机抖动，降低服务端限流概率
+            await asyncio.sleep(crawl_interval + random.uniform(1, 3))
             result.extend(videos)
         return result
