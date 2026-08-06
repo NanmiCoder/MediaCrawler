@@ -27,14 +27,18 @@ router = APIRouter(prefix="/crawler", tags=["crawler"])
 @router.post("/start")
 async def start_crawler(request: CrawlerStartRequest):
     """Start crawler task"""
-    success = await crawler_manager.start(request)
-    if not success:
+    task_id = await crawler_manager.start(request)
+    if not task_id:
         # Handle concurrent/duplicate requests: if process is already running, return 400 instead of 500
         if crawler_manager.process and crawler_manager.process.poll() is None:
             raise HTTPException(status_code=400, detail="Crawler is already running")
         raise HTTPException(status_code=500, detail="Failed to start crawler")
 
-    return {"status": "ok", "message": "Crawler started successfully"}
+    return {
+        "status": "ok",
+        "message": "Crawler started successfully",
+        "task_id": task_id,
+    }
 
 
 @router.post("/stop")

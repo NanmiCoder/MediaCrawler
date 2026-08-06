@@ -71,6 +71,7 @@ class CrawlerStartRequest(BaseModel):
     start_page: int = 1
     enable_comments: bool = True
     enable_sub_comments: bool = False
+    capture_creator_ids: bool = False
     save_option: SaveDataOptionEnum = SaveDataOptionEnum.JSONL
     cookies: str = ""
     headless: bool = False
@@ -85,6 +86,9 @@ class CrawlerStatusResponse(BaseModel):
     crawler_type: Optional[str] = None
     started_at: Optional[str] = None
     error_message: Optional[str] = None
+    task_id: Optional[str] = None
+    last_exit_code: Optional[int] = None
+    finished_at: Optional[str] = None
 
 
 class LogEntry(BaseModel):

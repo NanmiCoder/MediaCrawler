@@ -19,7 +19,8 @@
 
 import asyncio
 import json
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+import time
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional, Union
 from urllib.parse import quote, urlencode
 
 import httpx
@@ -35,11 +36,57 @@ from tools import utils
 if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
 
-from .exception import DataFetchError, IPBlockError, NoteNotFoundError
+from .exception import CaptchaRequiredError, DataFetchError, IPBlockError, NoteNotFoundError
 from .field import SearchNoteType, SearchSortType
 from .help import get_search_id
 from .extractor import XiaoHongShuExtractor
 from .playwright_sign import sign_with_xhshow
+
+
+CAPTCHA_RETRY_SECONDS = 10
+CAPTCHA_MAX_WAIT_SECONDS = 300
+
+
+def raise_for_captcha(response: httpx.Response) -> None:
+    if response.status_code not in {461, 471}:
+        return
+
+    verify_type = response.headers.get("Verifytype", "unknown")
+    verify_uuid = response.headers.get("Verifyuuid", "unknown")
+    raise CaptchaRequiredError(
+        "CAPTCHA appeared; please verify manually in Chrome. "
+        f"Verifytype: {verify_type}, Verifyuuid: {verify_uuid}"
+    )
+
+
+async def wait_for_captcha(
+    operation: Callable[[], Awaitable[Any]],
+    *,
+    on_captcha: Optional[Callable[[], Awaitable[None]]] = None,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    monotonic: Callable[[], float] = time.monotonic,
+) -> Any:
+    deadline = None
+    presented = False
+    while True:
+        try:
+            return await operation()
+        except CaptchaRequiredError:
+            now = monotonic()
+            if deadline is None:
+                deadline = now + CAPTCHA_MAX_WAIT_SECONDS
+            if not presented:
+                presented = True
+                if on_captcha is not None:
+                    await on_captcha()
+            remaining = deadline - now
+            if remaining <= 0:
+                raise
+            utils.logger.warning(
+                "[XiaoHongShuClient] CAPTCHA appeared; complete verification "
+                "in Chrome within 5 minutes."
+            )
+            await sleep(min(CAPTCHA_RETRY_SECONDS, remaining))
 
 
 class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
@@ -71,6 +118,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.NOTE_ABNORMAL_CODE = -510001
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
+        self._captcha_keyword: Optional[str] = None
         self._extractor = XiaoHongShuExtractor()
         # Initialize proxy pool (from ProxyRefreshMixin)
         self.init_proxy_pool(proxy_ip_pool)
@@ -112,7 +160,6 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.headers.update(headers)
         return self.headers
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1), retry=retry_if_not_exception_type(NoteNotFoundError))
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
         """
         Wrapper for httpx common request method, processes request response
@@ -124,34 +171,40 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
+        return_response = kwargs.pop("return_response", False)
+
+        async def operation():
+            return await self._request_with_short_retry(
+                method, url, return_response=return_response, **kwargs
+            )
+
+        return await wait_for_captcha(operation, on_captcha=self._present_captcha)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_not_exception_type((NoteNotFoundError, CaptchaRequiredError)),
+    )
+    async def _request_with_short_retry(
+        self, method, url, *, return_response=False, **kwargs
+    ) -> Union[str, Any]:
         # Check if proxy is expired before each request
         await self._refresh_proxy_if_expired()
-
-        # return response.text
-        return_response = kwargs.pop("return_response", False)
         async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
-        if response.status_code == 471 or response.status_code == 461:
-            # someday someone maybe will bypass captcha
-            verify_type = response.headers["Verifytype"]
-            verify_uuid = response.headers["Verifyuuid"]
-            msg = f"CAPTCHA appeared, request failed, Verifytype: {verify_type}, Verifyuuid: {verify_uuid}, Response: {response}"
-            utils.logger.error(msg)
-            raise Exception(msg)
-
+        raise_for_captcha(response)
         if return_response:
             return response.text
         data: Dict = response.json()
         if data["success"]:
             return data.get("data", data.get("success", {}))
-        elif data["code"] == self.IP_ERROR_CODE:
+        if data["code"] == self.IP_ERROR_CODE:
             raise IPBlockError(self.IP_ERROR_STR)
-        elif data["code"] in (self.NOTE_NOT_FOUND_CODE, self.NOTE_ABNORMAL_CODE):
+        if data["code"] in (self.NOTE_NOT_FOUND_CODE, self.NOTE_ABNORMAL_CODE):
             raise NoteNotFoundError(f"Note not found or abnormal, code: {data['code']}")
-        else:
-            err_msg = data.get("msg", None) or f"{response.text}"
-            raise DataFetchError(err_msg)
+        err_msg = data.get("msg", None) or response.text
+        raise DataFetchError(err_msg)
 
     @staticmethod
     def _build_query_string(params: Dict) -> str:
@@ -161,6 +214,14 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             value_str = str(value) if value is not None else ""
             parts.append(f"{key}={quote(value_str, safe=',')}")
         return "&".join(parts)
+
+    async def _present_captcha(self, keyword: Optional[str] = None) -> None:
+        await self.playwright_page.bring_to_front()
+        keyword = keyword or getattr(self, "_captcha_keyword", None)
+        if keyword:
+            await self.playwright_page.goto(
+                f"{self._domain}/search_result?keyword={quote(keyword, safe='')}"
+            )
 
     async def get(self, uri: str, params: Optional[Dict] = None) -> Dict:
         """
@@ -172,16 +233,29 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
-        headers = await self._pre_headers(uri, params)
-        # Build URL manually to ensure query string encoding matches the sign string
-        # (httpx's default params encoding differs from browser/XHS frontend behavior)
-        if params:
-            full_url = f"{self._host}{uri}?{self._build_query_string(params)}"
-        else:
-            full_url = f"{self._host}{uri}"
+        async def operation():
+            await self.update_cookies(self.playwright_page.context)
+            headers = await self._pre_headers(uri, params)
+            # Build URL manually to ensure query string encoding matches the sign string
+            # (httpx's default params encoding differs from browser/XHS frontend behavior)
+            if params:
+                full_url = f"{self._host}{uri}?{self._build_query_string(params)}"
+            else:
+                full_url = f"{self._host}{uri}"
+            return await self._request_with_short_retry(
+                method="GET", url=full_url, headers=headers
+            )
 
-        return await self.request(
-            method="GET", url=full_url, headers=headers
+        keyword = (
+            params.get("keyword")
+            if uri == "/api/sns/web/v1/search/notes" and isinstance(params, dict)
+            else None
+        )
+        if isinstance(keyword, str) and keyword:
+            self._captcha_keyword = keyword
+        return await wait_for_captcha(
+            operation,
+            on_captcha=lambda: self._present_captcha(keyword),
         )
 
     async def post(self, uri: str, data: dict, **kwargs) -> Dict:
@@ -194,14 +268,28 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
-        headers = await self._pre_headers(uri, payload=data)
-        json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
-        return await self.request(
-            method="POST",
-            url=f"{self._host}{uri}",
-            data=json_str,
-            headers=headers,
-            **kwargs,
+        async def operation():
+            await self.update_cookies(self.playwright_page.context)
+            headers = await self._pre_headers(uri, payload=data)
+            json_str = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
+            return await self._request_with_short_retry(
+                method="POST",
+                url=f"{self._host}{uri}",
+                data=json_str,
+                headers=headers,
+                **kwargs,
+            )
+
+        keyword = (
+            data.get("keyword")
+            if uri == "/api/sns/web/v1/search/notes" and isinstance(data, dict)
+            else None
+        )
+        if isinstance(keyword, str) and keyword:
+            self._captcha_keyword = keyword
+        return await wait_for_captcha(
+            operation,
+            on_captcha=lambda: self._present_captcha(keyword),
         )
 
     async def get_note_media(self, url: str) -> Union[bytes, None]:
