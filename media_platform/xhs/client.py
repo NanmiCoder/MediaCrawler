@@ -24,7 +24,13 @@ from urllib.parse import quote, urlencode
 
 import httpx
 from playwright.async_api import BrowserContext, Page
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_not_exception_type
+from tenacity import (
+    RetryError,
+    retry,
+    retry_if_not_exception_type,
+    stop_after_attempt,
+    wait_fixed,
+)
 from tools.httpx_util import make_async_client
 
 import config
@@ -35,7 +41,12 @@ from tools import utils
 if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
 
-from .exception import DataFetchError, IPBlockError, NoteNotFoundError
+from .exception import (
+    DataFetchError,
+    IPBlockError,
+    NoteNotFoundError,
+    PlatformAccessError,
+)
 from .field import SearchNoteType, SearchSortType
 from .help import get_search_id
 from .extractor import XiaoHongShuExtractor
@@ -66,6 +77,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.cookie_urls = [self._domain]
         self.IP_ERROR_STR = "Network connection error, please check network settings or restart"
         self.IP_ERROR_CODE = 300012
+        self.SECURITY_LIMIT_CODE = 300011
         self.NOTE_NOT_FOUND_CODE = -510000
         self.NOTE_ABNORMAL_STR = "Note status abnormal, please check later"
         self.NOTE_ABNORMAL_CODE = -510001
@@ -112,7 +124,13 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         self.headers.update(headers)
         return self.headers
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1), retry=retry_if_not_exception_type(NoteNotFoundError))
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_not_exception_type(
+            (NoteNotFoundError, IPBlockError, PlatformAccessError)
+        ),
+    )
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
         """
         Wrapper for httpx common request method, processes request response
@@ -132,6 +150,11 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         async with make_async_client(proxy=self.proxy) as client:
             response = await client.request(method, url, timeout=self.timeout, **kwargs)
 
+        if response.status_code in {401, 403, 429}:
+            raise PlatformAccessError(
+                f"XHS request blocked with HTTP {response.status_code}"
+            )
+
         if response.status_code == 471 or response.status_code == 461:
             # someday someone maybe will bypass captcha
             verify_type = response.headers["Verifytype"]
@@ -140,9 +163,29 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             utils.logger.error(msg)
             raise Exception(msg)
 
+        response_data: Optional[Dict] = None
+        try:
+            candidate_data = response.json()
+            if isinstance(candidate_data, dict):
+                response_data = candidate_data
+        except (TypeError, ValueError):
+            pass
+
+        response_code = (
+            str(response_data.get("code"))
+            if response_data is not None and response_data.get("code") is not None
+            else ""
+        )
+        if response_code == str(self.IP_ERROR_CODE):
+            raise IPBlockError(self.IP_ERROR_STR)
+        if response_code == str(self.SECURITY_LIMIT_CODE):
+            raise PlatformAccessError(
+                f"XHS account security restriction, code: {self.SECURITY_LIMIT_CODE}"
+            )
+
         if return_response:
             return response.text
-        data: Dict = response.json()
+        data: Dict = response_data if response_data is not None else response.json()
         if data["success"]:
             return data.get("data", data.get("success", {}))
         elif data["code"] == self.IP_ERROR_CODE:
@@ -667,7 +710,13 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         data = {"original_url": f"{self._domain}/discovery/item/{note_id}"}
         return await self.post(uri, data=data, return_response=True)
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(1),
+        retry=retry_if_not_exception_type(
+            (RetryError, IPBlockError, PlatformAccessError)
+        ),
+    )
     async def get_note_by_id_from_html(
         self,
         note_id: str,
