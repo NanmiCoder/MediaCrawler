@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from unittest.mock import AsyncMock
+import json
+from unittest.mock import AsyncMock, Mock
 
 import httpx
 import pytest
@@ -63,11 +64,16 @@ async def test_raw_response_rejects_access_http_status(monkeypatch, status_code)
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("code", "expected_exception"),
-    [(300011, PlatformAccessError), ("300012", IPBlockError)],
+    ("code", "expected_exception", "return_response"),
+    [
+        (300011, PlatformAccessError, True),
+        ("300011", PlatformAccessError, False),
+        (300012, IPBlockError, True),
+        ("300012", IPBlockError, False),
+    ],
 )
 async def test_raw_response_rejects_known_business_block(
-    monkeypatch, code, expected_exception
+    monkeypatch, code, expected_exception, return_response
 ):
     calls = 0
 
@@ -87,7 +93,9 @@ async def test_raw_response_rejects_known_business_block(
 
     with pytest.raises(expected_exception):
         await make_client().request(
-            "GET", "https://www.xiaohongshu.com/explore/test", return_response=True
+            "GET",
+            "https://www.xiaohongshu.com/explore/test",
+            return_response=return_response,
         )
 
     assert calls == 1
@@ -115,6 +123,37 @@ async def test_raw_response_keeps_successful_html(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_successful_json_keeps_raw_and_parsed_return_modes(monkeypatch):
+    calls = 0
+
+    async def request_impl(method, url, **kwargs):
+        nonlocal calls
+        calls += 1
+        return httpx.Response(
+            200,
+            json={"success": True, "data": {"id": "test"}},
+            request=httpx.Request(method, url),
+        )
+
+    monkeypatch.setattr(
+        "media_platform.xhs.client.make_async_client",
+        lambda **kwargs: FakeAsyncClient(request_impl),
+    )
+    client = make_client()
+
+    raw_result = await client.request(
+        "GET", "https://www.xiaohongshu.com/explore/test", return_response=True
+    )
+    parsed_result = await client.request(
+        "GET", "https://edith.xiaohongshu.com/api/test"
+    )
+
+    assert json.loads(raw_result) == {"success": True, "data": {"id": "test"}}
+    assert parsed_result == {"id": "test"}
+    assert calls == 2
+
+
+@pytest.mark.asyncio
 async def test_html_detail_does_not_multiply_transport_retries(monkeypatch):
     calls = 0
 
@@ -134,3 +173,20 @@ async def test_html_detail_does_not_multiply_transport_retries(monkeypatch):
         )
 
     assert calls == 3
+
+
+@pytest.mark.asyncio
+async def test_html_detail_still_retries_parse_failures():
+    client = make_client()
+    client.request = AsyncMock(return_value="<html>incomplete</html>")
+    client._extractor.extract_note_detail_from_html = Mock(
+        side_effect=ValueError("incomplete initial state")
+    )
+
+    with pytest.raises(RetryError):
+        await client.get_note_by_id_from_html(
+            "test", xsec_source="pc_search", xsec_token="token"
+        )
+
+    assert client.request.await_count == 3
+    assert client._extractor.extract_note_detail_from_html.call_count == 3
