@@ -289,8 +289,8 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         is_end = False
         next_page = 0
         max_retries = 3
+        is_first_page = True
         while not is_end and len(result) < max_count:
-            is_first_page = next_page == 0
             comments_res = None
             for attempt in range(max_retries):
                 try:
@@ -332,6 +332,7 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
                     for comment in comment_list
                     if str(comment.get("rpid")) not in pinned_ids
                 ]
+                is_first_page = False
 
             # Check if is_end and next exist
             if "is_end" not in cursor_info or "next" not in cursor_info:
@@ -344,6 +345,10 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
             if not isinstance(is_end, bool):
                 utils.logger.warning(f"[BilibiliClient.get_video_all_comments] 'is_end' is not a boolean for video_id: {video_id}. Assuming end of comments.")
                 is_end = True
+            # Truncate before fetching sub-comments, otherwise max_count neither caps
+            # the stored comments nor stops us from crawling sub-comments we discard.
+            if len(result) + len(comment_list) > max_count:
+                comment_list = comment_list[:max_count - len(result)]
             if is_fetch_sub_comments:
                 for comment in comment_list:
                     comment_id = comment['rpid']
@@ -356,14 +361,12 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
                             crawl_interval,
                             callback,
                         )
-            if len(result) + len(comment_list) > max_count:
-                comment_list = comment_list[:max_count - len(result)]
             if callback:  # If there is a callback function, execute it
                 await callback(video_id, comment_list)
             await asyncio.sleep(crawl_interval)
-            if not is_fetch_sub_comments:
-                result.extend(comment_list)
-                continue
+            # Always accumulate, otherwise the `len(result) < max_count` loop guard
+            # never advances when sub-comment crawling is enabled.
+            result.extend(comment_list)
         return result
 
     async def get_video_all_level_two_comments(

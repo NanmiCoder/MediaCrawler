@@ -42,7 +42,12 @@ from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
 
 from .client import XiaoHongShuClient
-from .exception import DataFetchError, NoteNotFoundError
+from .exception import (
+    DataFetchError,
+    IPBlockError,
+    NoteNotFoundError,
+    PlatformAccessError,
+)
 from .field import SearchSortType
 from .help import parse_note_info_from_note_url, parse_creator_info_from_url, get_search_id
 from .login import XiaoHongShuLogin
@@ -206,6 +211,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
             except ValueError as e:
                 utils.logger.error(f"[XiaoHongShuCrawler.get_creators_and_notes] Failed to parse creator URL: {e}")
                 continue
+            except (IPBlockError, PlatformAccessError) as e:
+                # Access restricted on the creator homepage, skip this creator instead of crashing the run.
+                utils.logger.error(
+                    f"[XiaoHongShuCrawler.get_creators_and_notes] Access restricted for creator {creator_url}: {e}. "
+                    f"建议降低采集频率、更换 IP 或检查账号状态"
+                )
+                continue
 
             # Use fixed crawling interval
             crawl_interval = config.CRAWLER_MAX_SLEEP_SEC
@@ -315,6 +327,14 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             except NoteNotFoundError as ex:
                 utils.logger.warning(f"[XiaoHongShuCrawler.get_note_detail_async_task] Note not found: {note_id}, {ex}")
+                return None
+            except (IPBlockError, PlatformAccessError) as ex:
+                # Access restricted (IP block / rate limit / account security).
+                # Skip this note instead of aborting the whole asyncio.gather batch.
+                utils.logger.error(
+                    f"[XiaoHongShuCrawler.get_note_detail_async_task] Access restricted while getting note {note_id}: {ex}. "
+                    f"建议降低采集频率、更换 IP 或检查账号状态"
+                )
                 return None
             except DataFetchError as ex:
                 utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail_async_task] Get note detail error: {ex}")

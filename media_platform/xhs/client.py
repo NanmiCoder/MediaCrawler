@@ -188,8 +188,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         data: Dict = response_data if response_data is not None else response.json()
         if data["success"]:
             return data.get("data", data.get("success", {}))
-        elif data["code"] == self.IP_ERROR_CODE:
-            raise IPBlockError(self.IP_ERROR_STR)
+        # IP_ERROR_CODE / SECURITY_LIMIT_CODE are already handled above, before return_response.
         elif data["code"] in (self.NOTE_NOT_FOUND_CODE, self.NOTE_ABNORMAL_CODE):
             raise NoteNotFoundError(f"Note not found or abnormal, code: {data['code']}")
         else:
