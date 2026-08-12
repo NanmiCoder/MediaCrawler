@@ -251,6 +251,14 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Account Configuration",
             ),
         ] = config.COOKIES,
+        check_session: Annotated[
+            bool,
+            typer.Option(
+                "--check_session",
+                help="Check whether the saved cookies/proxy still work, then exit without crawling",
+                rich_help_panel="Runtime Configuration",
+            ),
+        ] = False,
         specified_id: Annotated[
             str,
             typer.Option(
@@ -412,6 +420,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             headless=config.HEADLESS,
             save_data_option=config.SAVE_DATA_OPTION,
             init_db=init_db_value,
+            check_session=check_session,
             cookies=config.COOKIES,
             specified_id=specified_id,
             creator_id=creator_id,

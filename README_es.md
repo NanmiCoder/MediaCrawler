@@ -146,6 +146,9 @@ uv run main.py --platform xhs --lt qrcode --type detail
 
 # Abrir la APP correspondiente para escanear código QR para login
 
+# Antes de rastrear, compruebe si las cookies/proxy guardados siguen funcionando (una sola petición, sin rastreo)
+uv run main.py --platform xhs --check_session
+
 # Para ejemplos de uso de rastreador de otras plataformas, ejecute el siguiente comando para ver
 uv run main.py --help
 ```
