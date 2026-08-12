@@ -320,6 +320,14 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
         <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler">Atlas Cloud</a> 是一个全模态 AI 推理平台，让开发者通过统一的 AI API 访问视频生成、图像生成和 LLM API，无需分别维护多个厂商集成，即可调用 300+ 精选模型。Atlas Cloud 最新推出 <a href="https://www.atlascloud.ai/console/coding-plan">coding plan 优惠</a>，为开发者提供更具性价比的 API 访问预算。
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://go.nodemaven.com/MediaCrawlergh"><img src="docs/static/images/nodemaven_banner.png" width="180" alt="NodeMaven"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://go.nodemaven.com/MediaCrawlergh">NodeMaven</a> 是面向网页抓取和自动化场景的高效代理服务商，提供市面上最高质量的 IP。主要优势包括 99.9% 可用性、ZIP 邮编定位、IP 过滤（所有代理的欺诈评分均低于 97%）、无需 KYC，以及代理带宽检测器、Meta 标签检测器、IP 查询等独家免费工具。MediaCrawler 用户使用优惠码 <code>CRAWLER35</code> 可享移动和住宅代理 35% 折扣，使用 <code>CRAWLER40</code> 可享 ISP（静态）代理 40% 折扣。👉 <a href="https://go.nodemaven.com/MediaCrawlergh">访问 NodeMaven</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 

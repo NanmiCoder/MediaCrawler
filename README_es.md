@@ -294,6 +294,14 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
         <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">TikHub.io</a> proporciona 900+ interfaces de datos altamente estables, cubriendo 14+ plataformas principales nacionales e internacionales incluyendo TK, DY, XHS, Y2B, Ins, X, etc. Soporta APIs de datos públicos multidimensionales para usuarios, contenido, productos, comentarios, etc., con 40M+ conjuntos de datos estructurados limpios. Use el código de invitación <code>cfzyejV9</code> para <a href="https://tikhub.io/?utm_source=github.com/NanmiCoder/MediaCrawler&utm_medium=marketing_social&utm_campaign=retargeting&utm_content=carousel_ad">registrarse y recargar</a>, y obtenga $2 adicionales de bonificación.
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://go.nodemaven.com/MediaCrawlergh"><img src="docs/static/images/nodemaven_banner.png" width="180" alt="NodeMaven"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://go.nodemaven.com/MediaCrawlergh">NodeMaven</a> es un proveedor eficiente de proxies para web scraping y automatización, con las IP de mayor calidad del mercado. Sus principales ventajas incluyen una disponibilidad del 99,9%, segmentación por código postal, filtrado de IP en todos los proxies (puntuación de fraude inferior al 97%), sin KYC y herramientas gratuitas exclusivas como Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup y más. Los usuarios de MediaCrawler obtienen un 35% de descuento en proxies móviles y residenciales con el código <code>CRAWLER35</code>, y un 40% de descuento en proxies ISP (estáticos) con el código <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawlergh">Visita NodeMaven</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 

@@ -302,6 +302,14 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
         <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler">Atlas Cloud</a> is a full-modal AI inference platform that gives developers a single AI API to access video generation, image generation, and LLM APIs. Instead of managing multiple vendor integrations, you connect once and get unified access to 300+ curated models across all modalities. Check out Atlas Cloud's new <a href="https://www.atlascloud.ai/console/coding-plan">coding plan promotion</a> for more budget-friendly API access.
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://go.nodemaven.com/MediaCrawlergh"><img src="docs/static/images/nodemaven_banner.png" width="180" alt="NodeMaven"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://go.nodemaven.com/MediaCrawlergh">NodeMaven</a> is an efficient proxy provider for web scraping and automation, offering the highest-quality IPs on the market. Key benefits include 99.9% uptime, ZIP targeting, IP filtering across all proxies (fraud score below 97%), no KYC, and unique free tools such as Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup, and more. MediaCrawler users get 35% off mobile and residential proxies with code <code>CRAWLER35</code>, and 40% off ISP (static) proxies with code <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawlergh">Visit NodeMaven</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
