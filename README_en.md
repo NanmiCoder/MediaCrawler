@@ -146,6 +146,9 @@ uv run main.py --platform xhs --lt qrcode --type detail
 
 # Open corresponding APP to scan QR code for login
 
+# Before crawling, check whether the saved cookies/proxy still work (one request, no crawling)
+uv run main.py --platform xhs --check_session
+
 # For other platform crawler usage examples, execute the following command to view
 uv run main.py --help
 ```

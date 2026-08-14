@@ -166,6 +166,9 @@ uv run main.py --platform xhs --lt qrcode --type detail
 
 # 打开对应APP扫二维码登录
 
+# 开始爬取前，先检查已保存的 cookie / 代理是否还能用（只发一次请求，不会启动爬虫）
+uv run main.py --platform xhs --check_session
+
 # 其他平台爬虫使用示例，执行下面的命令查看
 uv run main.py --help
 ```
