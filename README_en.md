@@ -2,7 +2,7 @@
 
 <div align="center">
 
-### 🤝 Special Thanks to Our Platinum Sponsor
+### 🤝 Special Thanks to Our Gold Sponsor
 
 <a href="https://www.browseract.ai/mediacrawler" target="_blank">
   <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
@@ -11,7 +11,7 @@
 <br>
 
 <a href="https://www.browseract.ai/mediacrawler" target="_blank">
-<small>BrowserAct supports extracting data from any website. Just describe the data you need, and BrowserAct will explore and test web pages in a real browser, generating reliable, reusable data collection Bots that return structured results. Built-in stealth browsing and captcha handling, plus high-quality residential proxies. No code required — try it for free now.</small>
+<small>BrowserAct lets you extract data from any website with a single sentence. No code required—build once, reuse reliably, and consume very few tokens. BrowserAct uses a real browser to automatically build data collection Bots, with built-in stealth browsing, CAPTCHA handling, and residential proxies, then outputs structured results directly. Try it free now.</small>
 </a>
 
 </div>

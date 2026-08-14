@@ -2,7 +2,7 @@
 
 <div align="center">
 
-### 🤝 特别感谢白金赞助商
+### 🤝 特别感谢金牌赞助商
 
 <a href="https://www.browseract.ai/mediacrawler" target="_blank">
   <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
@@ -11,7 +11,7 @@
 <br>
 
 <a href="https://www.browseract.ai/mediacrawler" target="_blank">
-<small>BrowserAct 支持从任意网站提取数据。只需描述所需数据，BrowserAct 就会在真实浏览器中探索并测试网页，生成可靠、可复用的数据采集 Bot，并返回结构化结果。内置隐身浏览和验证码处理，并提供高质量住宅代理。无需代码，立即免费试用。</small>
+<small>BrowserAct 支持一句话从任意网站提取数据。无需代码，一次构建、稳定复用，Token 消耗极低。BrowserAct 使用真实浏览器自动构建数据采集 Bot，内置隐身浏览、验证码处理和住宅代理，直接输出结构化结果。立即免费试用。</small>
 </a>
 
 </div>

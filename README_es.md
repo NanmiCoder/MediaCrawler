@@ -2,7 +2,7 @@
 
 <div align="center">
 
-### 🤝 Agradecimientos Especiales a Nuestro Patrocinador Platino
+### 🤝 Agradecimientos Especiales a Nuestro Patrocinador Oro
 
 <a href="https://www.browseract.ai/mediacrawler" target="_blank">
   <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
@@ -11,7 +11,7 @@
 <br>
 
 <a href="https://www.browseract.ai/mediacrawler" target="_blank">
-<small>BrowserAct permite extraer datos de cualquier sitio web. Solo describe los datos que necesitas y BrowserAct explorará y probará las páginas web en un navegador real, generando Bots de recolección de datos confiables y reutilizables que devuelven resultados estructurados. Incluye navegación sigilosa y manejo de captchas integrados, además de proxies residenciales de alta calidad. Sin necesidad de código, pruébalo gratis ahora.</small>
+<small>BrowserAct permite extraer datos de cualquier sitio web con una sola frase. Sin código: créalo una vez, reutilízalo de forma estable y consume muy pocos tokens. BrowserAct utiliza un navegador real para crear automáticamente Bots de recolección de datos, con navegación sigilosa, gestión de CAPTCHA y proxies residenciales integrados, y entrega directamente resultados estructurados. Pruébalo gratis ahora.</small>
 </a>
 
 </div>
