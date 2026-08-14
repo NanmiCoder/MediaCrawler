@@ -48,6 +48,10 @@
     },
     "loginMethod": "登录方式",
     "loginMethodPlaceholder": "选择登录方式",
+    "crawlConfig": "抓取配置",
+    "crawlConfigHint": "帖子与评论数量上限",
+    "maxNotesCount": "帖子上限",
+    "maxCommentsCount": "单篇评论上限",
     "cookies": "Cookies",
     "cookiesHint": "粘贴 Cookie 字符串",
     "cookiesPlaceholder": "在此粘贴 Cookies...",
@@ -62,7 +66,12 @@
     "initiateScan": "开始爬虫",
     "initiating": "启动中...",
     "terminate": "终止",
-    "stopping": "停止中..."
+    "stopping": "停止中...",
+    "saveAllConfig": "保存全部配置"
+  },
+  "toast": {
+    "configSaved": "配置已保存",
+    "configSaveFailed": "配置保存失败"
   },
   "warning": {
     "cookieSlider": "[提示] 小红书和抖音平台不建议使用 Cookie 登录，因为可能会触发滑块验证",

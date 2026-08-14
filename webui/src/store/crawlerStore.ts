@@ -23,11 +23,15 @@ interface CrawlerState {
   clearLogs: () => void
   restoreLogs: () => void
   updateConfig: (config: Partial<CrawlerConfig>) => void
+  saveConfig: () => boolean
   reset: () => void
 }
 
 // 持久化相关的 localStorage key
 const CLEARED_LOG_ID_KEY = 'mediacrawler_cleared_log_id'
+const SAVED_CONFIG_KEY = 'mediacrawler_saved_config'
+const MIN_LIMIT = 1
+const MAX_LIMIT = 10000
 
 // 从 localStorage 读取清除标记
 function getClearedLogIdFromStorage(): number | null {
@@ -59,6 +63,48 @@ const defaultConfig: CrawlerConfig = {
   save_option: 'json',
   cookies: '',
   headless: false,
+  max_notes_count: 20,
+  max_comments_count: 10,
+}
+
+function clampInteger(value: unknown, fallback: number, max = MAX_LIMIT): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.min(max, Math.max(MIN_LIMIT, Math.trunc(value)))
+}
+
+function loadSavedConfig(): CrawlerConfig {
+  const restored: CrawlerConfig = { ...defaultConfig }
+  if (typeof window === 'undefined') return restored
+
+  try {
+    const raw = localStorage.getItem(SAVED_CONFIG_KEY)
+    if (!raw) return restored
+
+    const saved: unknown = JSON.parse(raw)
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return restored
+    const value = saved as Record<string, unknown>
+
+    if (typeof value.platform === 'string') restored.platform = value.platform
+    if (typeof value.login_type === 'string') restored.login_type = value.login_type
+    if (typeof value.crawler_type === 'string') restored.crawler_type = value.crawler_type
+    if (typeof value.keywords === 'string') restored.keywords = value.keywords
+    if (typeof value.specified_ids === 'string') restored.specified_ids = value.specified_ids
+    if (typeof value.creator_ids === 'string') restored.creator_ids = value.creator_ids
+    if (typeof value.save_option === 'string') restored.save_option = value.save_option
+    if (typeof value.enable_comments === 'boolean') restored.enable_comments = value.enable_comments
+    if (typeof value.enable_sub_comments === 'boolean') restored.enable_sub_comments = value.enable_sub_comments
+    if (typeof value.headless === 'boolean') restored.headless = value.headless
+
+    restored.start_page = clampInteger(value.start_page, defaultConfig.start_page)
+    restored.max_notes_count = clampInteger(value.max_notes_count, defaultConfig.max_notes_count)
+    restored.max_comments_count = clampInteger(value.max_comments_count, defaultConfig.max_comments_count)
+    restored.enable_sub_comments = restored.enable_comments && restored.enable_sub_comments
+    restored.cookies = ''
+  } catch {
+    return { ...defaultConfig }
+  }
+
+  return restored
 }
 
 export const useCrawlerStore = create<CrawlerState>((set, get) => ({
@@ -68,7 +114,7 @@ export const useCrawlerStore = create<CrawlerState>((set, get) => ({
   startedAt: null,
   logs: [],
   clearedAfterLogId: getClearedLogIdFromStorage(), // 从 localStorage 初始化
-  config: defaultConfig,
+  config: loadSavedConfig(),
 
   setStatus: (status) => {
     set({ status })
@@ -142,6 +188,18 @@ export const useCrawlerStore = create<CrawlerState>((set, get) => ({
     set((state) => ({
       config: { ...state.config, ...config },
     })),
+
+  saveConfig: () => {
+    if (typeof window === 'undefined') return false
+
+    try {
+      const { cookies: _cookies, ...safeConfig } = get().config
+      localStorage.setItem(SAVED_CONFIG_KEY, JSON.stringify(safeConfig))
+      return true
+    } catch {
+      return false
+    }
+  },
 
   reset: () =>
     set({

@@ -1,6 +1,8 @@
-import { Bug, Wifi, AlertTriangle, Github } from 'lucide-react'
+import { Bug, Wifi, AlertTriangle, Github, Save } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useCrawlerStore } from '@/store/crawlerStore'
 import { useCrawlerStatus } from '@/hooks/useCrawler'
 import { LanguageSwitch } from './LanguageSwitch'
@@ -13,18 +15,29 @@ interface SidebarProps {
 export function Sidebar({ onShowDisclaimer }: SidebarProps) {
   const { t } = useTranslation()
   const { t: tLicense } = useTranslation('license')
+  const { t: tConfig } = useTranslation('config')
   const status = useCrawlerStore((state) => state.status)
+  const saveConfig = useCrawlerStore((state) => state.saveConfig)
 
   // Poll status
   useCrawlerStatus()
 
   const isRunning = status === 'running'
 
+  const handleSaveConfig = () => {
+    const saved = saveConfig()
+    if (saved) {
+      toast.success(tConfig('toast.configSaved'))
+    } else {
+      toast.error(tConfig('toast.configSaveFailed'))
+    }
+  }
+
   return (
     <header className="h-14 flex-shrink-0 glass-panel border-b border-cyber-border-subtle relative z-10">
-      <div className="h-full px-4 flex items-center justify-between">
+      <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center gap-4 px-4">
         {/* Left: Logo and GitHub Star */}
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3 justify-self-start">
           <Bug className="w-5 h-5 text-cyber-neon-cyan" />
           <span className="font-mono font-bold text-cyber-text-primary tracking-wider text-sm">
             MediaCrawler
@@ -51,7 +64,7 @@ export function Sidebar({ onShowDisclaimer }: SidebarProps) {
         {/* Center: Warning Text */}
         <button
           onClick={onShowDisclaimer}
-          className="flex items-center gap-3 px-4 py-1.5 rounded-lg border border-cyber-neon-orange/50 bg-cyber-neon-orange/10 hover:bg-cyber-neon-orange/20 transition-all cursor-pointer"
+          className="hidden 2xl:flex items-center gap-3 px-4 py-1.5 rounded-lg border border-cyber-neon-orange/50 bg-cyber-neon-orange/10 hover:bg-cyber-neon-orange/20 transition-all cursor-pointer"
         >
           <AlertTriangle className="w-4 h-4 text-cyber-neon-orange flex-shrink-0" />
           <div className="flex items-center gap-4 text-xs font-mono">
@@ -63,9 +76,28 @@ export function Sidebar({ onShowDisclaimer }: SidebarProps) {
             </span>
           </div>
         </button>
+        <button
+          type="button"
+          onClick={onShowDisclaimer}
+          className="2xl:hidden flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-cyber-neon-orange/50 bg-cyber-neon-orange/10 text-cyber-neon-orange transition-all hover:bg-cyber-neon-orange/20"
+          title={`${tLicense('content.line1')} ${tLicense('content.line2')}`}
+          aria-label={`${tLicense('content.line1')} ${tLicense('content.line2')}`}
+        >
+          <AlertTriangle className="h-4 w-4" />
+        </button>
 
         {/* Right: Actions and Status */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 justify-self-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSaveConfig}
+            className="h-7 flex-shrink-0 border-cyber-neon-cyan/40 bg-cyber-neon-cyan/5 px-3 text-xs font-mono font-semibold text-cyber-neon-cyan hover:bg-cyber-neon-cyan/10 hover:text-cyber-neon-cyan hover:border-cyber-neon-cyan/70"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {tConfig('button.saveAllConfig')}
+          </Button>
           {/* Theme Toggle */}
           <ThemeToggle />
           {/* Language Switch */}

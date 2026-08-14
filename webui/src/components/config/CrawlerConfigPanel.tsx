@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode, KeyboardEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Database, Globe, KeyRound, MessageSquare, Play, Square, X } from 'lucide-react'
+import { Database, Globe, KeyRound, MessageSquare, Play, SlidersHorizontal, Square, X } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
@@ -131,6 +131,12 @@ function KeywordInput({ value, onChange, placeholder, disabled }: KeywordInputPr
   )
 }
 
+function clampLimit(value: string, fallback: number): number {
+  const parsed = Number.parseInt(value, 10)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(10000, Math.max(1, parsed))
+}
+
 export function CrawlerConfigPanel() {
   const { t } = useTranslation('config')
   const config = useCrawlerStore((state) => state.config)
@@ -145,6 +151,16 @@ export function CrawlerConfigPanel() {
   const isDisabled = status === 'running' || status === 'stopping'
   const isRunning = status === 'running'
   const isBusy = isStarting || isStopping || status === 'stopping'
+  const [maxNotesInput, setMaxNotesInput] = useState(String(config.max_notes_count))
+  const [maxCommentsInput, setMaxCommentsInput] = useState(String(config.max_comments_count))
+
+  useEffect(() => {
+    setMaxNotesInput(String(config.max_notes_count))
+  }, [config.max_notes_count])
+
+  useEffect(() => {
+    setMaxCommentsInput(String(config.max_comments_count))
+  }, [config.max_comments_count])
 
   const handleStart = () => {
     startCrawler(config)
@@ -274,49 +290,106 @@ export function CrawlerConfigPanel() {
           )}
         </Section>
 
-        {/* Column 2: Authentication Section */}
-        <Section
-          title={t('section.authMatrix.title')}
-          description={t('section.authMatrix.description')}
-          icon={KeyRound}
-        >
-          <Field label={t('field.loginMethod')}>
-            <Select
-              value={config.login_type}
-              onValueChange={(value) => updateConfig({ login_type: value })}
-              disabled={isDisabled}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder={t('field.loginMethodPlaceholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                {options?.login_types.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          {config.login_type === 'cookie' ? (
-            <Field label={t('field.cookies')} hint={t('field.cookiesHint')}>
-              <textarea
-                value={config.cookies}
-                onChange={(e) => updateConfig({ cookies: e.target.value })}
+        {/* Column 2: Authentication & Crawl Settings */}
+        <div className="grid h-full grid-rows-2 gap-4">
+          <Section
+            title={t('section.authMatrix.title')}
+            description={t('section.authMatrix.description')}
+            icon={KeyRound}
+          >
+            <Field label={t('field.loginMethod')}>
+              <Select
+                value={config.login_type}
+                onValueChange={(value) => updateConfig({ login_type: value })}
                 disabled={isDisabled}
-                placeholder={t('field.cookiesPlaceholder')}
-                className="min-h-[80px] w-full rounded-md border border-cyber-border-DEFAULT bg-cyber-bg-tertiary px-3 py-2 text-xs font-mono text-cyber-text-primary placeholder:text-cyber-text-muted focus-visible:outline-none focus-visible:border-cyber-neon-cyan/50 focus-visible:shadow-cyber-soft disabled:cursor-not-allowed disabled:opacity-50 transition-all resize-none"
-              />
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder={t('field.loginMethodPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {options?.login_types.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
-          ) : null}
 
-          {config.login_type === 'cookie' && (config.platform === 'xhs' || config.platform === 'dy') ? (
-            <div className="rounded-lg border border-cyber-neon-orange/30 bg-cyber-neon-orange/5 p-3 text-[11px] leading-snug text-cyber-neon-orange font-mono">
-              {t('warning.cookieSlider')}
+            {config.login_type === 'cookie' ? (
+              <Field label={t('field.cookies')} hint={t('field.cookiesHint')}>
+                <textarea
+                  value={config.cookies}
+                  onChange={(e) => updateConfig({ cookies: e.target.value })}
+                  disabled={isDisabled}
+                  placeholder={t('field.cookiesPlaceholder')}
+                  className="min-h-[80px] w-full rounded-md border border-cyber-border-DEFAULT bg-cyber-bg-tertiary px-3 py-2 text-xs font-mono text-cyber-text-primary placeholder:text-cyber-text-muted focus-visible:outline-none focus-visible:border-cyber-neon-cyan/50 focus-visible:shadow-cyber-soft disabled:cursor-not-allowed disabled:opacity-50 transition-all resize-none"
+                />
+              </Field>
+            ) : null}
+
+            {config.login_type === 'cookie' && (config.platform === 'xhs' || config.platform === 'dy') ? (
+              <div className="rounded-lg border border-cyber-neon-orange/30 bg-cyber-neon-orange/5 p-3 text-[11px] leading-snug text-cyber-neon-orange font-mono">
+                {t('warning.cookieSlider')}
+              </div>
+            ) : null}
+          </Section>
+
+          <Section
+            title={t('field.crawlConfig')}
+            description={t('field.crawlConfigHint')}
+            icon={SlidersHorizontal}
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <Field label={t('field.maxNotesCount')}>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={maxNotesInput}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setMaxNotesInput(value)
+                    const parsed = Number.parseInt(value, 10)
+                    if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 10000) {
+                      updateConfig({ max_notes_count: parsed })
+                    }
+                  }}
+                  onBlur={() => {
+                    const value = clampLimit(maxNotesInput, config.max_notes_count)
+                    setMaxNotesInput(String(value))
+                    updateConfig({ max_notes_count: value })
+                  }}
+                  disabled={isDisabled}
+                  className="h-9 text-xs"
+                />
+              </Field>
+              <Field label={t('field.maxCommentsCount')}>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={maxCommentsInput}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setMaxCommentsInput(value)
+                    const parsed = Number.parseInt(value, 10)
+                    if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 10000) {
+                      updateConfig({ max_comments_count: parsed })
+                    }
+                  }}
+                  onBlur={() => {
+                    const value = clampLimit(maxCommentsInput, config.max_comments_count)
+                    setMaxCommentsInput(String(value))
+                    updateConfig({ max_comments_count: value })
+                  }}
+                  disabled={isDisabled}
+                  className="h-9 text-xs"
+                />
+              </Field>
             </div>
-          ) : null}
-        </Section>
+          </Section>
+        </div>
 
         {/* Column 3: Output & Runtime Section */}
         <Section
@@ -388,7 +461,7 @@ export function CrawlerConfigPanel() {
         </Section>
       </div>
 
-      {/* Row 2: Start/Stop Button - Full Width */}
+      {/* Row 2: Primary Action - Full Width */}
       <div className="w-full">
         {isRunning ? (
           <Button

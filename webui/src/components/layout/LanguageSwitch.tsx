@@ -20,7 +20,7 @@ export function LanguageSwitch() {
 
   return (
     <Select value={i18n.language} onValueChange={(lang) => i18n.changeLanguage(lang)}>
-      <SelectTrigger className="w-20 h-7 text-xs font-mono border-cyber-border-subtle bg-cyber-bg-tertiary/50 hover:border-cyber-neon-cyan/50 transition-colors">
+      <SelectTrigger className="w-24 h-7 text-xs font-mono border-cyber-border-subtle bg-cyber-bg-tertiary/50 hover:border-cyber-neon-cyan/50 transition-colors">
         <Globe className="w-3 h-3 mr-1 text-cyber-text-secondary" />
         <SelectValue>{currentLang.label}</SelectValue>
       </SelectTrigger>

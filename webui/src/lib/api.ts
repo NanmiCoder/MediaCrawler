@@ -20,6 +20,8 @@ export interface CrawlerConfig {
   save_option: string
   cookies: string
   headless: boolean
+  max_notes_count: number
+  max_comments_count: number
 }
 
 export interface CrawlerStatus {
