@@ -314,7 +314,7 @@ class KuaishouCrawler(AbstractCrawler):
                 )
                 # use time.sleeep block main coroutine instead of asyncio.sleep and cacel running comment task
                 # maybe kuaishou block our request, we will take a nap and update the cookie again
-                current_running_tasks = comment_tasks_var.get()
+                current_running_tasks = comment_tasks_var.get() or []
                 for task in current_running_tasks:
                     task.cancel()
                 time.sleep(20)
