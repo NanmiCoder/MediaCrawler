@@ -164,7 +164,7 @@ def convert_str_cookie_to_dict(cookie_str: str) -> Dict:
         cookie = cookie.strip()
         if not cookie:
             continue
-        cookie_list = cookie.split("=")
+        cookie_list = cookie.split("=", 1)
         if len(cookie_list) != 2:
             continue
         cookie_value = cookie_list[1]
