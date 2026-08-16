@@ -20,6 +20,7 @@
 import asyncio
 import copy
 import json
+import config
 import urllib.parse
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union, Optional
 
@@ -329,15 +330,34 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         }
         return await self.get(uri, params)
 
+    @staticmethod
+    def filter_aweme_time(aweme_list):
+        filtered_aweme_list = []
+        stop_time_hit = False
+        end_time = utils.get_unix_time_from_time_str(config.UNTIL_TIME)
+        start_time = utils.get_unix_time_from_time_str(config.SINCE_TIME)
+        for aweme_info in aweme_list:
+            # time rule filter
+            if config.ENABLE_TIME_CRAWL and ( start_time > aweme_info.get('create_time')  or aweme_info.get('create_time') > end_time):
+                # stop paging flag filter (除去广告和置顶视频)
+                if aweme_info.get('create_time') < start_time and not aweme_info.get('is_ads', False) and not aweme_info.get('is_top', 0):
+                    stop_time_hit = True
+                    break
+                continue
+            filtered_aweme_list.append(aweme_info)
+        return filtered_aweme_list, stop_time_hit
+
     async def get_all_user_aweme_posts(self, sec_user_id: str, callback: Optional[Callable] = None):
         posts_has_more = 1
         max_cursor = ""
         result = []
-        while posts_has_more == 1:
+        stop_time_hit = False
+        while posts_has_more == 1 and not stop_time_hit:
             aweme_post_res = await self.get_user_aweme_posts(sec_user_id, max_cursor)
             posts_has_more = aweme_post_res.get("has_more", 0)
             max_cursor = aweme_post_res.get("max_cursor")
-            aweme_list = aweme_post_res.get("aweme_list") if aweme_post_res.get("aweme_list") else []
+            aweme_list = aweme_post_res.get("aweme_list") or []
+            aweme_list, stop_time_hit = self.filter_aweme_time(aweme_list)
             utils.logger.info(f"[DouYinClient.get_all_user_aweme_posts] get sec_user_id:{sec_user_id} video len : {len(aweme_list)}")
             if callback:
                 await callback(aweme_list)
