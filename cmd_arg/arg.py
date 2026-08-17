@@ -251,6 +251,14 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 rich_help_panel="Account Configuration",
             ),
         ] = config.COOKIES,
+        static_proxy: Annotated[
+            str,
+            typer.Option(
+                "--static_proxy",
+                help="Static HTTP proxy URL list (comma-separated, for example http://user:pass@host:port,http://host2:port). When set, overrides provider-based proxy rotation.",
+                rich_help_panel="Proxy Configuration",
+            ),
+        ] = "",
         specified_id: Annotated[
             str,
             typer.Option(
@@ -357,14 +365,15 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.CDP_HEADLESS = enable_headless
         config.SAVE_DATA_OPTION = save_data_option.value
         config.COOKIES = cookies
+        static_proxy_value = (static_proxy or static_proxy_url).strip()
+        config.STATIC_PROXY_URL = static_proxy_value
         config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = max_comments_count_singlenotes
         config.CRAWLER_MAX_NOTES_COUNT = crawler_max_notes_count
         config.MAX_CONCURRENCY_NUM = max_concurrency_num
         config.SAVE_DATA_PATH = save_data_path
-        config.ENABLE_IP_PROXY = enable_ip_proxy_value
+        config.ENABLE_IP_PROXY = enable_ip_proxy_value or bool(config.STATIC_PROXY_URL)
         config.IP_PROXY_POOL_COUNT = ip_proxy_pool_count
-        config.IP_PROXY_PROVIDER_NAME = ip_proxy_provider_name
-        config.STATIC_PROXY_URL = static_proxy_url
+        config.IP_PROXY_PROVIDER_NAME = "static" if config.STATIC_PROXY_URL else ip_proxy_provider_name
 
         # Set platform-specific ID lists for detail/creator mode
         if specified_id_list:
@@ -413,6 +422,8 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             save_data_option=config.SAVE_DATA_OPTION,
             init_db=init_db_value,
             cookies=config.COOKIES,
+            static_proxy=config.STATIC_PROXY_URL,
+            static_proxy_url=config.STATIC_PROXY_URL,
             specified_id=specified_id,
             creator_id=creator_id,
         )
