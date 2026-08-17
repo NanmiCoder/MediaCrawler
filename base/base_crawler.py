@@ -116,6 +116,12 @@ class AbstractStoreVideo(ABC):
         pass
 
 
+class AbstractStoreAudio(ABC):
+    # TODO: support all platform
+    async def store_audio(self, audio_content_item: Dict):
+        pass
+
+
 class AbstractApiClient(ABC):
 
     @abstractmethod

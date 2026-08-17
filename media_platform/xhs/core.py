@@ -540,3 +540,8 @@ class XiaoHongShuCrawler(AbstractCrawler):
             extension_file_name = f"{videoNum}.mp4"
             videoNum += 1
             await xhs_store.update_xhs_note_video(note_id, content, extension_file_name)
+
+            if config.ENABLE_GET_AUDIO:
+                video_path = f"{xhs_store.XiaoHongShuVideo().video_store_path}/{note_id}/{extension_file_name}"
+                audio_extension_file_name = f"{extension_file_name.rsplit('.', 1)[0]}.{config.AUDIO_FORMAT}"
+                await xhs_store.update_xhs_note_audio(note_id, video_path, audio_extension_file_name)

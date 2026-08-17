@@ -468,3 +468,8 @@ class DouYinCrawler(AbstractCrawler):
             return
         extension_file_name = f"video.mp4"
         await douyin_store.update_dy_aweme_video(aweme_id, content, extension_file_name)
+
+        if config.ENABLE_GET_AUDIO:
+            video_path = f"{douyin_store.DouYinVideo().video_store_path}/{aweme_id}/{extension_file_name}"
+            audio_extension_file_name = f"{extension_file_name.rsplit('.', 1)[0]}.{config.AUDIO_FORMAT}"
+            await douyin_store.update_dy_aweme_audio(aweme_id, video_path, audio_extension_file_name)

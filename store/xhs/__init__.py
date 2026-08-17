@@ -28,6 +28,7 @@ from var import source_keyword_var
 from tools.user_hash import anonymize_user_id, mask_nickname
 
 from .xhs_store_media import *
+from .xhs_store_audio import *
 from ._store_impl import *
 
 
@@ -220,3 +221,18 @@ async def update_xhs_note_video(note_id, video_content, extension_file_name):
     """
 
     await XiaoHongShuVideo().store_video({"notice_id": note_id, "video_content": video_content, "extension_file_name": extension_file_name})
+
+
+async def update_xhs_note_audio(note_id, video_path, extension_file_name):
+    """
+    Extract and save Xiaohongshu note audio from a downloaded video.
+    Args:
+        note_id:
+        video_path:
+        extension_file_name:
+
+    Returns:
+        Path to the extracted audio file, or None if failed.
+    """
+
+    return await XiaoHongShuAudio().store_audio({"notice_id": note_id, "video_path": video_path, "extension_file_name": extension_file_name})
