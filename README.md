@@ -164,11 +164,21 @@ uv run main.py --platform xhs --lt qrcode --type search
 # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
 uv run main.py --platform xhs --lt qrcode --type detail
 
+# 【仅小红书】爬取“收藏”的笔记：留空 config/xhs_config.py 的 XHS_COLLECT_USER_ID_LIST 即抓取当前登录账号自己收藏的笔记
+uv run main.py --platform xhs --lt qrcode --type collect
+
 # 打开对应APP扫二维码登录
 
 # 其他平台爬虫使用示例，执行下面的命令查看
 uv run main.py --help
 ```
+
+> 💡 **小红书收藏笔记（`--type collect`）**：抓取「收藏」列表里的笔记（含笔记详情与评论）。
+> 在 `config/xhs_config.py` 中通过 `XHS_COLLECT_USER_ID_LIST` 控制抓取目标：
+> - 留空 `[]` —— 抓取**当前登录账号自己**收藏的笔记（`user_id` 会自动获取）；
+> - 也可填入用户 `user_id`，或带 `xsec_token` 的完整主页 URL —— 抓取他人**公开**的收藏。
+>
+> 抓取数量由 `CRAWLER_MAX_NOTES_COUNT` 控制，结果写入 `data/xhs/` 目录（`collect_contents_*` / `collect_comments_*`）。
 
 <details>
 <summary>🖥️ <strong>WebUI 可视化操作界面</strong></summary>
@@ -269,6 +279,9 @@ python main.py --platform xhs --lt qrcode --type search
 
 # 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
 python main.py --platform xhs --lt qrcode --type detail
+
+# 【仅小红书】爬取“收藏”的笔记（XHS_COLLECT_USER_ID_LIST 留空即抓当前登录账号自己收藏的笔记）
+python main.py --platform xhs --lt qrcode --type collect
 
 # 打开对应APP扫二维码登录
 
