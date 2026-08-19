@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书数据查看器</title>
+    <link rel="stylesheet" href="/viewer/css/style.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-left">
+            <h1 class="logo">📚 小红书数据查看器</h1>
+        </div>
+        <div class="header-center">
+            <select id="keywordFilter" class="filter-select">
+                <option value="">全部关键词</option>
+            </select>
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索笔记标题...">
+        </div>
+        <div class="header-right">
+            <button id="refreshBtn" class="refresh-btn" title="刷新数据">
+                <span class="refresh-icon">🔄</span>
+                <span class="refresh-text">刷新</span>
+            </button>
+            <span id="lastUpdate" class="last-update"></span>
+        </div>
+    </header>
+
+    <!-- 监控面板 -->
+    <div class="monitor-panel">
+        <div class="status-card">
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot"></span>
+                <span class="status-text">加载中...</span>
+            </div>
+        </div>
+        <div class="stats-cards">
+            <div class="stat-card">
+                <span class="stat-value" id="totalNotes">0</span>
+                <span class="stat-label">笔记总数</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="totalImages">0</span>
+                <span class="stat-label">图片总数</span>
+            </div>
+        </div>
+        <div class="keywords-stats" id="keywordsStats"></div>
+    </div>
+
+    <!-- 笔记列表 -->
+    <main class="main-content">
+        <div id="notesGrid" class="note-grid">
+            <!-- 笔记卡片将通过 JS 动态插入 -->
+        </div>
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">📭</div>
+            <p class="empty-text">暂无数据</p>
+            <p class="empty-hint">请先运行爬虫获取数据</p>
+        </div>
+        <div id="loadingState" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>加载中...</p>
+        </div>
+    </main>
+
+    <!-- 详情模态框 -->
+    <div id="noteModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-body">
+                <!-- 图片画廊 -->
+                <div class="image-gallery" id="imageGallery">
+                    <div class="gallery-main">
+                        <img id="galleryImage" src="" alt="">
+                        <button class="gallery-nav gallery-prev" id="galleryPrev" style="display: none;">‹</button>
+                        <button class="gallery-nav gallery-next" id="galleryNext" style="display: none;">›</button>
+                    </div>
+                    <div class="gallery-info">
+                        <span id="galleryIndex">1/1</span>
+                    </div>
+                </div>
+                <!-- 笔记内容 -->
+                <div class="note-content">
+                    <h2 class="note-title" id="modalTitle"></h2>
+                    <div class="note-meta">
+                        <span class="note-author" id="modalAuthor"></span>
+                        <span class="note-time" id="modalTime"></span>
+                    </div>
+                    <div class="note-stats">
+                        <span class="stat-item">👍 <span id="modalLikes">0</span></span>
+                        <span class="stat-item">⭐ <span id="modalCollects">0</span></span>
+                        <span class="stat-item">💬 <span id="modalComments">0</span></span>
+                        <span class="stat-item">🔗 <span id="modalShares">0</span></span>
+                    </div>
+                    <div class="note-tags" id="modalTags"></div>
+                    <div class="note-desc" id="modalDesc"></div>
+                    <a class="note-link" id="modalLink" href="" target="_blank">查看原笔记 →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/viewer/js/api.js"></script>
+    <script src="/viewer/js/app.js"></script>
+    <script src="/viewer/js/modal.js"></script>
+    <script src="/viewer/js/monitor.js"></script>
+</body>
+</html>
