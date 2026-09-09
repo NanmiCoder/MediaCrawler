@@ -21,13 +21,21 @@ import csv
 import json
 import os
 import pathlib
+import tempfile
+import threading
 from typing import Dict, List
+from weakref import WeakValueDictionary
 import aiofiles
 import config
 from tools.utils import utils
 from tools.words import AsyncWordCloudGenerator
 
 class AsyncFileWriter:
+    # Stores are instantiated per record. A path lock, shared across instances
+    # and event loops, protects the entire read/modify/write transaction.
+    _file_locks = WeakValueDictionary()
+    _file_locks_guard = threading.Lock()
+
     def __init__(self, platform: str, crawler_type: str):
         self.lock = asyncio.Lock()
         self.platform = platform
@@ -45,39 +53,78 @@ class AsyncFileWriter:
 
     async def write_to_csv(self, item: Dict, item_type: str):
         file_path = self._get_file_path('csv', item_type)
+        await self._run_file_operation(self._append_csv, file_path, item)
+
+    @staticmethod
+    def _append_csv(file_path: str, item: Dict):
+        has_header = os.path.exists(file_path) and os.path.getsize(file_path) > 0
+        with open(file_path, 'a', newline='', encoding='utf-8-sig') as target:
+            writer = csv.DictWriter(target, fieldnames=item.keys())
+            if not has_header:
+                writer.writeheader()
+            writer.writerow(item)
+
+    async def _run_file_operation(self, operation, *args):
+        """Keep the lock until thread I/O ends, including on cancellation."""
         async with self.lock:
-            file_exists = os.path.exists(file_path)
-            async with aiofiles.open(file_path, 'a', newline='', encoding='utf-8-sig') as f:
-                writer = csv.DictWriter(f, fieldnames=item.keys())
-                if not file_exists or await f.tell() == 0:
-                    await writer.writeheader()
-                await writer.writerow(item)
+            task = asyncio.create_task(asyncio.to_thread(self._run_serialized, operation, *args))
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                await asyncio.gather(task, return_exceptions=True)
+                raise
+
+    @classmethod
+    def _run_serialized(cls, operation, file_path, *args):
+        key = os.path.normcase(os.path.realpath(file_path))
+        with cls._file_locks_guard:
+            lock = cls._file_locks.get(key)
+            if lock is None:
+                lock = threading.Lock()
+                cls._file_locks[key] = lock
+        with lock:
+            operation(file_path, *args)
 
     async def write_to_jsonl(self, item: Dict, item_type: str):
         file_path = self._get_file_path('jsonl', item_type)
-        async with self.lock:
-            async with aiofiles.open(file_path, 'a', encoding='utf-8') as f:
-                await f.write(json.dumps(item, ensure_ascii=False) + '\n')
+        await self._run_file_operation(self._append_jsonl, file_path, item)
+
+    @staticmethod
+    def _append_jsonl(file_path: str, item: Dict):
+        line = json.dumps(item, ensure_ascii=False) + '\n'
+        with open(file_path, 'a', encoding='utf-8') as target:
+            target.write(line)
 
     async def write_single_item_to_json(self, item: Dict, item_type: str):
         file_path = self._get_file_path('json', item_type)
-        async with self.lock:
-            existing_data = []
-            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
-                    try:
-                        content = await f.read()
-                        if content:
-                            existing_data = json.loads(content)
-                        if not isinstance(existing_data, list):
-                            existing_data = [existing_data]
-                    except json.JSONDecodeError:
-                        existing_data = []
+        await self._run_file_operation(self._append_json, file_path, item)
 
-            existing_data.append(item)
+    @staticmethod
+    def _append_json(file_path: str, item: Dict):
+        path = pathlib.Path(file_path)
+        existing_data = []
+        if path.exists() and path.stat().st_size:
+            with path.open(encoding='utf-8') as source:
+                existing_data = json.load(source)
+            if not isinstance(existing_data, list):
+                existing_data = [existing_data]
+        existing_data.append(item)
+        content = json.dumps(existing_data, ensure_ascii=False, indent=4)
 
-            async with aiofiles.open(file_path, 'w', encoding='utf-8') as f:
-                await f.write(json.dumps(existing_data, ensure_ascii=False, indent=4))
+        temporary_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode='w', encoding='utf-8', dir=path.parent,
+                prefix=f'.{path.name}.', suffix='.tmp', delete=False,
+            ) as target:
+                temporary_path = pathlib.Path(target.name)
+                target.write(content)
+                target.flush()
+                os.fsync(target.fileno())
+            os.replace(temporary_path, path)
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
 
     async def generate_wordcloud_from_comments(self):
         """
