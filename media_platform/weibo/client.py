@@ -33,7 +33,7 @@ import httpx
 from httpx import Response
 from playwright.async_api import BrowserContext, Page
 from tools.httpx_util import make_async_client
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wait_fixed
 
 import config
 from proxy.proxy_mixin import ProxyRefreshMixin
@@ -42,11 +42,14 @@ from tools import utils
 if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
 
-from .exception import DataFetchError
+from .exception import DataFetchError, NoMoreResultsError
 from .field import SearchType
 
 
 class WeiboClient(ProxyRefreshMixin):
+
+    # Messages Weibo returns with ok=0 when a paginated listing has no further results.
+    NO_MORE_RESULTS_MESSAGES = frozenset({"这里还没有内容"})
 
     def __init__(
         self,
@@ -69,7 +72,11 @@ class WeiboClient(ProxyRefreshMixin):
         # Initialize proxy pool (from ProxyRefreshMixin)
         self.init_proxy_pool(proxy_ip_pool)
 
-    @retry(stop=stop_after_attempt(5), wait=wait_fixed(3))
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_fixed(3),
+        retry=retry_if_not_exception_type(NoMoreResultsError),
+    )
     async def request(self, method, url, **kwargs) -> Union[Response, Dict]:
         # Check if proxy is expired before each request
         await self._refresh_proxy_if_expired()
@@ -93,8 +100,13 @@ class WeiboClient(ProxyRefreshMixin):
 
         ok_code = data.get("ok")
         if ok_code == 0:  # response error
+            msg = data.get("msg", "response error")
+            if msg in self.NO_MORE_RESULTS_MESSAGES:
+                # Weibo signals "no further pages" with ok=0 instead of an empty result set.
+                utils.logger.info(f"[WeiboClient.request] request {method}:{url} reached the end of results, msg:{msg}")
+                raise NoMoreResultsError(msg)
             utils.logger.error(f"[WeiboClient.request] request {method}:{url} err, res:{data}")
-            raise DataFetchError(data.get("msg", "response error"))
+            raise DataFetchError(msg)
         elif ok_code != 1:  # unknown error
             utils.logger.error(f"[WeiboClient.request] request {method}:{url} err, res:{data}")
             raise DataFetchError(data.get("msg", "unknown error"))
@@ -392,7 +404,13 @@ class WeiboClient(ProxyRefreshMixin):
         since_id = ""
         crawler_total_count = 0
         while notes_has_more:
-            notes_res = await self.get_notes_by_creator(creator_id, container_id, since_id)
+            try:
+                notes_res = await self.get_notes_by_creator(creator_id, container_id, since_id)
+            except NoMoreResultsError:
+                utils.logger.info(
+                    f"[WeiboClient.get_all_notes_by_creator_id] creator_id:{creator_id} has no more notes, stop paging"
+                )
+                break
             if not notes_res:
                 utils.logger.error(f"[WeiboClient.get_notes_by_creator] The current creator may have been banned by Weibo, so they cannot access the data.")
                 break
