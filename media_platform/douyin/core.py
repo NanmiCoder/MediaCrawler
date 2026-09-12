@@ -134,13 +134,10 @@ class DouYinCrawler(AbstractCrawler):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[DouYinCrawler.search] Current keyword: {keyword}")
             aweme_list: List[str] = []
-            page = 0
+            # offset is (page - 1) * dy_limit_count, so the first real page is 1
+            page = 1
             dy_search_id = ""
             while (page - start_page + 1) * dy_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
-                if page < start_page:
-                    utils.logger.info(f"[DouYinCrawler.search] Skip {page}")
-                    page += 1
-                    continue
                 try:
                     utils.logger.info(f"[DouYinCrawler.search] search douyin keyword: {keyword}, page: {page}")
                     posts_res = await self.dy_client.search_info_by_keyword(
@@ -161,6 +158,12 @@ class DouYinCrawler(AbstractCrawler):
                     utils.logger.error(f"[DouYinCrawler.search] search douyin keyword: {keyword} failed，账号也许被风控了。")
                     break
                 dy_search_id = posts_res.get("extra", {}).get("logid", "")
+                if page - 1 < start_page:
+                    # Douyin only serves later pages when search_id chains from the previous
+                    # response, so pages before START_PAGE are still requested but not stored.
+                    utils.logger.info(f"[DouYinCrawler.search] Skip {page - 1}, search_id: {dy_search_id}")
+                    await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
+                    continue
                 page_aweme_list = []
                 for post_item in posts_res.get("data"):
                     try:
@@ -171,7 +174,7 @@ class DouYinCrawler(AbstractCrawler):
                     page_aweme_list.append(aweme_info.get("aweme_id", ""))
                     await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
                     await self.get_aweme_media(aweme_item=aweme_info)
-                
+
                 # Batch get note comments for the current page
                 await self.batch_get_note_comments(page_aweme_list)
 
