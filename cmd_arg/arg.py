@@ -143,6 +143,17 @@ def _normalize_tieba_note_id(value: str) -> str:
     return match.group(1) if match else value
 
 
+def _normalize_weibo_note_id(value: str) -> str:
+    """Accept a raw Weibo note id or a post URL.
+
+    Handles the common post URL shapes:
+    https://weibo.com/<uid>/<bid>, https://m.weibo.cn/detail/<mid>, https://m.weibo.cn/status/<bid>
+    """
+    value = value.strip()
+    match = re.search(r"weibo\.(?:com|cn)/(?:\d+|detail|status)/([A-Za-z0-9]+)", value)
+    return match.group(1) if match else value
+
+
 def _normalize_tieba_creator_url(value: str) -> str:
     """Accept a Tieba creator homepage URL or a portrait id."""
     value = value.strip()
@@ -375,7 +386,9 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             elif platform == PlatformEnum.DOUYIN:
                 config.DY_SPECIFIED_ID_LIST = specified_id_list
             elif platform == PlatformEnum.WEIBO:
-                config.WEIBO_SPECIFIED_ID_LIST = specified_id_list
+                config.WEIBO_SPECIFIED_ID_LIST = [
+                    _normalize_weibo_note_id(item) for item in specified_id_list
+                ]
             elif platform == PlatformEnum.KUAISHOU:
                 config.KS_SPECIFIED_ID_LIST = specified_id_list
             elif platform == PlatformEnum.TIEBA:
