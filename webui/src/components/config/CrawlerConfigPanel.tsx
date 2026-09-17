@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode, KeyboardEvent } from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Database, Globe, KeyRound, MessageSquare, Play, Square, X } from 'lucide-react'
+import { Database, Globe, Image as ImageIcon, KeyRound, MessageSquare, Play, Square, X } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
@@ -369,6 +369,23 @@ export function CrawlerConfigPanel() {
                 disabled={isDisabled || !config.enable_comments}
               />
               <p className="text-xs font-mono text-cyber-text-primary">{t('field.subComments')}</p>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-lg border border-cyber-border-subtle bg-cyber-bg-tertiary/30 p-2.5 hover:border-cyber-border-DEFAULT transition-colors">
+              <Checkbox
+                checked={config.enable_media}
+                onCheckedChange={(checked) => updateConfig({ enable_media: checked === true })}
+                disabled={isDisabled}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="h-3.5 w-3.5 text-cyber-text-secondary" />
+                  <p className="text-xs font-mono text-cyber-text-primary">{t('field.downloadMedia')}</p>
+                </div>
+                <p className="text-[10px] text-cyber-text-muted leading-snug">
+                  {t('field.downloadMediaHint')}
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-3 rounded-lg border border-cyber-border-subtle bg-cyber-bg-tertiary/30 p-2.5 hover:border-cyber-border-DEFAULT transition-colors">

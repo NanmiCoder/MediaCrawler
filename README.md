@@ -171,6 +171,40 @@ uv run main.py --help
 ```
 
 <details>
+<summary>📥 <strong>媒体下载（封面 / 视频 / 图文图片）</strong></summary>
+
+默认关闭。开启后会在爬取的同时把媒体文件下载到本地，按帖子聚合存放：
+
+```shell
+# 命令行开关
+uv run main.py --platform xhs --type detail --specified_id <帖子URL或ID> --get_media true
+
+# 或在 config/base_config.py 中设置 ENABLE_GET_MEDIA = True
+```
+
+**落盘结构**（`SAVE_DATA_PATH` 为空时落在 `data/` 下）：
+
+```
+data/xhs/media/{帖子ID}/
+├── cover.jpg     # 封面
+├── video.mp4     # 视频（B站为 DASH 合流产物）
+└── 001.jpg       # 图文帖的图片
+```
+
+**支持平台**：小红书、抖音、快手、B站、微博。贴吧与知乎的数据结构中没有媒体字段，暂不支持。
+
+**关于 B 站**：
+- 安装 [ffmpeg](https://ffmpeg.org/) 后可走 DASH 路径获取最高画质（音视频分轨下载后无损合流）；未安装时自动降级为 mp4 直链，产物名为 `video-durl.mp4` 以便区分
+- 清晰度由 `config/bilibili_config.py` 的 `BILI_QN` 控制（默认 80 = 1080p）；未登录或权限不足时若高清取流被拒，会自动逐档降级到实际可下载的清晰度
+
+**说明**：
+- 媒体下载失败只记录日志，不会中断爬取
+- 已存在的文件会被跳过；需要重新下载时删掉对应目录即可
+- 下载是串行跟随爬取流程的（未做并发下载），避免给平台 CDN 造成压力
+
+</details>
+
+<details>
 <summary>🖥️ <strong>WebUI 可视化操作界面</strong></summary>
 
 MediaCrawler 提供了基于 Web 的可视化操作界面，无需命令行也能轻松使用爬虫功能。

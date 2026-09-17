@@ -246,29 +246,6 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             **kwargs,
         )
 
-    async def get_note_media(self, url: str) -> Union[bytes, None]:
-        # Check if proxy is expired before request
-        await self._refresh_proxy_if_expired()
-
-        async with make_async_client(proxy=self.proxy) as client:
-            try:
-                response = await client.request("GET", url, timeout=self.timeout)
-                response.raise_for_status()
-                if not response.reason_phrase == "OK":
-                    utils.logger.error(
-                        f"[XiaoHongShuClient.get_note_media] request {url} err, res:{response.text}"
-                    )
-                    return None
-                else:
-                    return response.content
-            except (
-                httpx.HTTPError
-            ) as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
-                utils.logger.error(
-                    f"[XiaoHongShuClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}"
-                )  # Keep original exception type name for developer debugging
-                return None
-
     async def query_self(self) -> Optional[Dict]:
         """
         Query self user info to check login state

@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 from .exception import DataFetchError
 from .field import CommentOrderType, SearchOrderType
 from .help import BilibiliSign
+from .media import DASH_FNVAL
 
 
 def _extract_pinned_comments(value: Any) -> List[Dict]:
@@ -213,11 +214,13 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
             params.update({"bvid": bvid})
         return await self.get(uri, params, enable_params_sign=False)
 
-    async def get_video_play_url(self, aid: int, cid: int) -> Dict:
+    async def get_video_play_url(self, aid: int, cid: int, fnval: int = DASH_FNVAL) -> Dict:
         """
         Bilibli web video play url api
         :param aid: Video aid
         :param cid: cid
+        :param fnval: 请求的媒体格式位掩码，默认请求 DASH（含 4K/8K/HDR/AV1）；
+                      传 1 则请求音视频合一的 mp4 直链
         :return:
         """
         if not aid or not cid or aid <= 0 or cid <= 0:
@@ -229,27 +232,11 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
             "cid": cid,
             "qn": qn_value,
             "fourk": 1,
-            "fnval": 1,
+            "fnval": fnval,
             "platform": "pc",
         }
 
         return await self.get(uri, params, enable_params_sign=True)
-
-    async def get_video_media(self, url: str) -> Union[bytes, None]:
-        # Follow CDN 302 redirects and treat any 2xx as success (some endpoints return 206)
-        async with make_async_client(proxy=self.proxy, follow_redirects=True) as client:
-            try:
-                response = await client.request("GET", url, timeout=self.timeout, headers=self.headers)
-                response.raise_for_status()
-                if 200 <= response.status_code < 300:
-                    return response.content
-                utils.logger.error(
-                    f"[BilibiliClient.get_video_media] Unexpected status {response.status_code} for {url}"
-                )
-                return None
-            except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
-                utils.logger.error(f"[BilibiliClient.get_video_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")  # Keep original exception type name for developer debugging
-                return None
 
     async def get_video_comments(
         self,

@@ -24,10 +24,10 @@
 from typing import List
 
 import config
+from media_platform.xhs.media import extract_video_urls
 from var import source_keyword_var
 from tools.user_hash import anonymize_user_id, mask_nickname
 
-from .xhs_store_media import *
 from ._store_impl import *
 
 
@@ -51,40 +51,6 @@ class XhsStoreFactory:
         return store_class()
 
 
-def get_video_url_arr(note_item: Dict) -> List:
-    """
-    Get video url array
-    Args:
-        note_item:
-
-    Returns:
-
-    """
-    if note_item.get('type') != 'video':
-        return []
-
-    video_dict = note_item.get('video')
-    if not video_dict:
-        return []
-
-    videoArr = []
-    consumer = video_dict.get('consumer', {})
-    originVideoKey = consumer.get('origin_video_key', '')
-    if originVideoKey == '':
-        originVideoKey = consumer.get('originVideoKey', '')
-    # Fallback with watermark
-    if originVideoKey == '':
-        media = video_dict.get('media', {})
-        stream = media.get('stream', {})
-        videos = stream.get('h264')
-        if type(videos).__name__ == 'list':
-            videoArr = [v.get('master_url') for v in videos]
-    else:
-        videoArr = [f"http://sns-video-bd.xhscdn.com/{originVideoKey}"]
-
-    return videoArr
-
-
 async def update_xhs_note(note_item: Dict):
     """
     Update Xiaohongshu note
@@ -104,7 +70,7 @@ async def update_xhs_note(note_item: Dict):
         if img.get('url_default') != '':
             img.update({'url': img.get('url_default')})
 
-    video_url = ','.join(get_video_url_arr(note_item))
+    video_url = ','.join(extract_video_urls(note_item))
 
     local_db_item = {
         "note_id": note_item.get("note_id"),  # Note ID
@@ -190,33 +156,3 @@ async def save_creator(user_id: str, creator: Dict):
     """
     # 教学版：创作者个人资料(昵称/性别/头像/IP/粉丝数等)不再落库，防骚扰。
     return
-
-
-async def update_xhs_note_image(note_id, pic_content, extension_file_name):
-    """
-    Update Xiaohongshu note image
-    Args:
-        note_id:
-        pic_content:
-        extension_file_name:
-
-    Returns:
-
-    """
-
-    await XiaoHongShuImage().store_image({"notice_id": note_id, "pic_content": pic_content, "extension_file_name": extension_file_name})
-
-
-async def update_xhs_note_video(note_id, video_content, extension_file_name):
-    """
-    Update Xiaohongshu note video
-    Args:
-        note_id:
-        video_content:
-        extension_file_name:
-
-    Returns:
-
-    """
-
-    await XiaoHongShuVideo().store_video({"notice_id": note_id, "video_content": video_content, "extension_file_name": extension_file_name})

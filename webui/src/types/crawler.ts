@@ -8,6 +8,7 @@ export interface CrawlerConfig {
   start_page: number
   enable_comments: boolean
   enable_sub_comments: boolean
+  enable_media: boolean  // 是否下载媒体（封面/视频/图文图片），支持 xhs/dy/ks/bili/wb
   save_option: string
   cookies: string
   headless: boolean

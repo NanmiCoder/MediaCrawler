@@ -28,7 +28,6 @@ from typing import List
 from tools.user_hash import anonymize_user_id, mask_nickname
 from var import source_keyword_var
 
-from .weibo_store_media import *
 from ._store_impl import *
 
 
@@ -158,20 +157,6 @@ async def update_weibo_note_comment(note_id: str, comment_item: Dict):
     }
     utils.logger.info(f"[store.weibo.update_weibo_note_comment] Weibo note comment: {comment_id}, content: {save_comment_item.get('content', '')[:24]} ...")
     await WeibostoreFactory.create_store().store_comment(comment_item=save_comment_item)
-
-
-async def update_weibo_note_image(picid: str, pic_content, extension_file_name):
-    """
-    Save weibo note image to local
-    Args:
-        picid:
-        pic_content:
-        extension_file_name:
-
-    Returns:
-
-    """
-    await WeiboStoreImage().store_image({"pic_id": picid, "pic_content": pic_content, "extension_file_name": extension_file_name})
 
 
 async def save_creator(user_id: str, user_info: Dict):

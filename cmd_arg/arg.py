@@ -216,6 +216,15 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
                 show_default=True,
             ),
         ] = str(config.ENABLE_GET_SUB_COMMENTS),
+        get_media: Annotated[
+            str,
+            typer.Option(
+                "--get_media",
+                help="Whether to download media files (cover/video/images of the post), supports yes/true/t/y/1 or no/false/f/n/0 (xhs/dy/ks/bili/wb)",
+                rich_help_panel="Storage Configuration",
+                show_default=True,
+            ),
+        ] = str(config.ENABLE_GET_MEDIA),
         headless: Annotated[
             str,
             typer.Option(
@@ -337,6 +346,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
 
         enable_comment = _to_bool(get_comment)
         enable_sub_comment = _to_bool(get_sub_comment)
+        enable_media = _to_bool(get_media)
         enable_headless = _to_bool(headless)
         enable_ip_proxy_value = _to_bool(enable_ip_proxy)
         init_db_value = init_db.value if init_db else None
@@ -353,6 +363,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
         config.KEYWORDS = keywords
         config.ENABLE_GET_COMMENTS = enable_comment
         config.ENABLE_GET_SUB_COMMENTS = enable_sub_comment
+        config.ENABLE_GET_MEDIA = enable_media
         config.HEADLESS = enable_headless
         config.CDP_HEADLESS = enable_headless
         config.SAVE_DATA_OPTION = save_data_option.value
@@ -409,6 +420,7 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             keywords=config.KEYWORDS,
             get_comment=config.ENABLE_GET_COMMENTS,
             get_sub_comment=config.ENABLE_GET_SUB_COMMENTS,
+            get_media=config.ENABLE_GET_MEDIA,
             headless=config.HEADLESS,
             save_data_option=config.SAVE_DATA_OPTION,
             init_db=init_db_value,

@@ -24,11 +24,11 @@
 from typing import List
 
 import config
+from media_platform.douyin.media import extract_cover_url, extract_image_urls, extract_video_urls
 from var import source_keyword_var
 from tools.user_hash import anonymize_user_id, mask_nickname
 
 from ._store_impl import *
-from .douyin_store_media import *
 
 
 class DouyinStoreFactory:
@@ -49,30 +49,6 @@ class DouyinStoreFactory:
         if not store_class:
             raise ValueError("[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json or sqlite or mongodb or excel ...")
         return store_class()
-
-
-def _extract_note_image_list(aweme_detail: Dict) -> List[str]:
-    """
-    Extract note image list
-
-    Args:
-        aweme_detail (Dict): Douyin content details
-
-    Returns:
-        List[str]: Note image list
-    """
-    images_res: List[str] = []
-    images: List[Dict] = aweme_detail.get("images", [])
-
-    if not images:
-        return []
-
-    for image in images:
-        image_url_list = image.get("url_list", [])  # download_url_list has watermarked images, url_list has non-watermarked images
-        if image_url_list:
-            images_res.append(image_url_list[-1])
-
-    return images_res
 
 
 def _extract_comment_image_list(comment_item: Dict) -> List[str]:
@@ -97,46 +73,6 @@ def _extract_comment_image_list(comment_item: Dict) -> List[str]:
             images_res.append(image_url_list[1])
 
     return images_res
-
-
-def _extract_content_cover_url(aweme_detail: Dict) -> str:
-    """
-    Extract video cover URL
-
-    Args:
-        aweme_detail (Dict): Douyin content details
-
-    Returns:
-        str: Video cover URL
-    """
-    res_cover_url = ""
-
-    video_item = aweme_detail.get("video", {})
-    raw_cover_url_list = (video_item.get("raw_cover", {}) or video_item.get("origin_cover", {})).get("url_list", [])
-    if raw_cover_url_list and len(raw_cover_url_list) > 1:
-        res_cover_url = raw_cover_url_list[1]
-
-    return res_cover_url
-
-
-def _extract_video_download_url(aweme_detail: Dict) -> str:
-    """
-    Extract video download URL
-
-    Args:
-        aweme_detail (Dict): Douyin video
-
-    Returns:
-        str: Video download URL
-    """
-    video_item = aweme_detail.get("video", {})
-    url_h264_list = video_item.get("play_addr_h264", {}).get("url_list", [])
-    url_256_list = video_item.get("play_addr_256", {}).get("url_list", [])
-    url_list = video_item.get("play_addr", {}).get("url_list", [])
-    actual_url_list = url_h264_list or url_256_list or url_list
-    if not actual_url_list or len(actual_url_list) < 2:
-        return ""
-    return actual_url_list[-1]
 
 
 def _extract_music_download_url(aweme_detail: Dict) -> str:
@@ -173,10 +109,10 @@ async def update_douyin_aweme(aweme_item: Dict):
         "share_count": str(interact_info.get("share_count")),
         "last_modify_ts": utils.get_current_timestamp(),
         "aweme_url": f"https://www.douyin.com/video/{aweme_id}",
-        "cover_url": _extract_content_cover_url(aweme_item),
-        "video_download_url": _extract_video_download_url(aweme_item),
+        "cover_url": extract_cover_url(aweme_item),
+        "video_download_url": (extract_video_urls(aweme_item) or [""])[0],
         "music_download_url": _extract_music_download_url(aweme_item),
-        "note_download_url": ",".join(_extract_note_image_list(aweme_item)),
+        "note_download_url": ",".join(extract_image_urls(aweme_item)),
         "source_keyword": source_keyword_var.get(),
     }
     utils.logger.info(f"[store.douyin.update_douyin_aweme] douyin aweme id:{aweme_id}, title:{save_content_item.get('title')}")
@@ -219,33 +155,3 @@ async def update_dy_aweme_comment(aweme_id: str, comment_item: Dict):
 async def save_creator(user_id: str, creator: Dict):
     # 教学版：创作者个人资料(昵称/性别/头像/签名/IP/粉丝数等)不再落库，防骚扰。
     return
-
-
-async def update_dy_aweme_image(aweme_id, pic_content, extension_file_name):
-    """
-    Update Douyin note image
-    Args:
-        aweme_id:
-        pic_content:
-        extension_file_name:
-
-    Returns:
-
-    """
-
-    await DouYinImage().store_image({"aweme_id": aweme_id, "pic_content": pic_content, "extension_file_name": extension_file_name})
-
-
-async def update_dy_aweme_video(aweme_id, video_content, extension_file_name):
-    """
-    Update Douyin short video
-    Args:
-        aweme_id:
-        video_content:
-        extension_file_name:
-
-    Returns:
-
-    """
-
-    await DouYinVideo().store_video({"aweme_id": aweme_id, "video_content": video_content, "extension_file_name": extension_file_name})

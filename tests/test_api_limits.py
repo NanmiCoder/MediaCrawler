@@ -62,6 +62,35 @@ def test_crawler_manager_build_command():
     idx_comments = cmd2.index("--max_comments_count_singlenotes")
     assert cmd2[idx_comments + 1] == "5"
 
+
+def test_crawler_manager_passes_media_switch():
+    cm = CrawlerManager()
+
+    req_off = CrawlerStartRequest(
+        platform=PlatformEnum.XHS,
+        login_type=LoginTypeEnum.QRCODE,
+        crawler_type=CrawlerTypeEnum.DETAIL,
+        specified_ids="note-1",
+    )
+    cmd_off = cm._build_command(req_off)
+    idx_off = cmd_off.index("--get_media")
+    assert cmd_off[idx_off + 1] == "false"
+
+    req_on = CrawlerStartRequest(
+        platform=PlatformEnum.XHS,
+        login_type=LoginTypeEnum.QRCODE,
+        crawler_type=CrawlerTypeEnum.DETAIL,
+        specified_ids="note-1",
+        enable_media=True,
+    )
+    cmd_on = cm._build_command(req_on)
+    idx_on = cmd_on.index("--get_media")
+    assert cmd_on[idx_on + 1] == "true"
+
+
+def test_api_schema_exposes_media_switch_default_off():
+    assert CrawlerStartRequest(platform=PlatformEnum.XHS).enable_media is False
+
 def test_api_start_crawler_with_limits():
     client = TestClient(app)
 

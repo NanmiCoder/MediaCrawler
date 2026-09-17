@@ -17,6 +17,7 @@ export interface CrawlerConfig {
   start_page: number
   enable_comments: boolean
   enable_sub_comments: boolean
+  enable_media: boolean
   save_option: string
   cookies: string
   headless: boolean
