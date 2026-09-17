@@ -20,6 +20,7 @@ import asyncio
 import subprocess
 import signal
 import os
+import re
 from typing import Optional, List
 from datetime import datetime
 from pathlib import Path
@@ -54,8 +55,26 @@ class CrawlerManager:
             self._log_queue = asyncio.Queue()
         return self._log_queue
 
+    def _redact_cookies(self, message: str) -> str:
+        """Redact cookie representations without replacing unrelated substrings."""
+        message = re.sub(r"(?i)(\bcookies?\b['\"]?\s*[:=]\s*).*", r"\1[REDACTED]", message)
+        if self.current_config and self.current_config.cookies:
+            for part in self.current_config.cookies.split(";"):
+                name, separator, value = part.partition("=")
+                name, value = name.strip(), value.strip()
+                if not separator or not name or not value:
+                    continue
+                pattern = (
+                    r"(?P<prefix>(?<![\w-])['\"]?" + re.escape(name)
+                    + r"['\"]?\s*[:=]\s*['\"]?)" + re.escape(value)
+                    + r"(?=$|[;,\s'\"}\]])"
+                )
+                message = re.sub(pattern, lambda match: match.group("prefix") + "[REDACTED]", message)
+        return message
+
     def _create_log_entry(self, message: str, level: str = "info") -> LogEntry:
         """Create log entry"""
+        message = self._redact_cookies(message)
         self._log_id += 1
         entry = LogEntry(
             id=self._log_id,
@@ -112,6 +131,7 @@ class CrawlerManager:
 
             # Build command line arguments
             cmd = self._build_command(config)
+            self.current_config = config
 
             # Log start information
             entry = self._create_log_entry(f"Starting crawler: {' '.join(cmd)}", "info")
@@ -127,7 +147,11 @@ class CrawlerManager:
                     encoding='utf-8',
                     bufsize=1,
                     cwd=str(self._project_root),
-                    env={**os.environ, "PYTHONUNBUFFERED": "1"}
+                    env={
+                        **os.environ,
+                        "PYTHONUNBUFFERED": "1",
+                        "MEDIACRAWLER_COOKIES": config.cookies,
+                    }
                 )
 
                 self.status = "running"
@@ -230,9 +254,6 @@ class CrawlerManager:
 
         if config.max_comments_count is not None:
             cmd.extend(["--max_comments_count_singlenotes", str(config.max_comments_count)])
-
-        if config.cookies:
-            cmd.extend(["--cookies", config.cookies])
 
         cmd.extend(["--headless", "true" if config.headless else "false"])
 

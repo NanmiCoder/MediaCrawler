@@ -154,7 +154,7 @@ def _normalize_tieba_creator_url(value: str) -> str:
 async def parse_cmd(argv: Optional[Sequence[str]] = None):
     """Parse command line arguments using Typer."""
 
-    app = typer.Typer(add_completion=False)
+    app = typer.Typer(add_completion=False, pretty_exceptions_show_locals=False)
 
     @app.callback(invoke_without_command=True)
     def main(
@@ -248,6 +248,9 @@ async def parse_cmd(argv: Optional[Sequence[str]] = None):
             typer.Option(
                 "--cookies",
                 help="Cookie value used for Cookie login method",
+                envvar="MEDIACRAWLER_COOKIES",
+                show_envvar=False,
+                show_default=False,
                 rich_help_panel="Account Configuration",
             ),
         ] = config.COOKIES,
