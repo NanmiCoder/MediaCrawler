@@ -29,12 +29,23 @@ import sys
 from typing import Optional
 
 from playwright.async_api import BrowserContext, Page
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
 import config
 from base.base_crawler import AbstractLogin
 from tools import utils
+
+# B 站首页 header 目前新旧两套实现并行灰度，未登录时的登录入口选择器不同：
+# - 新版 header：.header-avatar-unlogin-entry
+# - 旧版 header：.right-entry__outside.go-login-btn 内部的 .header-login-entry
+# 两者点击后都调用 mini-login-v2 的 openMiniLogin()，拉起同一个登录弹窗，
+# 弹窗内的二维码仍是 .login-scan-box 里的 img，所以这里只需要兼容入口按钮。
+LOGIN_ENTRY_SELECTORS = [
+    ".header-avatar-unlogin-entry",
+    ".right-entry__outside.go-login-btn .header-login-entry",
+]
 
 
 class BilibiliLogin(AbstractLogin):
@@ -82,10 +93,22 @@ class BilibiliLogin(AbstractLogin):
         utils.logger.info("[BilibiliLogin.login_by_qrcode] Begin login bilibili by qrcode ...")
 
         # click login button
-        login_button_ele = self.context_page.locator(
-            "xpath=//div[@class='right-entry__outside go-login-btn']//div"
-        )
-        await login_button_ele.click()
+        login_entry_selector = ", ".join(LOGIN_ENTRY_SELECTORS)
+        try:
+            await self.context_page.wait_for_selector(
+                selector=login_entry_selector,
+                state="visible",
+                timeout=30_000,
+            )
+        except PlaywrightTimeoutError:
+            utils.logger.error(
+                "[BilibiliLogin.login_by_qrcode] Login entry not found on the homepage, "
+                f"selectors tried: {LOGIN_ENTRY_SELECTORS}. "
+                "Bilibili may have changed the homepage header again, "
+                "please update LOGIN_ENTRY_SELECTORS in media_platform/bilibili/login.py."
+            )
+            sys.exit()
+        await self.context_page.locator(login_entry_selector).first.click()
         await asyncio.sleep(1)
         # find login qrcode
         qrcode_img_selector = "//div[@class='login-scan-box']//img"
