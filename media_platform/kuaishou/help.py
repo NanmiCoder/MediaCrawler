@@ -92,6 +92,8 @@ def parse_video_info_from_url(url: str) -> VideoUrlInfo:
     Supports the following formats:
     1. Full video URL: "https://www.kuaishou.com/short-video/3x3zxz4mjrsc8ke?authorId=3x84qugg4ch9zhs&streamSource=search"
     2. Pure video ID: "3x3zxz4mjrsc8ke"
+    3. Share short link: "https://www.kuaishou.com/f/X9Idt15MQb9L2cv"
+       （路径里是 share_token 而非视频 ID，返回 url_type="short"，由调用方跟随重定向）
 
     Args:
         url: Kuaishou video link or video ID
@@ -108,6 +110,14 @@ def parse_video_info_from_url(url: str) -> VideoUrlInfo:
     if match:
         video_id = match.group(1)
         return VideoUrlInfo(video_id=video_id, url_type="normal")
+
+    # 分享短链：https://www.kuaishou.com/f/X9Idt15MQb9L2cv
+    # 路径里的 share_token 不是视频 ID，必须跟随 302 重定向才能拿到真实地址，
+    # 所以这里只标记类型，交给调用方解析（url_type="short"）
+    share_pattern = r'kuaishou\.com/f/([a-zA-Z0-9_-]+)'
+    match = re.search(share_pattern, url)
+    if match:
+        return VideoUrlInfo(video_id=match.group(1), url_type="short")
 
     raise ValueError(f"Unable to parse video ID from URL: {url}")
 

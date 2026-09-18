@@ -204,6 +204,24 @@ class KuaishouCrawler(AbstractCrawler):
         for video_url in config.KS_SPECIFIED_ID_LIST:
             try:
                 video_info = parse_video_info_from_url(video_url)
+
+                # 分享短链（/f/xxx）要先跟随 302 重定向，才能拿到 /short-video/<id>
+                if video_info.url_type == "short":
+                    utils.logger.info(
+                        f"[KuaishouCrawler.get_specified_videos] Resolving short link: {video_url}"
+                    )
+                    resolved_url = await self.ks_client.resolve_short_url(video_url)
+                    if resolved_url:
+                        video_info = parse_video_info_from_url(resolved_url)
+                        utils.logger.info(
+                            f"[KuaishouCrawler.get_specified_videos] Short link resolved to video ID: {video_info.video_id}"
+                        )
+                    else:
+                        utils.logger.error(
+                            f"[KuaishouCrawler.get_specified_videos] Failed to resolve short link: {video_url}"
+                        )
+                        continue
+
                 video_ids.append(video_info.video_id)
                 utils.logger.info(f"Parsed video ID: {video_info.video_id} from {video_url}")
             except ValueError as e:

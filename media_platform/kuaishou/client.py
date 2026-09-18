@@ -240,6 +240,37 @@ class KuaiShouClient(AbstractApiClient, ProxyRefreshMixin):
         }
         return await self.post("", post_data)
 
+    async def resolve_short_url(self, short_url: str) -> str:
+        """解析快手分享短链（/f/xxx），返回重定向后的真实 URL。
+
+        短链路径里的 share_token 不是视频 ID，只能靠 302 的 Location 拿到
+        /short-video/<id> 形式的真实地址。
+        """
+        async with make_async_client(proxy=self.proxy, follow_redirects=False) as client:
+            try:
+                utils.logger.info(
+                    f"[KuaiShouClient.resolve_short_url] Resolving short URL: {short_url}"
+                )
+                response = await client.get(short_url, timeout=10, headers=self.headers)
+
+                # 短链通常返回 302
+                if response.status_code in (301, 302, 303, 307, 308):
+                    redirect_url = response.headers.get("Location", "")
+                    utils.logger.info(
+                        f"[KuaiShouClient.resolve_short_url] Resolved to: {redirect_url}"
+                    )
+                    return redirect_url
+
+                utils.logger.warning(
+                    f"[KuaiShouClient.resolve_short_url] Unexpected status code: {response.status_code}"
+                )
+                return ""
+            except Exception as e:
+                utils.logger.error(
+                    f"[KuaiShouClient.resolve_short_url] Failed to resolve short URL: {e}"
+                )
+                return ""
+
     async def get_video_info(self, photo_id: str) -> Dict:
         """
         Kuaishou web video detail api
