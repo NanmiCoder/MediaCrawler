@@ -214,7 +214,19 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         :param aweme_id:
         :return:
         """
-        params = {"aweme_id": aweme_id}
+        # 抖音 detail 接口的 Argus 风控要求这两个参数成套出现，缺一则直接 403
+        # （响应体为 "Blocked by ArgusSecurityPlugin Uifid Not Found"）：
+        #   uifid         = UIFID cookie，没有时退到 UIFID_TEMP
+        #   verifyFp / fp = s_v_web_id cookie
+        # 必须用 cookie 里的 s_v_web_id：实测 uifid 搭配自生成的 verifyFp 会被判成
+        # "Signature Not Found"，两者同源才能通过。
+        s_v_web_id = self.cookie_dict.get("s_v_web_id", "")
+        params = {
+            "aweme_id": aweme_id,
+            "uifid": self.cookie_dict.get("UIFID") or self.cookie_dict.get("UIFID_TEMP", ""),
+            "verifyFp": s_v_web_id,
+            "fp": s_v_web_id,
+        }
         headers = copy.copy(self.headers)
         del headers["Origin"]
         res = await self.get("/aweme/v1/web/aweme/detail/", params, headers)
