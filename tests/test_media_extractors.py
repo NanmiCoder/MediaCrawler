@@ -27,6 +27,8 @@ from media_platform.xhs import media as xhs_media
 
 # --------------------------------------------------------------------------- xhs fixture
 
+# 旧结构：分档按编码命名（h264），consumer 带无水印源片 key。
+# 保留这份 fixture 是为了确保兼容性不被改坏。
 XHS_VIDEO_NOTE = {
     "note_id": "video-note-1",
     "type": "video",
@@ -36,6 +38,47 @@ XHS_VIDEO_NOTE = {
         "consumer": {"origin_video_key": "spec/abc/def"},
         "media": {"stream": {"h264": [{"master_url": "https://sns-video-hw.xhscdn.com/master"}]}},
         "cover": {"url_default": "https://sns-webpic.xhscdn.com/video-cover"},
+    },
+}
+
+# 上游当前结构（2026-09 真实响应裁剪）：分档改按内部档位命名（EF4/EF5/EF6/EF7），
+# 同一分档内含多个分辨率，consumer 里不再有 origin_video_key。
+# 回归背景：写死 stream["h264"] 时这里的视频地址会被静默取空，只下到封面。
+XHS_VIDEO_NOTE_NEW_SHAPE = {
+    "note_id": "video-note-2",
+    "type": "video",
+    "image_list": [{"url_default": "https://sns-webpic.xhscdn.com/img-cover-2"}],
+    "video": {
+        "consumer": {"chapters": []},
+        "media": {
+            "stream": {
+                "EF4": [
+                    {
+                        "master_url": "https://sns-video-v4.xhscdn.com/720p-ef4",
+                        "backup_urls": ["https://sns-bak-v1.xhscdn.com/720p-ef4"],
+                        "width": 1280,
+                        "height": 720,
+                        "avg_bitrate": 414724,
+                    }
+                ],
+                "EF5": [
+                    {
+                        "master_url": "https://sns-video-v4.xhscdn.com/1080p-ef5",
+                        "width": 1920,
+                        "height": 1080,
+                        "avg_bitrate": 635797,
+                    },
+                    {
+                        "master_url": "https://sns-video-v4.xhscdn.com/4k-ef5",
+                        "width": 3840,
+                        "height": 2160,
+                        "avg_bitrate": 1534891,
+                    },
+                ],
+                "EF6": [],
+                "EF7": [],
+            }
+        },
     },
 }
 
@@ -114,6 +157,44 @@ def test_xhs_video_note_without_origin_key_uses_master_url():
     video = next(item for item in items if item.media_type == MediaType.VIDEO)
     assert video.url == "https://sns-video-hw.xhscdn.com/master"
     assert video.backup_urls == ()
+
+
+def test_xhs_video_note_new_stream_buckets():
+    """上游把分档名从 h264 换成 EF4/EF5/... 之后仍要能取到地址（本次回归核心）"""
+    urls = xhs_media.extract_video_urls(XHS_VIDEO_NOTE_NEW_SHAPE)
+
+    # 分辨率高的排前面作主地址，其余按清晰度降序作为备用
+    assert urls == [
+        "https://sns-video-v4.xhscdn.com/4k-ef5",
+        "https://sns-video-v4.xhscdn.com/1080p-ef5",
+        "https://sns-video-v4.xhscdn.com/720p-ef4",
+    ]
+
+
+def test_xhs_video_note_new_shape_builds_video_item():
+    """新结构下必须产出 video 任务，而不是只剩封面"""
+    items = xhs_media.build_media_items(XHS_VIDEO_NOTE_NEW_SHAPE)
+
+    assert [item.stem for item in items] == ["cover", "video"]
+    video = items[1]
+    assert video.media_type == MediaType.VIDEO
+    assert video.url == "https://sns-video-v4.xhscdn.com/4k-ef5"
+    assert video.backup_urls == (
+        "https://sns-video-v4.xhscdn.com/1080p-ef5",
+        "https://sns-video-v4.xhscdn.com/720p-ef4",
+    )
+
+
+def test_xhs_video_note_missing_dimensions_keeps_all_urls():
+    """缺 height/avg_bitrate 时不能抛异常，也不能丢地址"""
+    note = {
+        "type": "video",
+        "video": {
+            "media": {"stream": {"EF5": [{"master_url": "https://a"}, {"master_url": "https://b"}]}}
+        },
+    }
+
+    assert sorted(xhs_media.extract_video_urls(note)) == ["https://a", "https://b"]
 
 
 def test_xhs_international_does_not_build_xhscdn_url(monkeypatch):

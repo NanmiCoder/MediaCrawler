@@ -45,10 +45,40 @@ def _extract_origin_video_key(video_dict: Dict) -> str:
     return consumer.get("origin_video_key") or consumer.get("originVideoKey") or ""
 
 
+def _to_int(value, default: int = 0) -> int:
+    """接口偶尔把 height/bitrate 返回成字符串，排序前统一转 int"""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _stream_quality_key(item: Dict) -> tuple:
+    """分档排序 key：分辨率优先，其次平均码率"""
+    return (_to_int(item.get("height")), _to_int(item.get("avg_bitrate")))
+
+
+def _iter_stream_items(stream: Dict) -> List[Dict]:
+    """摊平 stream 下的全部分档条目。
+
+    分档名上游换过两代：早期按编码命名（h264/h265/av1），现在按内部档位命名
+    （EF4/EF5/EF6/EF7）。这里刻意不写死任何分档名——凡是列表都当候选，
+    以后再改名也不会像 ``stream["h264"]`` 那样静默取空。
+    """
+    return [
+        item
+        for bucket in stream.values()
+        if isinstance(bucket, list)
+        for item in bucket
+        if isinstance(item, dict) and item.get("master_url")
+    ]
+
+
 def extract_video_urls(note_item: Dict) -> List[str]:
     """提取视频地址候选列表，按可用性排序。
 
-    优先无水印源片（origin_video_key），其余为带水印的 h264 master_url 备用。
+    优先无水印源片（origin_video_key），其余按清晰度从高到低排。
+    同一分档内含多个分辨率（720P→4K），取最高的作主地址，其余交给下载器回退。
     国际版（rednote）的 CDN 域名与国内不同，不能拼接 xhscdn 域名。
     """
     if note_item.get("type") != "video":
@@ -64,9 +94,10 @@ def extract_video_urls(note_item: Dict) -> List[str]:
         urls.append(f"{XHS_VIDEO_CDN_HOST}/{origin_video_key}")
 
     stream = _as_dict(_as_dict(video_dict.get("media")).get("stream"))
-    for item in stream.get("h264") or []:
-        master_url = item.get("master_url") if isinstance(item, dict) else None
-        if master_url and master_url not in urls:
+    ranked = sorted(_iter_stream_items(stream), key=_stream_quality_key, reverse=True)
+    for item in ranked:
+        master_url = item["master_url"]
+        if master_url not in urls:
             urls.append(master_url)
 
     return urls
