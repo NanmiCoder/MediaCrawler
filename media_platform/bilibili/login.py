@@ -48,6 +48,18 @@ LOGIN_ENTRY_SELECTORS = [
 ]
 
 
+def is_login_cookie_refreshed(cookie_dict: dict, sessdata_before_login: str) -> bool:
+    """判断浏览器里的 SESSDATA 是否已经是扫码换发后的新值。
+
+    过期的 SESSDATA 同样会留在浏览器里，所以"cookie 存在"不等于"已登录"。
+    只判断存在会把死会话判成登录成功：既跳过扫码，又把这份死 cookie 灌给
+    API client —— B 站 playurl 依据 Cookie 决定清晰度，结果是详情和评论照常拿到
+    （这两个接口不要求登录），视频却被静默限制在 480P。
+    """
+    sessdata = cookie_dict.get("SESSDATA", "")
+    return bool(sessdata) and sessdata != sessdata_before_login
+
+
 class BilibiliLogin(AbstractLogin):
     def __init__(self,
                  login_type: str,
@@ -61,6 +73,8 @@ class BilibiliLogin(AbstractLogin):
         self.context_page = context_page
         self.login_phone = login_phone
         self.cookie_str = cookie_str
+        # 进入登录流程前浏览器里已有的 SESSDATA，用于区分"cookie 存在"与"cookie 有效"
+        self._sessdata_before_login: str = ""
 
     async def begin(self):
         """Start login bilibili"""
@@ -79,18 +93,26 @@ class BilibiliLogin(AbstractLogin):
     async def check_login_state(self) -> bool:
         """
             Check if the current login status is successful and return True otherwise return False
-            retry decorator will retry 20 times if the return value is False, and the retry interval is 1 second
+            retry decorator will retry 600 times if the return value is False, and the retry interval is 1 second
             if max retry times reached, raise RetryError
         """
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
-        if cookie_dict.get("SESSDATA", "") or cookie_dict.get("DedeUserID"):
-            return True
-        return False
+        return is_login_cookie_refreshed(cookie_dict, self._sessdata_before_login)
 
     async def login_by_qrcode(self):
         """login bilibili website and keep webdriver login state"""
         utils.logger.info("[BilibiliLogin.login_by_qrcode] Begin login bilibili by qrcode ...")
+
+        # 记下扫码前的 SESSDATA：扫码成功后它会被换发成新值，
+        # check_login_state 靠这个差值判断"真的登录了"而不是"只剩一份过期 cookie"
+        _, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
+        self._sessdata_before_login = cookie_dict.get("SESSDATA", "")
+        if self._sessdata_before_login:
+            utils.logger.warning(
+                "[BilibiliLogin.login_by_qrcode] 浏览器中残留了 SESSDATA，但接口校验为未登录，"
+                "该会话已失效；本次必须重新扫码换发新 cookie 才会继续 ..."
+            )
 
         # click login button
         login_entry_selector = ", ".join(LOGIN_ENTRY_SELECTORS)

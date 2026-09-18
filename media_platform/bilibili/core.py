@@ -24,6 +24,7 @@
 
 import asyncio
 import os
+import sys
 # import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
 from asyncio import Task
 from typing import Dict, List, Optional, Tuple, Union
@@ -113,6 +114,15 @@ class BilibiliCrawler(AbstractCrawler):
                     browser_context=self.browser_context,
                     urls=self.cookie_urls,
                 )
+                # 登录流程结束后再校验一次，宁可在这里失败也不要带着未登录状态跑完全程：
+                # B 站的清晰度由 playurl 依据 Cookie 决定，死会话不会报错，
+                # 只会把带 get_media 的视频静默限制在 480P
+                if not await self.bili_client.pong():
+                    utils.logger.error(
+                        "[BilibiliCrawler.start] 登录流程结束后仍未登录：请确认扫码已完成、"
+                        "或 config.COOKIES 是否有效。已终止，否则视频会被静默限制在 480P。"
+                    )
+                    sys.exit(1)
 
             crawler_type_var.set(config.CRAWLER_TYPE)
             if config.CRAWLER_TYPE == "search":
