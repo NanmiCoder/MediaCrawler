@@ -114,9 +114,13 @@ class ExpiringLocalCache(AbstractCache):
         Clean up cache based on expiration time
         :return:
         """
-        for key, (value, expire_time) in self._cache_container.items():
-            if expire_time < time.time():
-                del self._cache_container[key]
+        expired_keys = [
+            key
+            for key, (_, expire_time) in self._cache_container.items()
+            if expire_time < time.time()
+        ]
+        for key in expired_keys:
+            del self._cache_container[key]
 
     async def _start_clear_cron(self):
         """
