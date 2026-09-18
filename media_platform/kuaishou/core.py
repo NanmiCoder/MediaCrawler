@@ -237,15 +237,29 @@ class KuaishouCrawler(AbstractCrawler):
                 utils.logger.info(f"[KuaishouCrawler.get_video_info_task] Sleeping for {sleep_sec:.1f} seconds after fetching video details {video_id}")
 
                 detail = result.get("visionVideoDetail")
-                if detail:
-                    photo = detail.get("photo", {})
-                    author = detail.get("author", {})
-                    utils.logger.info(
-                        f"[KuaishouCrawler.get_video_info_task] video detail: "
-                        f"id={photo.get('id', video_id)} author={author.get('name', '')} "
-                        f"likes={photo.get('likeCount', '')} views={photo.get('viewCount', '')} "
-                        f"caption={str(photo.get('caption', ''))[:50]}"
+                if not detail:
+                    return None
+
+                # 快手对不可用视频（已删除/私密/不存在）返回的是
+                # visionVideoDetail: {photo: null, author: null}——key 在、值是 null。
+                # 注意 .get("photo", {}) 只在 key **缺失** 时给默认值，key 存在且为 null
+                # 时拿到的仍是 None，接着 .get() 就抛 AttributeError，而
+                # asyncio.gather 不会拦住它，整轮爬取会直接带崩。
+                photo = detail.get("photo") or {}
+                if not photo:
+                    utils.logger.warning(
+                        f"[KuaishouCrawler.get_video_info_task] 视频不可用"
+                        f"（photo 为空，可能已删除或私密），跳过 video_id={video_id}"
                     )
+                    return None
+
+                author = detail.get("author") or {}
+                utils.logger.info(
+                    f"[KuaishouCrawler.get_video_info_task] video detail: "
+                    f"id={photo.get('id', video_id)} author={author.get('name', '')} "
+                    f"likes={photo.get('likeCount', '')} views={photo.get('viewCount', '')} "
+                    f"caption={str(photo.get('caption', ''))[:50]}"
+                )
                 return detail
             except DataFetchError as ex:
                 utils.logger.error(
