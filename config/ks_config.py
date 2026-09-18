@@ -23,9 +23,12 @@
 # Supported formats:
 # 1. Full video URL: "https://www.kuaishou.com/short-video/3x3zxz4mjrsc8ke?authorId=3x84qugg4ch9zhs&streamSource=search"
 # 2. Pure video ID: "3xf8enb8dbj6uig"
+# 3. Share short link: "https://www.kuaishou.com/f/X9Idt15MQb9L2cv"
+#    (路径里是 share_token 不是视频 ID，会自动跟随 302 重定向解析)
 KS_SPECIFIED_ID_LIST = [
-    "https://www.kuaishou.com/short-video/3x3zxz4mjrsc8ke?authorId=3x84qugg4ch9zhs&streamSource=search&area=searchxxnull&searchKey=python",
-    "3xf8enb8dbj6uig",
+    "https://www.kuaishou.com/f/X9Idt15MQb9L2cv",
+    "https://www.kuaishou.com/f/X-a8vLyTxvEvN2jg",
+    "a8vLyTxvEvN2jg",
     # ........................
 ]
 
