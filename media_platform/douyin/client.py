@@ -39,6 +39,10 @@ from .exception import *
 from .field import *
 from .help import *
 
+# 抖音边缘网关 ArgusSecurityPlugin 要求的请求头。网关目前不校验取值，
+# 传固定字符串即可；将来若开始真校验，会重新出现 "Signature Not Found"。
+DOUYIN_ARGUS_HEADER_VALUE = "1"
+
 
 class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
 
@@ -55,6 +59,15 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
+        # 抖音边缘网关的 ArgusSecurityPlugin 会对这批接口做业务前置校验，缺少
+        # x-tt-argus 头时直接 403，响应体为
+        # "Blocked by ArgusSecurityPlugin Uifid Not Found"（补了 uifid 但没这个头则是
+        # "... Signature Not Found"）。当前网关尚未校验该头的值，可传任意字符串；
+        # 一旦升级到真校验，需要改为 WebView 内注入 JS 让页面自带 SDK 补齐。
+        self.headers.setdefault("x-tt-argus", DOUYIN_ARGUS_HEADER_VALUE)
+        uifid = cookie_dict.get("UIFID") or cookie_dict.get("UIFID_TEMP", "")
+        if uifid:
+            self.headers.setdefault("uifid", uifid)
         self._host = "https://www.douyin.com"
         self.cookie_urls = [
             "https://douyin.com",
