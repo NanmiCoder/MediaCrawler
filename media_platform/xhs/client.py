@@ -501,6 +501,8 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             try:
                 note_id = comment.get("note_id")
                 sub_comments = comment.get("sub_comments")
+                root_comment_id = comment.get("id")
+                self._tag_sub_comments_with_root(sub_comments, root_comment_id)
                 if sub_comments and callback:
                     await callback(note_id, sub_comments)
 
@@ -508,7 +510,6 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 if not sub_comment_has_more:
                     continue
 
-                root_comment_id = comment.get("id")
                 sub_comment_cursor = comment.get("sub_comment_cursor")
 
                 while sub_comment_has_more:
@@ -534,6 +535,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                             )
                             break
                         comments = comments_res["comments"]
+                        self._tag_sub_comments_with_root(comments, root_comment_id)
                         if callback:
                             await callback(note_id, comments)
                         await asyncio.sleep(crawl_interval)
@@ -554,6 +556,19 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 )
                 continue  # Continue to next comment
         return result
+
+    @staticmethod
+    def _tag_sub_comments_with_root(
+        sub_comments: Optional[List[Dict]], root_comment_id: str
+    ) -> None:
+        if not sub_comments or not root_comment_id:
+            return
+        for sub in sub_comments:
+            if isinstance(sub, dict):
+                sub["_root_comment_id"] = root_comment_id
+                target = sub.get("target_comment") or {}
+                if not target.get("id"):
+                    sub["target_comment"] = {"id": root_comment_id}
 
     async def get_creator_info(
         self, user_id: str, xsec_token: str = "", xsec_source: str = ""
