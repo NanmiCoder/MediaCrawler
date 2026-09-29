@@ -332,7 +332,17 @@ class CDPBrowserManager:
                         "[CDPBrowserManager] Direct existing-browser CDP connection failed: "
                         f"{direct_error}. Trying /json/version discovery..."
                     )
-                    ws_url = await self._get_browser_websocket_url(self.debug_port)
+                    try:
+                        ws_url = await self._get_browser_websocket_url(self.debug_port)
+                    except Exception as discovery_error:
+                        raise RuntimeError(
+                            f"Could not attach to the browser on port {self.debug_port} within "
+                            f"{config.BROWSER_LAUNCH_TIMEOUT}s. Either the remote debugging dialog was "
+                            "not accepted, or a tab or window is not responding (a sleeping tab, or "
+                            "another profile left open for a long time). Accept the dialog, close or "
+                            "reload those tabs or profiles, then run again. "
+                            f"(direct: {direct_error}; /json/version: {discovery_error})"
+                        ) from direct_error
                     utils.logger.info(
                         f"[CDPBrowserManager] Connecting to existing browser via discovered CDP: {ws_url}"
                     )
