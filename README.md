@@ -71,14 +71,16 @@
 
 
 
-<strong>MediaCrawlerPro 重磅发布！开源不易，欢迎订阅支持</strong>
+<details>
+<summary>🚀 <b>开源版不够用？看看 MediaCrawlerPro 多了什么：断点续爬 · 多账号 + IP 代理池 · 去掉 Playwright · 多个 AI Agent 项目源码</b>（点击展开）</summary>
+
+<br>
 
 > 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计思路同样值得深入学习！
 
 [MediaCrawlerPro](https://github.com/MediaCrawlerPro) 相较于开源版本的核心优势：
 
 #### 🎯 核心功能升级
-- ✅ **自媒体内容拆解Agent**（新增功能）
 - ✅ **断点续爬功能**（重点特性）
 - ✅ **多账号 + IP代理池支持**（重点特性）
 - ✅ **去除 Playwright 依赖**，使用更简单
@@ -90,12 +92,16 @@
 - ✅ **完美架构设计**，高扩展性，源码学习价值更大
 
 #### 🎁 额外功能
+- ✅ **AI Agent Skill 支持**（Codex / [OpenClaw](https://openclaw.ai/) 🦞 / [Hermes](https://github.com/NousResearch/hermes-agent) / Claude Code / [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) / [cc-haha](https://github.com/NanmiCoder/cc-haha) / WorkBuddy / 豆包 / Trae / Qoder / Cursor 一键安装，让 Agent 自动爬取数据）
+- ✅ **评论分析 Agent**（🆕 新上线）：输入关键词或链接，自动采集评论并生成研究报告
+- ✅ **自媒体内容拆解 Agent**：解析内容、视频转文字、拆解爆款元素
+- ✅ **多平台首页信息流推荐**（HomeFeed）和**热搜榜单**
 - ✅ **自媒体视频下载器桌面端**（适合学习全栈开发）
-- ✅ **多平台首页信息流推荐**（HomeFeed）
-- ✅ **AI Agent Skill 支持**（[OpenClaw](https://openclaw.ai/) 🦞 / Claude Code / Cursor 一键安装，让 Agent 自动爬取数据）
-- [ ] **基于评论分析AI Agent正在开发中 🚀🚀**
+- ✅ **AI 图片生成 Agent**：多轮迭代自动优化，内置精选模板库
 
-点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
+开源不易，欢迎订阅支持！点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
+
+</details>
 
 
 
