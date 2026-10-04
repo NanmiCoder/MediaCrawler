@@ -296,10 +296,26 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
     </tr>
     <tr>
       <td align="center" valign="middle">
+        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_black.png#gh-light-mode-only"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_white.png#gh-dark-mode-only"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler">Atlas Cloud</a> es una plataforma de inferencia de IA multimodal que ofrece a los desarrolladores una única API de IA para acceder a APIs de generación de video, generación de imágenes y LLM. En lugar de gestionar integraciones con múltiples proveedores, se conecta una sola vez y obtiene acceso unificado a más de 300 modelos seleccionados de todas las modalidades. Descubra la nueva <a href="https://www.atlascloud.ai/console/coding-plan">promoción del coding plan</a> de Atlas Cloud para acceder a la API con un presupuesto más asequible.
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
         <a href="https://go.nodemaven.com/MediaCrawlerSeptember"><img src="docs/static/images/nodemaven_banner_sep.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
         <a href="https://go.nodemaven.com/MediaCrawlerSeptember">NodeMaven</a> es un proveedor eficiente de proxies para web scraping y automatización, con las IP de mayor calidad del mercado. Sus principales ventajas incluyen una disponibilidad del 99,9%, segmentación por código postal, filtrado de IP en todos los proxies (puntuación de fraude inferior al 97%), sin KYC y herramientas gratuitas exclusivas como Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup y más. Los usuarios de MediaCrawler obtienen un 35% de descuento en proxies móviles y residenciales con el código <code>CRAWLER35</code>, y un 40% de descuento en proxies ISP (estáticos) con el código <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawlerSeptember">Visita NodeMaven</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.openlux.ai/register?channel=c_drxir46c"><img src="docs/static/images/openlux_logo.png" width="160" alt="OpenLux"></a>
+      </td>
+      <td valign="middle">
+        ¡Gracias a <a href="https://www.openlux.ai/register?channel=c_drxir46c">OpenLux</a> por patrocinar este proyecto! OpenLux es una plataforma de IA todo en uno para empresas que reúne los principales modelos de IA de los grandes proveedores de todo el mundo. Con un servicio rápido y fiable y un soporte técnico ágil, OpenLux ofrece precios base para los modelos de Claude, OpenAI y Gemini desde tan solo el 8,82%, el 4% y el 8% de las tarifas oficiales, respectivamente. Oferta exclusiva para usuarios de MediaCrawler: regístrese a través de nuestro <a href="https://www.openlux.ai/register?channel=c_drxir46c">enlace de referido</a> y disfrute de hasta un 7,5% de descuento en las recargas de crédito. 👉 <a href="https://www.openlux.ai/register?channel=c_drxir46c">Empiece con OpenLux</a>
       </td>
     </tr>
   </tbody>

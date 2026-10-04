@@ -310,6 +310,14 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
         <a href="https://go.nodemaven.com/MediaCrawlerSeptember">NodeMaven</a> is an efficient proxy provider for web scraping and automation, offering the highest-quality IPs on the market. Key benefits include 99.9% uptime, ZIP targeting, IP filtering across all proxies (fraud score below 97%), no KYC, and unique free tools such as Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup, and more. MediaCrawler users get 35% off mobile and residential proxies with code <code>CRAWLER35</code>, and 40% off ISP (static) proxies with code <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawlerSeptember">Visit NodeMaven</a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.openlux.ai/register?channel=c_drxir46c"><img src="docs/static/images/openlux_logo.png" width="160" alt="OpenLux"></a>
+      </td>
+      <td valign="middle">
+        Thank you to <a href="https://www.openlux.ai/register?channel=c_drxir46c">OpenLux</a> for sponsoring this project! OpenLux is an all-in-one AI platform for businesses, bringing together leading AI models from major providers worldwide. With fast, reliable service and responsive technical support, OpenLux offers base pricing for Claude, OpenAI, and Gemini models as low as 8.82%, 4%, and 8% of official rates, respectively. Exclusive offer for MediaCrawler users: Sign up through our <a href="https://www.openlux.ai/register?channel=c_drxir46c">referral link</a> and enjoy up to 7.5% off credit top-ups! 👉 <a href="https://www.openlux.ai/register?channel=c_drxir46c">Get started with OpenLux</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 

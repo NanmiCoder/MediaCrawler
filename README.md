@@ -368,6 +368,14 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
         <a href="https://go.nodemaven.com/MediaCrawlerSeptember">NodeMaven</a> 是面向网页抓取和自动化场景的高效代理服务商，提供市面上最高质量的 IP。主要优势包括 99.9% 可用性、ZIP 邮编定位、IP 过滤（所有代理的欺诈评分均低于 97%）、无需 KYC，以及代理带宽检测器、Meta 标签检测器、IP 查询等独家免费工具。MediaCrawler 用户使用优惠码 <code>CRAWLER35</code> 可享移动和住宅代理 35% 折扣，使用 <code>CRAWLER40</code> 可享 ISP（静态）代理 40% 折扣。👉 <a href="https://go.nodemaven.com/MediaCrawlerSeptember">访问 NodeMaven</a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.openlux.ai/register?channel=c_drxir46c"><img src="docs/static/images/openlux_logo.png" width="160" alt="OpenLux"></a>
+      </td>
+      <td valign="middle">
+        感谢 <a href="https://www.openlux.ai/register?channel=c_drxir46c">OpenLux</a> 对本项目的赞助！OpenLux 是一个面向企业的一站式 AI 聚合平台，汇集全球各大厂商主流大模型，平台提供高效、稳定的服务与及时的技术支持。Claude、OpenAI、Gemini 系列模型基准折扣分别低至官方的 0.882 折、0.4 折和 0.8 折。MediaCrawler 用户还可享受专属福利：通过<a href="https://www.openlux.ai/register?channel=c_drxir46c">专属链接注册</a>，充值最高可享 7.5% 优惠！👉 <a href="https://www.openlux.ai/register?channel=c_drxir46c">立即体验</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
