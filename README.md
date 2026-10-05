@@ -376,6 +376,14 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
         感谢 <a href="https://www.openlux.ai/register?channel=c_drxir46c">OpenLux</a> 对本项目的赞助！OpenLux 是一个面向企业的一站式 AI 聚合平台，汇集全球各大厂商主流大模型，平台提供高效、稳定的服务与及时的技术支持。Claude、OpenAI、Gemini 系列模型基准折扣分别低至官方的 0.882 折、0.4 折和 0.8 折。MediaCrawler 用户还可享受专属福利：通过<a href="https://www.openlux.ai/register?channel=c_drxir46c">专属链接注册</a>，充值最高可享 7.5% 优惠！👉 <a href="https://www.openlux.ai/register?channel=c_drxir46c">立即体验</a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://sx.org/c/CRAWLER3G"><img src="docs/static/images/sx_logo.png" width="180" alt="SX.ORG"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://sx.org/c/CRAWLER3G">SX.ORG</a> 是专为高频数据采集与反爬对抗打造的高性能代理网络，完美适配 MediaCrawler 等多平台抓取工具。核心优势包括全球 190+ 地区真实住宅 IP 池、99.9% 稳定连通率、精准国家/城市及 ASN 运营商定位、全面支持 HTTP(S) 与 SOCKS5 协议，以及针对社交媒体风控优化的智能会话轮换。MediaCrawler 用户使用专属优惠码 <code>CRAWLER3G</code> 注册即可免费领取 <strong>3GB</strong> 优质测试流量。👉 <a href="https://sx.org/c/CRAWLER3G">访问 SX.ORG 领取 3GB 流量</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 

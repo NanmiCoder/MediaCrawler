@@ -318,6 +318,14 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
         ¡Gracias a <a href="https://www.openlux.ai/register?channel=c_drxir46c">OpenLux</a> por patrocinar este proyecto! OpenLux es una plataforma de IA todo en uno para empresas que reúne los principales modelos de IA de los grandes proveedores de todo el mundo. Con un servicio rápido y fiable y un soporte técnico ágil, OpenLux ofrece precios base para los modelos de Claude, OpenAI y Gemini desde tan solo el 8,82%, el 4% y el 8% de las tarifas oficiales, respectivamente. Oferta exclusiva para usuarios de MediaCrawler: regístrese a través de nuestro <a href="https://www.openlux.ai/register?channel=c_drxir46c">enlace de referido</a> y disfrute de hasta un 7,5% de descuento en las recargas de crédito. 👉 <a href="https://www.openlux.ai/register?channel=c_drxir46c">Empiece con OpenLux</a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://sx.org/c/CRAWLER3G"><img src="docs/static/images/sx_logo.png" width="180" alt="SX.ORG"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://sx.org/c/CRAWLER3G">SX.ORG</a> es una red de proxies de alto rendimiento diseñada para la extracción intensiva de datos web y la evasión de sistemas antibots, totalmente compatible con MediaCrawler. Sus principales ventajas incluyen cobertura de IP residenciales dinámicas en más de 190 ubicaciones, una disponibilidad de red del 99,9%, segmentación precisa por país, ciudad y ASN, soporte nativo de HTTP(S) y SOCKS5, y rotación flexible de sesiones para plataformas de redes sociales. Los usuarios de MediaCrawler pueden utilizar el código promocional exclusivo <code>CRAWLER3G</code> al registrarse para obtener <strong>3 GB</strong> de tráfico de prueba gratuito. 👉 <a href="https://sx.org/c/CRAWLER3G">Obtenga 3 GB en SX.ORG</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
