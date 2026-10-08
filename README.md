@@ -384,6 +384,14 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
         <a href="https://sx.org/c/CRAWLER3G">SX.ORG</a> 是专为高频数据采集与反爬对抗打造的高性能代理网络，完美适配 MediaCrawler 等多平台抓取工具。核心优势包括全球 190+ 地区真实住宅 IP 池、99.9% 稳定连通率、精准国家/城市及 ASN 运营商定位、全面支持 HTTP(S) 与 SOCKS5 协议，以及针对社交媒体风控优化的智能会话轮换。MediaCrawler 用户使用专属优惠码 <code>CRAWLER3G</code> 注册即可免费领取 <strong>3GB</strong> 优质测试流量。👉 <a href="https://sx.org/c/CRAWLER3G">访问 SX.ORG 领取 3GB 流量</a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme"><img src="docs/static/images/proxylane_banner.png" width="180" alt="ProxyLane"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">ProxyLane</a> 提供中国住宅 IP（电信、联通、移动），适合在海外服务器运行 MediaCrawler，出口可固定到上海、北京、广州、深圳等城市。在 static 模式的代理用户名后加 <code>_c_CN_city_Shanghai</code> 即可使用上海住宅 IP，完整配置见 <a href="docs/proxylane/README.md">3 步接入指南</a>。MediaCrawler 用户使用优惠码 <code>MEDIACRAWLER3GB</code> 注册即可免费领取 <strong>3GB</strong> 流量。👉 <a href="https://proxylane.dev/redeem?code=MEDIACRAWLER3GB&utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">免费领取 3GB</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
