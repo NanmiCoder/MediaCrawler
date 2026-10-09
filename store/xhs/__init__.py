@@ -21,12 +21,16 @@
 # @Author  : relakkes@gmail.com
 # @Time    : 2024/1/14 17:34
 # @Desc    :
-from typing import List
+import json
+from pathlib import Path
+from typing import Dict, List, Optional
 
 import config
 from media_platform.xhs.media import extract_video_urls
 from var import source_keyword_var
-from tools.user_hash import anonymize_user_id, mask_nickname
+from tools.user_hash import anonymize_user_id, keep_creator_nickname, persist_nickname
+
+from . import comment_author as comment_author_helper
 
 from ._store_impl import *
 
@@ -60,11 +64,15 @@ async def update_xhs_note(note_item: Dict):
     Returns:
 
     """
-    note_id = note_item.get("note_id")
-    user_info = note_item.get("user", {})
+    note_id = note_item.get("note_id") or note_item.get("id")
+    user_info = note_item.get("user") or note_item.get("user_info") or {}
     interact_info = note_item.get("interact_info", {})
     image_list: List[Dict] = note_item.get("image_list", [])
     tag_list: List[Dict] = note_item.get("tag_list", [])
+
+    comment_author_helper.register_note_author(
+        note_id, user_info.get("user_id") or user_info.get("userid")
+    )
 
     for img in image_list:
         if img.get('url_default') != '':
@@ -81,7 +89,7 @@ async def update_xhs_note(note_item: Dict):
         "time": note_item.get("time"),  # Note publish time
         "last_update_time": note_item.get("last_update_time", 0),  # Note last update time
         "creator_hash": anonymize_user_id(user_info.get("user_id")),  # 创作者匿名哈希(不存原始 user_id)
-        "nickname": mask_nickname(user_info.get("nickname")),  # 用户昵称(已脱敏)
+        "nickname": persist_nickname(user_info.get("nickname"), keep_creator_nickname()),
         "liked_count": interact_info.get("liked_count"),  # Like count
         "collected_count": interact_info.get("collected_count"),  # Collection count
         "comment_count": interact_info.get("comment_count"),  # Comment count
@@ -97,6 +105,56 @@ async def update_xhs_note(note_item: Dict):
     await XhsStoreFactory.create_store().store_content(local_db_item)
 
 
+def _build_comment_record(
+    note_id: str,
+    comment_item: Dict,
+    *,
+    comment_level: str,
+    is_author_reply: bool,
+    has_author_reply: bool,
+    root_comment_id: str = "",
+) -> Dict:
+    user_info = comment_author_helper.comment_user_info(comment_item)
+    comment_id = comment_item.get("id")
+    comment_pictures = [item.get("url_default", "") for item in comment_item.get("pictures", [])]
+    target_comment = comment_item.get("target_comment", {})
+    parent_comment_id = target_comment.get("id", "")
+    if comment_level == "author_reply" and root_comment_id:
+        parent_comment_id = root_comment_id
+
+    show_tags = comment_author_helper.show_tags_list(comment_item)
+
+    return {
+        "comment_id": comment_id,
+        "create_time": comment_item.get("create_time"),
+        "note_id": note_id,
+        "content": comment_item.get("content"),
+        "creator_hash": anonymize_user_id(comment_author_helper.comment_user_id(comment_item)),
+        "nickname": persist_nickname(
+            user_info.get("nickname"),
+            keep_creator_nickname() and is_author_reply,
+        ),
+        "sub_comment_count": comment_item.get("sub_comment_count", 0),
+        "pictures": ",".join(comment_pictures),
+        "parent_comment_id": parent_comment_id,
+        "root_comment_id": root_comment_id or (comment_id if comment_level == "top" else ""),
+        "comment_level": comment_level,
+        "is_author_reply": is_author_reply,
+        "has_author_reply": has_author_reply,
+        "show_tags": ",".join(show_tags),
+        "last_modify_ts": utils.get_current_timestamp(),
+        "like_count": comment_item.get("like_count", 0),
+    }
+
+
+async def _store_comment_record(record: Dict) -> None:
+    comment_id = record.get("comment_id")
+    if not comment_author_helper.mark_comment_saved(comment_id):
+        return
+    utils.logger.info(f"[store.xhs.update_xhs_note_comment] xhs note comment:{record}")
+    await XhsStoreFactory.create_store().store_comment(record)
+
+
 async def batch_update_xhs_note_comments(note_id: str, comments: List[Dict]):
     """
     Batch update Xiaohongshu note comments
@@ -109,39 +167,124 @@ async def batch_update_xhs_note_comments(note_id: str, comments: List[Dict]):
     """
     if not comments:
         return
+
+    only_author_threads = comment_author_helper.only_author_reply_threads_enabled()
+    note_author_user_id = comment_author_helper.get_note_author_user_id(note_id)
+
+    if only_author_threads and not config.ENABLE_GET_SUB_COMMENTS:
+        utils.logger.warning(
+            "[store.xhs.batch_update_xhs_note_comments] XHS_SAVE_ONLY_AUTHOR_REPLY_THREADS 已开启，"
+            "请同时将 ENABLE_GET_SUB_COMMENTS 设为 True，否则无法抓取帖主楼中楼回复。"
+        )
+
     for comment_item in comments:
-        await update_xhs_note_comment(note_id, comment_item)
+        await _process_single_comment_for_store(
+            note_id,
+            comment_item,
+            only_author_threads=only_author_threads,
+            note_author_user_id=note_author_user_id,
+        )
+
+
+async def _process_single_comment_for_store(
+    note_id: str,
+    comment_item: Dict,
+    *,
+    only_author_threads: bool,
+    note_author_user_id: str,
+) -> None:
+    if comment_author_helper.is_top_level_comment(comment_item):
+        is_author = comment_author_helper.is_author_comment(comment_item, note_author_user_id)
+        has_author_reply = comment_author_helper.top_level_has_author_reply_inline(
+            comment_item, note_author_user_id
+        )
+        # Keep the author's own first-level comments even when nobody else replied.
+        if only_author_threads and not has_author_reply and not is_author:
+            comment_author_helper.remember_pending_top_comment(note_id, comment_item)
+            return
+
+        record = _build_comment_record(
+            note_id,
+            comment_item,
+            comment_level="top",
+            is_author_reply=is_author,
+            has_author_reply=has_author_reply or is_author,
+            root_comment_id=str(comment_item.get("id") or ""),
+        )
+        await _store_comment_record(record)
+        return
+
+    # Sub-comment (楼中楼)
+    is_author = comment_author_helper.is_author_comment(comment_item, note_author_user_id)
+    root_comment_id = comment_author_helper.resolve_root_comment_id(comment_item)
+
+    if only_author_threads:
+        if not is_author:
+            return
+        pending_top = comment_author_helper.pop_pending_top_comment(note_id, root_comment_id)
+        if pending_top:
+            top_record = _build_comment_record(
+                note_id,
+                pending_top,
+                comment_level="top",
+                is_author_reply=False,
+                has_author_reply=True,
+                root_comment_id=str(pending_top.get("id") or ""),
+            )
+            await _store_comment_record(top_record)
+
+    record = _build_comment_record(
+        note_id,
+        comment_item,
+        comment_level="author_reply" if is_author else "reply",
+        is_author_reply=is_author,
+        has_author_reply=False,
+        root_comment_id=root_comment_id,
+    )
+
+    if only_author_threads and not is_author:
+        return
+
+    await _store_comment_record(record)
+
+
+def reset_xhs_note_comment_session(note_id: str) -> None:
+    comment_author_helper.reset_note_comment_session(note_id)
+
+
+def clear_saved_comment_ids() -> None:
+    comment_author_helper.clear_saved_comment_ids()
+
+
+async def finalize_xhs_note_comments(note_id: str) -> None:
+    """Call after all comment pages for a note are fetched."""
+    dropped = comment_author_helper.flush_pending_top_comments(note_id)
+    if dropped and comment_author_helper.only_author_reply_threads_enabled():
+        utils.logger.info(
+            f"[store.xhs.finalize_xhs_note_comments] note_id={note_id} "
+            f"skipped {dropped} top-level comment(s) without author reply"
+        )
 
 
 async def update_xhs_note_comment(note_id: str, comment_item: Dict):
     """
-    Update Xiaohongshu note comment
-    Args:
-        note_id:
-        comment_item:
-
-    Returns:
-
+    Update Xiaohongshu note comment (legacy entry; prefer batch_update_xhs_note_comments)
     """
-    user_info = comment_item.get("user_info", {})
-    comment_id = comment_item.get("id")
-    comment_pictures = [item.get("url_default", "") for item in comment_item.get("pictures", [])]
-    target_comment = comment_item.get("target_comment", {})
-    local_db_item = {
-        "comment_id": comment_id,  # Comment ID
-        "create_time": comment_item.get("create_time"),  # Comment time
-        "note_id": note_id,  # Note ID
-        "content": comment_item.get("content"),  # Comment content
-        "creator_hash": anonymize_user_id(user_info.get("user_id")),  # 创作者匿名哈希(不存原始 user_id)
-        "nickname": mask_nickname(user_info.get("nickname")),  # 用户昵称(已脱敏)
-        "sub_comment_count": comment_item.get("sub_comment_count", 0),  # Sub-comment count
-        "pictures": ",".join(comment_pictures),  # Comment pictures
-        "parent_comment_id": target_comment.get("id", ""),  # Parent comment ID
-        "last_modify_ts": utils.get_current_timestamp(),  # Last modification timestamp (Generated by MediaCrawler, mainly used to record the latest update time of a record in DB storage)
-        "like_count": comment_item.get("like_count", 0),
-    }
-    utils.logger.info(f"[store.xhs.update_xhs_note_comment] xhs note comment:{local_db_item}")
-    await XhsStoreFactory.create_store().store_comment(local_db_item)
+    await batch_update_xhs_note_comments(note_id, [comment_item])
+
+
+def _extract_creator_nickname(creator: Optional[Dict]) -> str:
+    if not isinstance(creator, dict):
+        return ""
+    basic = creator.get("basicInfo") or creator.get("basic_info") or {}
+    candidates = []
+    if isinstance(basic, dict):
+        candidates.extend([basic.get("nickname"), basic.get("nickName"), basic.get("name")])
+    candidates.extend([creator.get("nickname"), creator.get("nickName"), creator.get("name")])
+    for value in candidates:
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
 
 
 async def save_creator(user_id: str, creator: Dict):
@@ -154,5 +297,22 @@ async def save_creator(user_id: str, creator: Dict):
     Returns:
 
     """
-    # 教学版：创作者个人资料(昵称/性别/头像/IP/粉丝数等)不再落库，防骚扰。
-    return
+    # 教学版默认不落库创作者档案。本机 InsightDeck 通过环境变量按需只写昵称。
+    if not keep_creator_nickname():
+        return
+    nickname = _extract_creator_nickname(creator)
+    if not nickname:
+        return
+    save_root = getattr(config, "SAVE_DATA_PATH", "") or ""
+    if not save_root:
+        return
+    out_dir = Path(save_root) / "xhs" / "jsonl"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    record = {
+        "creator_hash": anonymize_user_id(user_id),
+        "nickname": nickname,
+    }
+    (out_dir / "creator_profile.json").write_text(
+        json.dumps(record, ensure_ascii=False), encoding="utf-8"
+    )
+    utils.logger.info(f"[store.xhs.save_creator] wrote creator nickname for hash={record['creator_hash']}")

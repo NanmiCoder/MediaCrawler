@@ -85,7 +85,7 @@ def _check_nickname_masked(d: dict, raw: str, label: str):
 
 
 def test_mask_and_hash_tools():
-    from tools.user_hash import anonymize_user_id, mask_nickname
+    from tools.user_hash import anonymize_user_id, mask_nickname, persist_nickname
     h = anonymize_user_id("12345")
     assert h and h != "12345" and re.fullmatch(r"[0-9a-f]{16}", h)
     assert anonymize_user_id(None) == "" and anonymize_user_id("") == ""
@@ -94,6 +94,8 @@ def test_mask_and_hash_tools():
     assert "*" in mask_nickname("张三丰")
     assert mask_nickname(None) == ""
     assert mask_nickname("a") == "*"
+    assert persist_nickname("小红同学") != "小红同学"
+    assert persist_nickname("小红同学", keep_raw=True) == "小红同学"
 
 
 def test_xhs_note_extraction_masks_user_info():
@@ -127,6 +129,64 @@ def test_xhs_note_extraction_masks_user_info():
     _check_no_forbidden_keys(captured, "xhs_note")
     assert captured.get("creator_hash") != "u123"
     _check_nickname_masked(captured, "小红同学", "xhs_note")
+
+
+def test_xhs_note_keeps_raw_nickname_when_env_enabled(monkeypatch):
+    import asyncio
+    import store.xhs as xs
+
+    monkeypatch.setenv("XHS_KEEP_CREATOR_NICKNAME", "true")
+    note_item = {
+        "note_id": "abc",
+        "type": "normal",
+        "title": "t",
+        "desc": "d",
+        "time": 1,
+        "last_update_time": 0,
+        "user": {"user_id": "u123", "nickname": "小红同学", "avatar": "http://x/a.jpg"},
+        "interact_info": {"liked_count": "1", "collected_count": "0",
+                          "comment_count": "0", "share_count": "0"},
+        "image_list": [], "tag_list": [], "xsec_token": "tok",
+    }
+    captured = {}
+
+    class FakeStore:
+        async def store_content(self, content_item):
+            captured.update(content_item)
+
+    orig = xs.XhsStoreFactory.create_store
+    xs.XhsStoreFactory.create_store = staticmethod(lambda: FakeStore())
+    try:
+        asyncio.run(xs.update_xhs_note(note_item))
+    finally:
+        xs.XhsStoreFactory.create_store = orig
+    assert captured.get("nickname") == "小红同学"
+
+
+def test_save_creator_is_noop_by_default(tmp_path, monkeypatch):
+    import asyncio
+    import config
+    import store.xhs as xs
+
+    monkeypatch.delenv("XHS_KEEP_CREATOR_NICKNAME", raising=False)
+    monkeypatch.setattr(config, "SAVE_DATA_PATH", str(tmp_path))
+    asyncio.run(xs.save_creator("u123", {"basicInfo": {"nickname": "夜雨投研"}}))
+    assert not (tmp_path / "xhs" / "jsonl" / "creator_profile.json").exists()
+
+
+def test_save_creator_writes_nickname_sidecar_when_env_enabled(tmp_path, monkeypatch):
+    import asyncio
+    import json
+    import config
+    import store.xhs as xs
+
+    monkeypatch.setenv("XHS_KEEP_CREATOR_NICKNAME", "true")
+    monkeypatch.setattr(config, "SAVE_DATA_PATH", str(tmp_path))
+    asyncio.run(xs.save_creator("u123", {"basicInfo": {"nickname": "夜雨投研", "gender": 0}}))
+    payload = json.loads((tmp_path / "xhs" / "jsonl" / "creator_profile.json").read_text(encoding="utf-8"))
+    assert payload["nickname"] == "夜雨投研"
+    assert payload["creator_hash"] != "u123"
+    assert "gender" not in payload
 
 
 def test_tieba_note_extraction_masks_user_info():

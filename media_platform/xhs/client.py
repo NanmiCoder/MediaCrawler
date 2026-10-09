@@ -37,6 +37,7 @@ import config
 from base.base_crawler import AbstractApiClient
 from proxy.proxy_mixin import ProxyRefreshMixin
 from tools import utils
+from tools.incremental import collect_newest, load_known_content_ids, xhs_note_id, xhs_note_is_pinned
 
 if TYPE_CHECKING:
     from proxy.proxy_ip_pool import ProxyIpPool
@@ -501,6 +502,8 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
             try:
                 note_id = comment.get("note_id")
                 sub_comments = comment.get("sub_comments")
+                root_comment_id = comment.get("id")
+                self._tag_sub_comments_with_root(sub_comments, root_comment_id)
                 if sub_comments and callback:
                     await callback(note_id, sub_comments)
 
@@ -508,7 +511,6 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 if not sub_comment_has_more:
                     continue
 
-                root_comment_id = comment.get("id")
                 sub_comment_cursor = comment.get("sub_comment_cursor")
 
                 while sub_comment_has_more:
@@ -534,6 +536,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                             )
                             break
                         comments = comments_res["comments"]
+                        self._tag_sub_comments_with_root(comments, root_comment_id)
                         if callback:
                             await callback(note_id, comments)
                         await asyncio.sleep(crawl_interval)
@@ -554,6 +557,19 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
                 )
                 continue  # Continue to next comment
         return result
+
+    @staticmethod
+    def _tag_sub_comments_with_root(
+        sub_comments: Optional[List[Dict]], root_comment_id: str
+    ) -> None:
+        if not sub_comments or not root_comment_id:
+            return
+        for sub in sub_comments:
+            if isinstance(sub, dict):
+                sub["_root_comment_id"] = root_comment_id
+                target = sub.get("target_comment") or {}
+                if not target.get("id"):
+                    sub["target_comment"] = {"id": root_comment_id}
 
     async def get_creator_info(
         self, user_id: str, xsec_token: str = "", xsec_source: str = ""
@@ -631,47 +647,55 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         Returns:
 
         """
-        result = []
-        notes_has_more = True
-        notes_cursor = ""
-        while notes_has_more and len(result) < config.CRAWLER_MAX_NOTES_COUNT:
-            notes_res = await self.get_notes_by_creator(
-                user_id, notes_cursor, xsec_token=xsec_token, xsec_source=xsec_source
-            )
-            if not notes_res:
-                utils.logger.error(
-                    f"[XiaoHongShuClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data."
-                )
-                break
+        # user_posted pages are newest-first. The shared rule decides the cut;
+        # this client only turns pages into note lists.
+        known_ids = load_known_content_ids()
 
-            notes_has_more = notes_res.get("has_more", False)
-            notes_cursor = notes_res.get("cursor", "")
-            if "notes" not in notes_res:
+        async def pages():
+            notes_cursor = ""
+            while True:
+                notes_res = await self.get_notes_by_creator(
+                    user_id, notes_cursor, xsec_token=xsec_token, xsec_source=xsec_source
+                )
+                if not notes_res:
+                    utils.logger.error(
+                        "[XiaoHongShuClient.get_notes_by_creator] The current creator may have been banned by xhs, so they cannot access the data."
+                    )
+                    return
+                if "notes" not in notes_res:
+                    utils.logger.info(
+                        f"[XiaoHongShuClient.get_all_notes_by_creator] No 'notes' key found in response: {notes_res}"
+                    )
+                    return
+
+                notes = notes_res["notes"]
                 utils.logger.info(
-                    f"[XiaoHongShuClient.get_all_notes_by_creator] No 'notes' key found in response: {notes_res}"
+                    f"[XiaoHongShuClient.get_all_notes_by_creator] got user_id:{user_id} notes len : {len(notes)}"
                 )
-                break
+                yield notes
+                if not notes_res.get("has_more", False):
+                    return
+                notes_cursor = notes_res.get("cursor", "")
+                await asyncio.sleep(crawl_interval)
 
-            notes = notes_res["notes"]
-            utils.logger.info(
-                f"[XiaoHongShuClient.get_all_notes_by_creator] got user_id:{user_id} notes len : {len(notes)}"
-            )
-
-            remaining = config.CRAWLER_MAX_NOTES_COUNT - len(result)
-            if remaining <= 0:
-                break
-
-            notes_to_add = notes[:remaining]
-            if callback:
-                await callback(notes_to_add)
-
-            result.extend(notes_to_add)
-            await asyncio.sleep(crawl_interval)
-
-        utils.logger.info(
-            f"[XiaoHongShuClient.get_all_notes_by_creator] Finished getting notes for user {user_id}, total: {len(result)}"
+        cut = await collect_newest(
+            pages(),
+            known_ids=known_ids,
+            limit=config.CRAWLER_MAX_NOTES_COUNT,
+            item_id=xhs_note_id,
+            is_pinned=xhs_note_is_pinned,
         )
-        return result
+        if cut.collect and callback:
+            await callback(cut.collect)
+        if cut.stopped_id:
+            utils.logger.info(
+                f"[XiaoHongShuClient.get_all_notes_by_creator] 已入库笔记 {cut.stopped_id}，"
+                f"这条和更早的笔记不再采集，切换下一位创作者"
+            )
+        utils.logger.info(
+            f"[XiaoHongShuClient.get_all_notes_by_creator] Finished getting notes for user {user_id}, total: {len(cut.collect)}"
+        )
+        return cut.collect
 
     async def get_note_short_url(self, note_id: str) -> Dict:
         """
