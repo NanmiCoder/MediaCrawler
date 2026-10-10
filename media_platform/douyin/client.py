@@ -24,6 +24,8 @@ import urllib.parse
 from typing import TYPE_CHECKING, Any, Callable, Dict, Union, Optional
 
 import httpx
+
+import config
 from playwright.async_api import BrowserContext
 
 from base.base_crawler import AbstractApiClient
@@ -358,15 +360,19 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         posts_has_more = 1
         max_cursor = ""
         result = []
-        while posts_has_more == 1:
+        # Respect CRAWLER_MAX_NOTES_COUNT instead of paging through the creator's whole history
+        while posts_has_more == 1 and len(result) < config.CRAWLER_MAX_NOTES_COUNT:
             aweme_post_res = await self.get_user_aweme_posts(sec_user_id, max_cursor)
             posts_has_more = aweme_post_res.get("has_more", 0)
             max_cursor = aweme_post_res.get("max_cursor")
             aweme_list = aweme_post_res.get("aweme_list") if aweme_post_res.get("aweme_list") else []
+            aweme_list = aweme_list[: max(0, config.CRAWLER_MAX_NOTES_COUNT - len(result))]
             utils.logger.info(f"[DouYinClient.get_all_user_aweme_posts] get sec_user_id:{sec_user_id} video len : {len(aweme_list)}")
             if callback:
                 await callback(aweme_list)
             result.extend(aweme_list)
+            if posts_has_more == 1:
+                await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
         return result
 
     async def resolve_short_url(self, short_url: str) -> str:
