@@ -19,15 +19,32 @@
 import os
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from starlette.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 
 router = APIRouter(prefix="/data", tags=["data"])
 
 # Data directory
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
+SUPPORTED_EXTENSIONS = {".json", ".jsonl", ".csv", ".xlsx", ".xls"}
+
+
+def _preview_jsonl(path: Path, limit: int) -> dict:
+    rows = []
+    total = 0
+    with path.open(encoding="utf-8-sig") as source:
+        for line in source:
+            if not line.strip():
+                continue
+            # Validate every record, while only retaining the requested preview.
+            record = json.loads(line)
+            if total < limit:
+                rows.append(record)
+            total += 1
+    return {"data": rows, "total": total}
 
 
 def get_file_info(file_path: Path) -> dict:
@@ -37,7 +54,9 @@ def get_file_info(file_path: Path) -> dict:
 
     # Try to get record count
     try:
-        if file_path.suffix == ".json":
+        if file_path.suffix.lower() == ".jsonl":
+            record_count = _preview_jsonl(file_path, 0)["total"]
+        elif file_path.suffix == ".json":
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, list):
@@ -54,7 +73,7 @@ def get_file_info(file_path: Path) -> dict:
         "size": stat.st_size,
         "modified_at": stat.st_mtime,
         "record_count": record_count,
-        "type": file_path.suffix[1:] if file_path.suffix else "unknown"
+        "type": file_path.suffix[1:].lower() if file_path.suffix else "unknown"
     }
 
 
@@ -65,7 +84,7 @@ async def list_data_files(platform: Optional[str] = None, file_type: Optional[st
         return {"files": []}
 
     files = []
-    supported_extensions = {".json", ".csv", ".xlsx", ".xls"}
+    supported_extensions = SUPPORTED_EXTENSIONS
 
     for root, dirs, filenames in os.walk(DATA_DIR):
         root_path = Path(root)
@@ -85,7 +104,7 @@ async def list_data_files(platform: Optional[str] = None, file_type: Optional[st
                 continue
 
             try:
-                files.append(get_file_info(file_path))
+                files.append(await run_in_threadpool(get_file_info, file_path))
             except Exception:
                 continue
 
@@ -96,7 +115,10 @@ async def list_data_files(platform: Optional[str] = None, file_type: Optional[st
 
 
 @router.get("/files/{file_path:path}")
-async def get_file_content(file_path: str, preview: bool = True, limit: int = 100):
+async def get_file_content(
+    file_path: str, preview: bool = True,
+    limit: Annotated[int, Query(ge=1, le=1000)] = 100,
+):
     """Get file content or preview"""
     full_path = DATA_DIR / file_path
 
@@ -115,7 +137,9 @@ async def get_file_content(file_path: str, preview: bool = True, limit: int = 10
     if preview:
         # Return preview data
         try:
-            if full_path.suffix == ".json":
+            if full_path.suffix.lower() == ".jsonl":
+                return await run_in_threadpool(_preview_jsonl, full_path, limit)
+            elif full_path.suffix == ".json":
                 with open(full_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     if isinstance(data, list):
@@ -152,6 +176,10 @@ async def get_file_content(file_path: str, preview: bool = True, limit: int = 10
                 raise HTTPException(status_code=400, detail="Unsupported file type for preview")
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON file")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="File must be UTF-8 encoded")
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     else:
@@ -200,7 +228,7 @@ async def get_data_stats():
         "by_type": {}
     }
 
-    supported_extensions = {".json", ".csv", ".xlsx", ".xls"}
+    supported_extensions = SUPPORTED_EXTENSIONS
 
     for root, dirs, filenames in os.walk(DATA_DIR):
         root_path = Path(root)
