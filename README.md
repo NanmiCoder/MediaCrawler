@@ -356,14 +356,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_black.png#gh-light-mode-only"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_white.png#gh-dark-mode-only"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler">Atlas Cloud</a> 是一个全模态 AI 推理平台，让开发者通过统一的 AI API 访问视频生成、图像生成和 LLM API，无需分别维护多个厂商集成，即可调用 300+ 精选模型。Atlas Cloud 最新推出 <a href="https://www.atlascloud.ai/console/coding-plan">coding plan 优惠</a>，为开发者提供更具性价比的 API 访问预算。
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://go.nodemaven.com/MediaCrawlerSeptember"><img src="docs/static/images/nodemaven_banner_sep.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
@@ -392,6 +384,14 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
       </td>
       <td valign="middle">
         <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">ProxyLane</a> 提供中国住宅 IP（电信、联通、移动），适合在海外服务器运行 MediaCrawler，出口可固定到上海、北京、广州、深圳等城市。在 static 模式的代理用户名后加 <code>_c_CN_city_Shanghai</code> 即可使用上海住宅 IP，完整配置见 <a href="docs/proxylane/README.md">3 步接入指南</a>。MediaCrawler 用户使用优惠码 <code>MEDIACRAWLER3GB</code> 注册即可免费领取 <strong>3GB</strong> 流量。👉 <a href="https://proxylane.dev/redeem?code=MEDIACRAWLER3GB&utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">免费领取 3GB</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://helodata.com?ref=mediacrawler"><img src="docs/static/images/helodata_logo.png" width="180" alt="Helodata"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://helodata.com?ref=mediacrawler">Helodata</a> 是面向网页抓取、自动化与数据采集的代理基础设施服务商，提供住宅、静态 ISP、移动、数据中心与不限流量五条产品线，覆盖全球 190+ 国家与地区，拥有 8000 万+ 合规授权住宅 IP，满足不同规模与场景的采集需求。用户通过<a href="https://helodata.com?ref=mediacrawler">专属链接</a>注册并使用优惠码 <code>MEDIACRAWLER</code>，可享全部产品 <strong>10% 折扣</strong>，另可免费领取测试流量。<a href="https://helodata.com?ref=mediacrawler">领取免费试用</a>
       </td>
     </tr>
   </tbody>

@@ -298,14 +298,6 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_black.png#gh-light-mode-only"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_white.png#gh-dark-mode-only"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler">Atlas Cloud</a> is a full-modal AI inference platform that gives developers a single AI API to access video generation, image generation, and LLM APIs. Instead of managing multiple vendor integrations, you connect once and get unified access to 300+ curated models across all modalities. Check out Atlas Cloud's new <a href="https://www.atlascloud.ai/console/coding-plan">coding plan promotion</a> for more budget-friendly API access.
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://go.nodemaven.com/MediaCrawlerSeptember"><img src="docs/static/images/nodemaven_banner_sep.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
@@ -334,6 +326,14 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
       </td>
       <td valign="middle">
         <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme_en">ProxyLane</a> provides residential IPs inside mainland China (China Telecom, Unicom, Mobile) for running MediaCrawler from servers outside China, with the exit pinned to Shanghai, Beijing, Guangzhou, Shenzhen or another city. Add <code>_c_CN_city_Shanghai</code> to your proxy username in static mode to get a Shanghai residential IP; see the <a href="docs/proxylane/README_en.md">3-step setup guide</a>. MediaCrawler users can sign up with code <code>MEDIACRAWLER3GB</code> to get <strong>3 GB</strong> of free traffic. 👉 <a href="https://proxylane.dev/redeem?code=MEDIACRAWLER3GB&utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme_en">Claim 3 GB free</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://helodata.com?ref=mediacrawler"><img src="docs/static/images/helodata_logo.png" width="180" alt="Helodata"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://helodata.com?ref=mediacrawler">Helodata</a> provides proxy infrastructure for web scraping, automation, and data collection, with five product lines: residential, static ISP, mobile, datacenter, and unlimited-traffic proxies. Covering 190+ countries and regions with 80M+ ethically sourced, authorized residential IPs, it supports data collection at different scales and across diverse use cases. Sign up through the <a href="https://helodata.com?ref=mediacrawler">exclusive link</a> and use promo code <code>MEDIACRAWLER</code> to get <strong>10% off</strong> all products, plus free trial traffic. <a href="https://helodata.com?ref=mediacrawler">Claim your free trial</a>
       </td>
     </tr>
   </tbody>

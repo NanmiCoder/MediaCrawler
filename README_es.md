@@ -298,14 +298,6 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_black.png#gh-light-mode-only"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_white.png#gh-dark-mode-only"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler">Atlas Cloud</a> es una plataforma de inferencia de IA multimodal que ofrece a los desarrolladores una única API de IA para acceder a APIs de generación de video, generación de imágenes y LLM. En lugar de gestionar integraciones con múltiples proveedores, se conecta una sola vez y obtiene acceso unificado a más de 300 modelos seleccionados de todas las modalidades. Descubra la nueva <a href="https://www.atlascloud.ai/console/coding-plan">promoción del coding plan</a> de Atlas Cloud para acceder a la API con un presupuesto más asequible.
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://go.nodemaven.com/MediaCrawlerSeptember"><img src="docs/static/images/nodemaven_banner_sep.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
@@ -326,6 +318,14 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
       </td>
       <td valign="middle">
         <a href="https://sx.org/c/CRAWLER3G">SX.ORG</a> es una red de proxies de alto rendimiento diseñada para la extracción intensiva de datos web y la evasión de sistemas antibots, totalmente compatible con MediaCrawler. Sus principales ventajas incluyen cobertura de IP residenciales dinámicas en más de 190 ubicaciones, una disponibilidad de red del 99,9%, segmentación precisa por país, ciudad y ASN, soporte nativo de HTTP(S) y SOCKS5, y rotación flexible de sesiones para plataformas de redes sociales. Los usuarios de MediaCrawler pueden utilizar el código promocional exclusivo <code>CRAWLER3G</code> al registrarse para obtener <strong>3 GB</strong> de tráfico de prueba gratuito. 👉 <a href="https://sx.org/c/CRAWLER3G">Obtenga 3 GB en SX.ORG</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://helodata.com?ref=mediacrawler"><img src="docs/static/images/helodata_logo.png" width="180" alt="Helodata"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://helodata.com?ref=mediacrawler">Helodata</a> ofrece infraestructura de proxies para web scraping, automatización y recopilación de datos, con cinco líneas de productos: proxies residenciales, ISP estáticos, móviles, de centros de datos y de tráfico ilimitado. Con cobertura en más de 190 países y regiones y más de 80 millones de IP residenciales autorizadas y obtenidas de forma ética, satisface las necesidades de recopilación de datos a distintas escalas y en diversos escenarios. Regístrese a través del <a href="https://helodata.com?ref=mediacrawler">enlace exclusivo</a> y utilice el código promocional <code>MEDIACRAWLER</code> para obtener un <strong>10% de descuento</strong> en todos los productos, además de tráfico de prueba gratuito. <a href="https://helodata.com?ref=mediacrawler">Obtenga su prueba gratuita</a>
       </td>
     </tr>
   </tbody>
