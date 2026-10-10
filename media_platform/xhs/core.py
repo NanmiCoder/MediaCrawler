@@ -67,6 +67,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         # self.user_agent = utils.get_user_agent()
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         self.cdp_manager = None
+        self.client_hint_headers: Dict[str, str] = {}
         self.ip_proxy_pool = None  # Proxy IP pool for automatic proxy refresh
         self._media_downloader: Optional[MediaDownloader] = None
 
@@ -102,6 +103,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             self.context_page = await self.browser_context.new_page()
             await self.context_page.goto(self.index_url)
+            await self.read_browser_identity()
 
             # Create a client to interact with the Xiaohongshu website.
             self.xhs_client = await self.create_xhs_client(httpx_proxy_format)
@@ -381,6 +383,36 @@ class XiaoHongShuCrawler(AbstractCrawler):
             await asyncio.sleep(crawl_interval)
             utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Sleeping for {crawl_interval} seconds after fetching comments for note {note_id}")
 
+    async def read_browser_identity(self) -> None:
+        """Use the page's real user agent and client hints for the httpx requests.
+
+        In CDP mode the crawler reuses the user's Chrome, so the page does not use
+        self.user_agent. API calls and media downloads must send the same identity
+        as the browser that owns the cookies.
+        """
+        identity = await self.context_page.evaluate(
+            """() => {
+                const data = navigator.userAgentData;
+                return {
+                    userAgent: navigator.userAgent,
+                    brands: data ? data.brands : [],
+                    mobile: data ? data.mobile : false,
+                    platform: data ? data.platform : "",
+                };
+            }"""
+        )
+        self.user_agent = identity["userAgent"]
+        # A browser without navigator.userAgentData sends no client hints, so send none then.
+        if identity["brands"]:
+            self.client_hint_headers = {
+                "sec-ch-ua": ", ".join(f'"{b["brand"]}";v="{b["version"]}"' for b in identity["brands"]),
+                "sec-ch-ua-mobile": "?1" if identity["mobile"] else "?0",
+                "sec-ch-ua-platform": f'"{identity["platform"]}"',
+            }
+        else:
+            self.client_hint_headers = {}
+        utils.logger.info(f"[XiaoHongShuCrawler.read_browser_identity] Browser user agent: {self.user_agent}")
+
     async def create_xhs_client(self, httpx_proxy: Optional[str]) -> XiaoHongShuClient:
         """Create Xiaohongshu client"""
         utils.logger.info("[XiaoHongShuCrawler.create_xhs_client] Begin create Xiaohongshu API client ...")
@@ -399,13 +431,11 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 "pragma": "no-cache",
                 "priority": "u=1, i",
                 "referer": f"{self.index_url}/",
-                "sec-ch-ua": '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": '"Windows"',
+                **self.client_hint_headers,
                 "sec-fetch-dest": "empty",
                 "sec-fetch-mode": "cors",
                 "sec-fetch-site": "same-site",
-                "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+                "user-agent": self.user_agent,
                 "Cookie": cookie_str,
             },
             playwright_page=self.context_page,
