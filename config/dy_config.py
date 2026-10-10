@@ -44,3 +44,8 @@ DY_CREATOR_ID_LIST = [
     "MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE"
     # ........................
 ]
+
+# Whether to download companion live photo videos for image posts
+# True: download both static images and companion live photo video (.mp4)
+# False: download only static images
+DY_DOWNLOAD_LIVE_PHOTO = True

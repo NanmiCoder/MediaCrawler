@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
+import config
 from media_downloader import MediaItem, MediaType
 
 # 视频清晰度字段，按优先级排列（h264 与 256 通常为无水印源）
@@ -90,10 +91,30 @@ def extract_video_urls(aweme_detail: Dict) -> List[str]:
     return []
 
 
+def extract_live_photo_video_urls(image: Dict) -> List[str]:
+    """提取实况图/动图随附的短视频候选地址列表。
+
+    同一档清晰度会返回多个 CDN 地址，优先取 url_list 最后一个（通常无水印），
+    其余地址作为备用。
+    """
+    if not isinstance(image, dict):
+        return []
+    video_item = image.get("video")
+    if not isinstance(video_item, dict):
+        return []
+
+    for key in _VIDEO_ADDR_KEYS:
+        candidates = _url_list_of(video_item.get(key))
+        if candidates:
+            return list(reversed(candidates))
+
+    return []
+
+
 def build_media_items(aweme_item: Dict) -> List[MediaItem]:
     """把一个抖音作品转换成待下载的媒体任务列表。
 
-    - 图集作品：各张图片（第一张即封面，不再单独下载一份 cover）
+    - 图集作品：各张图片（第一张即封面，不再单独下载一份 cover）；若包含实况图/动图，亦一并提取其随附短视频
     - 视频作品：封面 + 视频
     """
     if not isinstance(aweme_item, dict):
@@ -107,7 +128,8 @@ def build_media_items(aweme_item: Dict) -> List[MediaItem]:
 
     image_urls = extract_image_urls(aweme_item)
     if image_urls:
-        for index, image_url in enumerate(image_urls, start=1):
+        images = aweme_item.get("images") or []
+        for index, (image_url, image) in enumerate(zip(image_urls, images), start=1):
             items.append(
                 MediaItem(
                     url=image_url,
@@ -116,6 +138,20 @@ def build_media_items(aweme_item: Dict) -> List[MediaItem]:
                     stem=f"{index:03d}",
                 )
             )
+
+            # 提取实况图随附视频（动图）
+            if getattr(config, "DY_DOWNLOAD_LIVE_PHOTO", True):
+                live_video_urls = extract_live_photo_video_urls(image)
+                if live_video_urls:
+                    items.append(
+                        MediaItem(
+                            url=live_video_urls[0],
+                            backup_urls=tuple(live_video_urls[1:]),
+                            media_type=MediaType.VIDEO,
+                            content_id=content_id,
+                            stem=f"{index:03d}_live",
+                        )
+                    )
         return items
 
     cover_url = extract_cover_url(aweme_item)
@@ -142,3 +178,4 @@ def build_media_items(aweme_item: Dict) -> List[MediaItem]:
         )
 
     return items
+

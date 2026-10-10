@@ -263,6 +263,24 @@ DY_IMAGE_ITEM = {
     "video": {"raw_cover": {"url_list": ["https://cdn/cover"]}},
 }
 
+DY_LIVE_PHOTO_ITEM = {
+    "aweme_id": "7300000000000000003",
+    "desc": "live photo images",
+    "images": [
+        {
+            "url_list": ["https://cdn-a/img1-small", "https://cdn-b/img1"],
+            "live_photo_type": 1,
+            "video": {
+                "play_addr_h264": {"url_list": ["https://cdn-a/live1", "https://cdn-b/live1"]},
+            },
+        },
+        {
+            "url_list": ["https://cdn-a/img2-small", "https://cdn-b/img2"],
+        },
+    ],
+}
+
+
 
 # --------------------------------------------------------------------------- douyin 用例
 
@@ -315,6 +333,31 @@ def test_douyin_image_item_yields_numbered_images_without_cover():
     assert [item.stem for item in items] == ["001", "002"]
     assert [item.url for item in items] == ["https://cdn-b/img1", "https://cdn-b/img2"]
     assert not any(item.stem == "cover" for item in items)
+
+
+def test_douyin_image_item_yields_live_photo_video():
+    items = douyin_media.build_media_items(DY_LIVE_PHOTO_ITEM)
+
+    assert [item.stem for item in items] == ["001", "001_live", "002"]
+    img1, live1, img2 = items
+
+    assert img1.media_type is MediaType.IMAGE
+    assert img1.url == "https://cdn-b/img1"
+
+    assert live1.media_type is MediaType.VIDEO
+    assert live1.url == "https://cdn-b/live1"
+    assert live1.backup_urls == ("https://cdn-a/live1",)
+
+    assert img2.media_type is MediaType.IMAGE
+    assert img2.url == "https://cdn-b/img2"
+
+
+def test_douyin_live_photo_disabled_by_config(monkeypatch):
+    monkeypatch.setattr(config, "DY_DOWNLOAD_LIVE_PHOTO", False)
+    items = douyin_media.build_media_items(DY_LIVE_PHOTO_ITEM)
+
+    assert [item.stem for item in items] == ["001", "002"]
+    assert all(item.media_type is MediaType.IMAGE for item in items)
 
 
 def test_douyin_empty_video_yields_nothing():
