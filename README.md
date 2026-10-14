@@ -356,10 +356,10 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawlerSeptember"><img src="docs/static/images/nodemaven_banner_sep.png" width="180" alt="NodeMaven"></a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober"><img src="docs/static/images/nodemaven_banner_oct.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawlerSeptember">NodeMaven</a> 是面向网页抓取和自动化场景的高效代理服务商，提供市面上最高质量的 IP。主要优势包括 99.9% 可用性、ZIP 邮编定位、IP 过滤（所有代理的欺诈评分均低于 97%）、无需 KYC，以及代理带宽检测器、Meta 标签检测器、IP 查询等独家免费工具。MediaCrawler 用户使用优惠码 <code>CRAWLER35</code> 可享移动和住宅代理 35% 折扣，使用 <code>CRAWLER40</code> 可享 ISP（静态）代理 40% 折扣。👉 <a href="https://go.nodemaven.com/MediaCrawlerSeptember">访问 NodeMaven</a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober">NodeMaven</a> 是面向网页抓取和自动化场景的高效代理服务商，提供市面上最高质量的 IP。主要优势包括 99.9% 可用性、ZIP 邮编定位、IP 过滤（所有代理的欺诈评分均低于 97%）、无需 KYC，以及代理带宽检测器、Meta 标签检测器、IP 查询等独家免费工具。MediaCrawler 用户使用优惠码 <code>CRAWLER35</code> 可享移动和住宅代理 35% 折扣，使用 <code>CRAWLER40</code> 可享 ISP（静态）代理 40% 折扣。👉 <a href="https://go.nodemaven.com/MediaCrawleroctober">访问 NodeMaven</a>
       </td>
     </tr>
     <tr>
@@ -392,6 +392,14 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
       </td>
       <td valign="middle">
         <a href="https://helodata.com?ref=mediacrawler">Helodata</a> 是面向网页抓取、自动化与数据采集的代理基础设施服务商，提供住宅、静态 ISP、移动、数据中心与不限流量五条产品线，覆盖全球 190+ 国家与地区，拥有 8000 万+ 合规授权住宅 IP，满足不同规模与场景的采集需求。用户通过<a href="https://helodata.com?ref=mediacrawler">专属链接</a>注册并使用优惠码 <code>MEDIACRAWLER</code>，可享全部产品 <strong>10% 折扣</strong>，另可免费领取测试流量。<a href="https://helodata.com?ref=mediacrawler">领取免费试用</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Proxy-Seller</a> 是面向网页抓取、数据采集与自动化场景的专业代理服务商，提供住宅、移动（4G/5G/LTE）、静态 ISP、数据中心 IPv4 与 IPv6 五大产品线，覆盖全球 220+ 地区，拥有 4700 万+ 住宅 IP 资源，可精准定位国家、城市及运营商（ISP）。主要优势包括 99.7% 可用性、全面支持 HTTP(S) 与 SOCKS5 协议、静态/轮换 IP 灵活切换、高并发请求支持，以及提供 RESTful API 与多语言 SDK（Python、Node.js、PHP、Java、Go），并配备 24/7 技术支持。服务通过 ISO/IEC 27001 与 ISO 9001 认证，全球用户已超 18.5 万，适合 MediaCrawler 等多平台抓取工具使用。MediaCrawler 用户使用优惠码 <code>MCRAWLER15</code> 可享 15% 折扣。👉 <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">访问 Proxy-Seller</a>
       </td>
     </tr>
   </tbody>

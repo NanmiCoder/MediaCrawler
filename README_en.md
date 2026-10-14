@@ -298,10 +298,10 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawlerSeptember"><img src="docs/static/images/nodemaven_banner_sep.png" width="180" alt="NodeMaven"></a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober"><img src="docs/static/images/nodemaven_banner_oct.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawlerSeptember">NodeMaven</a> is an efficient proxy provider for web scraping and automation, offering the highest-quality IPs on the market. Key benefits include 99.9% uptime, ZIP targeting, IP filtering across all proxies (fraud score below 97%), no KYC, and unique free tools such as Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup, and more. MediaCrawler users get 35% off mobile and residential proxies with code <code>CRAWLER35</code>, and 40% off ISP (static) proxies with code <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawlerSeptember">Visit NodeMaven</a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober">NodeMaven</a> is an efficient proxy provider for web scraping and automation, offering the highest-quality IPs on the market. Key benefits include 99.9% uptime, ZIP targeting, IP filtering across all proxies (fraud score below 97%), no KYC, and unique free tools such as Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup, and more. MediaCrawler users get 35% off mobile and residential proxies with code <code>CRAWLER35</code>, and 40% off ISP (static) proxies with code <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawleroctober">Visit NodeMaven</a>
       </td>
     </tr>
     <tr>
@@ -334,6 +334,14 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
       </td>
       <td valign="middle">
         <a href="https://helodata.com?ref=mediacrawler">Helodata</a> provides proxy infrastructure for web scraping, automation, and data collection, with five product lines: residential, static ISP, mobile, datacenter, and unlimited-traffic proxies. Covering 190+ countries and regions with 80M+ ethically sourced, authorized residential IPs, it supports data collection at different scales and across diverse use cases. Sign up through the <a href="https://helodata.com?ref=mediacrawler">exclusive link</a> and use promo code <code>MEDIACRAWLER</code> to get <strong>10% off</strong> all products, plus free trial traffic. <a href="https://helodata.com?ref=mediacrawler">Claim your free trial</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Proxy-Seller</a> is a professional proxy provider for web scraping, data collection and automation, offering five product lines — residential, mobile (4G/5G/LTE), static ISP, and datacenter IPv4 and IPv6 — covering 220+ locations worldwide with 47M+ residential IPs and precise targeting by country, city and ISP. Key benefits include 99.7% uptime, full HTTP(S) and SOCKS5 support, flexible switching between static and rotating IPs, high-concurrency request handling, a RESTful API and multi-language SDKs (Python, Node.js, PHP, Java, Go), plus 24/7 technical support. Certified to ISO/IEC 27001 and ISO 9001 and trusted by 185,000+ customers worldwide, it works well with MediaCrawler and other multi-platform scraping tools. MediaCrawler users get 15% off with code <code>MCRAWLER15</code>. 👉 <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Visit Proxy-Seller</a>
       </td>
     </tr>
   </tbody>

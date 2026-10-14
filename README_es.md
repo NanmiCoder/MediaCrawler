@@ -298,10 +298,10 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawlerSeptember"><img src="docs/static/images/nodemaven_banner_sep.png" width="180" alt="NodeMaven"></a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober"><img src="docs/static/images/nodemaven_banner_oct.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawlerSeptember">NodeMaven</a> es un proveedor eficiente de proxies para web scraping y automatización, con las IP de mayor calidad del mercado. Sus principales ventajas incluyen una disponibilidad del 99,9%, segmentación por código postal, filtrado de IP en todos los proxies (puntuación de fraude inferior al 97%), sin KYC y herramientas gratuitas exclusivas como Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup y más. Los usuarios de MediaCrawler obtienen un 35% de descuento en proxies móviles y residenciales con el código <code>CRAWLER35</code>, y un 40% de descuento en proxies ISP (estáticos) con el código <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawlerSeptember">Visita NodeMaven</a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober">NodeMaven</a> es un proveedor eficiente de proxies para web scraping y automatización, con las IP de mayor calidad del mercado. Sus principales ventajas incluyen una disponibilidad del 99,9%, segmentación por código postal, filtrado de IP en todos los proxies (puntuación de fraude inferior al 97%), sin KYC y herramientas gratuitas exclusivas como Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup y más. Los usuarios de MediaCrawler obtienen un 35% de descuento en proxies móviles y residenciales con el código <code>CRAWLER35</code>, y un 40% de descuento en proxies ISP (estáticos) con el código <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawleroctober">Visita NodeMaven</a>
       </td>
     </tr>
     <tr>
@@ -326,6 +326,14 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
       </td>
       <td valign="middle">
         <a href="https://helodata.com?ref=mediacrawler">Helodata</a> ofrece infraestructura de proxies para web scraping, automatización y recopilación de datos, con cinco líneas de productos: proxies residenciales, ISP estáticos, móviles, de centros de datos y de tráfico ilimitado. Con cobertura en más de 190 países y regiones y más de 80 millones de IP residenciales autorizadas y obtenidas de forma ética, satisface las necesidades de recopilación de datos a distintas escalas y en diversos escenarios. Regístrese a través del <a href="https://helodata.com?ref=mediacrawler">enlace exclusivo</a> y utilice el código promocional <code>MEDIACRAWLER</code> para obtener un <strong>10% de descuento</strong> en todos los productos, además de tráfico de prueba gratuito. <a href="https://helodata.com?ref=mediacrawler">Obtenga su prueba gratuita</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Proxy-Seller</a> es un proveedor profesional de proxies para web scraping, recopilación de datos y automatización, con cinco líneas de productos —residenciales, móviles (4G/5G/LTE), ISP estáticos y centros de datos IPv4 e IPv6— que cubren más de 220 ubicaciones en todo el mundo, con más de 47 millones de IP residenciales y segmentación precisa por país, ciudad e ISP. Sus principales ventajas incluyen un 99,7% de disponibilidad, compatibilidad total con HTTP(S) y SOCKS5, cambio flexible entre IP estáticas y rotativas, soporte para solicitudes de alta concurrencia, API RESTful y SDK en varios lenguajes (Python, Node.js, PHP, Java, Go), además de soporte técnico 24/7. Cuenta con certificación ISO/IEC 27001 e ISO 9001 y más de 185.000 clientes en todo el mundo, y es adecuado para MediaCrawler y otras herramientas de scraping multiplataforma. Los usuarios de MediaCrawler obtienen un 15% de descuento con el código <code>MCRAWLER15</code>. 👉 <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Visita Proxy-Seller</a>
       </td>
     </tr>
   </tbody>
