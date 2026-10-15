@@ -330,14 +330,6 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://helodata.com?ref=mediacrawler"><img src="docs/static/images/helodata_logo.png" width="180" alt="Helodata"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://helodata.com?ref=mediacrawler">Helodata</a> provides proxy infrastructure for web scraping, automation, and data collection, with five product lines: residential, static ISP, mobile, datacenter, and unlimited-traffic proxies. Covering 190+ countries and regions with 80M+ ethically sourced, authorized residential IPs, it supports data collection at different scales and across diverse use cases. Sign up through the <a href="https://helodata.com?ref=mediacrawler">exclusive link</a> and use promo code <code>MEDIACRAWLER</code> to get <strong>10% off</strong> all products, plus free trial traffic. <a href="https://helodata.com?ref=mediacrawler">Claim your free trial</a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
       </td>
       <td valign="middle">

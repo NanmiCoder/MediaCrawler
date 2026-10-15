@@ -322,14 +322,6 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://helodata.com?ref=mediacrawler"><img src="docs/static/images/helodata_logo.png" width="180" alt="Helodata"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://helodata.com?ref=mediacrawler">Helodata</a> ofrece infraestructura de proxies para web scraping, automatización y recopilación de datos, con cinco líneas de productos: proxies residenciales, ISP estáticos, móviles, de centros de datos y de tráfico ilimitado. Con cobertura en más de 190 países y regiones y más de 80 millones de IP residenciales autorizadas y obtenidas de forma ética, satisface las necesidades de recopilación de datos a distintas escalas y en diversos escenarios. Regístrese a través del <a href="https://helodata.com?ref=mediacrawler">enlace exclusivo</a> y utilice el código promocional <code>MEDIACRAWLER</code> para obtener un <strong>10% de descuento</strong> en todos los productos, además de tráfico de prueba gratuito. <a href="https://helodata.com?ref=mediacrawler">Obtenga su prueba gratuita</a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
       </td>
       <td valign="middle">

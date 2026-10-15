@@ -388,14 +388,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://helodata.com?ref=mediacrawler"><img src="docs/static/images/helodata_logo.png" width="180" alt="Helodata"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://helodata.com?ref=mediacrawler">Helodata</a> 是面向网页抓取、自动化与数据采集的代理基础设施服务商，提供住宅、静态 ISP、移动、数据中心与不限流量五条产品线，覆盖全球 190+ 国家与地区，拥有 8000 万+ 合规授权住宅 IP，满足不同规模与场景的采集需求。用户通过<a href="https://helodata.com?ref=mediacrawler">专属链接</a>注册并使用优惠码 <code>MEDIACRAWLER</code>，可享全部产品 <strong>10% 折扣</strong>，另可免费领取测试流量。<a href="https://helodata.com?ref=mediacrawler">领取免费试用</a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
       </td>
       <td valign="middle">
