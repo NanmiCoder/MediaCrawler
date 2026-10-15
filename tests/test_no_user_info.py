@@ -9,7 +9,6 @@
 3. 仓库 grep 断言 —— store/ 与 media_platform/ 不再把禁用字段作为存储 dict 的 key。
 """
 import re
-import subprocess
 import pathlib
 
 import pytest
@@ -213,26 +212,35 @@ def test_bilibili_video_dict_masks_user_info():
 
 # ----------------------------- 仓库 grep 断言 -----------------------------
 
+def _grep_store(pattern: str) -> str:
+    """Search store/**/*.py for a regex, like `grep -rnE`, in plain Python.
+
+    Shelling out to grep fails on Windows: PowerShell has no grep, and in Git Bash
+    the output cannot be decoded with the default GBK console encoding.
+    """
+    regex = re.compile(pattern)
+    hits = []
+    for path in sorted((ROOT / "store").rglob("*.py")):
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if regex.search(line):
+                hits.append(f"{path.relative_to(ROOT).as_posix()}:{lineno}:{line}")
+    return "\n".join(hits)
+
+
 def test_store_no_forbidden_dict_keys():
     # store/ 下不得把禁用字段作为存储 dict 的 key("field": value 形式)
-    out = subprocess.run(
-        ["grep", "-rnE", '"(' + "|".join(FORBIDDEN_KEYS) + r')"\s*:', str(ROOT / "store")],
-        capture_output=True, text=True,
-    )
+    out = _grep_store('"(' + "|".join(FORBIDDEN_KEYS) + r')"\s*:')
     # 允许的例外：Mongo store_creator 里的 query={"user_id": ...} 已全部改为 pass，应为空
-    assert out.stdout.strip() == "", f"store/ 仍写入禁用字段键:\n{out.stdout}"
+    assert out == "", f"store/ 仍写入禁用字段键:\n{out}"
 
 
 def test_store_no_creator_orm_imports():
     # 已删除的 creator ORM 表(XhsCreator/DyCreator/...)不得再从 database.models 导入。
     # 注意:model/m_*.py 里的同名 pydantic 类是内存类型，允许保留。
-    out = subprocess.run(
-        ["grep", "-rnE",
-         r"from database\.models import.*(XhsCreator|DyCreator|WeiboCreator|TiebaCreator|ZhihuCreator|BilibiliUpInfo|BilibiliContactInfo)",
-         str(ROOT / "store")],
-        capture_output=True, text=True,
+    out = _grep_store(
+        r"from database\.models import.*(XhsCreator|DyCreator|WeiboCreator|TiebaCreator|ZhihuCreator|BilibiliUpInfo|BilibiliContactInfo)"
     )
-    assert out.stdout.strip() == "", f"store/ 仍 import 已删除的 creator ORM 表:\n{out.stdout}"
+    assert out == "", f"store/ 仍 import 已删除的 creator ORM 表:\n{out}"
 
 
 if __name__ == "__main__":
