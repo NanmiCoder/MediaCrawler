@@ -13,18 +13,22 @@ async def test_cmd_arg_crawler_max_notes_count():
     # Store original values
     orig_notes = config.CRAWLER_MAX_NOTES_COUNT
     orig_comments = config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES
+    orig_sleep = config.CRAWLER_MAX_SLEEP_SEC
 
     try:
         await parse_cmd([
             "--platform", "xhs",
             "--crawler_max_notes_count", "42",
-            "--max_comments_count_singlenotes", "24"
+            "--max_comments_count_singlenotes", "24",
+            "--crawler_max_sleep_sec", "15",
         ])
         assert config.CRAWLER_MAX_NOTES_COUNT == 42
         assert config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES == 24
+        assert config.CRAWLER_MAX_SLEEP_SEC == 15
     finally:
         config.CRAWLER_MAX_NOTES_COUNT = orig_notes
         config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES = orig_comments
+        config.CRAWLER_MAX_SLEEP_SEC = orig_sleep
 
 def test_crawler_manager_build_command():
     cm = CrawlerManager()

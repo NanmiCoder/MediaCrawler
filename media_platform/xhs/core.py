@@ -353,6 +353,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
             return
 
         utils.logger.info(f"[XiaoHongShuCrawler.batch_get_note_comments] Begin batch get note comments, note list: {note_list}")
+        xhs_store.clear_saved_comment_ids()
         semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for index, note_id in enumerate(note_list):
@@ -369,13 +370,21 @@ class XiaoHongShuCrawler(AbstractCrawler):
             utils.logger.info(f"[XiaoHongShuCrawler.get_comments] Begin get note id comments {note_id}")
             # Use fixed crawling interval
             crawl_interval = config.CRAWLER_MAX_SLEEP_SEC
-            await self.xhs_client.get_note_all_comments(
-                note_id=note_id,
-                xsec_token=xsec_token,
-                crawl_interval=crawl_interval,
-                callback=xhs_store.batch_update_xhs_note_comments,
-                max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
-            )
+            try:
+                xhs_store.reset_xhs_note_comment_session(note_id)
+                await self.xhs_client.get_note_all_comments(
+                    note_id=note_id,
+                    xsec_token=xsec_token,
+                    crawl_interval=crawl_interval,
+                    callback=xhs_store.batch_update_xhs_note_comments,
+                    max_count=config.CRAWLER_MAX_COMMENTS_COUNT_SINGLENOTES,
+                )
+            except Exception as ex:
+                utils.logger.error(
+                    f"[XiaoHongShuCrawler.get_comments] Get comments failed for note {note_id}: {ex}"
+                )
+            finally:
+                await xhs_store.finalize_xhs_note_comments(note_id)
 
             # Sleep after fetching comments
             await asyncio.sleep(crawl_interval)
