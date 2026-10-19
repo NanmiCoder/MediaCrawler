@@ -18,6 +18,14 @@ import enData from './locales/en-US/data.json'
 import enEnv from './locales/en-US/env.json'
 import enLicense from './locales/en-US/license.json'
 
+// 越南文翻译
+import viCommon from './locales/vi-VN/common.json'
+import viConfig from './locales/vi-VN/config.json'
+import viTerminal from './locales/vi-VN/terminal.json'
+import viData from './locales/vi-VN/data.json'
+import viEnv from './locales/vi-VN/env.json'
+import viLicense from './locales/vi-VN/license.json'
+
 const resources = {
   'zh-CN': {
     common: zhCommon,
@@ -35,6 +43,14 @@ const resources = {
     env: enEnv,
     license: enLicense,
   },
+  'vi-VN': {
+    common: viCommon,
+    config: viConfig,
+    terminal: viTerminal,
+    data: viData,
+    env: viEnv,
+    license: viLicense,
+  },
 }
 
 i18n
@@ -42,7 +58,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'zh-CN',
+    fallbackLng: 'vi-VN',
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

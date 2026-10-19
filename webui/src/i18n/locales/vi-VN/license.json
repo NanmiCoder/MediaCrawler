@@ -1,0 +1,21 @@
+{
+  "title": "Thông báo sử dụng",
+  "warning": "Vui lòng đọc kỹ các điều khoản sau",
+  "content": {
+    "line1": "Dự án này chỉ dành cho mục đích học tập và nghiên cứu cá nhân",
+    "line2": "Sử dụng thương mại hoặc các hoạt động sinh lợi bị cấm hoàn toàn",
+    "line3": "Bằng cách sử dụng dự án này, bạn đồng ý tuân thủ tất cả các luật pháp hiện hành",
+    "line4": "Người dùng chịu toàn bộ trách nhiệm về bất kỳ hậu quả nào của việc sử dụng sai"
+  },
+  "license": "Xem Giấy phép đầy đủ",
+  "github": "Truy cập Kho lưu trữ GitHub",
+  "confirm": "Tôi hiểu và đồng ý với các điều khoản trên",
+  "decline": "Không đồng ý, Thoát",
+  "author": {
+    "name": "Relakkes (阿江)",
+    "tagline": "Tác giả Open Source 40K+ Star",
+    "description": "Tác giả của MediaCrawler (40K stars), tập trung vào chia sẻ kiến thức về công nghệ crawler và AI Agent",
+    "support": "Nếu bạn thấy dự án này hữu ích, vui lòng follow tác giả trên mạng xã hội",
+    "slogan": "Open source không dễ, vui lòng star ⭐"
+  }
+}
