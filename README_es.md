@@ -2,16 +2,16 @@
 
 <div align="center">
 
-### 🤝 Agradecimientos Especiales a Nuestro Patrocinador Platino
+### 🤝 Agradecimientos Especiales a Nuestro Patrocinador Oro
 
-<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
-  <img src="docs/static/images/browseract.png" alt="BrowserAct" width="400">
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+  <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
 </a>
 
 <br>
 
-<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
-<small>BrowserAct es una herramienta de automatización de navegador diseñada para Agentes de IA, con manejo de intercepciones anti-bot, transferencia humana cuando las tareas se atascan, aislamiento paralelo de múltiples tareas y gestión independiente de múltiples cuentas, ayudando a los Agentes a completar tareas web reales de manera más estable.</small>
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<small>BrowserAct permite extraer datos de cualquier sitio web con una sola frase. Sin código: créalo una vez, reutilízalo de forma estable y consume muy pocos tokens. BrowserAct utiliza un navegador real para crear automáticamente Bots de recolección de datos, con navegación sigilosa, gestión de CAPTCHA y proxies residenciales integrados, y entrega directamente resultados estructurados. Pruébalo gratis ahora.</small>
 </a>
 
 </div>
@@ -23,6 +23,8 @@
 <a href="https://trendshift.io/repositories/8291" target="_blank">
   <img src="https://trendshift.io/api/badge/repositories/8291" alt="NanmiCoder%2FMediaCrawler | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 </a>
+
+[![AtomGit](https://atomgit.com/NanmiCoder/MediaCrawler/star/new_badge.svg)](https://atomgit.com/NanmiCoder/MediaCrawler)
 
 [![GitHub Stars](https://img.shields.io/github/stars/NanmiCoder/MediaCrawler?style=social)](https://github.com/NanmiCoder/MediaCrawler/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/NanmiCoder/MediaCrawler?style=social)](https://github.com/NanmiCoder/MediaCrawler/network/members)
@@ -296,18 +298,34 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://bloome.im/login?ref=NanmiCoder"><img src="docs/static/images/bloome_logo.png" width="180" alt="Bloome"></a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober"><img src="docs/static/images/nodemaven_banner_oct.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
-        <a href="https://bloome.im/login?ref=NanmiCoder">Bloome</a> es una plataforma de IM de agentes de IA: varios agentes de IA (Claude, ChatGPT, DeepSeek, etc.) colaboran contigo en una misma conversación como miembros de un equipo, dividiéndose el trabajo automáticamente y revisándose entre sí, y generando directamente tablas, documentos y paneles visuales. Sin configuración, funciona en la nube, disponible tanto en web como en móvil, y puedes compartir tus agentes configurados con tu equipo con un solo clic. 👉 <a href="https://bloome.im/login?ref=NanmiCoder">Prueba Bloome</a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober">NodeMaven</a> es un proveedor eficiente de proxies para web scraping y automatización, con las IP de mayor calidad del mercado. Sus principales ventajas incluyen una disponibilidad del 99,9%, segmentación por código postal, filtrado de IP en todos los proxies (puntuación de fraude inferior al 97%), sin KYC y herramientas gratuitas exclusivas como Proxy Bandwidth Checker, Meta Tag Checker, IP Lookup y más. Los usuarios de MediaCrawler obtienen un 35% de descuento en proxies móviles y residenciales con el código <code>CRAWLER35</code>, y un 40% de descuento en proxies ISP (estáticos) con el código <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawleroctober">Visita NodeMaven</a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawler"><img src="docs/static/images/nodemaven_logo.svg" width="180" alt="NodeMaven"></a>
+        <a href="https://www.openlux.ai/register?channel=c_drxir46c"><img src="docs/static/images/openlux_logo.png" width="160" alt="OpenLux"></a>
       </td>
       <td valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawler">NodeMaven</a> ofrece proxies fiables y de alta calidad para automatización, web scraping, investigación SEO y gestión de redes sociales. El servicio incluye una disponibilidad del 99,9%, sesiones persistentes de hasta 7 días, filtrado de IP en todos los proxies (puntuación de fraude inferior al 97%), sin KYC y reembolso de hasta el 10% del tráfico. Los usuarios de MediaCrawler obtienen un 35% de descuento en proxies móviles y residenciales con el código <code>CRAWLER35</code>, y un 40% de descuento en proxies ISP (estáticos) con <code>CRAWLER40</code>. 👉 <a href="https://go.nodemaven.com/MediaCrawler">Visita NodeMaven</a>
+        ¡Gracias a <a href="https://www.openlux.ai/register?channel=c_drxir46c">OpenLux</a> por patrocinar este proyecto! OpenLux es una plataforma de IA todo en uno para empresas que reúne los principales modelos de IA de los grandes proveedores de todo el mundo. Con un servicio rápido y fiable y un soporte técnico ágil, OpenLux ofrece precios base para los modelos de Claude, OpenAI y Gemini desde tan solo el 8,82%, el 4% y el 8% de las tarifas oficiales, respectivamente. Oferta exclusiva para usuarios de MediaCrawler: regístrese a través de nuestro <a href="https://www.openlux.ai/register?channel=c_drxir46c">enlace de referido</a> y disfrute de hasta un 7,5% de descuento en las recargas de crédito. 👉 <a href="https://www.openlux.ai/register?channel=c_drxir46c">Empiece con OpenLux</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://sx.org/c/CRAWLER3G"><img src="docs/static/images/sx_logo.png" width="180" alt="SX.ORG"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://sx.org/c/CRAWLER3G">SX.ORG</a> es una red de proxies de alto rendimiento diseñada para la extracción intensiva de datos web y la evasión de sistemas antibots, totalmente compatible con MediaCrawler. Sus principales ventajas incluyen cobertura de IP residenciales dinámicas en más de 190 ubicaciones, una disponibilidad de red del 99,9%, segmentación precisa por país, ciudad y ASN, soporte nativo de HTTP(S) y SOCKS5, y rotación flexible de sesiones para plataformas de redes sociales. Los usuarios de MediaCrawler pueden utilizar el código promocional exclusivo <code>CRAWLER3G</code> al registrarse para obtener <strong>3 GB</strong> de tráfico de prueba gratuito. 👉 <a href="https://sx.org/c/CRAWLER3G">Obtenga 3 GB en SX.ORG</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Proxy-Seller</a> es un proveedor profesional de proxies para web scraping, recopilación de datos y automatización, con cinco líneas de productos —residenciales, móviles (4G/5G/LTE), ISP estáticos y centros de datos IPv4 e IPv6— que cubren más de 220 ubicaciones en todo el mundo, con más de 47 millones de IP residenciales y segmentación precisa por país, ciudad e ISP. Sus principales ventajas incluyen un 99,7% de disponibilidad, compatibilidad total con HTTP(S) y SOCKS5, cambio flexible entre IP estáticas y rotativas, soporte para solicitudes de alta concurrencia, API RESTful y SDK en varios lenguajes (Python, Node.js, PHP, Java, Go), además de soporte técnico 24/7. Cuenta con certificación ISO/IEC 27001 e ISO 9001 y más de 185.000 clientes en todo el mundo, y es adecuado para MediaCrawler y otras herramientas de scraping multiplataforma. Los usuarios de MediaCrawler obtienen un 15% de descuento con el código <code>MCRAWLER15</code>. 👉 <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Visita Proxy-Seller</a>
       </td>
     </tr>
   </tbody>
@@ -326,15 +344,19 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
 
 ### 📚 Otros
 - **Preguntas Frecuentes**: [Documentación Completa de MediaCrawler](https://nanmicoder.github.io/MediaCrawler/)
+
+### 🧩 Mis Otros Proyectos
 - **Tutorial de Rastreador para Principiantes**: [Tutorial Gratuito CrawlerTutorial](https://github.com/NanmiCoder/CrawlerTutorial)
 - **Proyecto de Código Abierto de Rastreador de Noticias**: [NewsCrawlerCollection](https://github.com/NanmiCoder/NewsCrawlerCollection)
+- **Agente de Escritorio de Código Abierto**: [cc-haha](https://github.com/NanmiCoder/cc-haha) — espacio de trabajo de escritorio local-first y multiplataforma para agentes, con colaboración multi-agente, Git worktrees, mercado de skills, soporte multimodelo y Computer Use, además de acceso remoto por WeChat / Feishu / DingTalk y más
+- **Plugin para DeepSeek Harness**: [dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) — añade Agent Teams a DeepSeek Harness para que varios agentes colaboren en paralelo en tareas complejas
 
 
 ## ⭐ Gráfico de Tendencia de Estrellas
 
 ¡Si este proyecto te ayuda, por favor da una ⭐ Estrella para apoyar y que más personas vean MediaCrawler!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
+[![Star History Chart](https://www.repostars.dev/api/embed?repo=NanmiCoder%2FMediaCrawler&theme=ocean)](https://www.repostars.dev/?repos=NanmiCoder%2FMediaCrawler&theme=ocean)
 
 
 ## 📚 Referencias

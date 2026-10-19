@@ -29,12 +29,35 @@ import sys
 from typing import Optional
 
 from playwright.async_api import BrowserContext, Page
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
 import config
 from base.base_crawler import AbstractLogin
 from tools import utils
+
+# B 站首页 header 目前新旧两套实现并行灰度，未登录时的登录入口选择器不同：
+# - 新版 header：.header-avatar-unlogin-entry
+# - 旧版 header：.right-entry__outside.go-login-btn 内部的 .header-login-entry
+# 两者点击后都调用 mini-login-v2 的 openMiniLogin()，拉起同一个登录弹窗，
+# 弹窗内的二维码仍是 .login-scan-box 里的 img，所以这里只需要兼容入口按钮。
+LOGIN_ENTRY_SELECTORS = [
+    ".header-avatar-unlogin-entry",
+    ".right-entry__outside.go-login-btn .header-login-entry",
+]
+
+
+def is_login_cookie_refreshed(cookie_dict: dict, sessdata_before_login: str) -> bool:
+    """判断浏览器里的 SESSDATA 是否已经是扫码换发后的新值。
+
+    过期的 SESSDATA 同样会留在浏览器里，所以"cookie 存在"不等于"已登录"。
+    只判断存在会把死会话判成登录成功：既跳过扫码，又把这份死 cookie 灌给
+    API client —— B 站 playurl 依据 Cookie 决定清晰度，结果是详情和评论照常拿到
+    （这两个接口不要求登录），视频却被静默限制在 480P。
+    """
+    sessdata = cookie_dict.get("SESSDATA", "")
+    return bool(sessdata) and sessdata != sessdata_before_login
 
 
 class BilibiliLogin(AbstractLogin):
@@ -50,6 +73,8 @@ class BilibiliLogin(AbstractLogin):
         self.context_page = context_page
         self.login_phone = login_phone
         self.cookie_str = cookie_str
+        # 进入登录流程前浏览器里已有的 SESSDATA，用于区分"cookie 存在"与"cookie 有效"
+        self._sessdata_before_login: str = ""
 
     async def begin(self):
         """Start login bilibili"""
@@ -68,24 +93,44 @@ class BilibiliLogin(AbstractLogin):
     async def check_login_state(self) -> bool:
         """
             Check if the current login status is successful and return True otherwise return False
-            retry decorator will retry 20 times if the return value is False, and the retry interval is 1 second
+            retry decorator will retry 600 times if the return value is False, and the retry interval is 1 second
             if max retry times reached, raise RetryError
         """
         current_cookie = await self.browser_context.cookies()
         _, cookie_dict = utils.convert_cookies(current_cookie)
-        if cookie_dict.get("SESSDATA", "") or cookie_dict.get("DedeUserID"):
-            return True
-        return False
+        return is_login_cookie_refreshed(cookie_dict, self._sessdata_before_login)
 
     async def login_by_qrcode(self):
         """login bilibili website and keep webdriver login state"""
         utils.logger.info("[BilibiliLogin.login_by_qrcode] Begin login bilibili by qrcode ...")
 
+        # 记下扫码前的 SESSDATA：扫码成功后它会被换发成新值，
+        # check_login_state 靠这个差值判断"真的登录了"而不是"只剩一份过期 cookie"
+        _, cookie_dict = utils.convert_cookies(await self.browser_context.cookies())
+        self._sessdata_before_login = cookie_dict.get("SESSDATA", "")
+        if self._sessdata_before_login:
+            utils.logger.warning(
+                "[BilibiliLogin.login_by_qrcode] 浏览器中残留了 SESSDATA，但接口校验为未登录，"
+                "该会话已失效；本次必须重新扫码换发新 cookie 才会继续 ..."
+            )
+
         # click login button
-        login_button_ele = self.context_page.locator(
-            "xpath=//div[@class='right-entry__outside go-login-btn']//div"
-        )
-        await login_button_ele.click()
+        login_entry_selector = ", ".join(LOGIN_ENTRY_SELECTORS)
+        try:
+            await self.context_page.wait_for_selector(
+                selector=login_entry_selector,
+                state="visible",
+                timeout=30_000,
+            )
+        except PlaywrightTimeoutError:
+            utils.logger.error(
+                "[BilibiliLogin.login_by_qrcode] Login entry not found on the homepage, "
+                f"selectors tried: {LOGIN_ENTRY_SELECTORS}. "
+                "Bilibili may have changed the homepage header again, "
+                "please update LOGIN_ENTRY_SELECTORS in media_platform/bilibili/login.py."
+            )
+            sys.exit()
+        await self.context_page.locator(login_entry_selector).first.click()
         await asyncio.sleep(1)
         # find login qrcode
         qrcode_img_selector = "//div[@class='login-scan-box']//img"

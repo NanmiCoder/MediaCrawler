@@ -2,16 +2,16 @@
 
 <div align="center">
 
-### 🤝 特别感谢白金赞助商
+### 🤝 特别感谢金牌赞助商
 
-<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
-  <img src="docs/static/images/browseract.png" alt="BrowserAct" width="400">
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+  <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
 </a>
 
 <br>
 
-<a href="https://www.browseract.com/?co-from=mediacrawler&redirect=https://github.com/browser-act/skills/tree/main" target="_blank">
-<small>BrowserAct 是面向 AI Agent 的浏览器自动化工具，支持反机器人拦截应对、受阻时人工接管、多任务并行隔离和多账号独立管理，帮助 Agent 更稳定地完成真实网页任务。</small>
+<a href="https://www.browseract.ai/mediacrawler" target="_blank">
+<small>BrowserAct 支持一句话从任意网站提取数据。无需代码，一次构建、稳定复用，Token 消耗极低。BrowserAct 使用真实浏览器自动构建数据采集 Bot，内置隐身浏览、验证码处理和住宅代理，直接输出结构化结果。立即免费试用。</small>
 </a>
 
 </div>
@@ -23,6 +23,8 @@
 <a href="https://trendshift.io/repositories/8291" target="_blank">
   <img src="https://trendshift.io/api/badge/repositories/8291" alt="NanmiCoder%2FMediaCrawler | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
 </a>
+
+[![AtomGit](https://atomgit.com/NanmiCoder/MediaCrawler/star/new_badge.svg)](https://atomgit.com/NanmiCoder/MediaCrawler)
 
 [![GitHub Stars](https://img.shields.io/github/stars/NanmiCoder/MediaCrawler?style=social)](https://github.com/NanmiCoder/MediaCrawler/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/NanmiCoder/MediaCrawler?style=social)](https://github.com/NanmiCoder/MediaCrawler/network/members)
@@ -71,14 +73,16 @@
 
 
 
-<strong>MediaCrawlerPro 重磅发布！开源不易，欢迎订阅支持</strong>
+<details>
+<summary>🚀 <b>开源版不够用？看看 MediaCrawlerPro 多了什么：断点续爬 · 多账号 + IP 代理池 · 去掉 Playwright · 多个 AI Agent 项目源码</b>（点击展开）</summary>
+
+<br>
 
 > 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计思路同样值得深入学习！
 
 [MediaCrawlerPro](https://github.com/MediaCrawlerPro) 相较于开源版本的核心优势：
 
 #### 🎯 核心功能升级
-- ✅ **自媒体内容拆解Agent**（新增功能）
 - ✅ **断点续爬功能**（重点特性）
 - ✅ **多账号 + IP代理池支持**（重点特性）
 - ✅ **去除 Playwright 依赖**，使用更简单
@@ -90,12 +94,16 @@
 - ✅ **完美架构设计**，高扩展性，源码学习价值更大
 
 #### 🎁 额外功能
+- ✅ **AI Agent Skill 支持**（Codex / [OpenClaw](https://openclaw.ai/) 🦞 / [Hermes](https://github.com/NousResearch/hermes-agent) / Claude Code / [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) / [cc-haha](https://github.com/NanmiCoder/cc-haha) / WorkBuddy / 豆包 / Trae / Qoder / Cursor 一键安装，让 Agent 自动爬取数据）
+- ✅ **评论分析 Agent**（🆕 新上线）：输入关键词或链接，自动采集评论并生成研究报告
+- ✅ **自媒体内容拆解 Agent**：解析内容、视频转文字、拆解爆款元素
+- ✅ **多平台首页信息流推荐**（HomeFeed）和**热搜榜单**
 - ✅ **自媒体视频下载器桌面端**（适合学习全栈开发）
-- ✅ **多平台首页信息流推荐**（HomeFeed）
-- ✅ **AI Agent Skill 支持**（[OpenClaw](https://openclaw.ai/) 🦞 / Claude Code / Cursor 一键安装，让 Agent 自动爬取数据）
-- [ ] **基于评论分析AI Agent正在开发中 🚀🚀**
+- ✅ **AI 图片生成 Agent**：多轮迭代自动优化，内置精选模板库
 
-点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
+开源不易，欢迎订阅支持！点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
+
+</details>
 
 
 
@@ -169,6 +177,40 @@ uv run main.py --platform xhs --lt qrcode --type detail
 # 其他平台爬虫使用示例，执行下面的命令查看
 uv run main.py --help
 ```
+
+<details>
+<summary>📥 <strong>媒体下载（封面 / 视频 / 图文图片）</strong></summary>
+
+默认关闭。开启后会在爬取的同时把媒体文件下载到本地，按帖子聚合存放：
+
+```shell
+# 命令行开关
+uv run main.py --platform xhs --type detail --specified_id <帖子URL或ID> --get_media true
+
+# 或在 config/base_config.py 中设置 ENABLE_GET_MEDIA = True
+```
+
+**落盘结构**（`SAVE_DATA_PATH` 为空时落在 `data/` 下）：
+
+```
+data/xhs/media/{帖子ID}/
+├── cover.jpg     # 封面
+├── video.mp4     # 视频（B站为 DASH 合流产物）
+└── 001.jpg       # 图文帖的图片
+```
+
+**支持平台**：小红书、抖音、快手、B站、微博。贴吧与知乎的数据结构中没有媒体字段，暂不支持。
+
+**关于 B 站**：
+- 安装 [ffmpeg](https://ffmpeg.org/) 后可走 DASH 路径获取最高画质（音视频分轨下载后无损合流）；未安装时自动降级为 mp4 直链，产物名为 `video-durl.mp4` 以便区分
+- 清晰度由 `config/bilibili_config.py` 的 `BILI_QN` 控制（默认 80 = 1080p）；未登录或权限不足时若高清取流被拒，会自动逐档降级到实际可下载的清晰度
+
+**说明**：
+- 媒体下载失败只记录日志，不会中断爬取
+- 已存在的文件会被跳过；需要重新下载时删掉对应目录即可
+- 下载是串行跟随爬取流程的（未做并发下载），避免给平台 CDN 造成压力
+
+</details>
 
 <details>
 <summary>🖥️ <strong>WebUI 可视化操作界面</strong></summary>
@@ -314,26 +356,42 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_black.png#gh-light-mode-only"><img width="160" alt="Atlas Cloud" src="docs/static/images/atlas_cloud_logo_white.png#gh-dark-mode-only"></a>
+        <a href="https://go.nodemaven.com/MediaCrawleroctober"><img src="docs/static/images/nodemaven_banner_oct.png" width="180" alt="NodeMaven"></a>
       </td>
       <td valign="middle">
-        <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=mei%27da%27c%27rmeidacrawler">Atlas Cloud</a> 是一个全模态 AI 推理平台，让开发者通过统一的 AI API 访问视频生成、图像生成和 LLM API，无需分别维护多个厂商集成，即可调用 300+ 精选模型。Atlas Cloud 最新推出 <a href="https://www.atlascloud.ai/console/coding-plan">coding plan 优惠</a>，为开发者提供更具性价比的 API 访问预算。
+        <a href="https://go.nodemaven.com/MediaCrawleroctober">NodeMaven</a> 是面向网页抓取和自动化场景的高效代理服务商，提供市面上最高质量的 IP。主要优势包括 99.9% 可用性、ZIP 邮编定位、IP 过滤（所有代理的欺诈评分均低于 97%）、无需 KYC，以及代理带宽检测器、Meta 标签检测器、IP 查询等独家免费工具。MediaCrawler 用户使用优惠码 <code>CRAWLER35</code> 可享移动和住宅代理 35% 折扣，使用 <code>CRAWLER40</code> 可享 ISP（静态）代理 40% 折扣。👉 <a href="https://go.nodemaven.com/MediaCrawleroctober">访问 NodeMaven</a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://bloome.im/login?ref=NanmiCoder"><img src="docs/static/images/bloome_logo.png" width="180" alt="Bloome"></a>
+        <a href="https://www.openlux.ai/register?channel=c_drxir46c"><img src="docs/static/images/openlux_logo.png" width="160" alt="OpenLux"></a>
       </td>
       <td valign="middle">
-        <a href="https://bloome.im/login?ref=NanmiCoder">Bloome</a> 是一个 AI Agent IM 平台——让多个 AI agent（Claude、ChatGPT、DeepSeek 等）和你在同一个对话里像团队成员一样协作，自动分工、互相校对，直接生成表格、文档与可视化看板。零配置、云端运行，网页和手机都能用，还能把配好的 agent 一键分享给团队。👉 <a href="https://bloome.im/login?ref=NanmiCoder">试试 Bloome</a>
+        感谢 <a href="https://www.openlux.ai/register?channel=c_drxir46c">OpenLux</a> 对本项目的赞助！OpenLux 是一个面向企业的一站式 AI 聚合平台，汇集全球各大厂商主流大模型，平台提供高效、稳定的服务与及时的技术支持。Claude、OpenAI、Gemini 系列模型基准折扣分别低至官方的 0.882 折、0.4 折和 0.8 折。MediaCrawler 用户还可享受专属福利：通过<a href="https://www.openlux.ai/register?channel=c_drxir46c">专属链接注册</a>，充值最高可享 7.5% 优惠！👉 <a href="https://www.openlux.ai/register?channel=c_drxir46c">立即体验</a>
       </td>
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawler"><img src="docs/static/images/nodemaven_logo.svg" width="180" alt="NodeMaven"></a>
+        <a href="https://sx.org/c/CRAWLER3G"><img src="docs/static/images/sx_logo.png" width="180" alt="SX.ORG"></a>
       </td>
       <td valign="middle">
-        <a href="https://go.nodemaven.com/MediaCrawler">NodeMaven</a> 提供稳定可靠的高质量代理服务，适用于自动化、网页抓取、SEO 研究和社交媒体管理。服务支持 99.9% 可用性、最长 7 天的粘性会话、IP 质量筛选（所有代理的欺诈评分均低于 97%）、无需 KYC，以及最高 10% 的流量返现。MediaCrawler 用户使用优惠码 <code>CRAWLER35</code> 可享移动和住宅代理 35% 折扣，使用 <code>CRAWLER40</code> 可享 ISP（静态）代理 40% 折扣。👉 <a href="https://go.nodemaven.com/MediaCrawler">访问 NodeMaven</a>
+        <a href="https://sx.org/c/CRAWLER3G">SX.ORG</a> 是专为高频数据采集与反爬对抗打造的高性能代理网络，完美适配 MediaCrawler 等多平台抓取工具。核心优势包括全球 190+ 地区真实住宅 IP 池、99.9% 稳定连通率、精准国家/城市及 ASN 运营商定位、全面支持 HTTP(S) 与 SOCKS5 协议，以及针对社交媒体风控优化的智能会话轮换。MediaCrawler 用户使用专属优惠码 <code>CRAWLER3G</code> 注册即可免费领取 <strong>3GB</strong> 优质测试流量。👉 <a href="https://sx.org/c/CRAWLER3G">访问 SX.ORG 领取 3GB 流量</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme"><img src="docs/static/images/proxylane_banner.png" width="180" alt="ProxyLane"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">ProxyLane</a> 提供中国住宅 IP（电信、联通、移动），适合在海外服务器运行 MediaCrawler，出口可固定到上海、北京、广州、深圳等城市。在 static 模式的代理用户名后加 <code>_c_CN_city_Shanghai</code> 即可使用上海住宅 IP，完整配置见 <a href="docs/proxylane/README.md">3 步接入指南</a>。MediaCrawler 用户使用优惠码 <code>MEDIACRAWLER3GB</code> 注册即可免费领取 <strong>3GB</strong> 流量。👉 <a href="https://proxylane.dev/redeem?code=MEDIACRAWLER3GB&utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">免费领取 3GB</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Proxy-Seller</a> 是面向网页抓取、数据采集与自动化场景的专业代理服务商，提供住宅、移动（4G/5G/LTE）、静态 ISP、数据中心 IPv4 与 IPv6 五大产品线，覆盖全球 220+ 地区，拥有 4700 万+ 住宅 IP 资源，可精准定位国家、城市及运营商（ISP）。主要优势包括 99.7% 可用性、全面支持 HTTP(S) 与 SOCKS5 协议、静态/轮换 IP 灵活切换、高并发请求支持，以及提供 RESTful API 与多语言 SDK（Python、Node.js、PHP、Java、Go），并配备 24/7 技术支持。服务通过 ISO/IEC 27001 与 ISO 9001 认证，全球用户已超 18.5 万，适合 MediaCrawler 等多平台抓取工具使用。MediaCrawler 用户使用优惠码 <code>MCRAWLER15</code> 可享 15% 折扣。👉 <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">访问 Proxy-Seller</a>
       </td>
     </tr>
   </tbody>
@@ -377,15 +435,19 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
 
 ## 📚 其他
 - **常见问题**：[MediaCrawler 完整文档](https://nanmicoder.github.io/MediaCrawler/)
+
+### 🧩 我的其他项目
 - **爬虫入门教程**：[CrawlerTutorial 免费教程](https://github.com/NanmiCoder/CrawlerTutorial)
 - **新闻爬虫开源项目**：[NewsCrawlerCollection](https://github.com/NanmiCoder/NewsCrawlerCollection)
+- **开源桌面端 Agent**：[cc-haha](https://github.com/NanmiCoder/cc-haha) — 本地优先、跨平台的 Agent 桌面工作台，支持多 Agent 协作、Git Worktree、技能市场、多模型与 Computer Use，并可通过微信 / 飞书 / 钉钉等远程接入
+- **DeepSeek Harness 插件**：[dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) — 给 DeepSeek Harness 装上 Agent Teams，让多个 Agent 组队并行协作完成复杂任务
 
 
 ## ⭐ Star 趋势图
 
 如果这个项目对您有帮助，请给个 ⭐ Star 支持一下，让更多的人看到 MediaCrawler！
 
-[![Star History Chart](https://api.star-history.com/svg?repos=NanmiCoder/MediaCrawler&type=Date)](https://star-history.com/#NanmiCoder/MediaCrawler&Date)
+[![Star History Chart](https://www.repostars.dev/api/embed?repo=NanmiCoder%2FMediaCrawler&theme=ocean)](https://www.repostars.dev/?repos=NanmiCoder%2FMediaCrawler&theme=ocean)
 
 
 ## 📚 参考

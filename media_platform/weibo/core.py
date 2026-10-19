@@ -38,12 +38,14 @@ from playwright.async_api import (
 
 import config
 from base.base_crawler import AbstractCrawler
+from media_downloader import MediaDownloader
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import weibo as weibo_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
 
+from . import media as weibo_media
 from .client import WeiboClient
 from .exception import DataFetchError
 from .field import SearchType
@@ -65,6 +67,7 @@ class WeiboCrawler(AbstractCrawler):
         self.mobile_user_agent = utils.get_mobile_user_agent()
         self.cdp_manager = None
         self.ip_proxy_pool = None  # Proxy IP pool for automatic proxy refresh
+        self._media_downloader: Optional[MediaDownloader] = None
 
     async def start(self):
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -179,7 +182,7 @@ class WeiboCrawler(AbstractCrawler):
                         if mblog:
                             note_id_list.append(mblog.get("id"))
                             await weibo_store.update_weibo_note(note_item)
-                            await self.get_note_images(mblog)
+                            await self.download_media(mblog)
 
                 page += 1
 
@@ -200,6 +203,9 @@ class WeiboCrawler(AbstractCrawler):
         for note_item in video_details:
             if note_item:
                 await weibo_store.update_weibo_note(note_item)
+                mblog = note_item.get("mblog")
+                if mblog:
+                    await self.download_media(mblog)
         await self.batch_get_notes_comments(config.WEIBO_SPECIFIED_ID_LIST)
 
     async def get_note_info_task(self, note_id: str, semaphore: asyncio.Semaphore) -> Optional[Dict]:
@@ -269,36 +275,46 @@ class WeiboCrawler(AbstractCrawler):
             except Exception as e:
                 utils.logger.error(f"[WeiboCrawler.get_note_comments] may be been blocked, err:{e}")
 
-    async def get_note_images(self, mblog: Dict):
-        """
-        get note images
-        :param mblog:
-        :return:
-        """
-        if not config.ENABLE_GET_MEIDAS:
-            utils.logger.info(f"[WeiboCrawler.get_note_images] Crawling image mode is not enabled")
-            return
+    async def download_media(self, mblog: Dict) -> None:
+        """下载微博的媒体资源（配图，或视频 + 封面）
 
-        pics: List = mblog.get("pics")
-        if not pics:
+        :param mblog: 微博正文数据
+        """
+        if not config.ENABLE_GET_MEDIA:
             return
-        for pic in pics:
-            if isinstance(pic, str):
-                url = pic
-                pid = url.split("/")[-1].split(".")[0]
-            elif isinstance(pic, dict):
-                url = pic.get("url")
-                pid = pic.get("pid", "")
-            else:
-                continue
-            if not url:
-                continue
-            content = await self.wb_client.get_note_image(url)
-            await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
-            utils.logger.info(f"[WeiboCrawler.get_note_images] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds after fetching image")
-            if content != None:
-                extension_file_name = url.split(".")[-1]
-                await weibo_store.update_weibo_note_image(pid, content, extension_file_name)
+        try:
+            items = weibo_media.build_media_items(mblog)
+            if items:
+                await self._get_media_downloader().download_all(items)
+        except Exception as exc:
+            # 媒体下载是旁路能力，解析异常/网络异常都不能中断爬取主流程
+            utils.logger.error(f"[WeiboCrawler.download_media] 媒体下载异常: {exc}")
+
+    def _get_media_downloader(self) -> MediaDownloader:
+        """惰性创建媒体下载器，并同步最新的代理与 UA（代理池是就地刷新的）"""
+        if self._media_downloader is None:
+            self._media_downloader = MediaDownloader(
+                platform="wb",
+                proxy=getattr(self.wb_client, "proxy", None),
+                extra_headers=self._media_headers(),
+            )
+        else:
+            self._media_downloader.update_credentials(
+                proxy=getattr(self.wb_client, "proxy", None),
+                extra_headers=self._media_headers(),
+            )
+        return self._media_downloader
+
+    def _media_headers(self) -> Dict:
+        """媒体请求头：平台 Referer（防盗链）+ UA。
+
+        client.headers 里含 Cookie，不能整体透传到 CDN 请求上，因此只取 UA。
+        """
+        headers = {"Referer": "https://weibo.com/"}
+        client_headers = getattr(self.wb_client, "headers", {}) or {}
+        if client_headers.get("User-Agent"):
+            headers["User-Agent"] = client_headers["User-Agent"]
+        return headers
 
     async def get_creators_and_notes(self) -> None:
         """
@@ -321,6 +337,10 @@ class WeiboCrawler(AbstractCrawler):
                     # If full text fetching is enabled, batch get full text first
                     updated_note_list = await self.batch_get_notes_full_text(note_list)
                     await weibo_store.batch_update_weibo_notes(updated_note_list)
+                    for note_item in updated_note_list:
+                        mblog = (note_item or {}).get("mblog")
+                        if mblog:
+                            await self.download_media(mblog)
 
                 # Get all note information of the creator
                 all_notes_list = await self.wb_client.get_all_notes_by_creator_id(

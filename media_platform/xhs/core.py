@@ -34,6 +34,7 @@ from tenacity import RetryError
 
 import config
 from base.base_crawler import AbstractCrawler
+from media_downloader import MediaDownloader
 from model.m_xiaohongshu import NoteUrlInfo, CreatorUrlInfo
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import xhs as xhs_store
@@ -41,8 +42,14 @@ from tools import utils
 from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
 
+from . import media as xhs_media
 from .client import XiaoHongShuClient
-from .exception import DataFetchError, NoteNotFoundError
+from .exception import (
+    DataFetchError,
+    IPBlockError,
+    NoteNotFoundError,
+    PlatformAccessError,
+)
 from .field import SearchSortType
 from .help import parse_note_info_from_note_url, parse_creator_info_from_url, get_search_id
 from .login import XiaoHongShuLogin
@@ -61,6 +68,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         self.cdp_manager = None
         self.ip_proxy_pool = None  # Proxy IP pool for automatic proxy refresh
+        self._media_downloader: Optional[MediaDownloader] = None
 
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -171,7 +179,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     for note_detail in note_details:
                         if note_detail:
                             await xhs_store.update_xhs_note(note_detail)
-                            await self.get_notice_media(note_detail)
+                            await self.download_media(note_detail)
                             note_ids.append(note_detail.get("note_id"))
                             xsec_tokens.append(note_detail.get("xsec_token"))
                     page += 1
@@ -205,6 +213,13 @@ class XiaoHongShuCrawler(AbstractCrawler):
                     await xhs_store.save_creator(user_id, creator=createor_info)
             except ValueError as e:
                 utils.logger.error(f"[XiaoHongShuCrawler.get_creators_and_notes] Failed to parse creator URL: {e}")
+                continue
+            except (IPBlockError, PlatformAccessError) as e:
+                # Access restricted on the creator homepage, skip this creator instead of crashing the run.
+                utils.logger.error(
+                    f"[XiaoHongShuCrawler.get_creators_and_notes] Access restricted for creator {creator_url}: {e}. "
+                    f"建议降低采集频率、更换 IP 或检查账号状态"
+                )
                 continue
 
             # Use fixed crawling interval
@@ -241,7 +256,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
         for note_detail in note_details:
             if note_detail:
                 await xhs_store.update_xhs_note(note_detail)
-                await self.get_notice_media(note_detail)
+                await self.download_media(note_detail)
 
     async def get_specified_notes(self):
         """Get the information and comments of the specified post
@@ -268,7 +283,7 @@ class XiaoHongShuCrawler(AbstractCrawler):
                 need_get_comment_note_ids.append(note_detail.get("note_id", ""))
                 xsec_tokens.append(note_detail.get("xsec_token", ""))
                 await xhs_store.update_xhs_note(note_detail)
-                await self.get_notice_media(note_detail)
+                await self.download_media(note_detail)
         await self.batch_get_note_comments(need_get_comment_note_ids, xsec_tokens)
 
     async def get_note_detail_async_task(
@@ -315,6 +330,14 @@ class XiaoHongShuCrawler(AbstractCrawler):
 
             except NoteNotFoundError as ex:
                 utils.logger.warning(f"[XiaoHongShuCrawler.get_note_detail_async_task] Note not found: {note_id}, {ex}")
+                return None
+            except (IPBlockError, PlatformAccessError) as ex:
+                # Access restricted (IP block / rate limit / account security).
+                # Skip this note instead of aborting the whole asyncio.gather batch.
+                utils.logger.error(
+                    f"[XiaoHongShuCrawler.get_note_detail_async_task] Access restricted while getting note {note_id}: {ex}. "
+                    f"建议降低采集频率、更换 IP 或检查账号状态"
+                )
                 return None
             except DataFetchError as ex:
                 utils.logger.error(f"[XiaoHongShuCrawler.get_note_detail_async_task] Get note detail error: {ex}")
@@ -460,63 +483,40 @@ class XiaoHongShuCrawler(AbstractCrawler):
             await self.browser_context.close()
         utils.logger.info("[XiaoHongShuCrawler.close] Browser context closed ...")
 
-    async def get_notice_media(self, note_detail: Dict):
-        if not config.ENABLE_GET_MEIDAS:
-            utils.logger.info(f"[XiaoHongShuCrawler.get_notice_media] Crawling image mode is not enabled")
-            return
-        await self.get_note_images(note_detail)
-        await self.get_notice_video(note_detail)
-
-    async def get_note_images(self, note_item: Dict):
-        """Get note images. Please use get_notice_media
+    async def download_media(self, note_detail: Dict) -> None:
+        """下载笔记的媒体资源（封面、视频或图文图片）
 
         Args:
-            note_item: Note item dictionary
+            note_detail: 笔记详情（原始 note_card 结构）
         """
-        if not config.ENABLE_GET_MEIDAS:
+        if not config.ENABLE_GET_MEDIA:
             return
-        note_id = note_item.get("note_id")
-        image_list: List[Dict] = note_item.get("image_list", [])
+        try:
+            items = xhs_media.build_media_items(note_detail)
+            if items:
+                await self._get_media_downloader().download_all(items)
+        except Exception as exc:
+            # 媒体下载是旁路能力，解析异常/网络异常都不能中断爬取主流程
+            utils.logger.error(f"[XiaoHongShuCrawler.download_media] 媒体下载异常: {exc}")
 
-        for img in image_list:
-            if img.get("url_default") != "":
-                img.update({"url": img.get("url_default")})
+    def _get_media_downloader(self) -> MediaDownloader:
+        """惰性创建媒体下载器，并同步最新的代理设置（代理池是就地刷新的）"""
+        if self._media_downloader is None:
+            self._media_downloader = MediaDownloader(
+                platform="xhs",
+                proxy=getattr(self.xhs_client, "proxy", None),
+                extra_headers=self._media_headers(),
+            )
+        else:
+            self._media_downloader.update_credentials(
+                proxy=getattr(self.xhs_client, "proxy", None),
+                extra_headers=self._media_headers(),
+            )
+        return self._media_downloader
 
-        if not image_list:
-            return
-        picNum = 0
-        for pic in image_list:
-            url = pic.get("url")
-            if not url:
-                continue
-            content = await self.xhs_client.get_note_media(url)
-            await asyncio.sleep(random.random())
-            if content is None:
-                continue
-            extension_file_name = f"{picNum}.jpg"
-            picNum += 1
-            await xhs_store.update_xhs_note_image(note_id, content, extension_file_name)
-
-    async def get_notice_video(self, note_item: Dict):
-        """Get note videos. Please use get_notice_media
-
-        Args:
-            note_item: Note item dictionary
-        """
-        if not config.ENABLE_GET_MEIDAS:
-            return
-        note_id = note_item.get("note_id")
-
-        videos = xhs_store.get_video_url_arr(note_item)
-
-        if not videos:
-            return
-        videoNum = 0
-        for url in videos:
-            content = await self.xhs_client.get_note_media(url)
-            await asyncio.sleep(random.random())
-            if content is None:
-                continue
-            extension_file_name = f"{videoNum}.mp4"
-            videoNum += 1
-            await xhs_store.update_xhs_note_video(note_id, content, extension_file_name)
+    def _media_headers(self) -> Dict:
+        """媒体请求头：平台 Referer（防盗链）+ UA"""
+        return {
+            "Referer": "https://www.xiaohongshu.com/",
+            "User-Agent": self.user_agent,
+        }

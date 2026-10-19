@@ -39,6 +39,10 @@ from .exception import *
 from .field import *
 from .help import *
 
+# 抖音边缘网关 ArgusSecurityPlugin 要求的请求头。网关目前不校验取值，
+# 传固定字符串即可；将来若开始真校验，会重新出现 "Signature Not Found"。
+DOUYIN_ARGUS_HEADER_VALUE = "1"
+
 
 class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
 
@@ -55,6 +59,15 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         self.proxy = proxy
         self.timeout = timeout
         self.headers = headers
+        # 抖音边缘网关的 ArgusSecurityPlugin 会对这批接口做业务前置校验，缺少
+        # x-tt-argus 头时直接 403，响应体为
+        # "Blocked by ArgusSecurityPlugin Uifid Not Found"（补了 uifid 但没这个头则是
+        # "... Signature Not Found"）。当前网关尚未校验该头的值，可传任意字符串；
+        # 一旦升级到真校验，需要改为 WebView 内注入 JS 让页面自带 SDK 补齐。
+        self.headers.setdefault("x-tt-argus", DOUYIN_ARGUS_HEADER_VALUE)
+        uifid = cookie_dict.get("UIFID") or cookie_dict.get("UIFID_TEMP", "")
+        if uifid:
+            self.headers.setdefault("uifid", uifid)
         self._host = "https://www.douyin.com"
         self.cookie_urls = [
             "https://douyin.com",
@@ -214,7 +227,19 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
         :param aweme_id:
         :return:
         """
-        params = {"aweme_id": aweme_id}
+        # 抖音 detail 接口的 Argus 风控要求这两个参数成套出现，缺一则直接 403
+        # （响应体为 "Blocked by ArgusSecurityPlugin Uifid Not Found"）：
+        #   uifid         = UIFID cookie，没有时退到 UIFID_TEMP
+        #   verifyFp / fp = s_v_web_id cookie
+        # 必须用 cookie 里的 s_v_web_id：实测 uifid 搭配自生成的 verifyFp 会被判成
+        # "Signature Not Found"，两者同源才能通过。
+        s_v_web_id = self.cookie_dict.get("s_v_web_id", "")
+        params = {
+            "aweme_id": aweme_id,
+            "uifid": self.cookie_dict.get("UIFID") or self.cookie_dict.get("UIFID_TEMP", ""),
+            "verifyFp": s_v_web_id,
+            "fp": s_v_web_id,
+        }
         headers = copy.copy(self.headers)
         del headers["Origin"]
         res = await self.get("/aweme/v1/web/aweme/detail/", params, headers)
@@ -343,20 +368,6 @@ class DouYinClient(AbstractApiClient, ProxyRefreshMixin):
                 await callback(aweme_list)
             result.extend(aweme_list)
         return result
-
-    async def get_aweme_media(self, url: str) -> Union[bytes, None]:
-        async with make_async_client(proxy=self.proxy) as client:
-            try:
-                response = await client.request("GET", url, timeout=self.timeout, follow_redirects=True)
-                response.raise_for_status()
-                if not response.reason_phrase == "OK":
-                    utils.logger.error(f"[DouYinClient.get_aweme_media] request {url} err, res:{response.text}")
-                    return None
-                else:
-                    return response.content
-            except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
-                utils.logger.error(f"[DouYinClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")  # Keep the original exception type name for developers to debug
-                return None
 
     async def resolve_short_url(self, short_url: str) -> str:
         """

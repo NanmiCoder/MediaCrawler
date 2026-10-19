@@ -104,8 +104,11 @@ CRAWLER_MAX_NOTES_COUNT = 15
 # Controlling the number of concurrent crawlers
 MAX_CONCURRENCY_NUM = 1
 
-# Whether to enable crawling media mode (including image or video resources), crawling media is not enabled by default
-ENABLE_GET_MEIDAS = False
+# 是否启用媒体下载（封面、视频，以及图文帖的图片），默认关闭。
+# 开启后媒体文件按 {SAVE_DATA_PATH 或 data}/{platform}/media/{内容ID}/ 目录聚合存放。
+# 支持的平台：xhs / dy / ks / bili / wb（tieba、zhihu 的数据结构中没有媒体字段，不支持）。
+# 命令行开关：--get_media
+ENABLE_GET_MEDIA = False
 
 # Whether to enable comment crawling mode. Comment crawling is enabled by default.
 ENABLE_GET_COMMENTS = True

@@ -986,7 +986,7 @@ requires-dist = [
     { name = "uvicorn", specifier = "==0.29.0" },
     { name = "websockets", specifier = ">=15.0.1" },
     { name = "wordcloud", specifier = ">=1.9.6" },
-    { name = "xhshow", specifier = ">=0.1.9" },
+    { name = "xhshow", specifier = ">=0.2.0" },
 ]
 
 [[package]]
@@ -2001,12 +2001,12 @@ wheels = [
 
 [[package]]
 name = "xhshow"
-version = "0.1.9"
+version = "0.2.0"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
 dependencies = [
     { name = "pycryptodome" },
 ]
-sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/e5/9a/ed544bea5b6a3702fc232eb774817d7f03a678b5f2ac3d67d3c7698695e6/xhshow-0.1.9.tar.gz", hash = "sha256:5a17cb510e9ab3ca61ef8ce00bd4cae6cbce39bb7b5f8ef38a5a980011883245", size = 55126 }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/17/16/4305d7a372e41b0cf24e9315f1e9a49a3c9ca7fe1229b7da5737e9096a68/xhshow-0.2.0.tar.gz", hash = "sha256:1ae45ce889d0041d57b6eff5dbcbcc31a06f3df351c80b4a50bac983a0e1fe44", size = 65626 }
 wheels = [
-    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/7f/c0/2783314af317b7207422e94f74302dbe32c5c9a1641bcfe11c4c073b0b04/xhshow-0.1.9-py3-none-any.whl", hash = "sha256:c4b0d38f4746b8a3f9c08fcfe4628f81c887b27c76b7ba73fa61ff990d1839dc", size = 31289 },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/8f/6a/4e227e0724606b1965b0036d9558fe25073e46f4ba11b47721e125b3caa3/xhshow-0.2.0-py3-none-any.whl", hash = "sha256:4de6f632ff911621b55335f7772187dcd4eed414142057120a37bfd46ca6d4bb", size = 40918 },
 ]

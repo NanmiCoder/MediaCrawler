@@ -55,6 +55,8 @@
     "saveFormatPlaceholder": "选择格式",
     "commentExtraction": "评论抓取",
     "subComments": "子评论",
+    "downloadMedia": "下载媒体",
+    "downloadMediaHint": "下载封面与视频（图文笔记下载图片），支持小红书/抖音/快手/B站/微博",
     "headlessMode": "无头模式",
     "headlessModeHint": "无 GUI 运行浏览器"
   },

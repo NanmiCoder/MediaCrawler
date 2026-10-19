@@ -224,6 +224,7 @@ class CrawlerManager:
 
         cmd.extend(["--get_comment", "true" if config.enable_comments else "false"])
         cmd.extend(["--get_sub_comment", "true" if config.enable_sub_comments else "false"])
+        cmd.extend(["--get_media", "true" if config.enable_media else "false"])
 
         if config.max_notes_count is not None:
             cmd.extend(["--crawler_max_notes_count", str(config.max_notes_count)])

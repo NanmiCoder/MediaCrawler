@@ -65,7 +65,6 @@ class WeiboClient(ProxyRefreshMixin):
         self.cookie_urls = [self._host]
         self.playwright_page = playwright_page
         self.cookie_dict = cookie_dict
-        self._image_agent_host = "https://i1.wp.com/"
         # Initialize proxy pool (from ProxyRefreshMixin)
         self.init_proxy_pool(proxy_ip_pool)
 
@@ -277,33 +276,6 @@ class WeiboClient(ProxyRefreshMixin):
                 utils.logger.info(f"[WeiboClient.get_note_info_by_id] $render_data value not found")
                 return dict()
 
-    async def get_note_image(self, image_url: str) -> bytes:
-        image_url = image_url[8:]  # Remove https://
-        sub_url = image_url.split("/")
-        image_url = ""
-        for i in range(len(sub_url)):
-            if i == 1:
-                image_url += "large/"  # Get high-resolution images
-            elif i == len(sub_url) - 1:
-                image_url += sub_url[i]
-            else:
-                image_url += sub_url[i] + "/"
-        # Weibo image hosting has anti-hotlinking, so proxy access is needed
-        # Since Weibo images are accessed through i1.wp.com, we need to concatenate the URL
-        final_uri = (f"{self._image_agent_host}"
-                     f"{image_url}")
-        async with make_async_client(proxy=self.proxy) as client:
-            try:
-                response = await client.request("GET", final_uri, timeout=self.timeout)
-                response.raise_for_status()
-                if not response.reason_phrase == "OK":
-                    utils.logger.error(f"[WeiboClient.get_note_image] request {final_uri} err, res:{response.text}")
-                    return None
-                else:
-                    return response.content
-            except httpx.HTTPError as exc:  # some wrong when call httpx.request method, such as connection error, client error, server error or response status code is not 2xx
-                utils.logger.error(f"[DouYinClient.get_aweme_media] {exc.__class__.__name__} for {exc.request.url} - {exc}")    # Keep original exception type name for developer debugging
-                return None
 
     async def get_creator_container_info(self, creator_id: str) -> Dict:
         """

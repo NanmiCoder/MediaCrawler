@@ -33,12 +33,14 @@ from playwright.async_api import (
 
 import config
 from base.base_crawler import AbstractCrawler
+from media_downloader import MediaDownloader
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import douyin as douyin_store
 from tools import utils
 from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
 
+from . import media as douyin_media
 from .client import DouYinClient
 from .exception import DataFetchError
 from .field import PublishTimeType
@@ -63,6 +65,7 @@ class DouYinCrawler(AbstractCrawler):
         ]
         self.cdp_manager = None
         self.ip_proxy_pool = None  # Proxy IP pool for automatic proxy refresh
+        self._media_downloader: Optional[MediaDownloader] = None
 
     async def start(self) -> None:
         playwright_proxy_format, httpx_proxy_format = None, None
@@ -170,7 +173,7 @@ class DouYinCrawler(AbstractCrawler):
                     aweme_list.append(aweme_info.get("aweme_id", ""))
                     page_aweme_list.append(aweme_info.get("aweme_id", ""))
                     await douyin_store.update_douyin_aweme(aweme_item=aweme_info)
-                    await self.get_aweme_media(aweme_item=aweme_info)
+                    await self.download_media(aweme_item=aweme_info)
                 
                 # Batch get note comments for the current page
                 await self.batch_get_note_comments(page_aweme_list)
@@ -212,7 +215,7 @@ class DouYinCrawler(AbstractCrawler):
         for aweme_detail in aweme_details:
             if aweme_detail is not None:
                 await douyin_store.update_douyin_aweme(aweme_item=aweme_detail)
-                await self.get_aweme_media(aweme_item=aweme_detail)
+                await self.download_media(aweme_item=aweme_detail)
         await self.batch_get_note_comments(aweme_id_list)
 
     async def get_aweme_detail(self, aweme_id: str, semaphore: asyncio.Semaphore) -> Any:
@@ -304,7 +307,7 @@ class DouYinCrawler(AbstractCrawler):
         for aweme_item in note_details:
             if aweme_item is not None:
                 await douyin_store.update_douyin_aweme(aweme_item=aweme_item)
-                await self.get_aweme_media(aweme_item=aweme_item)
+                await self.download_media(aweme_item=aweme_item)
 
     async def create_douyin_client(self, httpx_proxy: Optional[str]) -> DouYinClient:
         """Create douyin client"""
@@ -399,72 +402,44 @@ class DouYinCrawler(AbstractCrawler):
             await self.browser_context.close()
         utils.logger.info("[DouYinCrawler.close] Browser context closed ...")
 
-    async def get_aweme_media(self, aweme_item: Dict):
-        """
-        获取抖音媒体，自动判断媒体类型是短视频还是帖子图片并下载
+    async def download_media(self, aweme_item: Dict) -> None:
+        """下载抖音作品的媒体资源（图集图片，或视频 + 封面）
 
         Args:
             aweme_item (Dict): 抖音作品详情
         """
-        if not config.ENABLE_GET_MEIDAS:
-            utils.logger.info(f"[DouYinCrawler.get_aweme_media] Crawling image mode is not enabled")
+        if not config.ENABLE_GET_MEDIA:
             return
-        # List of note urls. If it is a short video type, an empty list will be returned.
-        note_download_url: List[str] = douyin_store._extract_note_image_list(aweme_item)
-        # The video URL will always exist, but when it is a short video type, the file is actually an audio file.
-        video_download_url: str = douyin_store._extract_video_download_url(aweme_item)
-        # TODO: Douyin does not adopt the audio and video separation strategy, so the audio can be separated from the original video and will not be extracted for the time being.
-        if note_download_url:
-            await self.get_aweme_images(aweme_item)
+        try:
+            items = douyin_media.build_media_items(aweme_item)
+            if items:
+                await self._get_media_downloader().download_all(items)
+        except Exception as exc:
+            # 媒体下载是旁路能力，解析异常/网络异常都不能中断爬取主流程
+            utils.logger.error(f"[DouYinCrawler.download_media] 媒体下载异常: {exc}")
+
+    def _get_media_downloader(self) -> MediaDownloader:
+        """惰性创建媒体下载器，并同步最新的代理与 UA（代理池是就地刷新的）"""
+        if self._media_downloader is None:
+            self._media_downloader = MediaDownloader(
+                platform="dy",
+                proxy=getattr(self.dy_client, "proxy", None),
+                extra_headers=self._media_headers(),
+            )
         else:
-            await self.get_aweme_video(aweme_item)
+            self._media_downloader.update_credentials(
+                proxy=getattr(self.dy_client, "proxy", None),
+                extra_headers=self._media_headers(),
+            )
+        return self._media_downloader
 
-    async def get_aweme_images(self, aweme_item: Dict):
+    def _media_headers(self) -> Dict:
+        """媒体请求头：平台 Referer（防盗链）+ UA。
+
+        client.headers 里含 Cookie，不能整体透传到 CDN 请求上，因此只取 UA。
         """
-        get aweme images. please use get_aweme_media
-
-        Args:
-            aweme_item (Dict): 抖音作品详情
-        """
-        if not config.ENABLE_GET_MEIDAS:
-            return
-        aweme_id = aweme_item.get("aweme_id")
-        # List of note urls. If it is a short video type, an empty list will be returned.
-        note_download_url: List[str] = douyin_store._extract_note_image_list(aweme_item)
-
-        if not note_download_url:
-            return
-        picNum = 0
-        for url in note_download_url:
-            if not url:
-                continue
-            content = await self.dy_client.get_aweme_media(url)
-            await asyncio.sleep(random.random())
-            if content is None:
-                continue
-            extension_file_name = f"{picNum:>03d}.jpeg"
-            picNum += 1
-            await douyin_store.update_dy_aweme_image(aweme_id, content, extension_file_name)
-
-    async def get_aweme_video(self, aweme_item: Dict):
-        """
-        get aweme videos. please use get_aweme_media
-
-        Args:
-            aweme_item (Dict): 抖音作品详情
-        """
-        if not config.ENABLE_GET_MEIDAS:
-            return
-        aweme_id = aweme_item.get("aweme_id")
-
-        # The video URL will always exist, but when it is a short video type, the file is actually an audio file.
-        video_download_url: str = douyin_store._extract_video_download_url(aweme_item)
-
-        if not video_download_url:
-            return
-        content = await self.dy_client.get_aweme_media(video_download_url)
-        await asyncio.sleep(random.random())
-        if content is None:
-            return
-        extension_file_name = f"video.mp4"
-        await douyin_store.update_dy_aweme_video(aweme_id, content, extension_file_name)
+        headers = {"Referer": "https://www.douyin.com/"}
+        client_headers = getattr(self.dy_client, "headers", {}) or {}
+        if client_headers.get("User-Agent"):
+            headers["User-Agent"] = client_headers["User-Agent"]
+        return headers

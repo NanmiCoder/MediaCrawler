@@ -55,6 +55,8 @@
     "saveFormatPlaceholder": "Select format",
     "commentExtraction": "Comment Extraction",
     "subComments": "Sub-comments",
+    "downloadMedia": "DOWNLOAD_MEDIA",
+    "downloadMediaHint": "Download cover and video (images for image posts). Supports xhs/dy/ks/bili/wb",
     "headlessMode": "HEADLESS_MODE",
     "headlessModeHint": "Run browser without GUI"
   },
