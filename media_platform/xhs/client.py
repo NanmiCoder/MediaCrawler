@@ -128,7 +128,8 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         stop=stop_after_attempt(3),
         wait=wait_fixed(1),
         retry=retry_if_not_exception_type(
-            (NoteNotFoundError, IPBlockError, PlatformAccessError)
+            # CancelledError must not be retried, or Ctrl+C is swallowed and the crawl keeps going
+            (asyncio.CancelledError, NoteNotFoundError, IPBlockError, PlatformAccessError)
         ),
     )
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
@@ -690,7 +691,7 @@ class XiaoHongShuClient(AbstractApiClient, ProxyRefreshMixin):
         stop=stop_after_attempt(3),
         wait=wait_fixed(1),
         retry=retry_if_not_exception_type(
-            (RetryError, IPBlockError, PlatformAccessError)
+            (asyncio.CancelledError, RetryError, IPBlockError, PlatformAccessError)
         ),
     )
     async def get_note_by_id_from_html(
