@@ -447,8 +447,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
 
 ### 🧩 我的其他项目
 - **正在创业做的项目**：[ModelDial](https://modeldial.com/?utm_source=github&utm_medium=referral&utm_campaign=mediacrawler&utm_content=readme-zh) — 在私有数据集上实测 AI 模型，对比能力、费用和思考档位，帮你找到适合自己任务的模型
-- **爬虫入门教程**：[CrawlerTutorial 免费教程](https://github.com/NanmiCoder/CrawlerTutorial)
-- **新闻爬虫开源项目**：[NewsCrawlerCollection](https://github.com/NanmiCoder/NewsCrawlerCollection)
 - **开源桌面端 Agent**：[cc-haha](https://github.com/NanmiCoder/cc-haha) — 本地优先、跨平台的 Agent 桌面工作台，支持多 Agent 协作、Git Worktree、技能市场、多模型与 Computer Use，并可通过微信 / 飞书 / 钉钉等远程接入
 - **DeepSeek Harness 插件**：[dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) — 给 DeepSeek Harness 装上 Agent Teams，让多个 Agent 组队并行协作完成复杂任务
 
