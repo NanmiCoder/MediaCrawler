@@ -363,6 +363,7 @@ Become a sponsor and showcase your product here, getting massive exposure daily!
 - **FAQ**: [MediaCrawler Complete Documentation](https://nanmicoder.github.io/MediaCrawler/)
 
 ### 🧩 My Other Projects
+- **The Startup I'm Building**: [ModelDial](https://modeldial.com/?utm_source=github&utm_medium=referral&utm_campaign=mediacrawler&utm_content=readme-en) — benchmarks AI models on private datasets, comparing capabilities, costs and reasoning effort levels to help you find the right model for your tasks
 - **Crawler Beginner Tutorial**: [CrawlerTutorial Free Tutorial](https://github.com/NanmiCoder/CrawlerTutorial)
 - **News Crawler Open Source Project**: [NewsCrawlerCollection](https://github.com/NanmiCoder/NewsCrawlerCollection)
 - **Open Source Desktop Agent**: [cc-haha](https://github.com/NanmiCoder/cc-haha) — a local-first, cross-platform desktop workspace for agents, with multi-agent collaboration, Git worktrees, a skill marketplace, multi-model support and Computer Use, plus remote access via WeChat / Feishu / DingTalk and more
