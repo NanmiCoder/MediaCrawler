@@ -114,7 +114,7 @@ class XiaoHongShuLogin(AbstractLogin):
                 timeout=5000
             )
             await element.click()
-        except Exception as e:
+        except Exception:
             utils.logger.info("[XiaoHongShuLogin.login_by_mobile] have not found mobile button icon and keep going ...")
 
         await asyncio.sleep(1)

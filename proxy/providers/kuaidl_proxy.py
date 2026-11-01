@@ -26,7 +26,6 @@ import os
 import re
 from typing import Dict, List
 
-import httpx
 from pydantic import BaseModel, Field
 from tools.httpx_util import make_async_client
 

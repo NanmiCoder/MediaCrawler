@@ -22,19 +22,14 @@
 # @Author  : persist1@126.com
 # @Time    : 2025/9/5 19:34
 # @Desc    : Douyin storage implementation class
-import asyncio
-import json
-import os
-import pathlib
 from typing import Dict
 
 from sqlalchemy import select
 
-import config
 from base.base_crawler import AbstractStore
 from database.db_session import get_session
 from database.models import DouyinAweme, DouyinAwemeComment
-from tools import utils, words
+from tools import utils
 from tools.async_file_writer import AsyncFileWriter
 from var import crawler_type_var
 from database.mongodb_store_base import MongoDBStoreBase

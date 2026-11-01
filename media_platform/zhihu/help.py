@@ -255,25 +255,6 @@ class ZhihuExtractor:
         return res
 
     @staticmethod
-    def _extract_comment_ip_location(comment_tags: List[Dict]) -> str:
-        """
-        extract comment ip location
-        Args:
-            comment_tags:
-
-        Returns:
-
-        """
-        if not comment_tags:
-            return ""
-
-        for ct in comment_tags:
-            if ct.get("type") == "ip_info":
-                return ct.get("text")
-
-        return ""
-
-    @staticmethod
     def extract_offset(paging_info: Dict) -> str:
         """
         extract offset
@@ -292,23 +273,6 @@ class ZhihuExtractor:
         query_params = parse_qs(parsed_url.query)
         offset = query_params.get('offset', [""])[0]
         return offset
-
-    @staticmethod
-    def _foramt_gender_text(gender: int) -> str:
-        """
-        format gender text
-        Args:
-            gender:
-
-        Returns:
-
-        """
-        if gender == 1:
-            return "Male"
-        elif gender == 0:
-            return "Female"
-        else:
-            return "Unknown"
 
 
     def extract_creator(self, user_url_token: str, html_content: str) -> Optional[ZhihuCreator]:

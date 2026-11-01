@@ -96,10 +96,3 @@ class LogEntry(BaseModel):
     message: str
 
 
-class DataFileInfo(BaseModel):
-    """Data file information"""
-    name: str
-    path: str
-    size: int
-    modified_at: str
-    record_count: Optional[int] = None

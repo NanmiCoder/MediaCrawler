@@ -21,7 +21,7 @@
 import asyncio
 import os
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from playwright.async_api import (
     BrowserContext,
