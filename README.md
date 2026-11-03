@@ -2,17 +2,7 @@
 
 <div align="center">
 
-### 🤝 特别感谢金牌赞助商
-
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
-  <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
-</a>
-
-<br>
-
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
-<small>BrowserAct 支持一句话从任意网站提取数据。无需代码，一次构建、稳定复用，Token 消耗极低。BrowserAct 使用真实浏览器自动构建数据采集 Bot，内置隐身浏览、验证码处理和住宅代理，直接输出结构化结果。立即免费试用。</small>
-</a>
+<sub>📢 首页赞助位虚位以待 · 合作请联系 <a href="mailto:relakkes@gmail.com">relakkes@gmail.com</a></sub>
 
 </div>
 

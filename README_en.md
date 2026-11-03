@@ -2,17 +2,7 @@
 
 <div align="center">
 
-### 🤝 Special Thanks to Our Gold Sponsor
-
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
-  <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
-</a>
-
-<br>
-
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
-<small>BrowserAct lets you extract data from any website with a single sentence. No code required—build once, reuse reliably, and consume very few tokens. BrowserAct uses a real browser to automatically build data collection Bots, with built-in stealth browsing, CAPTCHA handling, and residential proxies, then outputs structured results directly. Try it free now.</small>
-</a>
+<sub>📢 This top sponsor spot is open · Contact <a href="mailto:relakkes@gmail.com">relakkes@gmail.com</a></sub>
 
 </div>
 

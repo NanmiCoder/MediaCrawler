@@ -2,17 +2,7 @@
 
 <div align="center">
 
-### 🤝 Agradecimientos Especiales a Nuestro Patrocinador Oro
-
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
-  <img src="docs/static/images/browseract_ad.jpg" alt="BrowserAct" width="600">
-</a>
-
-<br>
-
-<a href="https://www.browseract.ai/mediacrawler" target="_blank">
-<small>BrowserAct permite extraer datos de cualquier sitio web con una sola frase. Sin código: créalo una vez, reutilízalo de forma estable y consume muy pocos tokens. BrowserAct utiliza un navegador real para crear automáticamente Bots de recolección de datos, con navegación sigilosa, gestión de CAPTCHA y proxies residenciales integrados, y entrega directamente resultados estructurados. Pruébalo gratis ahora.</small>
-</a>
+<sub>📢 Este espacio de patrocinio está disponible · Contacto: <a href="mailto:relakkes@gmail.com">relakkes@gmail.com</a></sub>
 
 </div>
 
