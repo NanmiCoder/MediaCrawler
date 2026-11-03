@@ -34,6 +34,7 @@
 [![中文](https://img.shields.io/badge/🇨🇳_中文-Available-blue)](README.md)
 [![English](https://img.shields.io/badge/🇺🇸_English-Available-green)](README_en.md)
 [![Español](https://img.shields.io/badge/🇪🇸_Español-Current-green)](README_es.md)
+[![日本語](https://img.shields.io/badge/🇯🇵_日本語-Available-green)](README_ja.md)
 
 </div>
 
