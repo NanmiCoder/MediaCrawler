@@ -111,17 +111,26 @@ class BilibiliClient(AbstractApiClient, ProxyRefreshMixin):
         Get the latest img_key and sub_key
         :return:
         """
-        local_storage = await self.playwright_page.evaluate("() => window.localStorage")
-        wbi_img_urls = local_storage.get("wbi_img_urls", "")
-        if not wbi_img_urls:
-            img_url_from_storage = local_storage.get("wbi_img_url")
-            sub_url_from_storage = local_storage.get("wbi_sub_url")
-            if img_url_from_storage and sub_url_from_storage:
-                wbi_img_urls = f"{img_url_from_storage}-{sub_url_from_storage}"
+        wbi_img_urls = ""
+        try:
+            local_storage = await self.playwright_page.evaluate("() => window.localStorage")
+            wbi_img_urls = local_storage.get("wbi_img_urls", "")
+            if not wbi_img_urls:
+                img_url_from_storage = local_storage.get("wbi_img_url")
+                sub_url_from_storage = local_storage.get("wbi_sub_url")
+                if img_url_from_storage and sub_url_from_storage:
+                    wbi_img_urls = f"{img_url_from_storage}-{sub_url_from_storage}"
+        except Exception:
+            # The page/context may have been closed (e.g. TargetClosedError); fall back to the nav API below.
+            wbi_img_urls = ""
         if wbi_img_urls and "-" in wbi_img_urls:
             img_url, sub_url = wbi_img_urls.split("-")
         else:
-            resp = await self.request(method="GET", url=self._host + "/x/web-interface/nav")
+            resp = await self.request(
+                method="GET",
+                url=self._host + "/x/web-interface/nav",
+                headers=self.headers,
+            )
             img_url: str = resp['wbi_img']['img_url']
             sub_url: str = resp['wbi_img']['sub_url']
         img_key = img_url.rsplit('/', 1)[1].split('.')[0]
