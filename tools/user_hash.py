@@ -6,6 +6,19 @@
 # （用户 ID、IP 归属地、头像、主页链接、签名、性别等一律不采集；
 # 昵称保留但做中间脱敏）。本模块提供匿名化与脱敏工具。
 import hashlib
+import os
+
+
+def keep_creator_nickname() -> bool:
+    """Opt-in: local apps may keep the tracked creator's raw nickname.
+
+    Default remains masked. InsightDeck sets ``XHS_KEEP_CREATOR_NICKNAME=true``
+    when driving this crawler so the user list can show the real XHS name.
+    """
+    override = os.getenv("XHS_KEEP_CREATOR_NICKNAME")
+    if override is None:
+        return False
+    return override.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def anonymize_user_id(user_id) -> str:
@@ -34,3 +47,10 @@ def mask_nickname(name) -> str:
     if len(s) == 2:
         return s[0] + "*"
     return s[0] + "***" + s[-1]
+
+
+def persist_nickname(name, keep_raw: bool = False) -> str:
+    """Return the raw nickname when ``keep_raw`` is set, otherwise mask it."""
+    if keep_raw:
+        return "" if name is None else str(name)
+    return mask_nickname(name)

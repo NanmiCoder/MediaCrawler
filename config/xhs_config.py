@@ -31,6 +31,11 @@ XHS_SPECIFIED_NOTE_URL_LIST = [
 
 # Specify the creator URL list, which needs to carry xsec_token and xsec_source parameters.
 
+# 评论落库：为 True 时仅保存「帖主回复过的一级评论」+「帖主楼中楼回复」
+# 需同时开启 base_config.py 中的 ENABLE_GET_SUB_COMMENTS = True
+# 也可用环境变量 XHS_SAVE_ONLY_AUTHOR_REPLY_THREADS 覆盖。
+XHS_SAVE_ONLY_AUTHOR_REPLY_THREADS = True
+
 XHS_CREATOR_ID_LIST = [
     "https://www.xiaohongshu.com/user/profile/5f58bd990000000001003753?xsec_token=ABYVg1evluJZZzpMX-VWzchxQ1qSNVW3r-jOEnKqMcgZw=&xsec_source=pc_search"
     # ........................
