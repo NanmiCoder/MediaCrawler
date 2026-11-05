@@ -23,6 +23,11 @@ from typing import Dict, Optional
 
 import humps
 
+from tools import utils
+
+# Matches a bare JS `undefined` value (after `:`, `[` or `,`), not the word inside strings
+_JS_UNDEFINED_RE = re.compile(r"(?<=[:\[,])\s*undefined(?=\s*[,}\]])")
+
 
 class XiaoHongShuExtractor:
     def __init__(self):
@@ -41,12 +46,17 @@ class XiaoHongShuExtractor:
             # Either a CAPTCHA appeared or the note doesn't exist
             return None
 
-        state = re.findall(r"window.__INITIAL_STATE__=({.*})</script>", html)[
-            0
-        ].replace("undefined", '""')
+        state = re.findall(r"window.__INITIAL_STATE__=({.*})</script>", html)[0]
+        # Only replace bare JS `undefined` values. A blanket str.replace also rewrote the
+        # word "undefined" inside note titles/descriptions and produced invalid JSON.
+        state = _JS_UNDEFINED_RE.sub("null", state)
         if state != "{}":
-            note_dict = humps.decamelize(json.loads(state))
-            return note_dict["note"]["note_detail_map"][note_id]["note"]
+            try:
+                note_dict = humps.decamelize(json.loads(state))
+                return note_dict["note"]["note_detail_map"][note_id]["note"]
+            except (json.JSONDecodeError, KeyError) as e:
+                utils.logger.warning(f"[XiaoHongShuExtractor.extract_note_detail_from_html] parse failed for {note_id}: {e}")
+                return None
         return None
 
     def extract_creator_info_from_html(self, html: str) -> Optional[Dict]:
@@ -63,7 +73,15 @@ class XiaoHongShuExtractor:
         )
         if match is None:
             return None
-        info = json.loads(match.group(1).replace(":undefined", ":null"), strict=False)
+        raw = _JS_UNDEFINED_RE.sub("null", match.group(1))
+        # The page state can contain JS literals such as `new Set([...])`, which are not JSON
+        raw = re.sub(r"new (?:Set|Map)\((\[[^()]*?\])\)", r"\1", raw)
+        try:
+            # The greedy regex may capture trailing script content; decode only the first JSON value
+            info, _ = json.JSONDecoder(strict=False).raw_decode(raw.strip())
+        except json.JSONDecodeError as e:
+            utils.logger.warning(f"[XiaoHongShuExtractor.extract_creator_info_from_html] parse failed: {e}")
+            return None
         if info is None:
             return None
         return info.get("user").get("userPageData")
