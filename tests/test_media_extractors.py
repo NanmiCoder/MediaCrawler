@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+import json
+
 import config
 import pytest
 
@@ -24,6 +26,7 @@ from media_platform.douyin import media as douyin_media
 from media_platform.kuaishou import media as kuaishou_media
 from media_platform.weibo import media as weibo_media
 from media_platform.xhs import media as xhs_media
+from media_platform.xhs.extractor import XiaoHongShuExtractor
 
 # --------------------------------------------------------------------------- xhs fixture
 
@@ -89,6 +92,40 @@ XHS_IMAGE_NOTE = {
         {"url_default": "https://sns-webpic.xhscdn.com/1"},
         {"url_default": "https://sns-webpic.xhscdn.com/2"},
         {"url_default": "https://sns-webpic.xhscdn.com/3"},
+    ],
+}
+
+# 首图基于 Web/H5 公开响应裁剪；其余合成条目覆盖静态混排与分档更名。
+# live_photo 是标记，stream 属于每张图片。
+# 仅保留字段结构，地址为测试占位符，不包含账号、签名 URL 或作者信息。
+XHS_LIVE_PHOTO_NOTE = {
+    "note_id": "xhs-live-photo",
+    "type": "normal",
+    "image_list": [
+        {
+            "url_default": "https://cdn/still1",
+            "live_photo": True,
+            "stream": {
+                "h264": [{
+                    "stream_type": 19,
+                    "stream_desc": "WEB_LIVEPHOTO_19",
+                    "height": 1440,
+                    "width": 1080,
+                    "duration": 3000,
+                    "master_url": "https://cdn/live1.mp4",
+                    "backup_urls": ["https://backup/live1.mp4"],
+                }],
+                "h265": [],
+                "h266": [],
+                "av1": [],
+            },
+        },
+        {"url_default": "https://cdn/still2", "live_photo": False},
+        {
+            "url": "https://cdn/still3",
+            "live_photo": True,
+            "stream": {"EF4": [{"master_url": "https://cdn/live3.mp4"}]},
+        },
     ],
 }
 
@@ -232,6 +269,78 @@ def test_xhs_image_note_skips_entries_without_url():
     assert [item.url for item in items] == ["https://cdn/x"]
 
 
+def test_xhs_mixed_images_keep_live_photo_pairs():
+    items = xhs_media.build_media_items(XHS_LIVE_PHOTO_NOTE)
+
+    assert [item.stem for item in items] == ["001", "001_live", "002", "003", "003_live"]
+    assert [item.url for item in items] == [
+        "https://cdn/still1", "https://cdn/live1.mp4", "https://cdn/still2",
+        "https://cdn/still3", "https://cdn/live3.mp4",
+    ]
+    assert items[1].media_type is MediaType.VIDEO
+    assert items[1].backup_urls == ("https://backup/live1.mp4",)
+    assert items[4].media_type is MediaType.VIDEO
+    assert all(item.content_id == "xhs-live-photo" for item in items)
+
+
+def test_xhs_live_photo_ranks_streams_and_keeps_cdn_backups():
+    image = {
+        "live_photo": True,
+        "stream": {
+            "h264": [{"master_url": "https://cdn/low", "height": 720}],
+            "EF5": [{
+                "master_url": "//cdn/high",
+                "height": "1440",
+                "avg_bitrate": "900",
+                "backup_urls": ["https://cdn/high", "//backup/high", None, ""],
+            }],
+            "h265": [{"master_url": "https://cdn/middle", "height": 1440, "avg_bitrate": 100}],
+        },
+    }
+
+    assert xhs_media.extract_live_photo_video_urls(image) == [
+        "https://cdn/high", "https://backup/high", "https://cdn/middle", "https://cdn/low",
+    ]
+
+
+@pytest.mark.parametrize("stream", [None, "invalid", [], {"h264": None}, {"h264": [None, {}]}])
+def test_xhs_missing_or_malformed_live_stream_keeps_static_image(stream):
+    note = {
+        "note_id": "n1", "type": "normal",
+        "image_list": [{"url_default": "https://cdn/still", "live_photo": True, "stream": stream}],
+    }
+
+    items = xhs_media.build_media_items(note)
+
+    assert [(item.stem, item.url) for item in items] == [("001", "https://cdn/still")]
+
+
+def test_xhs_unmarked_image_does_not_download_stream():
+    assert xhs_media.extract_live_photo_video_urls({
+        "live_photo": False, "stream": {"h264": [{"master_url": "https://cdn/unused"}]},
+    }) == []
+
+
+def test_xhs_live_photo_survives_html_detail_extraction():
+    state = {"note": {"noteDetailMap": {"n1": {"note": {
+        "noteId": "n1", "type": "normal", "imageList": [{
+            "urlDefault": "https://cdn/still", "livePhoto": True,
+            "stream": {"h264": [{
+                "masterUrl": "https://cdn/live", "backupUrls": ["https://backup/live"],
+            }]},
+        }],
+    }}}}}
+    note = XiaoHongShuExtractor().extract_note_detail_from_html(
+        "n1", f"<script>window.__INITIAL_STATE__={json.dumps(state)}</script>",
+    )
+
+    items = xhs_media.build_media_items(note)
+
+    assert [item.stem for item in items] == ["001", "001_live"]
+    assert items[1].url == "https://cdn/live"
+    assert items[1].backup_urls == ("https://backup/live",)
+
+
 def test_xhs_missing_note_id_returns_empty():
     assert xhs_media.build_media_items({"type": "video"}) == []
 
@@ -262,6 +371,24 @@ DY_IMAGE_ITEM = {
     ],
     "video": {"raw_cover": {"url_list": ["https://cdn/cover"]}},
 }
+
+DY_LIVE_PHOTO_ITEM = {
+    "aweme_id": "7300000000000000003",
+    "desc": "live photo images",
+    "images": [
+        {
+            "url_list": ["https://cdn-a/img1-small", "https://cdn-b/img1"],
+            "live_photo_type": 1,
+            "video": {
+                "play_addr_h264": {"url_list": ["https://cdn-a/live1", "https://cdn-b/live1"]},
+            },
+        },
+        {
+            "url_list": ["https://cdn-a/img2-small", "https://cdn-b/img2"],
+        },
+    ],
+}
+
 
 
 # --------------------------------------------------------------------------- douyin 用例
@@ -315,6 +442,77 @@ def test_douyin_image_item_yields_numbered_images_without_cover():
     assert [item.stem for item in items] == ["001", "002"]
     assert [item.url for item in items] == ["https://cdn-b/img1", "https://cdn-b/img2"]
     assert not any(item.stem == "cover" for item in items)
+
+
+def test_douyin_image_item_yields_live_photo_video():
+    items = douyin_media.build_media_items(DY_LIVE_PHOTO_ITEM)
+
+    assert [item.stem for item in items] == ["001", "001_live", "002"]
+    img1, live1, img2 = items
+
+    assert img1.media_type is MediaType.IMAGE
+    assert img1.url == "https://cdn-b/img1"
+
+    assert live1.media_type is MediaType.VIDEO
+    assert live1.url == "https://cdn-b/live1"
+    assert live1.backup_urls == ("https://cdn-a/live1",)
+
+    assert img2.media_type is MediaType.IMAGE
+    assert img2.url == "https://cdn-b/img2"
+
+
+@pytest.mark.parametrize("builder, payload", [
+    (xhs_media.build_media_items, XHS_LIVE_PHOTO_NOTE),
+    (douyin_media.build_media_items, DY_LIVE_PHOTO_ITEM),
+])
+def test_shared_live_photo_switch_keeps_only_static_images(monkeypatch, builder, payload):
+    monkeypatch.setattr(config, "DOWNLOAD_LIVE_PHOTO", False)
+    items = builder(payload)
+
+    assert items
+    assert all(item.media_type is MediaType.IMAGE for item in items)
+    assert not any(item.stem.endswith("_live") for item in items)
+
+
+@pytest.mark.parametrize("builder, payload", [
+    (xhs_media.build_media_items, XHS_VIDEO_NOTE),
+    (douyin_media.build_media_items, DY_VIDEO_ITEM),
+])
+def test_shared_live_photo_switch_does_not_disable_regular_video(monkeypatch, builder, payload):
+    monkeypatch.setattr(config, "DOWNLOAD_LIVE_PHOTO", False)
+    assert [item.stem for item in builder(payload)] == ["cover", "video"]
+
+
+@pytest.mark.parametrize("platform", ["xhs", "dy"])
+def test_live_photo_pairs_survive_missing_static_urls(platform):
+    if platform == "xhs":
+        live = {"live_photo": True, "stream": {"h264": [{"master_url": "https://cdn/live"}]}}
+        payload = {"note_id": "n1", "type": "normal", "image_list": [
+            {}, {**live, "url_default": "https://cdn/still2"}, live, None,
+            {**live, "url_default": "https://cdn/still5"},
+        ]}
+        items = xhs_media.build_media_items(payload)
+    else:
+        live = {"video": {"play_addr_h264": {"url_list": ["https://cdn/live"]}}}
+        payload = {"aweme_id": "a1", "images": [
+            {}, {**live, "url_list": ["https://cdn/still2"]}, live, None,
+            {**live, "url_list": ["https://cdn/still5"]},
+        ]}
+        items = douyin_media.build_media_items(payload)
+
+    assert [(item.stem, item.url) for item in items] == [
+        ("002", "https://cdn/still2"), ("002_live", "https://cdn/live"),
+        ("003_live", "https://cdn/live"), ("005", "https://cdn/still5"),
+        ("005_live", "https://cdn/live"),
+    ]
+
+
+def test_douyin_live_photo_disabled_by_config(monkeypatch):
+    monkeypatch.setattr(config, "DOWNLOAD_LIVE_PHOTO", False)
+    items = douyin_media.build_media_items(DY_LIVE_PHOTO_ITEM)
+
+    assert [item.stem for item in items] == ["001", "002"]
+    assert all(item.media_type is MediaType.IMAGE for item in items)
 
 
 def test_douyin_empty_video_yields_nothing():

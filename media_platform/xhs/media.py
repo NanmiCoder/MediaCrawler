@@ -20,7 +20,7 @@
 """小红书媒体地址提取。
 
 输入是 ``/api/sns/web/v1/feed`` 返回的原始 ``note_card``（snake_case 字段），
-输出是下载器可直接消费的 ``MediaItem`` 列表。无 IO（会读取 config 决定国际版策略）。
+输出是下载器可直接消费的 ``MediaItem`` 列表。无 IO（配置控制国际版与实况策略）。
 """
 
 from __future__ import annotations
@@ -103,15 +103,45 @@ def extract_video_urls(note_item: Dict) -> List[str]:
     return urls
 
 
+def _image_url_of(image_item) -> str:
+    if not isinstance(image_item, dict):
+        return ""
+    url = image_item.get("url_default") or image_item.get("url") or ""
+    return url if isinstance(url, str) else ""
+
+
 def extract_image_urls(note_item: Dict) -> List[str]:
     """提取图文笔记的图片地址（按原始顺序）"""
+    return [
+        url
+        for image_item in note_item.get("image_list") or []
+        if (url := _image_url_of(image_item))
+    ]
+
+
+def extract_live_photo_video_urls(image_item: Dict) -> List[str]:
+    """提取 Web 实况图片自身的 stream，保留清晰度与 CDN 备用地址。
+
+    HTML 详情经 XiaoHongShuExtractor 转为 snake_case 后，与 feed 的字段一致。
+    不使用笔记顶层 video，也不从图片 file_id 猜测视频原片地址。
+    网页流可能包含平台水印，下载时保留服务端提供的原始内容。
+    """
+    if not isinstance(image_item, dict) or not image_item.get("live_photo"):
+        return []
+
+    stream = _as_dict(image_item.get("stream"))
+    ranked = sorted(_iter_stream_items(stream), key=_stream_quality_key, reverse=True)
     urls: List[str] = []
-    for image_item in note_item.get("image_list") or []:
-        if not isinstance(image_item, dict):
-            continue
-        url = image_item.get("url_default") or image_item.get("url") or ""
-        if isinstance(url, str) and url:
-            urls.append(url)
+    for item in ranked:
+        backups = item.get("backup_urls")
+        candidates = [item["master_url"]] + (backups if isinstance(backups, list) else [])
+        for url in candidates:
+            if not isinstance(url, str) or not url:
+                continue
+            if url.startswith("//"):
+                url = f"https:{url}"
+            if url not in urls:
+                urls.append(url)
     return urls
 
 
@@ -143,7 +173,7 @@ def build_media_items(note_item: Dict) -> List[MediaItem]:
     """把一个笔记转换成待下载的媒体任务列表。
 
     - 视频笔记：封面 + 视频。其 image_list 通常只有封面一张，不再按图集重复下载
-    - 图文笔记：各张图片（第一张即封面，因此不再单独下载一份 cover）
+    - 图文笔记：各张图片及实况图随附视频（受 DOWNLOAD_LIVE_PHOTO 控制）
     """
     if not isinstance(note_item, dict):
         return []
@@ -178,14 +208,29 @@ def build_media_items(note_item: Dict) -> List[MediaItem]:
                 )
             )
     else:
-        for index, image_url in enumerate(extract_image_urls(note_item), start=1):
-            items.append(
-                MediaItem(
-                    url=image_url,
-                    media_type=MediaType.IMAGE,
-                    content_id=content_id,
-                    stem=f"{index:03d}",
+        for index, image_item in enumerate(note_item.get("image_list") or [], start=1):
+            image_url = _image_url_of(image_item)
+            if image_url:
+                items.append(
+                    MediaItem(
+                        url=image_url,
+                        media_type=MediaType.IMAGE,
+                        content_id=content_id,
+                        stem=f"{index:03d}",
+                    )
                 )
-            )
+
+            if config.DOWNLOAD_LIVE_PHOTO:
+                live_video_urls = extract_live_photo_video_urls(image_item)
+                if live_video_urls:
+                    items.append(
+                        MediaItem(
+                            url=live_video_urls[0],
+                            backup_urls=tuple(live_video_urls[1:]),
+                            media_type=MediaType.VIDEO,
+                            content_id=content_id,
+                            stem=f"{index:03d}_live",
+                        )
+                    )
 
     return items

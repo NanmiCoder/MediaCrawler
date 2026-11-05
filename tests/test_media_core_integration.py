@@ -16,8 +16,10 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import config
 import httpx
@@ -28,6 +30,7 @@ from media_platform.douyin.core import DouYinCrawler
 from media_platform.kuaishou.core import KuaishouCrawler
 from media_platform.weibo.core import WeiboCrawler
 from media_platform.xhs.core import XiaoHongShuCrawler
+from store import xhs as xhs_store
 from tests.media_server import DEFAULT_CONTENT, MediaTestServer, start_server
 
 
@@ -66,6 +69,47 @@ def assert_downloaded(directory: Path, filename: str) -> Path:
 
 
 # --------------------------------------------------------------------------- xhs
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("image_url_key", ["url", "url_default"])
+async def test_xhs_detail_stores_note_before_downloading_live_photo(
+    server, tmp_path, monkeypatch, image_url_key,
+):
+    """覆盖生产入口的入库步骤，防止它破坏 HTML 的 url-only 实况图片。"""
+    monkeypatch.setattr(config, "DOWNLOAD_LIVE_PHOTO", True)
+    monkeypatch.setattr(config, "ENABLE_GET_COMMENTS", False)
+    note_id = "000000000000000000000001"
+    note = {
+        "note_id": note_id,
+        "type": "normal",
+        "image_list": [{
+            image_url_key: server.url("/ok/xhs-detail-image"),
+            "live_photo": True,
+            "stream": {"h264": [{"master_url": server.url("/ok/xhs-detail-live?ct=video/mp4")}]},
+        }],
+    }
+    original_images = deepcopy(note["image_list"])
+    store_content = AsyncMock()
+    monkeypatch.setattr(
+        xhs_store.XhsStoreFactory, "create_store", lambda: SimpleNamespace(store_content=store_content),
+    )
+    monkeypatch.setattr(config, "XHS_SPECIFIED_NOTE_URL_LIST", [
+        f"https://www.xiaohongshu.com/explore/{note_id}?xsec_token=test&xsec_source=pc_search",
+    ])
+    crawler = XiaoHongShuCrawler()
+    crawler.xhs_client = SimpleNamespace(proxy=None, get_note_by_id=AsyncMock(return_value=note))
+    crawler.user_agent = "integration-test-agent"
+
+    await crawler.get_specified_notes()
+
+    store_content.assert_awaited_once()
+    assert store_content.call_args.args[0]["image_list"] == server.url("/ok/xhs-detail-image")
+    assert note["image_list"] == original_images
+    directory = media_dir(tmp_path, "xhs", note_id)
+    assert_downloaded(directory, "001.jpg")
+    assert_downloaded(directory, "001_live.mp4")
+    assert server.request_count == 2
 
 
 @pytest.mark.asyncio
@@ -471,6 +515,60 @@ async def test_bilibili_download_media_survives_play_url_failure(server, tmp_pat
 
 
 # --------------------------------------------------------------------------- 开关
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("platform", ["xhs", "dy"])
+@pytest.mark.parametrize("media_enabled, live_enabled", [(True, True), (True, False), (False, True)])
+async def test_live_photo_switch_and_pairing_through_core(
+    server, tmp_path, monkeypatch, platform, media_enabled, live_enabled,
+):
+    """真实 core -> 提取器 -> 下载器：配对文件、403 后 CDN 回退和两层开关。"""
+    monkeypatch.setattr(config, "ENABLE_GET_MEDIA", media_enabled)
+    monkeypatch.setattr(config, "DOWNLOAD_LIVE_PHOTO", live_enabled)
+    live_url = server.url("/ok/live2?ct=video/mp4")
+    server.contents.update({"still2": b"static-two", "live2": b"live-two", "still3": b"static-three"})
+    content_id = "live-photo-pairs"
+    if platform == "xhs":
+        payload = {"note_id": content_id, "type": "normal", "image_list": [
+            {},
+            {
+                "url_default": server.url("/ok/still2"), "live_photo": True,
+                "stream": {"h264": [{
+                    "master_url": server.url("/status/403"), "backup_urls": [live_url],
+                }]},
+            },
+            {"url_default": server.url("/ok/still3")},
+        ]}
+        crawler = XiaoHongShuCrawler()
+        crawler.xhs_client = SimpleNamespace(proxy=None)
+    else:
+        payload = {"aweme_id": content_id, "images": [
+            {},
+            {
+                "url_list": [server.url("/ok/still2")],
+                "video": {"play_addr_h264": {"url_list": [live_url, server.url("/status/403")]}},
+            },
+            {"url_list": [server.url("/ok/still3")]},
+        ]}
+        crawler = DouYinCrawler()
+        crawler.dy_client = SimpleNamespace(proxy=None, headers={"Cookie": "test-cookie-must-not-leak"})
+    crawler.user_agent = "integration-test-agent"
+
+    await crawler.download_media(payload)
+
+    directory = media_dir(tmp_path, platform, content_id)
+    if not media_enabled:
+        assert server.request_count == 0
+        assert not directory.exists()
+        return
+
+    expected = {"002.jpg": b"static-two", "003.jpg": b"static-three"}
+    if live_enabled:
+        expected["002_live.mp4"] = b"live-two"
+    assert {path.name: path.read_bytes() for path in directory.iterdir()} == expected
+    assert server.request_count == (4 if live_enabled else 2)
+    assert all("cookie" not in request.headers for request in server.requests)
 
 
 @pytest.mark.asyncio

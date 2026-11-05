@@ -186,10 +186,13 @@ uv run main.py --platform xhs --type detail --specified_id <帖子URL或ID> --ge
 data/xhs/media/{帖子ID}/
 ├── cover.jpg     # 封面
 ├── video.mp4     # 视频（B站为 DASH 合流产物）
-└── 001.jpg       # 图文帖的图片
+├── 001.jpg       # 图文帖的图片
+└── 001_live.mp4  # 对应图片的实况随附视频（有实况时）
 ```
 
 **支持平台**：小红书、抖音、快手、B站、微博。贴吧与知乎的数据结构中没有媒体字段，暂不支持。
+
+**实况照片（Live Photo）**：抖音和小红书统一由 `config/base_config.py` 中的 `DOWNLOAD_LIVE_PHOTO` 控制，默认 `True`，仅在 `ENABLE_GET_MEDIA` 开启时生效。设为 `False` 后只保存静态图，普通视频下载不受影响。实况视频与静态图使用相同的原始图片序号（如 `001.jpg` / `001_live.mp4`），缺失媒体时保留序号空位。这里保存的是独立图片与随附视频，不合成手机相册的 Live Photo，也不转换为 GIF。小红书 Web 返回的实况视频可能自带水印，下载会保留该视频的原始内容。
 
 **关于 B 站**：
 - 安装 [ffmpeg](https://ffmpeg.org/) 后可走 DASH 路径获取最高画质（音视频分轨下载后无损合流）；未安装时自动降级为 mp4 直链，产物名为 `video-durl.mp4` 以便区分
