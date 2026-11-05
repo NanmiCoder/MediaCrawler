@@ -1,0 +1,80 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025 relakkes@gmail.com
+#
+# This file is part of MediaCrawler project.
+# Repository: https://github.com/NanmiCoder/MediaCrawler/blob/main/tests/test_export_schema.py
+# GitHub: https://github.com/NanmiCoder
+# Licensed under NON-COMMERCIAL LEARNING LICENSE 1.1
+#
+# 声明：本代码仅供学习和研究目的使用。使用者应遵守以下原则：
+# 1. 不得用于任何商业用途。
+# 2. 使用时应遵守目标平台的使用条款和robots.txt规则。
+# 3. 不得进行大规模爬取或对平台造成运营干扰。
+# 4. 应合理控制请求频率，避免给目标平台带来不必要的负担。
+# 5. 不得用于任何非法或不当的用途。
+#
+# 详细许可条款请参阅项目根目录下的LICENSE文件。
+# 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
+
+import csv
+
+import openpyxl
+import pytest
+
+import config
+from store.excel_store_base import ExcelStoreBase
+from tools.async_file_writer import AsyncFileWriter
+
+
+@pytest.fixture
+def writer(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "SAVE_DATA_PATH", str(tmp_path))
+    monkeypatch.setattr(config, "ENABLE_GET_WORDCLOUD", False)
+    return AsyncFileWriter("xhs", "search")
+
+
+@pytest.mark.asyncio
+async def test_csv_preserves_columns_across_reordered_and_missing_fields(writer):
+    await writer.write_to_csv({"id": "1", "title": "first"}, "contents")
+    # Reopening the writer must read the schema from the file, not a local cache.
+    writer = AsyncFileWriter("xhs", "search")
+    await writer.write_to_csv({"title": "second", "id": "2"}, "contents")
+    await writer.write_to_csv({"id": "3"}, "contents")
+    with open(writer._get_file_path("csv", "contents"), newline="", encoding="utf-8-sig") as source:
+        assert list(csv.DictReader(source)) == [
+            {"id": "1", "title": "first"},
+            {"id": "2", "title": "second"},
+            {"id": "3", "title": ""},
+        ]
+
+
+@pytest.mark.asyncio
+async def test_csv_unknown_columns_fail_before_appending(writer):
+    await writer.write_to_csv({"id": "1"}, "contents")
+    with pytest.raises(ValueError):
+        await writer.write_to_csv({"id": "2", "new_field": "must not be lost"}, "contents")
+    with open(writer._get_file_path("csv", "contents"), newline="", encoding="utf-8-sig") as source:
+        assert list(csv.DictReader(source)) == [{"id": "1"}]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method,sheet_name", [
+    ("store_content", "Contents"), ("store_comment", "Comments"),
+    ("store_creator", "Creators"), ("store_contact", "Contacts"), ("store_dynamic", "Dynamics"),
+])
+async def test_excel_preserves_schema_for_reordered_and_new_fields(writer, method, sheet_name):
+    store = ExcelStoreBase("xhs")
+    save = getattr(store, method)
+    await save({"id": "1", "text": "first"})
+    await save({"text": "second", "id": "2"})
+    await save({"id": "3", "extra": "new column"})
+    store.flush()
+    workbook = openpyxl.load_workbook(store.filename, data_only=False)
+    try:
+        sheet = workbook[sheet_name]
+        assert list(sheet.values) == [
+            ("id", "text", "extra"), ("1", "first", None),
+            ("2", "second", None), ("3", None, "new column"),
+        ]
+    finally:
+        workbook.close()
