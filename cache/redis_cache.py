@@ -23,7 +23,7 @@
 # @Name    : Programmer AJiang-Relakkes
 # @Time    : 2024/5/29 22:57
 # @Desc    : RedisCache implementation
-import pickle
+import json
 import time
 from typing import Any, List
 
@@ -62,7 +62,12 @@ class RedisCache(AbstractCache):
         value = self._redis_client.get(key)
         if value is None:
             return None
-        return pickle.loads(value)
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            # Old pickle entries and corrupt values are cache misses. Never
+            # deserialize executable objects, even during a rolling upgrade.
+            return None
 
     def set(self, key: str, value: Any, expire_time: int) -> None:
         """
@@ -72,7 +77,9 @@ class RedisCache(AbstractCache):
         :param expire_time:
         :return:
         """
-        self._redis_client.set(key, pickle.dumps(value), ex=expire_time)
+        self._redis_client.set(
+            key, json.dumps(value, ensure_ascii=False, allow_nan=False), ex=expire_time
+        )
 
     def keys(self, pattern: str) -> List[str]:
         """
