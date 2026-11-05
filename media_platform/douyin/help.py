@@ -106,8 +106,9 @@ def parse_video_info_from_url(url: str) -> VideoUrlInfo:
     2. Link with modal_id parameter:
        - https://www.douyin.com/user/MS4wLjABAAAATJPY7LAlaa5X-c8uNdWkvz0jUGgpw4eeXIwu_8BhvqE?modal_id=7525082444551310602
        - https://www.douyin.com/root/search/python?modal_id=7471165520058862848
-    3. Short link: https://v.douyin.com/iF12345ABC/ (requires client parsing)
-    4. Pure ID: 7525082444551310602
+    3. Image post (图文) link: https://www.douyin.com/note/7525082444551310602
+    4. Short link: https://v.douyin.com/iF12345ABC/ (requires client parsing)
+    5. Pure ID: 7525082444551310602
 
     Args:
         url: Douyin video link or ID
@@ -119,7 +120,7 @@ def parse_video_info_from_url(url: str) -> VideoUrlInfo:
         return VideoUrlInfo(aweme_id=url, url_type="normal")
 
     # Check if it's a short link (v.douyin.com)
-    if "v.douyin.com" in url or url.startswith("http") and len(url) < 50 and "video" not in url:
+    if "v.douyin.com" in url:
         return VideoUrlInfo(aweme_id="", url_type="short")  # Requires client parsing
 
     # Try to extract modal_id from URL parameters
@@ -128,12 +129,17 @@ def parse_video_info_from_url(url: str) -> VideoUrlInfo:
     if modal_id:
         return VideoUrlInfo(aweme_id=modal_id, url_type="modal")
 
-    # Extract ID from standard video URL: /video/number
-    video_pattern = r'/video/(\d+)'
+    # Extract ID from a video or image-post (图文) URL: /video/number or /note/number,
+    # including the iesdouyin.com /share/video/ and /share/note/ pages short links resolve to
+    video_pattern = r'/(?:video|note)/(\d+)'
     match = re.search(video_pattern, url)
     if match:
         aweme_id = match.group(1)
         return VideoUrlInfo(aweme_id=aweme_id, url_type="normal")
+
+    # Other short http links without an ID in the path still need client parsing
+    if url.startswith("http") and len(url) < 50:
+        return VideoUrlInfo(aweme_id="", url_type="short")
 
     raise ValueError(f"Unable to parse video ID from URL: {url}")
 
