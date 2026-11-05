@@ -126,21 +126,23 @@ def build_media_items(aweme_item: Dict) -> List[MediaItem]:
 
     items: List[MediaItem] = []
 
-    image_urls = extract_image_urls(aweme_item)
-    if image_urls:
-        images = aweme_item.get("images") or []
-        for index, (image_url, image) in enumerate(zip(image_urls, images), start=1):
-            items.append(
-                MediaItem(
-                    url=image_url,
-                    media_type=MediaType.IMAGE,
-                    content_id=content_id,
-                    stem=f"{index:03d}",
+    images = aweme_item.get("images") or []
+    if images:
+        # 从同一原始条目提取图片和视频，缺少静态 URL 时也不会错配后续实况图。
+        for index, image in enumerate(images, start=1):
+            image_urls = _url_list_of(image)
+            if image_urls:
+                items.append(
+                    MediaItem(
+                        url=image_urls[-1],
+                        media_type=MediaType.IMAGE,
+                        content_id=content_id,
+                        stem=f"{index:03d}",
+                    )
                 )
-            )
 
             # 提取实况图随附视频（动图）
-            if getattr(config, "DY_DOWNLOAD_LIVE_PHOTO", True):
+            if config.DOWNLOAD_LIVE_PHOTO:
                 live_video_urls = extract_live_photo_video_urls(image)
                 if live_video_urls:
                     items.append(
@@ -152,7 +154,8 @@ def build_media_items(aweme_item: Dict) -> List[MediaItem]:
                             stem=f"{index:03d}_live",
                         )
                     )
-        return items
+        if items:
+            return items
 
     cover_url = extract_cover_url(aweme_item)
     if cover_url:
@@ -178,4 +181,3 @@ def build_media_items(aweme_item: Dict) -> List[MediaItem]:
         )
 
     return items
-
