@@ -33,6 +33,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from .routers import crawler_router, data_router, websocket_router
+from .security import APIAccessMiddleware
 
 # Project root directory (used for running subprocesses like uv run main.py)
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -59,6 +60,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(APIAccessMiddleware)
 
 # Register routers
 app.include_router(crawler_router, prefix="/api")
@@ -202,4 +204,4 @@ if os.path.exists(WEBUI_DIR):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="127.0.0.1", port=8080, proxy_headers=False)
