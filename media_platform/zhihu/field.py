@@ -19,7 +19,6 @@
 
 
 from enum import Enum
-from typing import NamedTuple
 
 from constant import zhihu as zhihu_constant
 

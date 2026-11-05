@@ -19,9 +19,8 @@
 
 import asyncio
 import os
-import random
 from asyncio import Task
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from playwright.async_api import (
     BrowserContext,
