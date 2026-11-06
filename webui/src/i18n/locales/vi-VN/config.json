@@ -1,0 +1,71 @@
+{
+  "section": {
+    "targetMatrix": {
+      "title": "MA TRẬN ĐỊA CHỈ",
+      "description": "Nền tảng, chế độ và tham số tìm kiếm"
+    },
+    "authMatrix": {
+      "title": "MA TRẬN XÁC THỰC",
+      "description": "Cấu hình phương pháp đăng nhập"
+    },
+    "outputConfig": {
+      "title": "CẤU HÌNH ĐẦU RA",
+      "description": "Định dạng lưu & tùy chọn bình luận"
+    },
+    "runtime": {
+      "title": "THỜI GIAN CHẠY",
+      "description": "Tham số thời gian chạy"
+    }
+  },
+  "field": {
+    "platform": "NỀN TẢNG",
+    "platformPlaceholder": "Chọn nền tảng",
+    "crawlType": "LOẠI CRAWL",
+    "crawlTypePlaceholder": "Chọn loại",
+    "startPage": "TRANG BẮTĐẦU",
+    "keywords": "TỪ KHÓA",
+    "keywordsHint": "Nhấn Enter để thêm từ khóa",
+    "keywordsPlaceholder": "Nhập từ khóa, nhấn Enter để thêm...",
+    "specifiedIds": "ID BÀI VIẾT/VIDEO",
+    "specifiedIdsHint": "Nhập ID bài viết hoặc video/URL, mỗi dòng một cái hoặc cách nhau bằng dấu phẩy",
+    "specifiedIdsPlaceholder": {
+      "bili": "Ví dụ:\nBV1xxxx\nhttps://www.bilibili.com/video/BV1xxxx",
+      "xhs": "Ví dụ:\nhttps://www.xiaohongshu.com/explore/xxx?xsec_token=xxx\n(phải bao gồm xsec_token)",
+      "dy": "Ví dụ:\n7525538910311632128\nhttps://www.douyin.com/video/xxx\nhttps://v.douyin.com/xxx (liên kết ngắn)",
+      "wb": "Ví dụ:\n4982041758140155\nhttps://weibo.com/xxx/xxx",
+      "ks": "Ví dụ:\n3xf8enb8dbj6uig\nhttps://www.kuaishou.com/short-video/xxx",
+      "default": "Nhập ID bài viết/video hoặc URL..."
+    },
+    "creatorIds": "ID TÁC GIẢ",
+    "creatorIdsHint": "Nhập ID tác giả/URL, mỗi dòng một cái hoặc cách nhau bằng dấu phẩy",
+    "creatorIdsPlaceholder": {
+      "bili": "Ví dụ:\n434377496\nhttps://space.bilibili.com/434377496",
+      "xhs": "Ví dụ:\nhttps://www.xiaohongshu.com/user/profile/xxx?xsec_token=xxx\n(phải bao gồm xsec_token)",
+      "dy": "Ví dụ:\nMS4wLjABAAAAxxx\nhttps://www.douyin.com/user/MS4wLjABAAAAxxx",
+      "wb": "Ví dụ:\n5533390220\nhttps://weibo.com/u/5533390220",
+      "ks": "Ví dụ:\n3x84qugg4ch9zhs\nhttps://www.kuaishou.com/profile/xxx",
+      "default": "Nhập ID tác giả hoặc URL..."
+    },
+    "loginMethod": "PHƯƠNG PHÁP ĐĂNG NHẬP",
+    "loginMethodPlaceholder": "Chọn phương pháp đăng nhập",
+    "cookies": "COOKIES",
+    "cookiesHint": "Dán chuỗi cookie",
+    "cookiesPlaceholder": "Dán cookies vào đây...",
+    "saveFormat": "ĐỊNH DẠNG LƯU",
+    "saveFormatPlaceholder": "Chọn định dạng",
+    "commentExtraction": "Trích xuất bình luận",
+    "subComments": "Bình luận cấp 2",
+    "headlessMode": "CHẾ ĐỘ KHÔNG CÓ GUI",
+    "headlessModeHint": "Chạy trình duyệt mà không có giao diện"
+  },
+  "button": {
+    "initiateScan": "BẮTĐẦU QUÉT",
+    "initiating": "ĐANG KHỞI ĐỘNG...",
+    "terminate": "DỪNG",
+    "stopping": "ĐANG DỪNG..."
+  },
+  "warning": {
+    "cookieSlider": "[Lưu ý] Đăng nhập bằng Cookie không được khuyến nghị cho Xiaohongshu và Douyin do có captcha slider",
+    "xhsToken": "[Quan trọng] URL Xiaohongshu phải chứa tham số xsec_token, vui lòng sao chép URL đầy đủ từ trình duyệt"
+  }
+}
