@@ -44,6 +44,7 @@ from media_platform.weibo import WeiboCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 from media_platform.zhihu import ZhihuCrawler
 from tools.async_file_writer import AsyncFileWriter
+from tools.session_check import run_session_check
 from var import crawler_type_var
 
 
@@ -101,6 +102,13 @@ async def main() -> None:
     global crawler
 
     args = await cmd_arg.parse_cmd()
+
+    # 预检只做一次登录态请求就退出，不建表、不启动爬虫。
+    # 放在 --init_db 之前：两个都传时，--init_db 的 return 会让预检被静默跳过。
+    if args.check_session:
+        exit_code = await run_session_check([config.PLATFORM])
+        raise SystemExit(exit_code)
+
     if args.init_db:
         await db.init_db(args.init_db)
         print(f"Database {args.init_db} initialized successfully.")
