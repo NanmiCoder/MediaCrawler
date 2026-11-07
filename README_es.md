@@ -311,6 +311,14 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
         🎁 ¡Los nuevos usuarios que se <a href="https://dragtokens.com">registren mediante este enlace exclusivo</a> reciben un crédito de bienvenida, y una única recarga de 100 CNY también obtiene un 10% de reembolso! La documentación cubre primeros pasos, configuración de herramientas y ejemplos de API, para que tanto la integración como el uso cuenten con una guía. No se almacenan sus prompts ni las respuestas del modelo, y se ofrecen grupos de cuentas dedicados, transferencia corporativa y facturación para equipos empresariales y universitarios.
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/static/images/mangoproxy_logo_dark.png"><img src="docs/static/images/mangoproxy_logo.png" width="180" alt="MangoProxy"></picture></a>
+      </td>
+      <td valign="middle">
+        <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github">MangoProxy</a> ofrece proxies residenciales, ISP, de centros de datos y móviles para web scraping, automatización y recopilación de datos. Con más de 90 millones de IP en más de 200 países, admite HTTP(S), SOCKS5, rotación flexible de IP y acceso mediante API. Usa el código <code>CODER</code> para obtener un <strong>7% de descuento en proxies ISP estáticos</strong>. 👉 <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github">Visita MangoProxy</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
