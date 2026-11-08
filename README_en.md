@@ -296,14 +296,6 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme_en"><img src="docs/static/images/proxylane_banner.png" width="180" alt="ProxyLane"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme_en">ProxyLane</a> provides residential IPs inside mainland China (China Telecom, Unicom, Mobile) for running MediaCrawler from servers outside China, with the exit pinned to Shanghai, Beijing, Guangzhou, Shenzhen or another city. Add <code>_c_CN_city_Shanghai</code> to your proxy username in static mode to get a Shanghai residential IP; see the <a href="docs/proxylane/README_en.md">3-step setup guide</a>. MediaCrawler users can sign up with code <code>MEDIACRAWLER3GB</code> to get <strong>3 GB</strong> of free traffic. 👉 <a href="https://proxylane.dev/redeem?code=MEDIACRAWLER3GB&utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme_en">Claim 3 GB free</a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
       </td>
       <td valign="middle">

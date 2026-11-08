@@ -357,14 +357,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme"><img src="docs/static/images/proxylane_banner.png" width="180" alt="ProxyLane"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://proxylane.dev/?utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">ProxyLane</a> 提供中国住宅 IP（电信、联通、移动），适合在海外服务器运行 MediaCrawler，出口可固定到上海、北京、广州、深圳等城市。在 static 模式的代理用户名后加 <code>_c_CN_city_Shanghai</code> 即可使用上海住宅 IP，完整配置见 <a href="docs/proxylane/README.md">3 步接入指南</a>。MediaCrawler 用户使用优惠码 <code>MEDIACRAWLER3GB</code> 注册即可免费领取 <strong>3GB</strong> 流量。👉 <a href="https://proxylane.dev/redeem?code=MEDIACRAWLER3GB&utm_source=mediacrawler&utm_medium=partnership&utm_campaign=mediacrawler_sponsor_202610&utm_content=github_readme">免费领取 3GB</a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
       </td>
       <td valign="middle">
