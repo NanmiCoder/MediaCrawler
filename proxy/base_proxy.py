@@ -73,12 +73,12 @@ class IpCache:
         """
         all_ip_list: List[IpInfoModel] = []
         all_ip_keys: List[str] = self.cache_client.keys(pattern=f"{proxy_brand_name}_*")
-        try:
-            for ip_key in all_ip_keys:
+        for ip_key in all_ip_keys:
+            try:
                 ip_value = self.cache_client.get(ip_key)
                 if not ip_value:
                     continue
                 all_ip_list.append(IpInfoModel(**json.loads(ip_value)))
-        except Exception as e:
-            utils.logger.error("[IpCache.load_all_ip] get ip err from redis db", e)
+            except Exception as e:
+                utils.logger.error(f"[IpCache.load_all_ip] get ip err from redis db, key: {ip_key}, err: {e}")
         return all_ip_list
