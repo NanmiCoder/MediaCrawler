@@ -26,6 +26,7 @@ import signal
 import atexit
 from typing import Optional, Dict, Any
 from playwright.async_api import Browser, BrowserContext, Playwright
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 import config
 from tools.browser_launcher import BrowserLauncher
@@ -332,7 +333,28 @@ class CDPBrowserManager:
                         "[CDPBrowserManager] Direct existing-browser CDP connection failed: "
                         f"{direct_error}. Trying /json/version discovery..."
                     )
-                    ws_url = await self._get_browser_websocket_url(self.debug_port)
+                    try:
+                        ws_url = await self._get_browser_websocket_url(self.debug_port)
+                    except Exception as discovery_error:
+                        if isinstance(direct_error, PlaywrightTimeoutError):
+                            hint = (
+                                f"Could not attach to the browser on port {self.debug_port} within "
+                                f"{config.BROWSER_LAUNCH_TIMEOUT}s. Either the remote debugging dialog was "
+                                "not accepted, or a tab or window is not responding (a sleeping tab, or "
+                                "another profile left open for a long time). Accept the dialog, close or "
+                                "reload those tabs or profiles, then run again."
+                            )
+                        else:
+                            # Failed fast without timing out: the port is reachable but did not
+                            # accept a browser CDP connection, so a sleeping tab is not the cause.
+                            hint = (
+                                f"Port {self.debug_port} is reachable but refused the browser CDP "
+                                "connection. Check that CDP_DEBUG_PORT is the browser's remote debugging "
+                                "port and that the remote debugging dialog was not denied, then run again."
+                            )
+                        raise RuntimeError(
+                            f"{hint} (direct: {direct_error}; /json/version: {discovery_error})"
+                        ) from direct_error
                     utils.logger.info(
                         f"[CDPBrowserManager] Connecting to existing browser via discovered CDP: {ws_url}"
                     )
