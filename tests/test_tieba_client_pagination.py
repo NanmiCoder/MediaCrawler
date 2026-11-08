@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import asyncio
+
 import pytest
 
 from media_platform.tieba.client import BaiduTieBaClient
@@ -108,3 +110,56 @@ async def test_creator_feed_walks_until_has_more_false(monkeypatch):
 
     assert pages == [1, 2]
     assert [note.note_id for note in notes] == ["1001", "1002"]
+
+
+@pytest.mark.asyncio
+async def test_creator_feed_skips_failed_thread_and_limits_concurrency(monkeypatch):
+    client = BaiduTieBaClient(playwright_page=DummyPage())
+    in_flight = 0
+    peak_in_flight = 0
+    stored = []
+
+    async def fake_get_notes_by_creator_portrait(portrait, page_number, page_size=20):
+        return {
+            "error_code": 0,
+            "data": {
+                "has_more": 0,
+                "list": [
+                    {"thread_info": {"id": tid, "tid": tid}}
+                    for tid in ("2001", "2002", "2003")
+                ],
+            },
+        }
+
+    async def fake_get_note_by_id(note_id):
+        nonlocal in_flight, peak_in_flight
+        in_flight += 1
+        peak_in_flight = max(peak_in_flight, in_flight)
+        try:
+            await asyncio.sleep(0)
+            if note_id == "2002":
+                raise Exception("Tieba PC API error, url=/c/f/pb/page_pc, response={'error_code': 4}")
+            return TiebaNote(
+                note_id=note_id,
+                title="title",
+                note_url=f"https://tieba.baidu.com/p/{note_id}",
+                tieba_name="加工中心吧",
+                tieba_link="https://tieba.baidu.com/f?kw=%E5%8A%A0%E5%B7%A5%E4%B8%AD%E5%BF%83",
+            )
+        finally:
+            in_flight -= 1
+
+    async def store_notes(notes):
+        stored.extend(note.note_id for note in notes)
+
+    client.get_notes_by_creator_portrait = fake_get_notes_by_creator_portrait
+    client.get_note_by_id = fake_get_note_by_id
+    monkeypatch.setattr("media_platform.tieba.client.config.MAX_CONCURRENCY_NUM", 1)
+
+    notes = await client.get_all_notes_by_creator_url(
+        "tb.1.creator", crawl_interval=0, callback=store_notes
+    )
+
+    assert [note.note_id for note in notes] == ["2001", "2003"]
+    assert stored == ["2001", "2003"]
+    assert peak_in_flight == 1
