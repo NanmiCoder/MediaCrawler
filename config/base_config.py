@@ -110,6 +110,11 @@ MAX_CONCURRENCY_NUM = 1
 # 命令行开关：--get_media
 ENABLE_GET_MEDIA = False
 
+# 是否下载实况照片（Live Photo）随附的视频，统一控制抖音和小红书。
+# 仅在 ENABLE_GET_MEDIA 开启时生效；关闭后只下载静态图片，不影响普通视频。
+# 视频与静态图配对保存为 001_live.mp4 / 001.jpg，不合成相册实况照片。
+DOWNLOAD_LIVE_PHOTO = True
+
 # Whether to enable comment crawling mode. Comment crawling is enabled by default.
 ENABLE_GET_COMMENTS = True
 
