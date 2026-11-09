@@ -103,14 +103,10 @@ class MongoDBStoreBase:
         return db[collection_name]
 
     async def save_or_update(self, collection_suffix: str, query: Dict, data: Dict) -> bool:
-        """Save or update data (upsert)"""
-        try:
-            collection = await self.get_collection(collection_suffix)
-            await collection.update_one(query, {"$set": data}, upsert=True)
-            return True
-        except Exception as e:
-            utils.logger.error(f"[MongoDBStoreBase] Save failed ({self.collection_prefix}_{collection_suffix}): {e}")
-            return False
+        """Upsert data; propagate failures so callers cannot report false success."""
+        collection = await self.get_collection(collection_suffix)
+        await collection.update_one(query, {"$set": data}, upsert=True)
+        return True
 
     async def find_one(self, collection_suffix: str, query: Dict) -> Optional[Dict]:
         """Query a single record"""
