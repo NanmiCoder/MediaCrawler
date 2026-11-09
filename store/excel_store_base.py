@@ -212,6 +212,13 @@ class ExcelStoreBase(AbstractStore):
             data: Data dictionary
             headers: List of header names (defines column order)
         """
+        # The first row defines the schema; each input dict may have a
+        # different insertion order or omit fields. New fields extend it.
+        existing_headers = [cell.value for cell in sheet[1]]
+        new_headers = [header for header in headers if header not in existing_headers]
+        headers = existing_headers + new_headers
+        if new_headers:
+            self._write_headers(sheet, headers)
         row_num = sheet.max_row + 1
 
         for col_num, header in enumerate(headers, 1):
