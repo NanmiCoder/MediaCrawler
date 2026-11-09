@@ -1,0 +1,26 @@
+{
+  "status": {
+    "active": "ĐANG HOẠT ĐỘNG",
+    "standby": "CHỜ CÓ VIỆC",
+    "idle": "CHƯA HOẠT ĐỘNG",
+    "running": "ĐANG CHẠY",
+    "stopping": "ĐANG DỪNG",
+    "error": "LỖI"
+  },
+  "sidebar": {
+    "title": "MediaCrawler",
+    "api": "API",
+    "local": "ĐỊA PHƯƠNG",
+    "disclaimer": "Chỉ dùng cho học tập cá nhân, cấm sử dụng thương mại",
+    "license": "Giấy phép"
+  },
+  "action": {
+    "loading": "Đang tải...",
+    "skip": "BỎ QUA_KIỂM TRA",
+    "retry": "LẠI_QUÉT"
+  },
+  "unit": {
+    "entries": "mục",
+    "records": "bản ghi"
+  }
+}
