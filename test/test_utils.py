@@ -34,6 +34,12 @@ def test_convert_cookies():
     assert cookie_dict.get("a1") == "x000101360"
 
 
+def test_convert_str_cookie_to_dict_preserves_equals_in_cookie_values():
+    cookie_dict = utils.convert_str_cookie_to_dict("session=eyJhbGciOiJIUzI1NiJ9==; theme=dark")
+
+    assert cookie_dict == {"session": "eyJhbGciOiJIUzI1NiJ9==", "theme": "dark"}
+
+
 @pytest.mark.asyncio
 async def test_convert_browser_context_cookies_uses_url_filter():
     browser_context = AsyncMock()
