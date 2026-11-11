@@ -23,7 +23,7 @@ import os
 import random
 import time
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from playwright.async_api import (
     BrowserContext,
@@ -36,7 +36,7 @@ from playwright.async_api import (
 import config
 from base.base_crawler import AbstractCrawler
 from media_downloader import MediaDownloader
-from model.m_kuaishou import VideoUrlInfo, CreatorUrlInfo
+from model.m_kuaishou import CreatorUrlInfo
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import kuaishou as kuaishou_store
 from tools import utils

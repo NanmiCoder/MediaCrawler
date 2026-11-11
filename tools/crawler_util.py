@@ -24,7 +24,6 @@
 # @Desc    : Crawler utility functions
 
 import base64
-import json
 import random
 import re
 import urllib
@@ -32,7 +31,6 @@ import urllib.parse
 from io import BytesIO
 from typing import Dict, List, Optional, Tuple, cast
 
-import httpx
 from PIL import Image, ImageDraw, ImageShow
 from playwright.async_api import BrowserContext, Cookie, Page
 
@@ -172,18 +170,6 @@ def convert_str_cookie_to_dict(cookie_str: str) -> Dict:
             cookie_value = "".join(cookie_value)
         cookie_dict[cookie_list[0]] = cookie_value
     return cookie_dict
-
-
-def match_interact_info_count(count_str: str) -> int:
-    if not count_str:
-        return 0
-
-    match = re.search(r'\d+', count_str)
-    if match:
-        number = match.group()
-        return int(number)
-    else:
-        return 0
 
 
 def format_proxy_info(ip_proxy_info) -> Tuple[Optional[Dict], Optional[str]]:

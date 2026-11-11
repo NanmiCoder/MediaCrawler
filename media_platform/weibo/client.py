@@ -29,7 +29,6 @@ import re
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 from urllib.parse import parse_qs, unquote, urlencode
 
-import httpx
 from httpx import Response
 from playwright.async_api import BrowserContext, Page
 from tools.httpx_util import make_async_client

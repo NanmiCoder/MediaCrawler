@@ -26,7 +26,7 @@ import asyncio
 import os
 # import random  # Removed as we now use fixed config.CRAWLER_MAX_SLEEP_SEC intervals
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from playwright.async_api import (
     BrowserContext,

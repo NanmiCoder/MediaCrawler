@@ -32,9 +32,6 @@ from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
 from tools import utils
 from tools.user_hash import anonymize_user_id, mask_nickname
 
-GENDER_MALE = "sex_male"
-GENDER_FEMALE = "sex_female"
-
 
 class TieBaExtractor:
     def __init__(self):
@@ -105,21 +102,6 @@ class TieBaExtractor:
         if not portrait:
             return ""
         return f"{const.TIEBA_URL}/home/main?id={quote(str(portrait))}"
-
-    @staticmethod
-    def _api_user_avatar(user: Dict) -> str:
-        image_data = (
-            (user or {})
-            .get("user_show_info", {})
-            .get("feed_head", {})
-            .get("image_data", {})
-        )
-        return image_data.get("img_url") or (
-            "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/"
-            f"{user.get('portrait', '')}"
-            if user and user.get("portrait")
-            else ""
-        )
 
     def extract_search_note_list_from_api(self, api_data: Dict) -> List[TiebaNote]:
         """
@@ -738,22 +720,6 @@ class TieBaExtractor:
         ip_match = pattern_ip.search(html_content)
         ip = ip_match.group(1) if ip_match else ""
         return ip
-
-    @staticmethod
-    def extract_gender(html_content: str) -> str:
-        """
-        Extract gender from HTML content
-        Args:
-            html_content: HTML string
-
-        Returns:
-            Gender string ('Male', 'Female', or 'Unknown')
-        """
-        if GENDER_MALE in html_content:
-            return 'Male'
-        elif GENDER_FEMALE in html_content:
-            return 'Female'
-        return 'Unknown'
 
     @staticmethod
     def extract_follow_and_fans(selectors: List[Selector]) -> Tuple[str, str]:
