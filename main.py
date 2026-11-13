@@ -41,6 +41,7 @@ from media_platform.douyin import DouYinCrawler
 from media_platform.kuaishou import KuaishouCrawler
 from media_platform.tieba import TieBaCrawler
 from media_platform.weibo import WeiboCrawler
+from media_platform.xhh import XiaoHeiHeCrawler
 from media_platform.xhs import XiaoHongShuCrawler
 from media_platform.zhihu import ZhihuCrawler
 from tools.async_file_writer import AsyncFileWriter
@@ -56,6 +57,7 @@ class CrawlerFactory:
         "wb": WeiboCrawler,
         "tieba": TieBaCrawler,
         "zhihu": ZhihuCrawler,
+        "xhh": XiaoHeiHeCrawler,
     }
 
     @staticmethod
