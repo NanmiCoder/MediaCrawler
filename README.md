@@ -357,14 +357,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Proxy-Seller</a> 是面向网页抓取、数据采集与自动化场景的专业代理服务商，提供住宅、移动（4G/5G/LTE）、静态 ISP、数据中心 IPv4 与 IPv6 五大产品线，覆盖全球 220+ 地区，拥有 4700 万+ 住宅 IP 资源，可精准定位国家、城市及运营商（ISP）。主要优势包括 99.7% 可用性、全面支持 HTTP(S) 与 SOCKS5 协议、静态/轮换 IP 灵活切换、高并发请求支持，以及提供 RESTful API 与多语言 SDK（Python、Node.js、PHP、Java、Go），并配备 24/7 技术支持。服务通过 ISO/IEC 27001 与 ISO 9001 认证，全球用户已超 18.5 万，适合 MediaCrawler 等多平台抓取工具使用。MediaCrawler 用户使用优惠码 <code>MCRAWLER15</code> 可享 15% 折扣。👉 <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">访问 Proxy-Seller</a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://dragtokens.com"><img src="docs/static/images/dragtokens_logo.jpg" width="180" alt="DragTokens"></a>
       </td>
       <td valign="middle">

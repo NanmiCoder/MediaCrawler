@@ -296,14 +296,6 @@ MediaCrawler soporta múltiples métodos de almacenamiento de datos, incluyendo 
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B"><img src="docs/static/images/proxy_seller_logo.png" width="180" alt="Proxy-Seller"></a>
-      </td>
-      <td valign="middle">
-        <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Proxy-Seller</a> es un proveedor profesional de proxies para web scraping, recopilación de datos y automatización, con cinco líneas de productos —residenciales, móviles (4G/5G/LTE), ISP estáticos y centros de datos IPv4 e IPv6— que cubren más de 220 ubicaciones en todo el mundo, con más de 47 millones de IP residenciales y segmentación precisa por país, ciudad e ISP. Sus principales ventajas incluyen un 99,7% de disponibilidad, compatibilidad total con HTTP(S) y SOCKS5, cambio flexible entre IP estáticas y rotativas, soporte para solicitudes de alta concurrencia, API RESTful y SDK en varios lenguajes (Python, Node.js, PHP, Java, Go), además de soporte técnico 24/7. Cuenta con certificación ISO/IEC 27001 e ISO 9001 y más de 185.000 clientes en todo el mundo, y es adecuado para MediaCrawler y otras herramientas de scraping multiplataforma. Los usuarios de MediaCrawler obtienen un 15% de descuento con el código <code>MCRAWLER15</code>. 👉 <a href="https://proxy-seller.com/?partner=72D769D7B7FB4A8B">Visita Proxy-Seller</a>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://dragtokens.com"><img src="docs/static/images/dragtokens_logo.jpg" width="180" alt="DragTokens"></a>
       </td>
       <td valign="middle">
