@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select'
 
 const languages = [
+  { code: 'vi-VN', label: 'Tiếng Việt' },
   { code: 'zh-CN', label: '中文' },
   { code: 'en-US', label: 'EN' },
 ]
