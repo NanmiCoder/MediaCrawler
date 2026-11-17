@@ -20,9 +20,8 @@
 import asyncio
 import json
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
-import httpx
 from playwright.async_api import BrowserContext, Page
 from tenacity import (
     RetryError,

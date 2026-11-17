@@ -25,7 +25,6 @@ import os
 from typing import Dict, List
 from urllib.parse import urlencode
 
-import httpx
 
 from proxy import IpCache, IpGetError, ProxyProvider
 from proxy.types import IpInfoModel

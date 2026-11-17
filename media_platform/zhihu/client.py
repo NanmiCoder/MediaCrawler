@@ -23,7 +23,6 @@ import json
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
-import httpx
 from httpx import Response
 from playwright.async_api import BrowserContext, Page
 from tools.httpx_util import make_async_client

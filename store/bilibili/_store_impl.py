@@ -22,23 +22,15 @@
 # @Author  : persist1@126.com
 # @Time    : 2025/9/5 19:34
 # @Desc    : Bilibili storage implementation class
-import asyncio
-import csv
-import json
-import os
-import pathlib
 from typing import Dict
 
-import aiofiles
 from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker
 
-import config
 from base.base_crawler import AbstractStore
 from database.db_session import get_session
 from database.models import BilibiliVideoComment, BilibiliVideo, BilibiliUpDynamic
 from tools.async_file_writer import AsyncFileWriter
-from tools import utils, words
+from tools import utils
 from var import crawler_type_var
 from database.mongodb_store_base import MongoDBStoreBase
 
@@ -90,20 +82,6 @@ class BiliCsvStoreImplement(AbstractStore):
         await self.file_writer.write_to_csv(
             item=creator,
             item_type="creators"
-        )
-
-    async def store_contact(self, contact_item: Dict):
-        """
-        creator contact CSV storage implementation
-        Args:
-            contact_item: creator's contact item dict
-
-        Returns:
-
-        """
-        await self.file_writer.write_to_csv(
-            item=contact_item,
-            item_type="contacts"
         )
 
     async def store_dynamic(self, dynamic_item: Dict):
@@ -176,10 +154,6 @@ class BiliDbStoreImplement(AbstractStore):
 
     async def store_creator(self, creator: Dict):
         # 教学版：UP 主个人资料不再落库
-        pass
-
-    async def store_contact(self, contact_item: Dict):
-        # 教学版：UP-粉丝关系表已移除，不再存储联系人信息
         pass
 
     async def store_dynamic(self, dynamic_item):
@@ -255,20 +229,6 @@ class BiliJsonStoreImplement(AbstractStore):
             item_type="creators"
         )
 
-    async def store_contact(self, contact_item: Dict):
-        """
-        creator contact JSON storage implementation
-        Args:
-            contact_item: creator's contact item dict
-
-        Returns:
-
-        """
-        await self.file_writer.write_single_item_to_json(
-            item=contact_item,
-            item_type="contacts"
-        )
-
     async def store_dynamic(self, dynamic_item: Dict):
         """
         creator dynamic JSON storage implementation
@@ -308,12 +268,6 @@ class BiliJsonlStoreImplement(AbstractStore):
         await self.file_writer.write_to_jsonl(
             item=creator,
             item_type="creators"
-        )
-
-    async def store_contact(self, contact_item: Dict):
-        await self.file_writer.write_to_jsonl(
-            item=contact_item,
-            item_type="contacts"
         )
 
     async def store_dynamic(self, dynamic_item: Dict):

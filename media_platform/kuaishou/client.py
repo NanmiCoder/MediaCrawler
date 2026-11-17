@@ -25,7 +25,6 @@ import random
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 from urllib.parse import urlencode
 
-import httpx
 from playwright.async_api import BrowserContext, Page
 
 import config
