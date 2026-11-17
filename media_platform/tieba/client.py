@@ -825,6 +825,18 @@ class BaiduTieBaClient(AbstractApiClient):
         result: List[TiebaNote] = []
         page_number = 1
         page_size = 20
+        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+
+        async def get_note_detail(thread_id: str) -> Optional[TiebaNote]:
+            async with semaphore:
+                try:
+                    return await self.get_note_by_id(thread_id)
+                except Exception as e:
+                    utils.logger.error(
+                        f"[BaiduTieBaClient.get_all_notes_by_creator_url] "
+                        f"Skip thread {thread_id}, get note detail failed: {e}"
+                    )
+                    return None
 
         while max_note_count == 0 or len(result) < max_note_count:
             notes_res = await self.get_notes_by_creator_portrait(
@@ -847,7 +859,7 @@ class BaiduTieBaClient(AbstractApiClient):
                 f"[BaiduTieBaClient.get_all_notes_by_creator_url] "
                 f"got portrait:{portrait} thread ids len: {len(thread_id_list)}"
             )
-            note_detail_task = [self.get_note_by_id(thread_id) for thread_id in thread_id_list]
+            note_detail_task = [get_note_detail(thread_id) for thread_id in thread_id_list]
             notes = await asyncio.gather(*note_detail_task)
             notes = [note for note in notes if note]
             if callback and notes:
