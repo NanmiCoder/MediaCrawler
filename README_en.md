@@ -311,6 +311,14 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
         <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github">MangoProxy</a> provides residential, ISP, datacenter, and mobile proxies for web scraping, automation, and data collection. With 90M+ IPs across 200+ countries, it supports HTTP(S), SOCKS5, flexible IP rotation, and API access. Use promo code <code>CODER</code> for <strong>7% off static ISP proxies</strong>. 👉 <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github">Visit MangoProxy</a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.thordata.com/?ls=dmr&amp;lk=dmr"><img src="docs/static/images/thordata_logo.png" width="180" alt="ThorData"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://www.thordata.com/?ls=dmr&amp;lk=dmr">ThorData</a> provides a proxy network with 100M+ residential IPs across 190+ countries and regions, supporting country, city, and ASN targeting, as well as rotating and sticky sessions. It helps MediaCrawler users collect public content, comments, and creator data from platforms such as Xiaohongshu, Douyin, and Bilibili. HTTP(S) support and API documentation make it easy to integrate with existing Python, Playwright, and web scraping projects. Residential proxies start at $0.65/GB, and MediaCrawler users can get a 3-day trial with no credit card required. Use promo code <code>Crawler10</code> for an <strong>extra 10% off</strong>. 👉 <a href="https://www.thordata.com/?ls=dmr&amp;lk=dmr">Try ThorData</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 

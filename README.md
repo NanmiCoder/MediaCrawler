@@ -372,6 +372,14 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
         <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github">MangoProxy</a> 为网页抓取、自动化和数据采集提供住宅、ISP、数据中心及移动代理，拥有覆盖 200 多个国家的 9000 万以上 IP，支持 HTTP(S)、SOCKS5、灵活的 IP 轮换和 API 接入。使用优惠码 <code>CODER</code> 购买静态 ISP 代理可享 <strong>7% 优惠</strong>。👉 <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github">访问 MangoProxy</a>
       </td>
     </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.thordata.com/?ls=dmr&amp;lk=dmr"><img src="docs/static/images/thordata_logo.png" width="180" alt="ThorData"></a>
+      </td>
+      <td valign="middle">
+        <a href="https://www.thordata.com/?ls=dmr&amp;lk=dmr">ThorData</a> 提供覆盖 190+ 国家和地区、1 亿+ 住宅 IP 的代理网络，支持国家、城市和 ASN 定位，以及旋转和粘性会话。适合 MediaCrawler 用户进行小红书、抖音、B 站等平台的公开内容、评论和创作者数据采集，支持 HTTP(S)，并提供 API 文档，方便开发者接入现有的 Python、Playwright 和爬虫项目。住宅代理低至 $0.65/GB，MediaCrawler 用户可领取 3 天免绑卡试用；使用优惠码 <code>Crawler10</code> 可享<strong>额外 10% 折扣</strong>。👉 <a href="https://www.thordata.com/?ls=dmr&amp;lk=dmr">立即体验 ThorData</a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
