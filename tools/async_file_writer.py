@@ -46,12 +46,24 @@ class AsyncFileWriter:
     async def write_to_csv(self, item: Dict, item_type: str):
         file_path = self._get_file_path('csv', item_type)
         async with self.lock:
-            file_exists = os.path.exists(file_path)
+            headers = await asyncio.to_thread(self._csv_headers, file_path, item)
             async with aiofiles.open(file_path, 'a', newline='', encoding='utf-8-sig') as f:
-                writer = csv.DictWriter(f, fieldnames=item.keys())
-                if not file_exists or await f.tell() == 0:
+                writer = csv.DictWriter(f, fieldnames=headers)
+                if await f.tell() == 0:
                     await writer.writeheader()
                 await writer.writerow(item)
+
+    @staticmethod
+    def _csv_headers(file_path: str, item: Dict) -> List[str]:
+        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            with open(file_path, newline='', encoding='utf-8-sig') as source:
+                headers = next(csv.reader(source))
+        else:
+            headers = list(item)
+        extra_fields = item.keys() - set(headers)
+        if extra_fields:
+            raise ValueError(f"CSV fields are not in the existing header: {sorted(extra_fields)}")
+        return headers
 
     async def write_to_jsonl(self, item: Dict, item_type: str):
         file_path = self._get_file_path('jsonl', item_type)
