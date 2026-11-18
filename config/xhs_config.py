@@ -35,3 +35,11 @@ XHS_CREATOR_ID_LIST = [
     "https://www.xiaohongshu.com/user/profile/5f58bd990000000001003753?xsec_token=ABYVg1evluJZZzpMX-VWzchxQ1qSNVW3r-jOEnKqMcgZw=&xsec_source=pc_search"
     # ........................
 ]
+
+# 收藏笔记抓取（CRAWLER_TYPE = "collect" 时生效）。
+# 留空则抓取【当前登录账号自己】收藏的笔记（user_id 通过 /api/sns/web/v2/user/me 自动获取）。
+# 也可显式指定：可填裸 user_id，或带 xsec_token 的完整 profile URL（抓他人公开收藏）。
+XHS_COLLECT_USER_ID_LIST = [
+    # "",  # 例: 抓自己 -> 直接留空整个列表即可
+    # "https://www.xiaohongshu.com/user/profile/xxxx?xsec_token=...&xsec_source=pc_search",
+]
