@@ -51,7 +51,17 @@ class AsyncFileWriter:
                 writer = csv.DictWriter(f, fieldnames=item.keys())
                 if not file_exists or await f.tell() == 0:
                     await writer.writeheader()
-                await writer.writerow(item)
+                await writer.writerow({key: self._csv_value(value) for key, value in item.items()})
+
+    @staticmethod
+    def _csv_value(value):
+        """Keep untrusted strings from becoming spreadsheet formulas."""
+        if isinstance(value, str) and (
+            value.lstrip().startswith(('=', '+', '-', '@'))
+            or value.startswith(('\t', '\r', '\n'))
+        ):
+            return "'" + value
+        return value
 
     async def write_to_jsonl(self, item: Dict, item_type: str):
         file_path = self._get_file_path('jsonl', item_type)
