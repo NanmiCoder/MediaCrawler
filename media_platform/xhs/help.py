@@ -309,7 +309,7 @@ def parse_note_info_from_note_url(url: str) -> NoteUrlInfo:
     Returns:
 
     """
-    note_id = url.split("/")[-1].split("?")[0]
+    note_id = urllib.parse.urlparse(url).path.rstrip("/").split("/")[-1]
     params = extract_url_params_to_dict(url)
     xsec_token = params.get("xsec_token", "")
     xsec_source = params.get("xsec_source", "")
