@@ -44,7 +44,7 @@ from tools.cdp_browser import CDPBrowserManager
 from var import crawler_type_var, source_keyword_var
 
 from .client import ZhiHuClient
-from .exception import DataFetchError
+from .exception import DataFetchError, ForbiddenError
 from .help import ZhihuExtractor, judge_zhihu_url
 from .login import ZhiHuLogin
 
@@ -194,8 +194,8 @@ class ZhihuCrawler(AbstractCrawler):
                         await zhihu_store.update_zhihu_content(content)
 
                     await self.batch_get_content_comments(content_list)
-                except DataFetchError:
-                    utils.logger.error("[ZhihuCrawler.search] Search content error")
+                except (DataFetchError, ForbiddenError) as e:
+                    utils.logger.error(f"[ZhihuCrawler.search] Search content error: {e}")
                     return
 
     async def batch_get_content_comments(self, content_list: List[ZhihuContent]):
@@ -243,11 +243,16 @@ class ZhihuCrawler(AbstractCrawler):
             await asyncio.sleep(config.CRAWLER_MAX_SLEEP_SEC)
             utils.logger.info(f"[ZhihuCrawler.get_comments] Sleeping for {config.CRAWLER_MAX_SLEEP_SEC} seconds before fetching comments for content {content_item.content_id}")
 
-            await self.zhihu_client.get_note_all_comments(
-                content=content_item,
-                crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
-                callback=zhihu_store.batch_update_zhihu_note_comments,
-            )
+            try:
+                await self.zhihu_client.get_note_all_comments(
+                    content=content_item,
+                    crawl_interval=config.CRAWLER_MAX_SLEEP_SEC,
+                    callback=zhihu_store.batch_update_zhihu_note_comments,
+                )
+            except (DataFetchError, ForbiddenError) as e:
+                utils.logger.error(
+                    f"[ZhihuCrawler.get_comments] get content {content_item.content_id} comments error: {e}"
+                )
 
     async def get_creators_and_notes(self) -> None:
         """

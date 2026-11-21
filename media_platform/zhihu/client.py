@@ -82,7 +82,7 @@ class ZhiHuClient(AbstractApiClient, ProxyRefreshMixin):
         headers['x-zse-96'] = sign_res["x-zse-96"]
         return headers
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1), reraise=True)
     async def request(self, method, url, **kwargs) -> Union[str, Any]:
         """
         Wrapper for httpx common request method with response handling
