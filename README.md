@@ -28,26 +28,21 @@
 
 
 
-> **免责声明：**
-> 
-> 大家请以学习为目的使用本仓库⚠️⚠️⚠️⚠️，[爬虫违法违规的案件](https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China)  <br>
+> [!CAUTION]
+> **免责声明（请务必阅读）**
 >
->本仓库的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及的爬虫技术仅用于学习和研究，不得用于对其他平台进行大规模爬虫或其他非法行为。对于因使用本仓库内容而引起的任何法律责任，本仓库不承担任何责任。使用本仓库的内容即表示您同意本免责声明的所有条款和条件。
+> 大家请以学习为目的使用本仓库 ⚠️⚠️⚠️⚠️，[爬虫违法违规的案件](https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China)
 >
-> 点击查看更为详细的免责声明。[点击跳转](#disclaimer)
-
-
+> 本仓库的所有内容仅供学习和参考之用，禁止用于商业用途。任何人或组织不得将本仓库的内容用于非法用途或侵犯他人合法权益。本仓库所涉及的爬虫技术仅用于学习和研究，不得用于对其他平台进行大规模爬虫或其他非法行为。对于因使用本仓库内容而引起的任何法律责任，本仓库不承担任何责任。使用本仓库的内容即表示您同意本免责声明的所有条款和条件。
+>
+> 点击查看更为详细的免责声明：[点击跳转](#disclaimer)
 
 
 ## 📖 项目简介
 
-一个功能强大的**多平台自媒体数据采集工具**，支持小红书、抖音、快手、B站、微博、贴吧、知乎等主流平台的公开信息抓取。
+一个用于学习与研究的**多平台自媒体数据采集工具**，支持小红书、抖音、快手、B站、微博、贴吧、知乎等主流平台的公开信息抓取。
 
-### 🔧 技术原理
-
-- **核心技术**：基于 [Playwright](https://playwright.dev/) 浏览器自动化框架登录保存登录态
-- **无需JS逆向**：利用保留登录态的浏览器上下文环境，通过 JS 表达式获取签名参数
-- **优势特点**：无需逆向复杂的加密算法，大幅降低技术门槛
+- **技术原理**：基于 [Playwright](https://playwright.dev/) 浏览器自动化框架保留登录态，在浏览器上下文中通过 JS 表达式获取签名参数，**无需 JS 逆向**复杂的加密算法，大幅降低爬虫学习门槛。
 
 
 ## ✨ 功能特性
@@ -63,108 +58,73 @@
 
 
 
+## ⚡ MediaCrawlerPro（个人进阶源码版）
+
+> 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计与 AI Agent 工程实践同样值得深入学习！（**仅限个人学习与源码研究，不面向商业用途**）
+
+| 对比维度 | 开源版（当前仓库） | [MediaCrawlerPro](https://github.com/MediaCrawlerPro) |
+| :--- | :--- | :--- |
+| 运行与依赖 | 依赖 Playwright / 本地 Chrome | **去除 Playwright 依赖**，支持完整 Linux 环境学习与运行 |
+| 架构与机制 | 单账号基础学习示例 | **解耦 JS 签名逻辑**，支持**断点续爬**、**多账号 + IP 代理池**机制 |
+| 数据结构覆盖 | 搜索 / 帖子详情 / 评论 / 创作者 | 额外支持**首页信息流（HomeFeed）**与**热搜榜单** |
+| AI Agent 与扩展项目 | — | 内置 **AI Agent Skill** + **多套 AI Agent / 全栈桌面端项目源码** |
+
+👉 开源不易，欢迎订阅支持：**[查看 MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro)** ｜ **[查看订阅方式](https://nanmicoder.github.io/MediaCrawler/mediacrawlerpro%E8%AE%A2%E9%98%85.html)**
+
 <details>
-<summary>🚀 <b>开源版不够用？看看 MediaCrawlerPro 多了什么：断点续爬 · 多账号 + IP 代理池 · 去掉 Playwright · 多个 AI Agent 项目源码</b>（点击展开）</summary>
+<summary>📦 <b>点击展开：查看 Pro 版详细特性与附赠 AI Agent 项目源码清单</b></summary>
 
 <br>
 
-> 专注于学习成熟项目的架构设计，不仅仅是爬虫技术，Pro 版本的代码设计思路同样值得深入学习！
-
-[MediaCrawlerPro](https://github.com/MediaCrawlerPro) 相较于开源版本的核心优势：
-
-#### 🎯 核心功能升级
-- ✅ **断点续爬功能**（重点特性）
-- ✅ **多账号 + IP代理池支持**（重点特性）
-- ✅ **去除 Playwright 依赖**，使用更简单
-- ✅ **完整 Linux 环境支持**
-
-#### 🏗️ 架构设计优化
-- ✅ **代码重构优化**，更易读易维护（解耦 JS 签名逻辑）
-- ✅ **企业级代码质量**，适合构建大型爬虫项目
-- ✅ **完美架构设计**，高扩展性，源码学习价值更大
-
-#### 🎁 额外功能
-- ✅ **AI Agent Skill 支持**（Codex / [OpenClaw](https://openclaw.ai/) 🦞 / [Hermes](https://github.com/NousResearch/hermes-agent) / Claude Code / [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) / [cc-haha](https://github.com/NanmiCoder/cc-haha) / WorkBuddy / 豆包 / Trae / Qoder / Cursor 一键安装，让 Agent 自动爬取数据）
-- ✅ **评论分析 Agent**（🆕 新上线）：输入关键词或链接，自动采集评论并生成研究报告
-- ✅ **自媒体内容拆解 Agent**：解析内容、视频转文字、拆解爆款元素
-- ✅ **多平台首页信息流推荐**（HomeFeed）和**热搜榜单**
-- ✅ **自媒体视频下载器桌面端**（适合学习全栈开发）
-- ✅ **AI 图片生成 Agent**：多轮迭代自动优化，内置精选模板库
-
-开源不易，欢迎订阅支持！点击查看：[MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro) 更多介绍
+- **源码架构设计**：彻底重构解耦 JS 签名逻辑，去除重型浏览器依赖，模块划分清晰、扩展性强，适合深入学习爬虫工程架构。
+- **AI Agent Skill 一键接入**：支持 Codex / [OpenClaw](https://openclaw.ai/) 🦞 / [Hermes](https://github.com/NousResearch/hermes-agent) / Claude Code / [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) / [cc-haha](https://github.com/NanmiCoder/cc-haha) / WorkBuddy / 豆包 / Trae / Qoder / Cursor 一键安装，体验让 Agent 自动调用采集能力。
+- **附赠学习项目源码**：
+  - 🆕 **评论分析 Agent**：输入关键词或链接，自动采集评论并生成研究报告
+  - **自媒体内容拆解 Agent**：解析内容、视频转文字、拆解爆款元素
+  - **AI 图片生成 Agent**：多轮迭代自动优化，内置精选模板库
+  - **自媒体视频下载器桌面端**：适合学习全栈桌面端开发
 
 </details>
 
 
-
 ## 🚀 快速开始
 
-> 💡 **如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！**
+### 1. 环境准备
 
-## 📋 前置依赖
+- **uv（推荐）**：[官方安装指南](https://docs.astral.sh/uv/getting-started/installation)，安装后执行 `uv --version` 验证
+- **Node.js**：版本 `>= 16.0.0`，[官网下载](https://nodejs.org/en/download/)
 
-### 🚀 uv 安装（推荐）
-
-在进行下一步操作之前，请确保电脑上已经安装了 uv：
-
-- **安装地址**：[uv 官方安装指南](https://docs.astral.sh/uv/getting-started/installation)
-- **验证安装**：终端输入命令 `uv --version`，如果正常显示版本号，证明已经安装成功
-- **推荐理由**：uv 是目前最强的 Python 包管理工具，速度快、依赖解析准确
-
-### 🟢 Node.js 安装
-
-项目依赖 Node.js，请前往官网下载安装：
-
-- **下载地址**：https://nodejs.org/en/download/
-- **版本要求**：>= 16.0.0
-
-### 📦 Python 包安装
+### 2. 安装依赖
 
 ```shell
-# 进入项目目录
 cd MediaCrawler
-
-# 使用 uv sync 命令来保证 python 版本和相关依赖包的一致性
 uv sync
 ```
 
-### 🌐 浏览器驱动安装（可选）
+> 默认使用 CDP 模式连接本地 Chrome，**无需安装 Playwright 驱动**；若切换为标准 Playwright 模式（在 `config/base_config.py` 中设 `ENABLE_CDP_MODE = False`），需先执行 `uv run playwright install`。
 
-> 如果使用默认的 CDP 模式（连接已有 Chrome 浏览器），**无需安装浏览器驱动**。仅在使用标准 Playwright 模式时需要安装。
+### 3. 开启 Chrome 远程调试（默认 CDP 模式）
 
-```shell
-# 仅在标准 Playwright 模式下需要安装浏览器驱动
-uv run playwright install
-```
+连接已有的 Chrome 浏览器可复用登录态、Cookie 与扩展，降低风控风险：
 
-### 🌍 Chrome 浏览器配置（推荐）
+1. 安装最新版 Chrome（版本 `>= 144`），[下载地址](https://www.google.com/chrome/)
+2. 地址栏打开 `chrome://inspect/#remote-debugging`，勾选 **Allow remote debugging for this browser instance**
+3. 页面出现 `Server running at: 127.0.0.1:9222` 即就绪
 
-项目默认使用 CDP 模式连接用户已有的 Chrome 浏览器，可以复用浏览器已有的登录状态、Cookie、扩展等，**大幅降低平台风控检测风险**。
+> 💡 运行爬虫后 Chrome 会弹出确认框，60 秒内点击「接受」即可。
 
-使用前需要：
-
-1. **安装最新版 Chrome 浏览器**（版本 >= 144），[下载地址](https://www.google.com/chrome/)
-2. **开启远程调试功能**：在 Chrome 地址栏输入 `chrome://inspect/#remote-debugging`，勾选 **"Allow remote debugging for this browser instance"**
-3. 页面显示 `Server running at: 127.0.0.1:9222` 表示已就绪
-
-> 💡 **提示**：运行爬虫后，Chrome 浏览器会弹出确认对话框，点击"接受"即可。程序会等待用户确认，60秒内操作完成即可。
->
-> 如果不想使用 CDP 模式，可以在 `config/base_config.py` 中设置 `ENABLE_CDP_MODE = False` 切换为标准 Playwright 模式。
-
-## 🚀 运行爬虫程序
+### 4. 运行爬虫
 
 ```shell
-# 在 config/base_config.py 查看配置项目功能，写的有中文注释
+# 更多配置项见 config/base_config.py（含中文注释）
 
-# 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
+# 按关键词搜索帖子及评论（打开对应 APP 扫码登录）
 uv run main.py --platform xhs --lt qrcode --type search
 
-# 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
+# 按指定帖子 ID 爬取详情及评论
 uv run main.py --platform xhs --lt qrcode --type detail
 
-# 打开对应APP扫二维码登录
-
-# 其他平台爬虫使用示例，执行下面的命令查看
+# 查看其他平台与参数示例
 uv run main.py --help
 ```
 
@@ -192,7 +152,10 @@ data/xhs/media/{帖子ID}/
 
 **支持平台**：小红书、抖音、快手、B站、微博。贴吧与知乎的数据结构中没有媒体字段，暂不支持。
 
-**实况照片（Live Photo）**：抖音和小红书统一由 `config/base_config.py` 中的 `DOWNLOAD_LIVE_PHOTO` 控制，默认 `True`，仅在 `ENABLE_GET_MEDIA` 开启时生效。设为 `False` 后只保存静态图，普通视频下载不受影响。实况视频与静态图使用相同的原始图片序号（如 `001.jpg` / `001_live.mp4`），缺失媒体时保留序号空位。这里保存的是独立图片与随附视频，不合成手机相册的 Live Photo，也不转换为 GIF。小红书 Web 返回的实况视频可能自带水印，下载会保留该视频的原始内容。
+**实况照片（Live Photo）**：
+- 抖音和小红书由 `config/base_config.py` 中的 `DOWNLOAD_LIVE_PHOTO` 控制（默认 `True`，仅在 `ENABLE_GET_MEDIA` 开启时生效）；设为 `False` 时只保存静态图，不影响普通视频下载
+- 实况视频与静态图共用原始序号（如 `001.jpg` / `001_live.mp4`），缺失时保留序号空位；仅保存独立图片与随附视频，不合成系统 Live Photo 或 GIF
+- 小红书 Web 返回的实况视频可能自带水印，下载保留原始文件内容
 
 **关于 B 站**：
 - 安装 [ffmpeg](https://ffmpeg.org/) 后可走 DASH 路径获取最高画质（音视频分轨下载后无损合流）；未安装时自动降级为 mp4 直链，产物名为 `video-durl.mp4` 以便区分
@@ -261,54 +224,21 @@ uv run uvicorn api.main:app --port 8080 --reload
 <details>
 <summary>🔗 <strong>使用 Python 原生 venv 管理环境（不推荐）</strong></summary>
 
-#### 创建并激活 Python 虚拟环境
-
-> 如果是爬取抖音和知乎，需要提前安装 nodejs 环境，版本大于等于：`16` 即可
+> 爬取抖音和知乎需提前安装 Node.js（`>= 16`）；`requirements.txt` 基于 Python 3.11。
 
 ```shell
-# 进入项目根目录
 cd MediaCrawler
-
-# 创建虚拟环境
-# 我的 python 版本是：3.11 requirements.txt 中的库是基于这个版本的
-# 如果是其他 python 版本，可能 requirements.txt 中的库不兼容，需自行解决
 python -m venv venv
 
-# macOS & Linux 激活虚拟环境
+# 激活虚拟环境（macOS/Linux 用第一条，Windows 用第二条）
 source venv/bin/activate
+# venv\Scripts\activate
 
-# Windows 激活虚拟环境
-venv\Scripts\activate
-```
-
-#### 安装依赖库
-
-```shell
 pip install -r requirements.txt
-```
-
-#### 安装 playwright 浏览器驱动
-
-```shell
 playwright install
-```
 
-#### 运行爬虫程序（原生环境）
-
-```shell
-# 项目默认是没有开启评论爬取模式，如需评论请在 config/base_config.py 中的 ENABLE_GET_COMMENTS 变量修改
-# 一些其他支持项，也可以在 config/base_config.py 查看功能，写的有中文注释
-
-# 从配置文件中读取关键词搜索相关的帖子并爬取帖子信息与评论
+# 运行示例（把上面快速开始中的 uv run 换成 python 即可）
 python main.py --platform xhs --lt qrcode --type search
-
-# 从配置文件中读取指定的帖子ID列表获取指定帖子的信息与评论信息
-python main.py --platform xhs --lt qrcode --type detail
-
-# 打开对应APP扫二维码登录
-
-# 其他平台爬虫使用示例，执行下面的命令查看
-python main.py --help
 ```
 
 </details>
@@ -316,17 +246,7 @@ python main.py --help
 
 ## 💾 数据保存
 
-MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel、SQLite 和 MySQL 数据库。
-
-📖 **详细使用说明请查看：[数据存储指南](docs/data_storage_guide.md)**
-
-
-[🚀 MediaCrawlerPro 重磅发布 🚀！更多的功能，更好的架构设计！开源不易，欢迎订阅支持！](https://github.com/MediaCrawlerPro)
-
-
-## 💬 交流群组
-- **微信交流群**：[点击加入](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
-- **B站账号**：[关注我](https://space.bilibili.com/434377496)，分享AI与爬虫技术知识
+MediaCrawler 支持 CSV、JSON、JSONL、Excel、SQLite 和 MySQL 等多种存储方式，详见 [数据存储指南](docs/data_storage_guide.md)；更多配置与常见问题见 [完整文档](https://nanmicoder.github.io/MediaCrawler/)。
 
 
 ## 💰 赞助商展示
@@ -392,7 +312,19 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
 **联系方式**：
 - 微信：`relakkes`
 - 邮箱：`relakkes@gmail.com`
+
 ---
+
+## 🧩 我的其他项目
+- **正在创业做的项目**：[ModelDial](https://modeldial.com/?utm_source=github&utm_medium=referral&utm_campaign=mediacrawler&utm_content=readme-zh) — 在私有数据集上实测 AI 模型，对比能力、费用和思考档位，帮你找到适合自己任务的模型
+- **开源桌面端 Agent**：[cc-haha](https://github.com/NanmiCoder/cc-haha) — 本地优先、跨平台的 Agent 桌面工作台，支持多 Agent 协作、Git Worktree、技能市场、多模型与 Computer Use，并可通过微信 / 飞书 / 钉钉等远程接入
+- **DeepSeek Harness 插件**：[dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) — 给 DeepSeek Harness 装上 Agent Teams，让多个 Agent 组队并行协作完成复杂任务
+
+
+## 💬 交流群组
+- **微信交流群**：[点击加入](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
+- **B站账号**：[关注我](https://space.bilibili.com/434377496)，分享 AI 与爬虫技术知识
+
 
 ## ☕ 请作者喝杯咖啡
 
@@ -419,14 +351,6 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
 
 ---
 
-## 📚 其他
-- **常见问题**：[MediaCrawler 完整文档](https://nanmicoder.github.io/MediaCrawler/)
-
-### 🧩 我的其他项目
-- **正在创业做的项目**：[ModelDial](https://modeldial.com/?utm_source=github&utm_medium=referral&utm_campaign=mediacrawler&utm_content=readme-zh) — 在私有数据集上实测 AI 模型，对比能力、费用和思考档位，帮你找到适合自己任务的模型
-- **开源桌面端 Agent**：[cc-haha](https://github.com/NanmiCoder/cc-haha) — 本地优先、跨平台的 Agent 桌面工作台，支持多 Agent 协作、Git Worktree、技能市场、多模型与 Computer Use，并可通过微信 / 飞书 / 钉钉等远程接入
-- **DeepSeek Harness 插件**：[dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) — 给 DeepSeek Harness 装上 Agent Teams，让多个 Agent 组队并行协作完成复杂任务
-
 
 ## ⭐ Star 趋势图
 
@@ -443,24 +367,24 @@ MediaCrawler 支持多种数据存储方式，包括 CSV、JSON、JSONL、Excel�
 - **内网穿透工具**：[ngrok 官方文档](https://ngrok.com/docs/)
 
 
-# 免责声明
-<div id="disclaimer"> 
+## ⚖️ 免责声明
+<div id="disclaimer">
 
-## 1. 项目目的与性质
+### 1. 项目目的与性质
 本项目（以下简称“本项目”）是作为一个技术研究与学习工具而创建的，旨在探索和学习网络数据采集技术。本项目专注于自媒体平台的数据爬取技术研究，旨在提供给学习者和研究者作为技术交流之用。
 
-## 2. 法律合规性声明
+### 2. 法律合规性声明
 本项目开发者（以下简称“开发者”）郑重提醒用户在下载、安装和使用本项目时，严格遵守中华人民共和国相关法律法规，包括但不限于《中华人民共和国网络安全法》、《中华人民共和国反间谍法》等所有适用的国家法律和政策。用户应自行承担一切因使用本项目而可能引起的法律责任。
 
-## 3. 使用目的限制
+### 3. 使用目的限制
 本项目严禁用于任何非法目的或非学习、非研究的商业行为。本项目不得用于任何形式的非法侵入他人计算机系统，不得用于任何侵犯他人知识产权或其他合法权益的行为。用户应保证其使用本项目的目的纯属个人学习和技术研究，不得用于任何形式的非法活动。
 
-## 4. 免责声明
+### 4. 免责声明
 开发者已尽最大努力确保本项目的正当性及安全性，但不对用户使用本项目可能引起的任何形式的直接或间接损失承担责任。包括但不限于由于使用本项目而导致的任何数据丢失、设备损坏、法律诉讼等。
 
-## 5. 知识产权声明
+### 5. 知识产权声明
 本项目的知识产权归开发者所有。本项目受到著作权法和国际著作权条约以及其他知识产权法律和条约的保护。用户在遵守本声明及相关法律法规的前提下，可以下载和使用本项目。
 
-## 6. 最终解释权
+### 6. 最终解释权
 关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。
 </div>

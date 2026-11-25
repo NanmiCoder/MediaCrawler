@@ -27,23 +27,21 @@
 
 </div>
 
-> **Disclaimer:**
-> 
-> Please use this repository for learning purposes only ⚠️⚠️⚠️⚠️, [Web scraping illegal cases](https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China)  <br>
+> [!CAUTION]
+> **Disclaimer (Please Read Carefully)**
 >
->All content in this repository is for learning and reference purposes only, and commercial use is prohibited. No person or organization may use the content of this repository for illegal purposes or infringe upon the legitimate rights and interests of others. The web scraping technology involved in this repository is only for learning and research, and may not be used for large-scale crawling of other platforms or other illegal activities. This repository assumes no legal responsibility for any legal liability arising from the use of the content of this repository. By using the content of this repository, you agree to all terms and conditions of this disclaimer.
+> Please use this repository for learning purposes only ⚠️⚠️⚠️⚠️, [Web scraping illegal cases](https://github.com/HiddenStrawberry/Crawler_Illegal_Cases_In_China)
 >
-> Click to view a more detailed disclaimer. [Click to jump](#disclaimer)
+> All content in this repository is for learning and reference purposes only, and commercial use is prohibited. No person or organization may use the content of this repository for illegal purposes or infringe upon the legitimate rights and interests of others. The web scraping technology involved in this repository is only for learning and research, and may not be used for large-scale crawling of other platforms or other illegal activities. This repository assumes no legal responsibility for any legal liability arising from the use of the content of this repository. By using the content of this repository, you agree to all terms and conditions of this disclaimer.
+>
+> Click to view a more detailed disclaimer: [Click to jump](#disclaimer)
+
 
 ## 📖 Project Introduction
 
-A powerful **multi-platform social media data collection tool** that supports crawling public information from mainstream platforms including Xiaohongshu, Douyin, Kuaishou, Bilibili, Weibo, Tieba, Zhihu, and more.
+A **multi-platform social media data collection tool** for learning and research, supporting public information collection from Xiaohongshu, Douyin, Kuaishou, Bilibili, Weibo, Tieba, Zhihu, and more.
 
-### 🔧 Technical Principles
-
-- **Core Technology**: Based on [Playwright](https://playwright.dev/) browser automation framework for login and maintaining login state
-- **No JS Reverse Engineering Required**: Uses browser context environment with preserved login state to obtain signature parameters through JS expressions
-- **Advantages**: No need to reverse complex encryption algorithms, significantly lowering the technical barrier
+- **Technical Principle**: Built on the [Playwright](https://playwright.dev/) browser automation framework to preserve login state and obtain signature parameters via JS expressions inside the browser context — **no JS reverse engineering** of complex encryption algorithms required, significantly lowering the learning barrier.
 
 ## ✨ Features
 | Platform | Keyword Search | Specific Post ID Crawling | Secondary Comments | Specific Creator Homepage | Login State Cache | IP Proxy Pool | Generate Comment Word Cloud |
@@ -57,92 +55,115 @@ A powerful **multi-platform social media data collection tool** that supports cr
 | Zhihu   | ✅          | ✅              | ✅        | ✅              | ✅          | ✅        | ✅              |
 
 
-<strong>MediaCrawlerPro Major Release! Open source is not easy, welcome to subscribe and support!</strong>
+## ⚡ MediaCrawlerPro (Personal Learning Source Edition)
 
-> Focus on learning mature project architectural design, not just crawling technology. The code design philosophy of the Pro version is equally worth in-depth study!
+> Focus on learning mature project architectural design — not just crawling technology, the Pro version's code design and AI Agent engineering practices are equally worth in-depth study! (**For personal learning and source code study only; not for commercial use**)
 
-[MediaCrawlerPro](https://github.com/MediaCrawlerPro) core advantages over the open-source version:
+| Comparison | Open-Source Edition (This Repo) | [MediaCrawlerPro](https://github.com/MediaCrawlerPro) |
+| :--- | :--- | :--- |
+| Runtime & Dependencies | Requires Playwright / local Chrome | **Removes Playwright dependency**, full Linux environment support for learning and running |
+| Architecture & Mechanisms | Single-account learning example | **Decoupled JS signature logic**, **resume crawling**, and **multi-account + IP proxy pool** mechanisms |
+| Data Structure Coverage | Search / Post Detail / Comments / Creator | Additional support for **HomeFeed recommendations** and **trending lists** |
+| AI Agent & Bonus Projects | — | Built-in **AI Agent Skill** + **multiple AI Agent / full-stack desktop app source repos** |
 
-#### 🎯 Core Feature Upgrades
-- ✅ **Content Deconstruction Agent** (New feature)
-- ✅ **Resume crawling functionality** (Key feature)
-- ✅ **Multi-account + IP proxy pool support** (Key feature)
-- ✅ **Remove Playwright dependency**, easier to use
-- ✅ **Complete Linux environment support**
+👉 Open source is not easy, welcome to subscribe and support: **[View MediaCrawlerPro Project Homepage](https://github.com/MediaCrawlerPro)** ｜ **[Subscription Guide](https://nanmicoder.github.io/MediaCrawler/mediacrawlerpro%E8%AE%A2%E9%98%85.html)**
 
-#### 🏗️ Architectural Design Optimization
-- ✅ **Code refactoring optimization**, more readable and maintainable (decoupled JS signature logic)
-- ✅ **Enterprise-level code quality**, suitable for building large-scale crawler projects
-- ✅ **Perfect architectural design**, high scalability, greater source code learning value
+<details>
+<summary>📦 <b>Click to expand: Full Pro features & included AI Agent learning projects</b></summary>
 
-#### 🎁 Additional Features
-- ✅ **Social media video downloader desktop app** (suitable for learning full-stack development)
-- ✅ **Multi-platform homepage feed recommendations** (HomeFeed)
-- [ ] **AI Agent based on comment analysis is under development 🚀🚀**
+<br>
 
-Click to view: [MediaCrawlerPro Project Homepage](https://github.com/MediaCrawlerPro) for more information
+- **Source Architecture Design**: Refactored with decoupled JS signature logic and no heavy browser dependency — clean module boundaries and high extensibility for deeper crawler architecture study.
+- **One-Click AI Agent Skill**: Supports Codex / [OpenClaw](https://openclaw.ai/) 🦞 / [Hermes](https://github.com/NousResearch/hermes-agent) / Claude Code / [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) / [cc-haha](https://github.com/NanmiCoder/cc-haha) / WorkBuddy / Doubao / Trae / Qoder / Cursor, allowing agents to invoke collection workflows automatically.
+- **Included Learning Project Source Code**:
+  - 🆕 **Comment Analysis Agent**: Enter keywords or links to collect comments and generate research reports automatically
+  - **Content Deconstruction Agent**: Parse posts, transcribe videos, and break down viral elements
+  - **AI Image Generation Agent**: Multi-round iterative refinement with curated prompt templates
+  - **Social Media Video Downloader Desktop App**: Ideal for studying full-stack desktop development
+
+</details>
+
 
 ## 🚀 Quick Start
 
-> 💡 **Open source is not easy, if this project helps you, please give a ⭐ Star to support!**
+### 1. Prerequisites
 
-## 📋 Prerequisites
+- **uv (Recommended)**: [Official Installation Guide](https://docs.astral.sh/uv/getting-started/installation); verify with `uv --version`
+- **Node.js**: Version `>= 16.0.0`, [Download](https://nodejs.org/en/download/)
 
-### 🚀 uv Installation (Recommended)
-
-Before proceeding with the next steps, please ensure that uv is installed on your computer:
-
-- **Installation Guide**: [uv Official Installation Guide](https://docs.astral.sh/uv/getting-started/installation)
-- **Verify Installation**: Enter the command `uv --version` in the terminal. If the version number is displayed normally, the installation was successful
-- **Recommendation Reason**: uv is currently the most powerful Python package management tool, with fast speed and accurate dependency resolution
-
-### 🟢 Node.js Installation
-
-The project depends on Node.js, please download and install from the official website:
-
-- **Download Link**: https://nodejs.org/en/download/
-- **Version Requirement**: >= 16.0.0
-
-### 📦 Python Package Installation
+### 2. Install Dependencies
 
 ```shell
-# Enter project directory
 cd MediaCrawler
-
-# Use uv sync command to ensure consistency of python version and related dependency packages
 uv sync
 ```
 
-### 🌐 Browser Driver Installation
+> By default, CDP mode connects to your local Chrome browser, so **no Playwright browser driver is needed**. If you switch to standard Playwright mode (set `ENABLE_CDP_MODE = False` in `config/base_config.py`), run `uv run playwright install` first.
+
+### 3. Enable Chrome Remote Debugging (Default CDP Mode)
+
+Connecting to your existing Chrome browser reuses existing login sessions, cookies, and extensions to reduce anti-bot risk:
+
+1. Install the latest Chrome (`>= 144`): [Download](https://www.google.com/chrome/)
+2. Open `chrome://inspect/#remote-debugging` in Chrome and check **Allow remote debugging for this browser instance**
+3. Confirm the page displays `Server running at: 127.0.0.1:9222`
+
+> 💡 When the crawler starts, Chrome will show a confirmation dialog — click **Allow / Accept** within 60 seconds.
+
+### 4. Run the Crawler
 
 ```shell
-# Install browser driver
-uv run playwright install
-```
+# See config/base_config.py for all configuration options (with inline comments)
 
-> **💡 Tip**: MediaCrawler now supports using playwright to connect to your local Chrome browser, solving some issues caused by Webdriver.
->
-> Currently, `xhs` and `dy` are available using CDP mode to connect to local browsers. If needed, check the configuration items in `config/base_config.py`.
-
-## 🚀 Run Crawler Program
-
-```shell
-# The project does not enable comment crawling mode by default. If you need comments, please modify the ENABLE_GET_COMMENTS variable in config/base_config.py
-# Other supported options can also be viewed in config/base_config.py with Chinese comments
-
-# Read keywords from configuration file to search related posts and crawl post information and comments
+# Search posts & comments by keywords (scan QR code in the platform app to log in)
 uv run main.py --platform xhs --lt qrcode --type search
 
-# Read specified post ID list from configuration file to get information and comment information of specified posts
+# Fetch details & comments for specified post IDs
 uv run main.py --platform xhs --lt qrcode --type detail
 
-# Open corresponding APP to scan QR code for login
-
-# For other platform crawler usage examples, execute the following command to view
+# View usage examples for other platforms
 uv run main.py --help
 ```
 
-## WebUI Support
+<details>
+<summary>📥 <strong>Media Download (Cover / Video / Image Posts)</strong></summary>
+
+Disabled by default. When enabled, media files are downloaded locally alongside crawling and grouped by post:
+
+```shell
+# CLI flag
+uv run main.py --platform xhs --type detail --specified_id <Post URL or ID> --get_media true
+
+# Or set ENABLE_GET_MEDIA = True in config/base_config.py
+```
+
+**Output structure** (under `data/` when `SAVE_DATA_PATH` is empty):
+
+```
+data/xhs/media/{post_id}/
+├── cover.jpg     # Cover image
+├── video.mp4     # Video (merged DASH stream on Bilibili)
+├── 001.jpg       # Image from image posts
+└── 001_live.mp4  # Accompanying Live Photo video (when present)
+```
+
+**Supported platforms**: Xiaohongshu, Douyin, Kuaishou, Bilibili, Weibo. Tieba and Zhihu do not expose media fields in their data structures and are not supported yet.
+
+**Live Photo**:
+- Controlled by `DOWNLOAD_LIVE_PHOTO` in `config/base_config.py` for Douyin and Xiaohongshu (default `True`, effective only when `ENABLE_GET_MEDIA` is enabled); setting it to `False` saves static images only without affecting regular video downloads
+- Live Photo videos share the original image index (e.g., `001.jpg` / `001_live.mp4`), keeping index gaps when items are missing; saved as standalone images and companion videos (not merged into OS Live Photos or converted to GIF)
+- Xiaohongshu web Live Photo videos may include watermarks; downloads keep the original stream as returned
+
+**Bilibili notes**:
+- With [ffmpeg](https://ffmpeg.org/) installed, Bilibili uses DASH to fetch highest quality and losslessly mux audio/video; without it, it falls back to a direct mp4 link saved as `video-durl.mp4`
+- Quality is controlled by `BILI_QN` in `config/bilibili_config.py` (default `80` = 1080p), with automatic fallback to lower resolutions if unauthenticated or restricted
+
+**Notes**:
+- Media download failures are logged and do not interrupt crawling
+- Existing files are skipped; delete the corresponding folder to re-download
+- Downloads run sequentially alongside crawling (no concurrent download bursts) to avoid putting load on platform CDNs
+
+</details>
 
 <details>
 <summary>🖥️ <strong>WebUI Visual Operation Interface</strong></summary>
@@ -200,54 +221,21 @@ After successful startup, visit `http://localhost:8080` to open the WebUI interf
 <details>
 <summary>🔗 <strong>Using Python native venv environment management (Not recommended)</strong></summary>
 
-#### Create and activate Python virtual environment
-
-> If crawling Douyin and Zhihu, you need to install nodejs environment in advance, version greater than or equal to: `16`
+> Node.js (`>= 16`) is required when crawling Douyin or Zhihu; `requirements.txt` is based on Python 3.11.
 
 ```shell
-# Enter project root directory
 cd MediaCrawler
-
-# Create virtual environment
-# My python version is: 3.9.6, the libraries in requirements.txt are based on this version
-# If using other python versions, the libraries in requirements.txt may not be compatible, please resolve on your own
 python -m venv venv
 
-# macOS & Linux activate virtual environment
+# Activate virtual environment (first line for macOS/Linux, second for Windows)
 source venv/bin/activate
+# venv\Scripts\activate
 
-# Windows activate virtual environment
-venv\Scripts\activate
-```
-
-#### Install dependency libraries
-
-```shell
 pip install -r requirements.txt
-```
-
-#### Install playwright browser driver
-
-```shell
 playwright install
-```
 
-#### Run crawler program (native environment)
-
-```shell
-# The project does not enable comment crawling mode by default. If you need comments, please modify the ENABLE_GET_COMMENTS variable in config/base_config.py
-# Other supported options can also be viewed in config/base_config.py with Chinese comments
-
-# Read keywords from configuration file to search related posts and crawl post information and comments
+# Run example (replace `uv run` in Quick Start with `python`)
 python main.py --platform xhs --lt qrcode --type search
-
-# Read specified post ID list from configuration file to get information and comment information of specified posts
-python main.py --platform xhs --lt qrcode --type detail
-
-# Open corresponding APP to scan QR code for login
-
-# For other platform crawler usage examples, execute the following command to view
-python main.py --help
 ```
 
 </details>
@@ -255,20 +243,10 @@ python main.py --help
 
 ## 💾 Data Storage
 
-MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL, Excel, SQLite, and MySQL databases.
-
-📖 **For detailed usage instructions, please see: [Data Storage Guide](docs/data_storage_guide.md)**
-
----
-
-[🚀 MediaCrawlerPro Major Release 🚀! More features, better architectural design!](https://github.com/MediaCrawlerPro)
-
-### 💬 Discussion Groups
-- **WeChat Discussion Group**: [Click to join](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
-- **Bilibili Account**: [Follow me](https://space.bilibili.com/434377496), sharing AI and crawler technology knowledge
+MediaCrawler supports CSV, JSON, JSONL, Excel, SQLite, and MySQL. See the [Data Storage Guide](docs/data_storage_guide.md); for more configuration and FAQs, visit the [Complete Documentation](https://nanmicoder.github.io/MediaCrawler/).
 
 
-### 💰 Sponsor Display
+## 💰 Sponsor Display
 
 <table>
   <thead>
@@ -324,22 +302,51 @@ MediaCrawler supports multiple data storage methods, including CSV, JSON, JSONL,
 
 ---
 
-### 🤝 Become a Sponsor
+## 🤝 Become a Sponsor
 
 Become a sponsor and showcase your product here, getting massive exposure daily!
 
 **Contact Information**:
 - WeChat: `relakkes`
 - Email: `relakkes@gmail.com`
+
 ---
 
-### 📚 Other
-- **FAQ**: [MediaCrawler Complete Documentation](https://nanmicoder.github.io/MediaCrawler/)
-
-### 🧩 My Other Projects
+## 🧩 My Other Projects
 - **The Startup I'm Building**: [ModelDial](https://modeldial.com/?utm_source=github&utm_medium=referral&utm_campaign=mediacrawler&utm_content=readme-en) — benchmarks AI models on private datasets, comparing capabilities, costs and reasoning effort levels to help you find the right model for your tasks
 - **Open Source Desktop Agent**: [cc-haha](https://github.com/NanmiCoder/cc-haha) — a local-first, cross-platform desktop workspace for agents, with multi-agent collaboration, Git worktrees, a skill marketplace, multi-model support and Computer Use, plus remote access via WeChat / Feishu / DingTalk and more
 - **DeepSeek Harness Plugin**: [dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) — brings Agent Teams to DeepSeek Harness, so multiple agents can work in parallel on complex tasks
+
+
+## 💬 Discussion Groups
+- **WeChat Discussion Group**: [Click to join](https://nanmicoder.github.io/MediaCrawler/%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4.html)
+- **Bilibili Account**: [Follow me](https://space.bilibili.com/434377496), sharing AI and crawler technology knowledge
+
+
+## ☕ Buy Me a Coffee
+
+If this project helps you, feel free to support my work — every bit of support keeps me motivated to maintain and improve it ❤️
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="docs/static/images/wechat_pay.jpeg" width="250" alt="WeChat Pay"><br>
+<b>WeChat Pay</b>
+</td>
+<td align="center" width="33%">
+<img src="docs/static/images/zfb_pay.png" width="250" alt="Alipay"><br>
+<b>Alipay</b>
+</td>
+<td align="center" width="33%">
+<a href="https://buymeacoffee.com/relakkes" target="_blank">
+<img src="docs/static/images/bmc_button.png" width="250" alt="Buy Me a Coffee">
+</a><br>
+<b>Buy Me a Coffee</b>
+</td>
+</tr>
+</table>
+
+---
 
 
 ## ⭐ Star Trend Chart
@@ -357,25 +364,25 @@ If this project helps you, please give a ⭐ Star to support and let more people
 - **Intranet Penetration Tool**: [ngrok official documentation](https://ngrok.com/docs/)
 
 
-# Disclaimer
+## ⚖️ Disclaimer
 <div id="disclaimer">
 
-## 1. Project Purpose and Nature
+### 1. Project Purpose and Nature
 This project (hereinafter referred to as "this project") was created as a technical research and learning tool, aimed at exploring and learning network data collection technologies. This project focuses on research of data crawling technologies for social media platforms, intended to provide learners and researchers with technical exchange purposes.
 
-## 2. Legal Compliance Statement
+### 2. Legal Compliance Statement
 The project developer (hereinafter referred to as "developer") solemnly reminds users to strictly comply with relevant laws and regulations of the People's Republic of China when downloading, installing and using this project, including but not limited to the "Cybersecurity Law of the People's Republic of China", "Counter-Espionage Law of the People's Republic of China" and all applicable national laws and policies. Users shall bear all legal responsibilities that may arise from using this project.
 
-## 3. Usage Purpose Restrictions
+### 3. Usage Purpose Restrictions
 This project is strictly prohibited from being used for any illegal purposes or non-learning, non-research commercial activities. This project may not be used for any form of illegal intrusion into other people's computer systems, nor may it be used for any activities that infringe upon others' intellectual property rights or other legitimate rights and interests. Users should ensure that their use of this project is purely for personal learning and technical research, and may not be used for any form of illegal activities.
 
-## 4. Disclaimer
+### 4. Disclaimer
 The developer has made every effort to ensure the legitimacy and security of this project, but assumes no responsibility for any form of direct or indirect losses that may arise from users' use of this project. Including but not limited to any data loss, equipment damage, legal litigation, etc. caused by using this project.
 
-## 5. Intellectual Property Statement
+### 5. Intellectual Property Statement
 The intellectual property rights of this project belong to the developer. This project is protected by copyright law and international copyright treaties as well as other intellectual property laws and treaties. Users may download and use this project under the premise of complying with this statement and relevant laws and regulations.
 
-## 6. Final Interpretation Rights
+### 6. Final Interpretation Rights
 The developer has the final interpretation rights regarding this project. The developer reserves the right to change or update this disclaimer at any time without further notice.
 </div>
 
