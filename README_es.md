@@ -66,7 +66,7 @@ Una **herramienta de recolección de datos de redes sociales multiplataforma** p
 | Cobertura de Datos | Búsqueda / Detalle / Comentarios / Creador | Soporte adicional de **HomeFeed** y **listas de tendencias** |
 | AI Agent y Proyectos Extra | — | Incluye **AI Agent Skill** + **múltiples códigos fuente de AI Agents y app de escritorio full-stack** |
 
-👉 El código abierto no es fácil, bienvenido a suscribirte y apoyar: **[Ver Página del Proyecto MediaCrawlerPro](https://github.com/MediaCrawlerPro)** ｜ **[Guía de Suscripción](https://nanmicoder.github.io/MediaCrawler/mediacrawlerpro%E8%AE%A2%E9%98%85.html)**
+👉 El código abierto no es fácil, bienvenido a suscribirte y apoyar: **[Ver Página del Proyecto MediaCrawlerPro y Guía de Suscripción](https://github.com/MediaCrawlerPro)**
 
 <details>
 <summary>📦 <b>Haz clic para expandir: Características completas de Pro y lista de proyectos AI Agent incluidos</b></summary>

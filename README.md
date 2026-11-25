@@ -69,7 +69,7 @@
 | 数据结构覆盖 | 搜索 / 帖子详情 / 评论 / 创作者 | 额外支持**首页信息流（HomeFeed）**与**热搜榜单** |
 | AI Agent 与扩展项目 | — | 内置 **AI Agent Skill** + **多套 AI Agent / 全栈桌面端项目源码** |
 
-👉 开源不易，欢迎订阅支持：**[查看 MediaCrawlerPro 项目主页](https://github.com/MediaCrawlerPro)** ｜ **[查看订阅方式](https://nanmicoder.github.io/MediaCrawler/mediacrawlerpro%E8%AE%A2%E9%98%85.html)**
+👉 开源不易，欢迎订阅支持：**[查看 MediaCrawlerPro 项目主页与订阅方式](https://github.com/MediaCrawlerPro)**
 
 <details>
 <summary>📦 <b>点击展开：查看 Pro 版详细特性与附赠 AI Agent 项目源码清单</b></summary>

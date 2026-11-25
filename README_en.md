@@ -66,7 +66,7 @@ A **multi-platform social media data collection tool** for learning and research
 | Data Structure Coverage | Search / Post Detail / Comments / Creator | Additional support for **HomeFeed recommendations** and **trending lists** |
 | AI Agent & Bonus Projects | — | Built-in **AI Agent Skill** + **multiple AI Agent / full-stack desktop app source repos** |
 
-👉 Open source is not easy, welcome to subscribe and support: **[View MediaCrawlerPro Project Homepage](https://github.com/MediaCrawlerPro)** ｜ **[Subscription Guide](https://nanmicoder.github.io/MediaCrawler/mediacrawlerpro%E8%AE%A2%E9%98%85.html)**
+👉 Open source is not easy, welcome to subscribe and support: **[View MediaCrawlerPro Homepage & Subscription Guide](https://github.com/MediaCrawlerPro)**
 
 <details>
 <summary>📦 <b>Click to expand: Full Pro features & included AI Agent learning projects</b></summary>
