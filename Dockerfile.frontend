@@ -1,0 +1,32 @@
+FROM node:20-alpine AS builder
+
+LABEL maintainer="MediaCrawler Contributors"
+LABEL description="React frontend build stage for MediaCrawler"
+
+WORKDIR /app/webui
+
+COPY webui/package*.json ./
+
+RUN npm install
+
+COPY webui/ ./
+
+RUN npm run build
+
+FROM node:20-alpine
+
+LABEL maintainer="MediaCrawler Contributors"
+LABEL description="React frontend server for MediaCrawler"
+
+WORKDIR /app
+
+RUN npm install -g serve
+
+COPY --from=builder /app/api/webui ./dist
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:3000 || exit 1
+
+CMD ["serve", "-s", "dist", "-l", "3000"]
