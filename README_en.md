@@ -274,15 +274,6 @@ MediaCrawler supports CSV, JSON, JSONL, Excel, SQLite, and MySQL. See the [Data 
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://dragtokens.com"><img src="docs/static/images/dragtokens_logo.jpg" width="180" alt="DragTokens"></a>
-      </td>
-      <td valign="middle">
-        Thanks to <a href="https://dragtokens.com">DragTokens (Drag API)</a> for sponsoring this project! DragTokens focuses on providing developers with a multi-model API relay service, supporting AI coding tools such as Claude Code, Codex, and Gemini CLI, and covering leading models including GPT, Claude, and Gemini. Rates are as low as 1.1x for the Claude official-client-dedicated group (about 1.55 discount vs. the official API, saving ~84.5%), 0.3x for Codex (about 0.42 discount, saving ~96%), and 0.25x for Gemini (about 0.35 discount, saving ~96.5%), with peak pool throughput reaching 700 million TPM.<br><br>
-        🎁 New users who <a href="https://dragtokens.com">register through this exclusive link</a> receive a sign-up credit, and a single top-up of CNY 100 also earns 10% cash back! Documentation covers getting started, tool configuration, and API examples, so setup and usage both come with guidance. Prompts and model responses are never stored, and dedicated account pools, corporate transfer, and invoicing are available for enterprise and university teams.
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/static/images/mangoproxy_logo_dark.png"><img src="docs/static/images/mangoproxy_logo.png" width="180" alt="MangoProxy"></picture></a>
       </td>
       <td valign="middle">

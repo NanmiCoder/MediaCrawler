@@ -274,15 +274,6 @@ MediaCrawler soporta CSV, JSON, JSONL, Excel, SQLite y MySQL. Consulta la [Guía
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://dragtokens.com"><img src="docs/static/images/dragtokens_logo.jpg" width="180" alt="DragTokens"></a>
-      </td>
-      <td valign="middle">
-        ¡Gracias a <a href="https://dragtokens.com">DragTokens (Drag API)</a> por patrocinar este proyecto! DragTokens se especializa en ofrecer a los desarrolladores un servicio de retransmisión de API multimodelo, compatible con herramientas de programación con IA como Claude Code, Codex y Gemini CLI, y que cubre modelos principales como GPT, Claude y Gemini. Las tarifas son tan bajas como 1,1× para el grupo dedicado al cliente oficial de Claude (aproximadamente 1,55 de descuento frente a la API oficial, un ahorro del ~84,5%), 0,3× para Codex (aproximadamente 0,42 de descuento, un ahorro del ~96%) y 0,25× para Gemini (aproximadamente 0,35 de descuento, un ahorro del ~96,5%), con un pico de TPM del grupo de cuentas de 700 millones.<br><br>
-        🎁 ¡Los nuevos usuarios que se <a href="https://dragtokens.com">registren mediante este enlace exclusivo</a> reciben un crédito de bienvenida, y una única recarga de 100 CNY también obtiene un 10% de reembolso! La documentación cubre primeros pasos, configuración de herramientas y ejemplos de API, para que tanto la integración como el uso cuenten con una guía. No se almacenan sus prompts ni las respuestas del modelo, y se ofrecen grupos de cuentas dedicados, transferencia corporativa y facturación para equipos empresariales y universitarios.
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/static/images/mangoproxy_logo_dark.png"><img src="docs/static/images/mangoproxy_logo.png" width="180" alt="MangoProxy"></picture></a>
       </td>
       <td valign="middle">

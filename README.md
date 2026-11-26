@@ -277,15 +277,6 @@ MediaCrawler 支持 CSV、JSON、JSONL、Excel、SQLite 和 MySQL 等多种存�
     </tr>
     <tr>
       <td align="center" valign="middle">
-        <a href="https://dragtokens.com"><img src="docs/static/images/dragtokens_logo.jpg" width="180" alt="DragTokens"></a>
-      </td>
-      <td valign="middle">
-        感谢 <a href="https://dragtokens.com">DragTokens（Drag API）</a> 对本项目的赞助！DragTokens 专注于为开发者提供多模型 API 中转服务，支持 Claude Code、Codex、Gemini CLI 等 AI 编程工具，覆盖 GPT、Claude、Gemini 等主流模型。Claude 官方客户端专用分组倍率低至 1.1×（对比官方 API 约 1.55 折，节省约 84.5%）、Codex 倍率低至 0.3×（约 0.42 折，节省约 96%）、Gemini 倍率低至 0.25×（约 0.35 折，节省约 96.5%），号池峰值 TPM 达 7 亿。<br><br>
-        🎁 通过 <a href="https://dragtokens.com">专属链接</a>注册的新用户即送赠金，单次充值满 100 元还可享受 10% 返现！配套新手入门、工具配置及 API 示例文档，接入有教程，使用有指引。不存储您的提示词与模型回复，并为企业及高校团队提供专属账户池、对公转账与开票支持。
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="middle">
         <a href="https://mangoproxy.com/?utm_medium=partner&amp;utm_campaign=nanmicoder_github"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/static/images/mangoproxy_logo_dark.png"><img src="docs/static/images/mangoproxy_logo.png" width="180" alt="MangoProxy"></picture></a>
       </td>
       <td valign="middle">
