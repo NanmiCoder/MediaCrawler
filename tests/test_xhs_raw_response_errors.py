@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import asyncio
 import json
 from unittest.mock import AsyncMock, Mock
 
@@ -190,3 +191,23 @@ async def test_html_detail_still_retries_parse_failures():
 
     assert client.request.await_count == 3
     assert client._extractor.extract_note_detail_from_html.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_ctrl_c_is_not_retried(monkeypatch):
+    """Ctrl+C cancels the crawl; tenacity must not retry (and thus swallow) the cancellation."""
+    calls = 0
+
+    async def request_impl(method, url, **kwargs):
+        nonlocal calls
+        calls += 1
+        raise asyncio.CancelledError()
+
+    monkeypatch.setattr(
+        "media_platform.xhs.client.make_async_client",
+        lambda **kwargs: FakeAsyncClient(request_impl),
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await make_client().request("GET", "https://edith.xiaohongshu.com/api/test")
+    assert calls == 1
