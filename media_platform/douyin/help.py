@@ -26,7 +26,6 @@
 
 import random
 import re
-from typing import Optional
 
 import execjs
 from playwright.async_api import Page
@@ -80,22 +79,6 @@ def get_a_bogus_from_js(url: str, params: str, user_agent: str):
         sign_js_name = "sign_reply"
     return douyin_sign_obj.call(sign_js_name, params, user_agent)
 
-
-
-async def get_a_bogus_from_playwright(params: str, post_data: dict, user_agent: str, page: Page):
-    """
-    Get a_bogus parameter through playwright
-    playwright version is deprecated
-    Returns:
-
-    """
-    if not post_data:
-        post_data = ""
-    a_bogus = await page.evaluate(
-        "([params, post_data, ua]) => window.bdms.init._v[2].p[42].apply(null, [0, 1, 8, params, post_data, ua])",
-        [params, post_data, user_agent])
-
-    return a_bogus
 
 
 def parse_video_info_from_url(url: str) -> VideoUrlInfo:

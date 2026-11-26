@@ -20,13 +20,10 @@
 # @Time    : 2025/9/5 19:34
 # @Desc    : Xiaohongshu storage implementation class
 import json
-import os
-from datetime import datetime
-from typing import List, Dict, Any
+from typing import Dict
 
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 from base.base_crawler import AbstractStore
 from database.db_session import get_session
@@ -229,18 +226,6 @@ class XhsDbStoreImplement(AbstractStore):
     async def store_creator(self, creator_item: Dict):
         # 教学版：创作者个人资料不再落库
         pass
-
-    async def get_all_content(self) -> List[Dict]:
-        async with get_session() as session:
-            stmt = select(XhsNote)
-            result = await session.execute(stmt)
-            return [item.__dict__ for item in result.scalars().all()]
-
-    async def get_all_comments(self) -> List[Dict]:
-        async with get_session() as session:
-            stmt = select(XhsNoteComment)
-            result = await session.execute(stmt)
-            return [item.__dict__ for item in result.scalars().all()]
 
 
 class XhsSqliteStoreImplement(XhsDbStoreImplement):

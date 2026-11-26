@@ -21,9 +21,8 @@ import asyncio
 import copy
 import json
 import urllib.parse
-from typing import TYPE_CHECKING, Any, Callable, Dict, Union, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
-import httpx
 from playwright.async_api import BrowserContext
 
 from base.base_crawler import AbstractApiClient

@@ -22,21 +22,15 @@
 # @Author  : persist1@126.com
 # @Time    : 2025/9/5 19:34
 # @Desc    : Weibo storage implementation class
-import asyncio
-import csv
-import json
 import os
-import pathlib
 from typing import Dict
 
-import aiofiles
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 import config
 from base.base_crawler import AbstractStore
 from database.models import WeiboNote, WeiboNoteComment
-from tools import utils, words
+from tools import utils
 from tools.async_file_writer import AsyncFileWriter
 from database.db_session import get_session
 from var import crawler_type_var

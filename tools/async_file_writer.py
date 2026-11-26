@@ -21,7 +21,7 @@ import csv
 import json
 import os
 import pathlib
-from typing import Dict, List
+from typing import Dict
 import aiofiles
 import config
 from tools.utils import utils

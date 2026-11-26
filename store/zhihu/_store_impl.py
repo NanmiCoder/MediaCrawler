@@ -22,39 +22,17 @@
 # @Author  : persist1@126.com
 # @Time    : 2025/9/5 19:34
 # @Desc    : Zhihu storage implementation class
-import asyncio
-import csv
-import json
-import os
-import pathlib
 from typing import Dict
 
-import aiofiles
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-import config
 from base.base_crawler import AbstractStore
 from database.db_session import get_session
 from database.models import ZhihuContent, ZhihuComment
-from tools import utils, words
+from tools import utils
 from var import crawler_type_var
 from tools.async_file_writer import AsyncFileWriter
 from database.mongodb_store_base import MongoDBStoreBase
-
-def calculate_number_of_files(file_store_path: str) -> int:
-    """Calculate the prefix sorting number for data save files, supporting writing to different files for each run
-    Args:
-        file_store_path;
-    Returns:
-        file nums
-    """
-    if not os.path.exists(file_store_path):
-        return 1
-    try:
-        return max([int(file_name.split("_")[0]) for file_name in os.listdir(file_store_path)]) + 1
-    except ValueError:
-        return 1
 
 
 class ZhihuCsvStoreImplement(AbstractStore):

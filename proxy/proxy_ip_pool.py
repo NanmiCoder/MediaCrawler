@@ -26,7 +26,6 @@ import time
 from typing import Dict, List
 from urllib.parse import unquote, urlparse
 
-import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
 from tools.httpx_util import make_async_client
 
