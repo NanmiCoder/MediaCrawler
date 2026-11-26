@@ -32,3 +32,7 @@ class DataFetchError(RequestError):
 
 class IPBlockError(RequestError):
     """fetch so fast that the server block us ip"""
+
+
+class NoMoreResultsError(RequestError):
+    """pagination reached the end, weibo returns ok=0 with an empty-content message"""
